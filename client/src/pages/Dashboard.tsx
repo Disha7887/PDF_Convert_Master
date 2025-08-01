@@ -96,6 +96,12 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ title, description, time, s
 };
 
 export const Dashboard: React.FC = () => {
+  const [location, setLocation] = useLocation();
+
+  const handleNavigation = (path: string) => {
+    setLocation(path);
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
