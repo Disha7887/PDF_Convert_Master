@@ -161,23 +161,74 @@ export const TermsOfService = (): JSX.Element => {
           </div>
         </div>
 
+        {/* Mobile Navigation Overlay */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div className="absolute top-0 right-0 w-80 h-full bg-white shadow-xl overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Table of Contents</h3>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-lg hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <nav className="space-y-2">
+                  {tableOfContentsItems.map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-3 text-left text-sm rounded-lg transition-all ${
+                        activeSection === item.id
+                          ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
+                        <item.icon className={`w-[18.75px] h-[18px] ${
+                          activeSection === item.id ? 'text-blue-600' : 'text-gray-500'
+                        }`} />
+                      </div>
+                      <span className="font-medium">{item.text}</span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main Content Layout */}
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar - Table of Contents */}
-          <aside className="w-full lg:w-72 lg:sticky lg:top-8 lg:self-start">
+          <aside className="hidden lg:block w-72 sticky top-24 self-start">
             <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Table of Contents
               </h3>
 
-              <nav className="space-y-2">
+              <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
                 {tableOfContentsItems.map((item, index) => (
                   <button
                     key={index}
-                    className="w-full flex items-center gap-3 px-3 py-3 text-left text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => scrollToSection(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 text-left text-sm rounded-lg transition-all ${
+                      activeSection === item.id
+                        ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
                   >
                     <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
-                      <item.icon className="w-[18.75px] h-[18px] text-gray-500" />
+                      <item.icon className={`w-[18.75px] h-[18px] ${
+                        activeSection === item.id ? 'text-blue-600' : 'text-gray-500'
+                      }`} />
                     </div>
                     <span className="font-medium">{item.text}</span>
                   </button>
