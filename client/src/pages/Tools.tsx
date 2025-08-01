@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   Upload,
   FileText,
   Copy,
@@ -24,7 +24,9 @@ import {
   Image,
   Camera,
   Globe,
-  Settings
+  Settings,
+  BookOpen,
+  Presentation
 } from "lucide-react";
 
 interface ToolCardProps {
@@ -33,6 +35,7 @@ interface ToolCardProps {
   icon: React.ReactNode;
   iconBgColor: string;
   iconBorderColor: string;
+  category: string;
 }
 
 const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgColor, iconBorderColor }) => {
