@@ -42,8 +42,8 @@ export const NavigationSection = (): JSX.Element => {
 
   return (
     <header className="w-full h-[65px] bg-[#111726] border-b border-[#374050] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
-      <div className="max-w-screen-xl mx-auto px-8 h-16">
-        <div className="flex items-center justify-between h-full">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
+        <div className="flex items-center justify-between h-full gap-4">
           {/* Logo */}
           <div className="flex items-center h-7">
             <h1 className="[font-family:'Pacifico',Helvetica] font-normal text-white text-xl leading-7 whitespace-nowrap">
