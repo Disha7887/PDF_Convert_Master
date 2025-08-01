@@ -281,17 +281,18 @@ export const Tools: React.FC = () => {
       <div className="w-full py-8 px-20">
         <div className="max-w-screen-xl mx-auto px-6">
           <div className="flex justify-center gap-3 flex-wrap pb-8">
-            {filterButtons.map((button, index) => (
+            {filterButtons.map((buttonName, index) => (
               <Button
                 key={index}
-                variant={button.active ? "default" : "outline"}
+                variant={activeFilter === buttonName ? "default" : "outline"}
                 className={`px-6 py-3 rounded-full font-medium ${
-                  button.active 
-                    ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700" 
+                  activeFilter === buttonName
+                    ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
+                onClick={() => setActiveFilter(buttonName)}
               >
-                {button.name}
+                {buttonName}
               </Button>
             ))}
           </div>
