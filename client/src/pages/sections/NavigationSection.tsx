@@ -97,6 +97,7 @@ export const NavigationSection = (): JSX.Element => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="header-search-input w-[200px] xl:w-[240px] h-[38px] pl-10 pr-4 border border-gray-200 rounded-full text-gray-700 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent hover:border-gray-300"
+                  title="Press Ctrl+K to focus search"
                 />
               </div>
             </form>
