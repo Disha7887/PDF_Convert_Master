@@ -15,19 +15,27 @@ import { Dashboard } from "@/pages/Dashboard";
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        {/* Add pages below */}
-        <Route path="/" component={Body} />
-        <Route path="/tools" component={Tools} />
-        <Route path="/contact" component={Contact} />
-        <Route path="/pricing" component={Pricing} />
-        <Route path="/about" component={About} />
-        <Route path="/dashboard" component={Dashboard} />
-        {/* Fallback to 404 */}
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      {/* Dashboard route without Layout */}
+      <Route path="/dashboard" component={Dashboard} />
+
+      {/* Regular pages with Layout */}
+      <Route>
+        {(params) => (
+          <Layout>
+            <Switch>
+              <Route path="/" component={Body} />
+              <Route path="/tools" component={Tools} />
+              <Route path="/contact" component={Contact} />
+              <Route path="/pricing" component={Pricing} />
+              <Route path="/about" component={About} />
+              {/* Fallback to 404 */}
+              <Route component={NotFound} />
+            </Switch>
+          </Layout>
+        )}
+      </Route>
+    </Switch>
   );
 }
 
