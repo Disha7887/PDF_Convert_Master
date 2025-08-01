@@ -167,13 +167,7 @@ export const TermsOfService = (): JSX.Element => {
 
   };
 
-  // Scroll to top
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
+
 
   // Track scroll position and active section
   useEffect(() => {
