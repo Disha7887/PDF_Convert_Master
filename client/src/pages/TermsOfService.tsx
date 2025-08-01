@@ -574,16 +574,7 @@ export const TermsOfService = (): JSX.Element => {
           </main>
         </div>
 
-        {/* Scroll to Top Button */}
-        {isScrolled && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-40 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 hover:scale-110"
-            aria-label="Scroll to top"
-          >
-            <ChevronUp className="w-5 h-5" />
-          </button>
-        )}
+
       </div>
     </div>
   );
