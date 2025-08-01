@@ -174,7 +174,7 @@ export const PrivacyPolicy = (): JSX.Element => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 rounded-lg hover:bg-gray-100"
                   >
-                    <Phone className="w-5 h-5" />
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
