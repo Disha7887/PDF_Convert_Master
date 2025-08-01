@@ -31,6 +31,15 @@ export const NavigationSection = (): JSX.Element => {
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // For now, navigate to support page with search - could be enhanced later
+      setLocation(`/support`);
+      console.log('Header search:', searchQuery);
+    }
+  };
+
   return (
     <header className="w-full h-[65px] bg-[#111726] border-b border-[#374050] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
       <div className="max-w-screen-xl mx-auto px-8 h-16">
