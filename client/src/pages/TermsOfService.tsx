@@ -240,7 +240,7 @@ export const TermsOfService = (): JSX.Element => {
           {/* Main Content Area */}
           <main className="flex-1">
             <div className="bg-white rounded-lg shadow-sm p-8">
-              <div className="prose prose-gray max-w-none space-y-8">
+              <div className="prose prose-gray max-w-none space-y-12">
 
                 {/* 1. Acceptance of Terms */}
                 <section id="acceptance-of-terms">
