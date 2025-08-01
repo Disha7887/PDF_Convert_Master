@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Calendar, Clock, Shield, Database, FileText, Lock, Cookie, Cloud, Timer, UserCheck, Globe, AlertTriangle, Mail, Edit, Phone, ChevronUp, Menu, Eye, UserX, HardDrive, Trash2, FileCheck } from "lucide-react";
+import { Calendar, Clock, Shield, Database, FileText, Lock, Cookie, Cloud, Timer, UserCheck, Globe, AlertTriangle, Mail, Edit, X, ChevronUp, Menu, Eye, UserX, HardDrive, Trash2, FileCheck } from "lucide-react";
 
 export const PrivacyPolicy = (): JSX.Element => {
   const [activeSection, setActiveSection] = useState("");
