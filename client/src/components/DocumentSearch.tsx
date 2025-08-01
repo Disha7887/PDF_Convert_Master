@@ -259,7 +259,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
         <>
           {/* Backdrop for mobile */}
           <div className="fixed inset-0 z-[90] bg-black/10 md:hidden" onClick={() => setShowSuggestions(false)} />
-          <Card className="absolute top-full left-0 right-0 mt-2 z-[100] max-h-96 overflow-y-auto border-2 border-gray-200 shadow-2xl bg-white rounded-lg">
+          <Card className="search-dropdown absolute top-full left-0 right-0 mt-2 z-[100] max-h-96 overflow-y-auto rounded-lg">
             <CardContent className="p-0 bg-white rounded-lg">
             {/* Search History */}
             {!query && searchHistory.length > 0 && (
