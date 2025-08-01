@@ -38,22 +38,15 @@
     -webkit-line-clamp: 2;
   }
 
-  /* Header search bar specific styling */
-  .header-search-input {
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(4px);
-    transition: all 0.2s ease-in-out;
+  /* Page search specific styling */
+  .page-search-input {
+    position: relative;
+    z-index: 10;
   }
 
-  .header-search-input:focus {
-    background: rgb(255, 255, 255);
-    transform: scale(1.02);
-    box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.1);
-  }
-
-  .header-search-input:hover:not(:focus) {
-    background: rgba(255, 255, 255, 0.99);
-    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.08);
+  .page-search-input .search-dropdown {
+    max-height: 60vh;
+    overflow-y: auto;
   }
 }
 
