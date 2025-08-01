@@ -5,20 +5,22 @@ import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 
 export const FooterSection = (): JSX.Element => {
+  const [, setLocation] = useLocation();
+
   // Footer links data
   const quickLinks = [
-    { text: "PDF Tools" },
-    { text: "Pricing" },
-    { text: "About Us" },
-    { text: "Support" },
-    { text: "Contact" },
+    { text: "PDF Tools", path: "/tools" },
+    { text: "Pricing", path: "/pricing" },
+    { text: "About Us", path: "/about" },
+    { text: "Support", path: "/contact" },
+    { text: "Contact", path: "/contact" },
   ];
 
   const companyLinks = [
-    { text: "Privacy Policy" },
-    { text: "Terms of Service" },
-    { text: "Support" },
-    { text: "Report Bug" },
+    { text: "Privacy Policy", path: null },
+    { text: "Terms of Service", path: "/terms-of-service" },
+    { text: "Support", path: "/contact" },
+    { text: "Report Bug", path: null },
   ];
 
   // Footer bottom info items
