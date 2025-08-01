@@ -78,7 +78,7 @@ export const About = (): JSX.Element => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+    <div className="bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
       
       {/* Hero Section */}
       <section 
