@@ -1,0 +1,500 @@
+import React, { useState } from "react";
+import { Search, MessageCircle, Mail, Phone, Play, CheckCircle, BookOpen, Settings, CreditCard, Code, FileText, Wrench, Users, TrendingUp, Server, Clock, Target, Award, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+export const Support = (): JSX.Element => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // Knowledge base categories
+  const knowledgeBaseCategories = [
+    {
+      title: "Getting Started",
+      description: "Basic setup and first steps",
+      icon: BookOpen,
+      color: "bg-green-500",
+      articles: 12,
+      id: "getting-started"
+    },
+    {
+      title: "Troubleshooting",
+      description: "Common issues and solutions",
+      icon: Wrench,
+      color: "bg-blue-500",
+      articles: 18,
+      id: "troubleshooting"
+    },
+    {
+      title: "Account & Billing",
+      description: "Manage your account and payments",
+      icon: CreditCard,
+      color: "bg-red-500",
+      articles: 8,
+      id: "billing"
+    },
+    {
+      title: "API Documentation",
+      description: "Developer resources and guides",
+      icon: Code,
+      color: "bg-purple-500",
+      articles: 15,
+      id: "api"
+    },
+    {
+      title: "File Conversion",
+      description: "Converting between formats",
+      icon: FileText,
+      color: "bg-orange-500",
+      articles: 22,
+      id: "conversion"
+    },
+    {
+      title: "Advanced Features",
+      description: "Pro tips and advanced usage",
+      icon: Settings,
+      color: "bg-teal-500",
+      articles: 9,
+      id: "advanced"
+    }
+  ];
+
+  // Getting started topics
+  const gettingStartedTopics = [
+    "How to convert your first PDF",
+    "Understanding file formats",
+    "Creating your account",
+    "Navigating the interface",
+    "Setting up preferences",
+    "Managing your files",
+    "Understanding conversion limits",
+    "Using batch conversion"
+  ];
+
+  // Help options
+  const helpOptions = [
+    {
+      title: "Live Chat",
+      description: "Get instant help from our support team",
+      icon: MessageCircle,
+      color: "bg-blue-500",
+      action: "Start Chat",
+      availability: "24/7 Support"
+    },
+    {
+      title: "Email Support",
+      description: "Send us detailed questions via email",
+      icon: Mail,
+      color: "bg-green-500",
+      action: "Send Email",
+      availability: "< 2h response"
+    },
+    {
+      title: "Phone Support",
+      description: "Speak directly with our experts",
+      icon: Phone,
+      color: "bg-purple-500",
+      action: "Call Now",
+      availability: "+447429919748"
+    },
+    {
+      title: "Video Tutorials",
+      description: "Watch step-by-step video guides",
+      icon: Play,
+      color: "bg-orange-500",
+      action: "Watch Videos",
+      availability: "15+ tutorials"
+    }
+  ];
+
+  // Support statistics
+  const supportStats = [
+    {
+      title: "Response Time",
+      value: "< 2h",
+      description: "Average response time",
+      icon: Clock,
+      color: "text-blue-600"
+    },
+    {
+      title: "Satisfaction Rate",
+      value: "98.3%",
+      description: "Customer satisfaction",
+      icon: Award,
+      color: "text-green-600"
+    },
+    {
+      title: "Resolution Rate",
+      value: "99.2%",
+      description: "Issues resolved",
+      icon: Target,
+      color: "text-purple-600"
+    },
+    {
+      title: "Articles Available",
+      value: "15+",
+      description: "Help articles",
+      icon: BookOpen,
+      color: "text-orange-600"
+    }
+  ];
+
+  // Video tutorials
+  const videoTutorials = [
+    {
+      title: "Getting Started with PDF Convert Master",
+      duration: "5:32",
+      views: "12.5K",
+      thumbnail: "/api/placeholder/320/180"
+    },
+    {
+      title: "Advanced PDF Conversion Techniques",
+      duration: "8:45",
+      views: "8.2K",
+      thumbnail: "/api/placeholder/320/180"
+    },
+    {
+      title: "Batch Processing and Automation",
+      duration: "6:15",
+      views: "5.7K",
+      thumbnail: "/api/placeholder/320/180"
+    }
+  ];
+
+  // Popular help topics
+  const popularTopics = [
+    "How to convert PDF to Word",
+    "Troubleshooting upload issues",
+    "Account verification process",
+    "API rate limits",
+    "File size limitations"
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section with Purple Gradient */}
+      <section className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 py-20 overflow-hidden">
+        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"}></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-bold text-white mb-6">
+            How Can We Help You?
+          </h1>
+          <p className="text-xl text-purple-100 mb-12 max-w-3xl mx-auto">
+            Get help with PDF Convert Master services with comprehensive support for all your PDF conversion needs
+          </p>
+          
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search for help topics..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-4 py-4 text-lg bg-white/95 border-0 shadow-lg rounded-xl focus:ring-2 focus:ring-white/50"
+              />
+            </div>
+          </div>
+
+          {/* Popular Topics */}
+          <div className="flex flex-wrap justify-center gap-3">
+            {popularTopics.map((topic, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full"
+              >
+                {topic}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Knowledge Base Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Knowledge Base</h2>
+            <p className="text-lg text-gray-600">Find answers to common questions and learn how to use our features</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {knowledgeBaseCategories.map((category, index) => (
+              <Card key={index} className="cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-lg ${category.color} flex items-center justify-center text-white`}>
+                      <category.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{category.title}</CardTitle>
+                      <Badge variant="secondary">{category.articles} articles</Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-gray-600">
+                    {category.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Getting Started Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Getting Started</h2>
+              <p className="text-lg text-gray-600 mb-8">
+                New to PDF Convert Master? Start here with our most popular getting started topics.
+              </p>
+              <div className="space-y-4">
+                {gettingStartedTopics.map((topic, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/60 transition-colors cursor-pointer">
+                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    <span className="text-gray-700 font-medium">{topic}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-8 shadow-lg">
+              <div className="aspect-video bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+                <Play className="w-16 h-16 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold mt-4 mb-2">Quick Start Video</h3>
+              <p className="text-gray-600">Watch our 5-minute overview to get started quickly</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Multiple Ways to Get Help */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Multiple Ways to Get Help</h2>
+            <p className="text-lg text-gray-600">Choose the support option that works best for you</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {helpOptions.map((option, index) => (
+              <Card key={index} className="text-center hover:shadow-lg transition-all duration-300">
+                <CardHeader>
+                  <div className={`w-16 h-16 rounded-full ${option.color} flex items-center justify-center text-white mx-auto mb-4`}>
+                    <option.icon className="w-8 h-8" />
+                  </div>
+                  <CardTitle className="text-lg">{option.title}</CardTitle>
+                  <CardDescription>{option.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Button className="w-full mb-2">{option.action}</Button>
+                  <p className="text-sm text-gray-500">{option.availability}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Statistics Section */}
+      <section className="py-16 bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Support Performance</h2>
+            <p className="text-lg text-gray-300">Our commitment to excellent customer service</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {supportStats.map((stat, index) => (
+              <Card key={index} className="bg-gray-800 border-gray-700 text-center">
+                <CardHeader className="pb-2">
+                  <stat.icon className={`w-8 h-8 mx-auto mb-2 ${stat.color}`} />
+                  <CardTitle className="text-3xl font-bold text-white">{stat.value}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-300 font-medium">{stat.title}</p>
+                  <p className="text-sm text-gray-400">{stat.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Video Tutorials Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Video Tutorials & Guides</h2>
+              <p className="text-lg text-gray-600">Learn with our comprehensive video library</p>
+            </div>
+            <Button variant="outline">View All Videos</Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {videoTutorials.map((video, index) => (
+              <Card key={index} className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                <div className="relative aspect-video bg-gray-200">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Play className="w-12 h-12 text-white bg-black/50 rounded-full p-3" />
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    {video.duration}
+                  </div>
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold mb-2">{video.title}</h3>
+                  <p className="text-sm text-gray-500">{video.views} views</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* System Status Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">System Status & Performance</h2>
+            <p className="text-lg text-gray-600">Real-time monitoring of our services</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Server className="w-5 h-5" />
+                  Service Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>PDF Conversion API</span>
+                  <Badge className="bg-green-100 text-green-800">Operational</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>File Upload Service</span>
+                  <Badge className="bg-green-100 text-green-800">Operational</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>User Authentication</span>
+                  <Badge className="bg-green-100 text-green-800">Operational</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Payment Processing</span>
+                  <Badge className="bg-green-100 text-green-800">Operational</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Performance Metrics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>API Response Time</span>
+                  <span className="font-semibold">245ms</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Uptime (30 days)</span>
+                  <span className="font-semibold">99.98%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Conversion Success Rate</span>
+                  <span className="font-semibold">99.95%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Active Users</span>
+                  <span className="font-semibold">15,432</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Insights Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Team Insights</h2>
+            <p className="text-lg text-gray-600">Stay updated with the latest from our development team</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Latest Updates
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold mb-1">New Batch Processing Feature</h4>
+                  <p className="text-gray-600 text-sm mb-2">Process multiple files simultaneously with our new batch conversion tool.</p>
+                  <p className="text-xs text-gray-500">Released 2 days ago</p>
+                </div>
+                <div className="border-l-4 border-green-500 pl-4">
+                  <h4 className="font-semibold mb-1">API Rate Limit Improvements</h4>
+                  <p className="text-gray-600 text-sm mb-2">We've increased API rate limits for premium users by 50%.</p>
+                  <p className="text-xs text-gray-500">Released 1 week ago</p>
+                </div>
+                <div className="border-l-4 border-purple-500 pl-4">
+                  <h4 className="font-semibold mb-1">Enhanced Security Features</h4>
+                  <p className="text-gray-600 text-sm mb-2">New encryption standards and improved data protection.</p>
+                  <p className="text-xs text-gray-500">Released 2 weeks ago</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Coming Soon
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-1">AI-Powered OCR</h4>
+                  <p className="text-gray-600 text-sm">Advanced text recognition for scanned documents</p>
+                  <Badge variant="outline" className="mt-2">Q2 2024</Badge>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Mobile App</h4>
+                  <p className="text-gray-600 text-sm">Native iOS and Android applications</p>
+                  <Badge variant="outline" className="mt-2">Q3 2024</Badge>
+                </div>
+                <div className="mt-6">
+                  <Button className="w-full">Subscribe to Updates</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Chat Widget */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg">
+          <MessageCircle className="w-6 h-6" />
+        </Button>
+      </div>
+    </div>
+  );
+};
