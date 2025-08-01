@@ -37,9 +37,10 @@ interface ToolCardProps {
   iconBgColor: string;
   iconBorderColor: string;
   category: string;
+  onSelectFiles: () => void;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgColor, iconBorderColor }) => {
+const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgColor, iconBorderColor, onSelectFiles }) => {
   return (
     <div className="w-[290px] h-[344.5px] p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
       <div className="flex flex-col h-full">
