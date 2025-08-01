@@ -257,7 +257,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 2. Definitions */}
-                <section id="definitions">
+                <section id="definitions" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Book className="w-6 h-6 text-blue-600" />
                     2. Definitions
@@ -273,7 +273,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 3. Description of Services */}
-                <section id="description-of-services">
+                <section id="description-of-services" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Heart className="w-6 h-6 text-blue-600" />
                     3. Description of Services
@@ -295,7 +295,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 4. User Accounts */}
-                <section id="user-accounts">
+                <section id="user-accounts" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <User className="w-6 h-6 text-blue-600" />
                     4. User Accounts
@@ -312,7 +312,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 5. Acceptable Use Policy */}
-                <section id="acceptable-use-policy">
+                <section id="acceptable-use-policy" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Shield className="w-6 h-6 text-blue-600" />
                     5. Acceptable Use Policy
@@ -333,7 +333,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 6. User Content and Files */}
-                <section id="user-content-and-files">
+                <section id="user-content-and-files" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <FileText className="w-6 h-6 text-blue-600" />
                     6. User Content and Files
@@ -348,7 +348,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 7. Intellectual Property */}
-                <section id="intellectual-property">
+                <section id="intellectual-property" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Copyright className="w-6 h-6 text-blue-600" />
                     7. Intellectual Property
@@ -362,7 +362,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 8. Payment Terms */}
-                <section id="payment-terms">
+                <section id="payment-terms" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <DollarSign className="w-6 h-6 text-blue-600" />
                     8. Payment Terms
@@ -377,7 +377,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 9. Privacy and Security */}
-                <section id="privacy-and-security">
+                <section id="privacy-and-security" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Lock className="w-6 h-6 text-blue-600" />
                     9. Privacy and Security
@@ -392,7 +392,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 10. Termination */}
-                <section id="termination">
+                <section id="termination" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <X className="w-6 h-6 text-blue-600" />
                     10. Termination
@@ -406,7 +406,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 11. Warranty Disclaimer */}
-                <section id="warranty-disclaimer">
+                <section id="warranty-disclaimer" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <AlertCircle className="w-6 h-6 text-blue-600" />
                     11. Warranty Disclaimer
@@ -420,7 +420,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 12. Limitation of Liability */}
-                <section id="limitation-of-liability">
+                <section id="limitation-of-liability" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Shield className="w-6 h-6 text-blue-600" />
                     12. Limitation of Liability
@@ -434,7 +434,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 13. Indemnification */}
-                <section id="indemnification">
+                <section id="indemnification" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Gavel className="w-6 h-6 text-blue-600" />
                     13. Indemnification
@@ -445,7 +445,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 14. Governing Law */}
-                <section id="governing-law">
+                <section id="governing-law" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Gavel className="w-6 h-6 text-blue-600" />
                     14. Governing Law
@@ -456,7 +456,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 15. Dispute Resolution */}
-                <section id="dispute-resolution">
+                <section id="dispute-resolution" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <MessageSquare className="w-6 h-6 text-blue-600" />
                     15. Dispute Resolution
@@ -470,7 +470,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 16. Modifications */}
-                <section id="modifications">
+                <section id="modifications" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Edit className="w-6 h-6 text-blue-600" />
                     16. Modifications
@@ -484,7 +484,7 @@ export const TermsOfService = (): JSX.Element => {
                 </section>
 
                 {/* 17. Contact Information */}
-                <section id="contact-information">
+                <section id="contact-information" className="scroll-mt-24">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Phone className="w-6 h-6 text-blue-600" />
                     17. Contact Information
