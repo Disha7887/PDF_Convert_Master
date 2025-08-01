@@ -72,7 +72,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgCol
 };
 
 export const Tools: React.FC = () => {
-  const [activeFilter, setActiveFilter] = useState("Organize");
+  const [activeFilter, setActiveFilter] = useState("Security");
 
   const toolsData = [
     {
