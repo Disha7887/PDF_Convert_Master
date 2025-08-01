@@ -30,6 +30,112 @@ export const TermsOfService = (): JSX.Element => {
     { icon: Phone, text: "Contact Information", id: "contact-information" }
   ];
 
+  // Create searchable sections data
+  const searchableSections: SearchableSection[] = useMemo(() => [
+    {
+      id: "acceptance-of-terms",
+      title: "Acceptance of Terms",
+      content: "By accessing and using PDF Convert Master (the \"Service\"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, please do not use our Service. These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.",
+      category: "Legal"
+    },
+    {
+      id: "definitions",
+      title: "Definitions",
+      content: "\"Service\" refers to PDF Convert Master, our web-based platform and all related tools and features. \"User,\" \"you,\" or \"your\" refers to any individual or entity using our Service. \"Company,\" \"we,\" \"us,\" or \"our\" refers to Mizan Store Ltd, a company incorporated in England and Wales. \"Content\" refers to any files, documents, data, or information uploaded to or processed through our Service. \"Account\" refers to your registered user account on our platform. \"Personal Data\" has the meaning set out in the UK General Data Protection Regulation (UK GDPR).",
+      category: "Legal"
+    },
+    {
+      id: "description-of-services",
+      title: "Description of Services",
+      content: "PDF Convert Master provides online document conversion and processing services, including but not limited to PDF to various format conversions (Word, Excel, PowerPoint, images, etc.), Multiple format to PDF conversions, PDF merging, splitting, and editing tools, Document compression and optimization, Password protection and security features, Batch processing capabilities. We reserve the right to modify, suspend, or discontinue any aspect of our Service at any time with reasonable notice to users.",
+      category: "Services"
+    },
+    {
+      id: "user-accounts",
+      title: "User Accounts",
+      content: "While many features are available without registration, creating an account provides access to enhanced features and processing history. Account Security: You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. Accurate Information: You must provide accurate, current, and complete information when creating your account. Age Requirement: You must be at least 16 years old to create an account and use our Service. Single Account: You may maintain only one account per individual or business entity.",
+      category: "Account"
+    },
+    {
+      id: "acceptable-use-policy",
+      title: "Acceptable Use Policy",
+      content: "You agree not to use our Service to upload, process, or distribute illegal, harmful, or copyrighted content without authorization, attempt to gain unauthorized access to our systems or other users' accounts, distribute malware, viruses, or other malicious code, engage in activities that could damage, disable, or impair our Service, use automated scripts or bots to abuse our Service, violate any applicable laws or regulations, infringe upon intellectual property rights of others. Violation of this policy may result in immediate termination of your access to our Service.",
+      category: "Usage"
+    },
+    {
+      id: "user-content-and-files",
+      title: "User Content and Files",
+      content: "File Processing: Files uploaded to our Service are processed temporarily and automatically deleted after completion. We do not permanently store your documents. Content Ownership: You retain full ownership of all content you upload. We do not claim any ownership rights to your files. Processing License: By uploading files, you grant us a limited, temporary license to process your content solely for providing our conversion services. File Limitations: We may impose reasonable limits on file size, processing time, and usage volume to ensure optimal service performance. Prohibited Content: You may not upload content that violates laws, infringes copyrights, or contains malicious code.",
+      category: "Content"
+    },
+    {
+      id: "intellectual-property",
+      title: "Intellectual Property",
+      content: "Our Rights: The Service, including all software, designs, text, graphics, and other content, is owned by Mizan Store Ltd and protected by copyright, trademark, and other intellectual property laws. Limited License: We grant you a limited, non-exclusive, non-transferable license to use our Service for its intended purpose. Restrictions: You may not copy, modify, distribute, sell, or lease any part of our Service or attempt to reverse engineer our software. Feedback: Any feedback, suggestions, or ideas you provide about our Service may be used by us without compensation or attribution.",
+      category: "Legal"
+    },
+    {
+      id: "payment-terms",
+      title: "Payment Terms",
+      content: "Free Services: Basic conversion services are provided free of charge with usage limitations. Premium Services: Enhanced features, higher processing limits, and priority support are available through paid subscriptions. Billing: Subscription fees are billed in advance on a recurring basis. All fees are non-refundable except as required by law. Price Changes: We may modify subscription prices with 30 days' written notice to existing subscribers. Taxes: You are responsible for any applicable taxes, duties, or government charges.",
+      category: "Billing"
+    },
+    {
+      id: "privacy-and-security",
+      title: "Privacy and Security",
+      content: "Data Protection: We implement industry-standard security measures to protect your data and comply with UK GDPR requirements. File Security: All file uploads and downloads are encrypted in transit using SSL/TLS encryption. Automatic Deletion: Uploaded files are automatically deleted from our servers after processing, typically within 24 hours. Privacy Policy: Our collection and use of personal information is governed by our Privacy Policy, which forms part of these Terms. No Guarantee: While we implement robust security measures, no system is completely secure, and we cannot guarantee absolute security.",
+      category: "Security"
+    },
+    {
+      id: "termination",
+      title: "Termination",
+      content: "Your Right to Terminate: You may stop using our Service at any time and delete your account through your account settings. Our Right to Terminate: We may suspend or terminate your access immediately if you violate these Terms or engage in harmful activities. Effect of Termination: Upon termination, your right to use the Service ceases, and we may delete any data associated with your account. Survival: Provisions regarding intellectual property, limitation of liability, and indemnification survive termination.",
+      category: "Legal"
+    },
+    {
+      id: "warranty-disclaimer",
+      title: "Warranty Disclaimer",
+      content: "AS IS BASIS: The Service is provided \"as is\" without warranties of any kind, either express or implied. NO WARRANTIES: We disclaim all warranties, including but not limited to merchantability, fitness for a particular purpose, and non-infringement. NO GUARANTEE: We do not guarantee that the Service will be error-free, uninterrupted, or meet your specific requirements. RESULTS: We do not warrant the accuracy, completeness, or quality of conversion results.",
+      category: "Legal"
+    },
+    {
+      id: "limitation-of-liability",
+      title: "Limitation of Liability",
+      content: "LIMITED LIABILITY: To the maximum extent permitted by law, our total liability for any claims arising from your use of the Service shall not exceed the amount you paid us in the 12 months preceding the claim. EXCLUDED DAMAGES: We shall not be liable for indirect, incidental, special, consequential, or punitive damages, including lost profits or data. USER RESPONSIBILITY: You acknowledge that you use the Service at your own risk and are responsible for backing up important documents. STATUTORY RIGHTS: Nothing in these Terms excludes or limits liability that cannot be excluded or limited under applicable law.",
+      category: "Legal"
+    },
+    {
+      id: "indemnification",
+      title: "Indemnification",
+      content: "You agree to indemnify, defend, and hold harmless Mizan Store Ltd, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.",
+      category: "Legal"
+    },
+    {
+      id: "governing-law",
+      title: "Governing Law",
+      content: "These Terms shall be governed by and construed in accordance with the laws of England and Wales, without regard to conflict of law principles. Any legal action or proceeding arising under these Terms will be brought exclusively in the courts of England and Wales, and you consent to personal jurisdiction and venue in such courts.",
+      category: "Legal"
+    },
+    {
+      id: "dispute-resolution",
+      title: "Dispute Resolution",
+      content: "Informal Resolution: Before initiating formal legal proceedings, you agree to first contact us to attempt to resolve any disputes informally. Mediation: If informal resolution fails, disputes may be resolved through mediation by a mutually agreed mediator in London, UK. Court Proceedings: As a last resort, disputes may be brought before the competent courts of England and Wales. Consumer Rights: Nothing in this section affects your statutory rights as a consumer under UK law.",
+      category: "Legal"
+    },
+    {
+      id: "modifications",
+      title: "Modifications",
+      content: "Right to Modify: We reserve the right to modify these Terms at any time to reflect changes in our Service, legal requirements, or business practices. Notice: Significant changes will be communicated through email notification and prominent notice on our website at least 30 days before taking effect. Acceptance: Your continued use of the Service after changes take effect constitutes acceptance of the modified Terms. Disagreement: If you disagree with modifications, you may terminate your account before the changes take effect.",
+      category: "Legal"
+    },
+    {
+      id: "contact-information",
+      title: "Contact Information",
+      content: "For questions about these Terms of Service or our Service, please contact us: Company: Mizan Store Ltd, Service: PDF Convert Master, Phone: +447429919748, Location: London, United Kingdom, Website: PDF Convert Master",
+      category: "Contact"
+    }
+  ], []);
+
   // Smooth scroll to section
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
