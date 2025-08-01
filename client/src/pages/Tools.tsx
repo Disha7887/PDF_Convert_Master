@@ -72,13 +72,16 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgCol
 };
 
 export const Tools: React.FC = () => {
+  const [activeFilter, setActiveFilter] = useState("All Tools");
+
   const toolsData = [
     {
       title: "PDF to Word",
       description: "Convert PDF documents to editable Word files",
-      icon: <FileText className="w-9 h-9 text-blue-600" />,
+      icon: <BookOpen className="w-9 h-9 text-blue-600" />,
       iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200"
+      iconBorderColor: "border-blue-200",
+      category: "Convert"
     },
     {
       title: "Word to PDF", 
