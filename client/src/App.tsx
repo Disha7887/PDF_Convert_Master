@@ -27,6 +27,7 @@ function Router() {
       <Route path="/dashboard/api-setup" component={APISetup} />
       <Route path="/dashboard/api-reference" component={APIReference} />
       <Route path="/dashboard/manage-plans" component={ManagePlans} />
+      <Route path="/dashboard/live-tools" component={LiveTools} />
 
       {/* Regular pages with Layout */}
       <Route>
