@@ -422,6 +422,7 @@ export const Tools: React.FC = () => {
                 iconBgColor={tool.iconBgColor}
                 iconBorderColor={tool.iconBorderColor}
                 category={tool.category}
+                onSelectFiles={() => handleSelectFiles(tool)}
               />
             ))}
           </div>
