@@ -65,7 +65,7 @@ export const PageSearch: React.FC<PageSearchProps> = ({
 
   if (isMobile) {
     return (
-      <div className={`fixed top-4 right-4 z-50 ${className}`}>
+      <div className={`fixed top-20 right-4 z-50 ${className}`}>
         <Button
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-12 h-12 rounded-full bg-white border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800"
@@ -96,7 +96,7 @@ export const PageSearch: React.FC<PageSearchProps> = ({
   }
 
   return (
-    <div className={`fixed top-6 right-6 z-50 transition-all duration-300 ${className}`}>
+    <div className={`fixed top-20 right-6 z-50 transition-all duration-300 ${className}`}>
       {!isExpanded ? (
         <Button
           onClick={() => setIsExpanded(true)}
