@@ -126,7 +126,7 @@ export const highlightSearchTerms = (query: string, containerSelector: string) =
 
   // Create regex for search term
   const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  
+
   // Find and highlight text nodes
   const walker = document.createTreeWalker(
     container,
@@ -157,8 +157,8 @@ export const highlightSearchTerms = (query: string, containerSelector: string) =
     if (!parent) return;
 
     const text = textNode.textContent || '';
-    const highlightedHTML = text.replace(regex, '<mark class="search-highlight bg-yellow-200 px-1 rounded">$1</mark>');
-    
+    const highlightedHTML = text.replace(regex, '<mark class="search-highlight bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium border border-blue-200">$1</mark>');
+
     if (highlightedHTML !== text) {
       const wrapper = document.createElement('span');
       wrapper.innerHTML = highlightedHTML;
