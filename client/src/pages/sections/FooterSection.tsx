@@ -74,7 +74,10 @@ export const FooterSection = (): JSX.Element => {
                     key={`quick-link-${index}`}
                     className="flex items-center"
                   >
-                    <div className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors">
+                    <div
+                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
+                      onClick={() => link.path && setLocation(link.path)}
+                    >
                       {link.text}
                     </div>
                   </div>
