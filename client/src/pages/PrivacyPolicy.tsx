@@ -4,26 +4,7 @@ import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 
 export const PrivacyPolicy = (): JSX.Element => {
-  const [activeSection, setActiveSection] = useState("");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [filteredItems, setFilteredItems] = useState(tableOfContentsItems);
-  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
-
-  // Search functionality
-  const {
-    handleSearchChange,
-    handleResultClick,
-    clearSearch
-  } = useDocumentSearch({
-    sections: searchableSections,
-    onSectionHighlight: setHighlightedSection,
-    onNavigationFilter: (sectionIds) => {
-      const filtered = tableOfContentsItems.filter(item => sectionIds.includes(item.id));
-      setFilteredItems(filtered.length > 0 ? filtered : tableOfContentsItems);
-    }
-  });
-
+  // Define table of contents items first
   const tableOfContentsItems = [
     { icon: Database, text: "Information We Collect", id: "information-we-collect" },
     { icon: Eye, text: "How We Use Your Information", id: "how-we-use-your-information" },
