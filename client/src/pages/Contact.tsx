@@ -12,8 +12,7 @@ export const Contact = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FEF2F2] via-[#FFF7ED] to-[#FEFCE8]">
-      {/* Navigation */}
-      <NavigationSection />
+
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-[#DC2626] via-[#EA580C] to-[#B91C1C] py-24">
