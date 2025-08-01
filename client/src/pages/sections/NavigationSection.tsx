@@ -78,7 +78,7 @@ export const NavigationSection = (): JSX.Element => {
                   placeholder="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-[200px] xl:w-[240px] h-[38px] pl-10 pr-4 bg-white border border-gray-200 rounded-full text-gray-700 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="header-search-input w-[200px] xl:w-[240px] h-[38px] pl-10 pr-4 border border-gray-200 rounded-full text-gray-700 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent hover:border-gray-300"
                 />
               </div>
             </form>
