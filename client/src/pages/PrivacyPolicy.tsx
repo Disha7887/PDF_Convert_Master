@@ -7,6 +7,8 @@ export const PrivacyPolicy = (): JSX.Element => {
   const [activeSection, setActiveSection] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [filteredItems, setFilteredItems] = useState(tableOfContentsItems);
+  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
 
   const tableOfContentsItems = [
     { icon: Database, text: "Information We Collect", id: "information-we-collect" },
