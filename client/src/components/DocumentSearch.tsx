@@ -230,6 +230,11 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
           className="pl-12 pr-12 py-4 text-lg bg-white border-2 border-gray-200 shadow-lg rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 relative z-10"
+          aria-label={`Search ${pageType} content`}
+          aria-expanded={showSuggestions}
+          aria-haspopup="listbox"
+          role="combobox"
+          autoComplete="off"
         />
         {query && (
           <Button
