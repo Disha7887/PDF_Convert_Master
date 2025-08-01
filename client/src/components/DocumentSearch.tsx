@@ -182,50 +182,45 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
     }
   };
 
-  // Highlight matching text with proper HTML escaping
+  // Safe highlight function that avoids HTML malformation
   const highlightText = (text: string, matches: Fuse.FuseResultMatch[]) => {
-    if (!matches.length || !text) return text;
-
-    // Clean and escape the text to prevent HTML injection
-    const cleanText = text
-      .replace(/<[^>]*>/g, '') // Remove any HTML tags
-      .replace(/&lt;/g, '<')   // Decode HTML entities
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#x27;/g, "'")
-      .trim();
-
-    const contentMatch = matches.find(match => match.key === "content");
-
-    if (contentMatch && contentMatch.indices && contentMatch.indices.length > 0) {
-      let result = cleanText;
-
-      // Process indices from end to start to maintain positions
-      const sortedIndices = [...contentMatch.indices]
-        .filter(([start, end]) => start >= 0 && end < cleanText.length && start <= end)
-        .sort((a, b) => b[0] - a[0]);
-
-      sortedIndices.forEach(([start, end]) => {
-        const before = result.slice(0, start);
-        const matchText = result.slice(start, end + 1);
-        const after = result.slice(end + 1);
-
-        // Escape the match text to prevent HTML issues
-        const escapedMatch = matchText
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#x27;');
-
-        result = before + `<mark class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium">${escapedMatch}</mark>` + after;
-      });
-
-      return result;
+    if (!matches.length || !text) {
+      return text.replace(/<[^>]*>/g, '').trim();
     }
 
-    return cleanText;
+    try {
+      // Clean text from any HTML and decode entities
+      const cleanText = text
+        .replace(/<[^>]*>/g, '')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#x27;/g, "'")
+        .trim();
+
+      // For safety, just return clean text if there are no matches
+      const contentMatch = matches.find(match => match.key === "content");
+      if (!contentMatch || !contentMatch.indices || contentMatch.indices.length === 0) {
+        return cleanText;
+      }
+
+      // Simple approach: find the first match and highlight it
+      const firstMatch = contentMatch.indices[0];
+      if (firstMatch && firstMatch[0] >= 0 && firstMatch[1] < cleanText.length) {
+        const [start, end] = firstMatch;
+        const before = cleanText.slice(0, start);
+        const match = cleanText.slice(start, end + 1);
+        const after = cleanText.slice(end + 1);
+
+        return `${before}<mark class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium">${match}</mark>${after}`;
+      }
+
+      return cleanText;
+    } catch (error) {
+      console.error('Error in highlightText:', error);
+      return text.replace(/<[^>]*>/g, '').trim();
+    }
   };
 
   // Click outside handler
