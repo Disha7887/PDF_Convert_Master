@@ -182,26 +182,37 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
     }
   };
 
-  // Highlight matching text
+  // Highlight matching text - Fixed to prevent malformed HTML
   const highlightText = (text: string, matches: Fuse.FuseResultMatch[]) => {
-    if (!matches.length) return text;
+    if (!matches.length || !text) return text;
 
-    let highlightedText = text;
+    // Clean the text first to prevent HTML issues
+    const cleanText = text.replace(/<[^>]*>/g, '').trim();
+
     const contentMatch = matches.find(match => match.key === "content");
 
-    if (contentMatch && contentMatch.indices) {
-      // Create a copy with highlights
-      let offset = 0;
-      contentMatch.indices.forEach(([start, end]) => {
-        const before = highlightedText.slice(0, start + offset);
-        const match = highlightedText.slice(start + offset, end + 1 + offset);
-        const after = highlightedText.slice(end + 1 + offset);
-        highlightedText = before + `<mark class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium">${match}</mark>` + after;
-        offset += 67; // Length of added markup
+    if (contentMatch && contentMatch.indices && contentMatch.indices.length > 0) {
+      // Sort indices in reverse order to avoid position shifts
+      const sortedIndices = [...contentMatch.indices].sort((a, b) => b[0] - a[0]);
+
+      let result = cleanText;
+
+      sortedIndices.forEach(([start, end]) => {
+        // Ensure indices are within bounds
+        if (start >= 0 && end < cleanText.length && start <= end) {
+          const before = result.slice(0, start);
+          const match = result.slice(start, end + 1);
+          const after = result.slice(end + 1);
+
+          // Simple highlight without nested HTML
+          result = before + `<mark class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium">${match}</mark>` + after;
+        }
       });
+
+      return result;
     }
 
-    return highlightedText;
+    return cleanText;
   };
 
   // Click outside handler
