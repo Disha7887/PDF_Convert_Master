@@ -259,16 +259,16 @@ export const Support = (): JSX.Element => {
             Get help with PDF Convert Master services with comprehensive support for all your PDF conversion needs
           </p>
           
-          {/* Search Component */}
+          {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">
-            <DocumentSearch
-              sections={searchableSections}
-              placeholder="Search help articles and guides..."
-              onResultClick={handleResultClick}
-              onSearchChange={handleSearchChange}
-              pageType="support"
-              className="w-full"
-            />
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search for help topics..."
+                className="pl-12 pr-4 py-4 text-lg bg-white/95 border-0 shadow-lg rounded-xl focus:ring-2 focus:ring-white/50"
+              />
+            </div>
           </div>
 
           {/* Popular Topics */}
