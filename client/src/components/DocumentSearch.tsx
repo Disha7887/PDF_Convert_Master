@@ -217,7 +217,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
   }, []);
 
   return (
-    <div ref={searchRef} className={`relative w-full max-w-2xl mx-auto ${className}`}>
+    <div ref={searchRef} className={`search-container relative w-full max-w-2xl mx-auto ${className}`}>
       {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
