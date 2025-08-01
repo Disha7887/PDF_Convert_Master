@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Clock, CheckCircle, Book, Heart, User, Shield, FileText, Copyright, DollarSign, Lock, X, AlertCircle, Gavel, MessageSquare, Edit, Phone, ChevronUp, Menu } from "lucide-react";
+import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
+import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 
 export const TermsOfService = (): JSX.Element => {
   const [activeSection, setActiveSection] = useState("");
