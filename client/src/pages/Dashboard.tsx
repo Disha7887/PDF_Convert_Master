@@ -96,7 +96,8 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ title, description, time, s
 
 export const Dashboard: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <DashboardLayout>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -414,5 +415,6 @@ export const Dashboard: React.FC = () => {
         </main>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
