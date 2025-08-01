@@ -44,6 +44,7 @@ function Router() {
               <Route path="/about" component={About} />
               <Route path="/terms-of-service" component={TermsOfService} />
               <Route path="/privacy-policy" component={PrivacyPolicy} />
+              <Route path="/support" component={Support} />
               {/* Fallback to 404 */}
               <Route component={NotFound} />
             </Switch>
