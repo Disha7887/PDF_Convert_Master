@@ -14,7 +14,7 @@ export const NavigationSection = (): JSX.Element => {
   // Navigation menu items data
   const navItems = [
     { name: "Home", width: "w-[42.98px]", href: "/" },
-    { name: "Tools", width: "w-[38.66px]", href: "#" },
+    { name: "Tools", width: "w-[38.66px]", href: "/tools" },
     { name: "Pricing", width: "w-[50.38px]", href: "/pricing" },
     { name: "About", width: "w-[42.98px]", href: "/about" },
     { name: "Contact", width: "w-[56.12px]", href: "/contact" },

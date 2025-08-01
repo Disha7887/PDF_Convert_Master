@@ -10,6 +10,7 @@ import { Body } from "@/pages/Body";
 import { Contact } from "@/pages/Contact";
 import { Pricing } from "@/pages/Pricing";
 import { About } from "@/pages/About";
+import { Tools } from "@/pages/Tools";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Switch>
         {/* Add pages below */}
         <Route path="/" component={Body} />
+        <Route path="/tools" component={Tools} />
         <Route path="/contact" component={Contact} />
         <Route path="/pricing" component={Pricing} />
         <Route path="/about" component={About} />
