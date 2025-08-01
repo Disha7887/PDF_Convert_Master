@@ -266,6 +266,63 @@ export const Tools: React.FC = () => {
       iconBgColor: "bg-indigo-50",
       iconBorderColor: "border-indigo-200",
       category: "Security"
+    },
+    // Additional Edit Tools from Figma Design
+    {
+      title: "Repair PDF",
+      description: "Repair a damaged PDF and recover data from corrupt PDF",
+      icon: <Wrench className="w-9 h-9 text-red-500" />,
+      iconBgColor: "bg-red-50",
+      iconBorderColor: "border-red-200",
+      category: "Edit"
+    },
+    {
+      title: "Page Numbers",
+      description: "Add page numbers into PDFs with ease",
+      icon: <Hash className="w-9 h-9 text-purple-600" />,
+      iconBgColor: "bg-purple-50",
+      iconBorderColor: "border-purple-200",
+      category: "Edit"
+    },
+    {
+      title: "OCR PDF",
+      description: "Easily convert scanned PDF into searchable and selectable documents",
+      icon: <Eye className="w-9 h-9 text-green-600" />,
+      iconBgColor: "bg-green-50",
+      iconBorderColor: "border-green-200",
+      category: "Edit"
+    },
+    {
+      title: "Compare PDF",
+      description: "Show a side-by-side document comparison and easily spot changes",
+      icon: <Split className="w-9 h-9 text-blue-600" />,
+      iconBgColor: "bg-blue-50",
+      iconBorderColor: "border-blue-200",
+      category: "Edit"
+    },
+    {
+      title: "Crop PDF",
+      description: "Crop margins of PDF documents or select specific areas",
+      icon: <Crop className="w-9 h-9 text-purple-600" />,
+      iconBgColor: "bg-purple-50",
+      iconBorderColor: "border-purple-200",
+      category: "Edit"
+    },
+    {
+      title: "Compress PDF",
+      description: "Reduce file size while optimizing for maximal PDF quality",
+      icon: <Archive className="w-9 h-9 text-green-600" />,
+      iconBgColor: "bg-green-50",
+      iconBorderColor: "border-green-200",
+      category: "Edit"
+    },
+    {
+      title: "Edit PDF",
+      description: "Add text, images, shapes or freehand annotations to PDF files",
+      icon: <Edit3 className="w-9 h-9 text-purple-600" />,
+      iconBgColor: "bg-purple-50",
+      iconBorderColor: "border-purple-200",
+      category: "Edit"
     }
   ];
 
