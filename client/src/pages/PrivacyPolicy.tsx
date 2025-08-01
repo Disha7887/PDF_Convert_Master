@@ -250,49 +250,7 @@ export const PrivacyPolicy = (): JSX.Element => {
           </div>
         </div>
 
-        {/* Mobile Navigation Overlay */}
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            <div className="absolute top-0 right-0 w-80 h-full bg-white shadow-xl overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Table of Contents</h3>
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 rounded-lg hover:bg-gray-100"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
 
-                <nav className="space-y-2">
-                  {filteredItems.map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => scrollToSection(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-3 text-left text-sm rounded-lg transition-all ${
-                        activeSection === item.id || highlightedSection === item.id
-                          ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      } ${highlightedSection === item.id ? 'ring-2 ring-yellow-300 ring-opacity-50' : ''}`}
-                    >
-                      <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
-                        <item.icon className={`w-[18.75px] h-[18px] ${
-                          activeSection === item.id || highlightedSection === item.id ? 'text-blue-600' : 'text-gray-500'
-                        }`} />
-                      </div>
-                      <span className="font-medium">{item.text}</span>
-                    </button>
-                  ))}
-                </nav>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Main Content Layout */}
         <div className="flex flex-col lg:flex-row gap-8">
