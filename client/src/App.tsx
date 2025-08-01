@@ -19,6 +19,7 @@ import { ManagePlans } from "@/pages/ManagePlans";
 import { LiveTools } from "@/pages/LiveTools";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
+import { Support } from "@/pages/Support";
 
 function Router() {
   return (
