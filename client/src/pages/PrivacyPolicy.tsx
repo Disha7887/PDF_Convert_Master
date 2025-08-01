@@ -28,6 +28,100 @@ export const PrivacyPolicy = (): JSX.Element => {
     { icon: Calendar, text: "Effective Date", id: "effective-date" }
   ];
 
+  // Create searchable sections data
+  const searchableSections: SearchableSection[] = useMemo(() => [
+    {
+      id: "information-we-collect",
+      title: "Information We Collect",
+      content: "Personal Information: We collect minimal personal information, including email addresses for account creation, user preferences, and customer support communications. File Information: When you upload files for conversion, we temporarily process file metadata and content solely for conversion purposes. We do not permanently store or analyze your file contents. Usage Data: We collect anonymous usage statistics, including conversion types, file sizes, processing times, and general usage patterns to improve our services. Technical Information: We automatically collect IP addresses, browser types, device information, and referral URLs for security, analytics, and service optimization. Account Information: For registered users, we store account credentials, preferences, subscription status, and basic profile information.",
+      category: "Data Collection"
+    },
+    {
+      id: "how-we-use-your-information",
+      title: "How We Use Your Information",
+      content: "Service Provision: To provide PDF conversion and document processing services, including file format conversion, merging, splitting, and optimization. Account Management: To create and manage user accounts, authenticate users, and provide personalized service experiences. Communication: To send important service notifications, security alerts, and respond to customer support inquiries. Service Improvement: To analyze usage patterns, identify technical issues, and enhance our platform's performance and features. Security: To detect and prevent fraudulent activities, unauthorized access, and ensure platform security. Legal Compliance: To comply with applicable laws, regulations, and legal processes when required.",
+      category: "Data Usage"
+    },
+    {
+      id: "file-processing-and-storage",
+      title: "File Processing and Storage",
+      content: "Temporary Processing: All uploaded files are processed temporarily on secure servers. Files are automatically deleted after conversion completion, typically within 24 hours. No Permanent Storage: We do not permanently store your uploaded files or converted documents. Once processing is complete and files are downloaded or the session expires, all data is permanently deleted. Processing Purpose: Files are accessed only for the specific conversion or processing task requested and are not used for any other purpose. Server Security: Our processing servers are secured with encryption, access controls, and regular security monitoring. File Limitations: We may impose reasonable file size and processing time limits to ensure optimal service performance for all users.",
+      category: "File Handling"
+    },
+    {
+      id: "data-security-measures",
+      title: "Data Security Measures",
+      content: "Encryption in Transit: All data transmission between your device and our servers is encrypted using SSL/TLS protocols (HTTPS). Encryption at Rest: Files temporarily stored during processing are encrypted using industry-standard encryption algorithms. Access Controls: Strict access controls ensure only authorized personnel can access systems, with multi-factor authentication and regular access reviews. Server Security: Our servers are protected by firewalls, intrusion detection systems, and regular security updates. Automatic Deletion: Automated systems ensure uploaded files and processing data are permanently deleted after completion. Security Monitoring: Continuous monitoring for security threats, suspicious activities, and potential data breaches.",
+      category: "Security"
+    },
+    {
+      id: "cookies-and-tracking",
+      title: "Cookies and Tracking",
+      content: "Essential Cookies: We use necessary cookies for core site functionality, including user authentication, session management, and security features. Functional Cookies: Cookies that remember your preferences, settings, and improve your user experience on our platform. Analytics Cookies: Anonymous analytics cookies help us understand how users interact with our service to improve functionality and performance. Cookie Control: You can control cookie settings through your browser preferences, though disabling certain cookies may affect site functionality. Third-Party Cookies: We may use third-party services that set their own cookies, subject to their respective privacy policies. Cookie Retention: Most cookies expire automatically, with session cookies deleted when you close your browser.",
+      category: "Cookies"
+    },
+    {
+      id: "third-party-services",
+      title: "Third-Party Services",
+      content: "Payment Processing: We use secure third-party payment processors for subscription billing. These services have their own privacy policies and security measures. Analytics Services: Anonymous usage analytics are collected through third-party services to help improve our platform performance. Customer Support: We may use third-party tools for customer support communications, subject to strict data protection agreements. Cloud Infrastructure: Our services are hosted on secure cloud infrastructure providers who comply with industry security standards. Data Sharing Limitations: We do not share your personal data or files with third parties for marketing or unrelated business purposes. Vendor Agreements: All third-party vendors are bound by data protection agreements and must comply with our privacy standards.",
+      category: "Third Party"
+    },
+    {
+      id: "data-retention",
+      title: "Data Retention",
+      content: "File Retention: Uploaded and converted files are automatically deleted within 24 hours of processing completion. No files are stored permanently. Account Information: Account data is retained while your account is active and for a reasonable period after account closure to comply with legal obligations. Usage Analytics: Anonymous usage statistics may be retained for service improvement purposes, with personal identifiers removed. Legal Requirements: We may retain certain data longer when required by law, legal processes, or legitimate business purposes. Data Deletion: Upon account deletion, personal information is removed within 30 days, except where retention is legally required. Backup Systems: Data in backup systems is subject to the same deletion schedules, though technical limitations may cause brief delays.",
+      category: "Retention"
+    },
+    {
+      id: "your-privacy-rights",
+      title: "Your Privacy Rights",
+      content: "Access Rights: You can request access to the personal information we hold about you and receive details about how it's processed. Correction Rights: You may request correction of inaccurate or incomplete personal information in your account settings or by contacting us. Deletion Rights: You can request deletion of your personal information, subject to legal retention requirements and legitimate business needs. Portability Rights: You may request your personal data in a portable format to transfer to another service provider. Objection Rights: You can object to certain types of data processing, including direct marketing communications. Withdrawal of Consent: Where processing is based on consent, you may withdraw consent at any time without affecting lawfulness of prior processing.",
+      category: "Rights"
+    },
+    {
+      id: "gdpr-compliance",
+      title: "GDPR Compliance",
+      content: "Legal Basis: We process personal data based on legitimate interests for service provision, contractual necessity for account management, and consent for marketing communications. Data Minimization: We collect only the minimum personal data necessary to provide our services effectively. Purpose Limitation: Personal data is used only for the specific purposes for which it was collected or compatible purposes. Data Protection Officer: We have designated data protection responsibilities to ensure GDPR compliance across all operations. Impact Assessments: We conduct privacy impact assessments for high-risk processing activities to protect individual rights. Breach Notification: We have procedures to detect, report, and investigate personal data breaches within required timeframes.",
+      category: "GDPR"
+    },
+    {
+      id: "childrens-privacy",
+      title: "Children's Privacy",
+      content: "Age Requirements: Our services are not intended for children under 16 years of age. We do not knowingly collect personal information from children under 16. Parental Consent: If we discover we have collected information from a child under 16 without parental consent, we will delete such information immediately. Educational Use: Educational institutions may use our services for students over 16 with appropriate permissions and supervision. Reporting: Parents or guardians who believe we have collected information from a child under 16 should contact us immediately. Account Restrictions: Users must confirm they are at least 16 years old during account creation.",
+      category: "Children"
+    },
+    {
+      id: "international-transfers",
+      title: "International Transfers",
+      content: "Data Location: Your data may be processed and stored in countries outside the UK/EU where our service providers operate. Transfer Safeguards: All international transfers are protected by appropriate safeguards, including adequacy decisions, standard contractual clauses, or other approved mechanisms. Security Standards: International service providers must meet equivalent data protection and security standards as required in the UK/EU. Legal Protections: Transfer agreements include strong data protection clauses and rights for data subjects. Minimized Transfers: We minimize international transfers and ensure they occur only when necessary for service provision.",
+      category: "International"
+    },
+    {
+      id: "data-breach-notification",
+      title: "Data Breach Notification",
+      content: "Detection Systems: We maintain monitoring systems to detect potential security incidents and data breaches promptly. Response Procedures: We have established incident response procedures to contain, assess, and resolve security breaches effectively. Regulatory Notification: We will notify relevant authorities within 72 hours of becoming aware of a breach that poses risks to individual rights and freedoms. User Notification: Affected users will be notified without undue delay if a breach is likely to result in high risk to their rights and freedoms. Documentation: All security incidents are documented with details of the breach, impact assessment, and remediation actions taken. Prevention Measures: We continuously improve security measures based on incident learnings and emerging threats.",
+      category: "Security"
+    },
+    {
+      id: "contact-for-privacy-concerns",
+      title: "Contact for Privacy Concerns",
+      content: "If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us: Company: Mizan Store Ltd, Service: PDF Convert Master, Phone: +447429919748, Location: London, United Kingdom, Privacy Inquiries: Please contact us through our website contact form. Response Time: We aim to respond to privacy inquiries within 30 days of receipt. Regulatory Contact: You also have the right to contact the Information Commissioner's Office (ICO) in the UK regarding privacy concerns.",
+      category: "Contact"
+    },
+    {
+      id: "changes-to-privacy-policy",
+      title: "Changes to Privacy Policy",
+      content: "Policy Updates: We may update this Privacy Policy to reflect changes in our practices, legal requirements, or service features. Notification Methods: Significant changes will be communicated through email notifications to registered users and prominent notices on our website. Advance Notice: Material changes will be announced at least 30 days before taking effect to allow you to review and understand the changes. Continued Use: Your continued use of our services after policy changes take effect constitutes acceptance of the updated Privacy Policy. Objection Rights: If you disagree with policy changes, you may close your account before the changes take effect. Version Control: We maintain version history of policy changes with effective dates for transparency.",
+      category: "Updates"
+    },
+    {
+      id: "effective-date",
+      title: "Effective Date",
+      content: "Current Version: This Privacy Policy is effective as of January 15, 2024, and applies to all information collected on or after this date. Previous Versions: This policy supersedes all previous versions of our privacy statements and policies. Retroactive Application: Changes to this policy apply only to information collected after the effective date, unless otherwise specified. Regular Reviews: We review and update this policy regularly to ensure it remains current with legal requirements and best practices. Contact for Clarification: If you have questions about when specific provisions became effective, please contact us for clarification.",
+      category: "Effective"
+    }
+  ], []);
+
   // Smooth scroll to section
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
