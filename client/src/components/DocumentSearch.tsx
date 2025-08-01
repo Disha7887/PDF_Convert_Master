@@ -366,17 +366,19 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
                   <button
                     key={result.section.id}
                     onClick={() => handleResultClick(result.section.id)}
-                    className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${
-                      selectedIndex === index + 5 ? 'bg-blue-50' : ''
+                    className={`w-full text-left p-4 transition-colors border-0 bg-white ${
+                      selectedIndex === index + 5
+                        ? 'bg-blue-50 border-l-4 border-blue-500'
+                        : 'hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 mb-1">
+                        <h4 className="font-semibold text-gray-900 mb-2 text-base">
                           {result.section.title}
                         </h4>
-                        <p 
-                          className="text-sm text-gray-600 line-clamp-2"
+                        <p
+                          className="text-sm text-gray-700 line-clamp-2 leading-relaxed"
                           dangerouslySetInnerHTML={{
                             __html: highlightText(
                               result.section.content.slice(0, 150) + "...",
@@ -385,7 +387,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
                           }}
                         />
                       </div>
-                      <div className="text-xs text-gray-400 flex-shrink-0">
+                      <div className="text-xs font-medium text-blue-600 flex-shrink-0 bg-blue-50 px-2 py-1 rounded">
                         {Math.round((1 - result.score) * 100)}% match
                       </div>
                     </div>
