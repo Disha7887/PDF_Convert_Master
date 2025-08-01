@@ -311,11 +311,13 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
                   <button
                     key={result.section.id}
                     onClick={() => handleResultClick(result.section.id)}
-                    className={`w-full text-left p-4 transition-colors border-0 bg-white ${
+                    className={`w-full text-left p-4 transition-colors border-0 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
                       selectedIndex === index
                         ? 'bg-blue-50 border-l-4 border-blue-500'
                         : 'hover:bg-gray-50'
                     }`}
+                    aria-label={`Go to section: ${result.section.title}`}
+                    tabIndex={showSuggestions ? 0 : -1}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
