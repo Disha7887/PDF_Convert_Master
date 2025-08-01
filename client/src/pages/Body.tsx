@@ -1,8 +1,6 @@
 import React from "react";
 import { FeaturesSection } from "./sections/FeaturesSection";
-import { FooterSection } from "./sections/FooterSection";
 import { HeroSection } from "./sections/HeroSection";
-import { NavigationSection } from "./sections/NavigationSection";
 import { TestimonialsSection } from "./sections/TestimonialsSection";
 
 export const Body = (): JSX.Element => {
