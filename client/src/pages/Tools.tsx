@@ -252,6 +252,22 @@ export const Tools: React.FC = () => {
       category: "Organize"
     },
     {
+      title: "Merge PDF",
+      description: "Combine PDFs in the order you want with the easiest PDF merger available",
+      icon: <Copy className="w-9 h-9 text-red-500" />,
+      iconBgColor: "bg-red-50",
+      iconBorderColor: "border-red-200",
+      category: "Organize"
+    },
+    {
+      title: "Split PDF",
+      description: "Separate one page or a whole set for easy conversion into independent PDF files",
+      icon: <Scissors className="w-9 h-9 text-red-500" />,
+      iconBgColor: "bg-red-50",
+      iconBorderColor: "border-red-200",
+      category: "Organize"
+    },
+    {
       title: "Unlock PDF",
       description: "Remove PDF password security, giving you freedom to use your PDFs",
       icon: <Lock className="w-9 h-9 text-blue-600" />,
