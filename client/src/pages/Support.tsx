@@ -175,6 +175,76 @@ export const Support = (): JSX.Element => {
     "File size limitations"
   ];
 
+  // Create searchable sections data
+  const searchableSections: SearchableSection[] = useMemo(() => [
+    {
+      id: "getting-started",
+      title: "Getting Started",
+      content: "Basic setup and first steps. How to convert your first PDF. Understanding file formats. Creating your account. Navigating the interface. Setting up preferences. Managing your files. Understanding conversion limits. Using batch conversion. Step-by-step tutorials for new users.",
+      category: "Getting Started"
+    },
+    {
+      id: "troubleshooting",
+      title: "Troubleshooting",
+      content: "Common issues and solutions. File upload problems. Conversion errors. Login issues. Payment failures. Performance problems. Browser compatibility. Error codes. Network connectivity. File format issues. Quality problems. Timeout errors.",
+      category: "Troubleshooting"
+    },
+    {
+      id: "account-billing",
+      title: "Account & Billing",
+      content: "Manage your account and payments. Subscription plans. Payment methods. Billing history. Account settings. Profile management. Password reset. Email verification. Plan upgrades. Cancellation process. Refund policy. Invoice downloads.",
+      category: "Account"
+    },
+    {
+      id: "api-documentation",
+      title: "API Documentation",
+      content: "Developer resources and guides. API endpoints. Authentication methods. Rate limits. Error handling. Code examples. SDKs and libraries. Webhooks. API keys. Request formats. Response formats. Testing tools.",
+      category: "API"
+    },
+    {
+      id: "file-conversion",
+      title: "File Conversion",
+      content: "Converting between formats. PDF to Word conversion. PDF to Excel conversion. PDF to PowerPoint. Image to PDF. Word to PDF. Excel to PDF. Batch conversion. File compression. Quality settings. Format limitations.",
+      category: "Conversion"
+    },
+    {
+      id: "advanced-features",
+      title: "Advanced Features",
+      content: "Pro tips and advanced usage. Batch processing. OCR text recognition. Password protection. Digital signatures. Form filling. Page manipulation. Bookmarks and annotations. Custom workflows. Integration options.",
+      category: "Advanced"
+    },
+    {
+      id: "video-tutorials",
+      title: "Video Tutorials",
+      content: "Watch step-by-step video guides. Getting started videos. Advanced technique tutorials. Feature demonstrations. Best practices. Common workflows. Tips and tricks. Video library access.",
+      category: "Tutorials"
+    },
+    {
+      id: "system-status",
+      title: "System Status",
+      content: "Real-time monitoring of our services. Service health status. Performance metrics. Uptime statistics. Maintenance schedules. Known issues. Status updates. Service interruptions.",
+      category: "Status"
+    }
+  ], []);
+
+  // Search functionality
+  const {
+    handleSearchChange,
+    handleResultClick,
+    clearSearch
+  } = useDocumentSearch({
+    sections: searchableSections,
+    onSectionHighlight: setHighlightedSection,
+    onNavigationFilter: (sectionIds) => {
+      // Filter categories based on search results
+      if (sectionIds.length > 0) {
+        setSelectedCategory("search-results");
+      } else {
+        setSelectedCategory("all");
+      }
+    }
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section with Purple Gradient */}
