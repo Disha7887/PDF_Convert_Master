@@ -17,8 +17,9 @@ import { UsageStatistics } from "@/pages/UsageStatistics";
 function Router() {
   return (
     <Switch>
-      {/* Dashboard route without Layout */}
+      {/* Dashboard routes without Layout */}
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/usage" component={UsageStatistics} />
 
       {/* Regular pages with Layout */}
       <Route>
