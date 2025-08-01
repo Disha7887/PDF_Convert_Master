@@ -269,13 +269,11 @@ export const Tools: React.FC = () => {
     }
   ];
 
-  const filterButtons = [
-    { name: "All Tools", active: true },
-    { name: "Convert", active: false },
-    { name: "Edit", active: false },
-    { name: "Organize", active: false },
-    { name: "Security", active: false }
-  ];
+  const filterButtons = ["All Tools", "Convert", "Edit", "Organize", "Security"];
+
+  const filteredTools = activeFilter === "All Tools"
+    ? toolsData
+    : toolsData.filter(tool => tool.category === activeFilter);
 
   return (
     <div className="min-h-screen bg-gray-50">
