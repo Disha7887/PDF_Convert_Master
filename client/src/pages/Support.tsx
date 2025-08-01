@@ -294,6 +294,34 @@ export const Support = (): JSX.Element => {
         </div>
       </section>
 
+      {/* File Conversion Section */}
+      <section id="file-conversion" className="py-16 bg-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">File Conversion Guide</h2>
+            <p className="text-lg text-gray-600">Learn how to convert between different file formats with ease</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">PDF to Word</h3>
+              <p className="text-gray-600 mb-4">Convert PDF documents to editable Word files while preserving formatting and layout.</p>
+              <Button variant="outline" size="sm">Learn More</Button>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">PDF to Excel</h3>
+              <p className="text-gray-600 mb-4">Extract tables and data from PDFs into Excel spreadsheets for analysis.</p>
+              <Button variant="outline" size="sm">Learn More</Button>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Batch Conversion</h3>
+              <p className="text-gray-600 mb-4">Process multiple files simultaneously to save time and improve efficiency.</p>
+              <Button variant="outline" size="sm">Learn More</Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Knowledge Base Section */}
       <section id="troubleshooting" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
