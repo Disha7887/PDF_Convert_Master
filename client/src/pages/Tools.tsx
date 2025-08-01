@@ -303,7 +303,7 @@ export const Tools: React.FC = () => {
       <div className="w-full px-20 pb-16">
         <div className="max-w-screen-xl mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-            {toolsData.map((tool, index) => (
+            {filteredTools.map((tool, index) => (
               <ToolCard
                 key={index}
                 title={tool.title}
@@ -311,6 +311,7 @@ export const Tools: React.FC = () => {
                 icon={tool.icon}
                 iconBgColor={tool.iconBgColor}
                 iconBorderColor={tool.iconBorderColor}
+                category={tool.category}
               />
             ))}
           </div>
