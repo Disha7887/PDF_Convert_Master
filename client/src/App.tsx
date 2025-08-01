@@ -12,6 +12,7 @@ import { Pricing } from "@/pages/Pricing";
 import { About } from "@/pages/About";
 import { Tools } from "@/pages/Tools";
 import { Dashboard } from "@/pages/Dashboard";
+import { UsageStatistics } from "@/pages/UsageStatistics";
 
 function Router() {
   return (
