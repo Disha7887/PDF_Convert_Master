@@ -13,6 +13,7 @@ import { About } from "@/pages/About";
 import { Tools } from "@/pages/Tools";
 import { Dashboard } from "@/pages/Dashboard";
 import { UsageStatistics } from "@/pages/UsageStatistics";
+import { APISetup } from "@/pages/APISetup";
 
 function Router() {
   return (
