@@ -214,9 +214,17 @@ export const Tools: React.FC = () => {
     {
       title: "PDF Organizer",
       description: "Reorder and organize PDF pages",
-      icon: <Layers className="w-9 h-9 text-teal-600" />,
+      icon: <FileText className="w-9 h-9 text-teal-600" />,
       iconBgColor: "bg-teal-50",
       iconBorderColor: "border-teal-200",
+      category: "Organize"
+    },
+    {
+      title: "Organize PDF",
+      description: "Sort pages of your PDF file however you like",
+      icon: <FileStack className="w-9 h-9 text-orange-600" />,
+      iconBgColor: "bg-orange-50",
+      iconBorderColor: "border-orange-200",
       category: "Organize"
     },
     {
