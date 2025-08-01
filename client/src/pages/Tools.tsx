@@ -216,175 +216,56 @@ export const Tools: React.FC = () => {
       description: "Edit text and images in PDF documents",
       icon: <Edit3 className="w-9 h-9 text-purple-600" />,
       iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200"
+      iconBorderColor: "border-purple-200",
+      category: "Edit"
     },
     {
       title: "PDF Organizer",
       description: "Reorder and organize PDF pages",
       icon: <Layers className="w-9 h-9 text-teal-600" />,
       iconBgColor: "bg-teal-50",
-      iconBorderColor: "border-teal-200"
+      iconBorderColor: "border-teal-200",
+      category: "Organize"
     },
     {
       title: "Sign PDF",
       description: "Add yourself or request electronic signatures from others",
       icon: <PenTool className="w-9 h-9 text-blue-600" />,
       iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200"
+      iconBorderColor: "border-blue-200",
+      category: "Edit"
     },
     {
       title: "Watermark",
       description: "Stamp an image or text over your PDF in seconds",
       icon: <Palette className="w-9 h-9 text-purple-600" />,
       iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200"
+      iconBorderColor: "border-purple-200",
+      category: "Edit"
     },
     {
       title: "Rotate PDF",
       description: "Rotate your PDFs the way you need them",
       icon: <RotateCw className="w-9 h-9 text-green-600" />,
       iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200"
-    },
-    {
-      title: "HTML to PDF",
-      description: "Convert webpages in HTML to PDF with a click",
-      icon: <Globe className="w-9 h-9 text-yellow-600" />,
-      iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200"
+      iconBorderColor: "border-green-200",
+      category: "Organize"
     },
     {
       title: "Unlock PDF",
       description: "Remove PDF password security, giving you freedom to use your PDFs",
       icon: <Lock className="w-9 h-9 text-blue-600" />,
       iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200"
+      iconBorderColor: "border-blue-200",
+      category: "Security"
     },
     {
       title: "Protect PDF",
       description: "Protect PDF files with a password to prevent unauthorized access",
       icon: <Shield className="w-9 h-9 text-indigo-600" />,
       iconBgColor: "bg-indigo-50",
-      iconBorderColor: "border-indigo-200"
-    },
-    {
-      title: "Organize PDF",
-      description: "Sort pages of your PDF file however you like",
-      icon: <Settings className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200"
-    },
-    {
-      title: "PDF to PDF/A",
-      description: "Transform your PDF to PDF/A, the ISO-standardized version",
-      icon: <FileStack className="w-9 h-9 text-teal-600" />,
-      iconBgColor: "bg-teal-50",
-      iconBorderColor: "border-teal-200"
-    },
-    {
-      title: "Repair PDF",
-      description: "Repair a damaged PDF and recover data from corrupt PDF",
-      icon: <Wrench className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200"
-    },
-    {
-      title: "Page Numbers",
-      description: "Add page numbers into PDFs with ease",
-      icon: <Hash className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200"
-    },
-    {
-      title: "Scan to PDF",
-      description: "Capture document scans from your mobile device",
-      icon: <Scan className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200"
-    },
-    {
-      title: "OCR PDF",
-      description: "Easily convert scanned PDF into searchable and selectable documents",
-      icon: <Eye className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200"
-    },
-    {
-      title: "Compare PDF",
-      description: "Show a side-by-side document comparison and easily spot changes",
-      icon: <Split className="w-9 h-9 text-blue-600" />,
-      iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200"
-    },
-    {
-      title: "Redact PDF",
-      description: "Redact text and graphics to permanently remove sensitive information",
-      icon: <Edit3 className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200"
-    },
-    {
-      title: "Crop PDF",
-      description: "Crop margins of PDF documents or select specific areas",
-      icon: <Crop className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200"
-    },
-    {
-      title: "Merge PDF",
-      description: "Combine PDFs in the order you want with the easiest PDF merger available",
-      icon: <Copy className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200"
-    },
-    {
-      title: "Split PDF",
-      description: "Separate one page or a whole set for easy conversion into independent PDF files",
-      icon: <Scissors className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200"
-    },
-    {
-      title: "Compress PDF",
-      description: "Reduce file size while optimizing for maximal PDF quality",
-      icon: <Archive className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200"
-    },
-    {
-      title: "PDF to PowerPoint",
-      description: "Turn your PDF files into editable PowerPoint PPT and PPTX files",
-      icon: <FileText className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200"
-    },
-    {
-      title: "PowerPoint to PDF",
-      description: "Make PPT and PPTX slideshows easy to view by converting them to PDF",
-      icon: <FileStack className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200"
-    },
-    {
-      title: "Edit PDF",
-      description: "Add text, images, shapes or freehand annotations to PDF files",
-      icon: <Edit3 className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200"
-    },
-    {
-      title: "PDF to JPG",
-      description: "Convert each PDF page into a JPG or extract all images contained in a PDF",
-      icon: <Image className="w-9 h-9 text-yellow-600" />,
-      iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200"
-    },
-    {
-      title: "JPG to PDF",
-      description: "Convert JPG images to PDF in seconds. Easily adjust orientation and margins",
-      icon: <Camera className="w-9 h-9 text-yellow-600" />,
-      iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200"
+      iconBorderColor: "border-indigo-200",
+      category: "Security"
     }
   ];
 
