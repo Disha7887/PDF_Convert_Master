@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Clock, Shield, Database, FileText, Lock, Cookie, Cloud, Timer, UserCheck, Globe, AlertTriangle, Mail, Edit, X, Eye, UserX, HardDrive, Trash2, FileCheck } from "lucide-react";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
+import { PageSearch } from "@/components/PageSearch";
 
 export const PrivacyPolicy = (): JSX.Element => {
   // Define table of contents items first
@@ -187,6 +188,13 @@ export const PrivacyPolicy = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Page Search Component */}
+      <PageSearch
+        sections={searchableSections}
+        onResultClick={handleResultClick}
+        onSearchChange={handleSearchChange}
+        pageType="privacy"
+      />
 
 
 

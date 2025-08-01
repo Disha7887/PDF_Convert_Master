@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
+import { PageSearch } from "@/components/PageSearch";
 
 export const Support = (): JSX.Element => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -247,6 +248,13 @@ export const Support = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Page Search Component */}
+      <PageSearch
+        sections={searchableSections}
+        onResultClick={handleResultClick}
+        onSearchChange={handleSearchChange}
+        pageType="support"
+      />
 
       {/* Hero Section with Purple Gradient */}
       <section className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 py-20 overflow-hidden">
