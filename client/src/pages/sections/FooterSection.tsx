@@ -7,23 +7,33 @@ import { useLocation } from "wouter";
 export const FooterSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
 
-  // Enhanced navigation handler
+  // Enhanced navigation handler with better error handling
   const handleNavigation = (path: string | null, linkText: string) => {
-    console.log(`Footer link clicked: ${linkText}`);
-    if (path) {
-      console.log(`Navigating to: ${path}`);
+    console.log(`🔗 Footer link clicked: ${linkText}`, { path });
+
+    if (!path) {
+      console.log(`❌ No path defined for: ${linkText}`);
+      return;
+    }
+
+    try {
+      console.log(`🚀 Navigating to: ${path}`);
+      setLocation(path);
+
+      // Scroll to top after a short delay to ensure page loads
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      console.log(`✅ Navigation to ${path} initiated successfully`);
+    } catch (error) {
+      console.error(`❌ Navigation error for ${path}:`, error);
+      // Fallback: try direct window navigation
       try {
-        setLocation(path);
-        // Ensure page scroll to top on navigation
-        setTimeout(() => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
-        console.log(`Navigation to ${path} completed`);
-      } catch (error) {
-        console.error(`Navigation error:`, error);
+        window.location.href = path;
+      } catch (fallbackError) {
+        console.error(`❌ Fallback navigation failed:`, fallbackError);
       }
-    } else {
-      console.log(`No path defined for: ${linkText}`);
     }
   };
 
