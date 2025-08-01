@@ -11,6 +11,7 @@ import { Contact } from "@/pages/Contact";
 import { Pricing } from "@/pages/Pricing";
 import { About } from "@/pages/About";
 import { Tools } from "@/pages/Tools";
+import { Dashboard } from "@/pages/Dashboard";
 
 function Router() {
   return (
