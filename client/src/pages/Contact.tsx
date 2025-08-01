@@ -11,7 +11,7 @@ export const Contact = (): JSX.Element => {
   const [selectedPriority, setSelectedPriority] = useState("medium");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEF2F2] via-[#FFF7ED] to-[#FEFCE8]">
+    <div className="bg-gradient-to-br from-[#FEF2F2] via-[#FFF7ED] to-[#FEFCE8]">
 
 
       {/* Hero Section */}
