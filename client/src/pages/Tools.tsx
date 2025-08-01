@@ -78,6 +78,30 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgCol
 
 export const Tools: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState("Security");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<{
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    iconBgColor: string;
+    iconBorderColor: string;
+  } | null>(null);
+
+  const handleSelectFiles = (tool: any) => {
+    setSelectedTool({
+      title: tool.title,
+      description: tool.description,
+      icon: tool.icon,
+      iconBgColor: tool.iconBgColor,
+      iconBorderColor: tool.iconBorderColor,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTool(null);
+  };
 
   const toolsData = [
     {
