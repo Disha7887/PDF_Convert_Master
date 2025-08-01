@@ -269,7 +269,7 @@ export const TermsOfService = (): JSX.Element => {
         {/* Main Content Layout */}
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar - Table of Contents */}
-          <aside className="hidden lg:block w-72 sticky top-24 self-start">
+          <aside className="hidden lg:block w-72 sticky top-20 self-start">
             <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Table of Contents
