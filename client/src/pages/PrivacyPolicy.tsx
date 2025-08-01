@@ -150,7 +150,7 @@ export const PrivacyPolicy = (): JSX.Element => {
         behavior: 'smooth'
       });
     }
-    setIsMobileMenuOpen(false);
+
   };
 
   // Scroll to top
