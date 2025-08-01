@@ -256,8 +256,8 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
 
       {/* Suggestions and Results Dropdown */}
       {showSuggestions && (
-        <Card className="absolute top-full left-0 right-0 mt-2 z-50 max-h-96 overflow-y-auto border-2 border-gray-200 shadow-xl">
-          <CardContent className="p-0">
+        <Card className="absolute top-full left-0 right-0 mt-2 z-[100] max-h-96 overflow-y-auto border-2 border-gray-200 shadow-2xl bg-white">
+          <CardContent className="p-0 bg-white">
             {/* Search History */}
             {!query && searchHistory.length > 0 && (
               <div className="p-4 border-b border-gray-100">
