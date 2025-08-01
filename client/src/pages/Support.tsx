@@ -295,7 +295,7 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Knowledge Base Section */}
-      <section className="py-16 bg-white">
+      <section id="troubleshooting" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Knowledge Base</h2>
@@ -328,7 +328,7 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Getting Started Section */}
-      <section className="py-16 bg-gray-50">
+      <section id="getting-started" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -357,7 +357,7 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Multiple Ways to Get Help */}
-      <section className="py-16 bg-white">
+      <section id="api-documentation" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Multiple Ways to Get Help</h2>
@@ -385,7 +385,7 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Statistics Section */}
-      <section className="py-16 bg-gray-900 text-white">
+      <section id="account-billing" className="py-16 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Support Performance</h2>
@@ -410,7 +410,7 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Video Tutorials Section */}
-      <section className="py-16 bg-white">
+      <section id="video-tutorials" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-12">
             <div>
@@ -442,7 +442,7 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* System Status Section */}
-      <section className="py-16 bg-gray-50">
+      <section id="system-status" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">System Status & Performance</h2>
@@ -508,7 +508,7 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Team Insights Section */}
-      <section className="py-16 bg-white">
+      <section id="advanced-features" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Team Insights</h2>
