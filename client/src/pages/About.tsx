@@ -251,8 +251,6 @@ export const About = (): JSX.Element => {
           </div>
         </div>
       </section>
-
-      <FooterSection />
     </div>
   );
 };
