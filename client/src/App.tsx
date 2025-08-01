@@ -15,6 +15,7 @@ import { Dashboard } from "@/pages/Dashboard";
 import { UsageStatistics } from "@/pages/UsageStatistics";
 import { APISetup } from "@/pages/APISetup";
 import { APIReference } from "@/pages/APIReference";
+import { ManagePlans } from "@/pages/ManagePlans";
 
 function Router() {
   return (
