@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import { Body } from "@/pages/Body";
 import { Contact } from "@/pages/Contact";
 import { Pricing } from "@/pages/Pricing";
+import { About } from "@/pages/About";
 
 function Router() {
   return (
