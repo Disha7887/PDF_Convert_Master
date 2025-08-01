@@ -14,6 +14,7 @@ import { Tools } from "@/pages/Tools";
 import { Dashboard } from "@/pages/Dashboard";
 import { UsageStatistics } from "@/pages/UsageStatistics";
 import { APISetup } from "@/pages/APISetup";
+import { APIReference } from "@/pages/APIReference";
 
 function Router() {
   return (
