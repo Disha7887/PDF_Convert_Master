@@ -16,6 +16,7 @@ import { UsageStatistics } from "@/pages/UsageStatistics";
 import { APISetup } from "@/pages/APISetup";
 import { APIReference } from "@/pages/APIReference";
 import { ManagePlans } from "@/pages/ManagePlans";
+import { LiveTools } from "@/pages/LiveTools";
 
 function Router() {
   return (
