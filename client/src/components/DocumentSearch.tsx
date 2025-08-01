@@ -185,10 +185,10 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
   // Highlight matching text
   const highlightText = (text: string, matches: Fuse.FuseResultMatch[]) => {
     if (!matches.length) return text;
-    
+
     let highlightedText = text;
     const contentMatch = matches.find(match => match.key === "content");
-    
+
     if (contentMatch && contentMatch.indices) {
       // Create a copy with highlights
       let offset = 0;
@@ -196,11 +196,11 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
         const before = highlightedText.slice(0, start + offset);
         const match = highlightedText.slice(start + offset, end + 1 + offset);
         const after = highlightedText.slice(end + 1 + offset);
-        highlightedText = before + `<mark class="bg-yellow-200 px-1 rounded">${match}</mark>` + after;
-        offset += 47; // Length of added markup
+        highlightedText = before + `<mark class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium">${match}</mark>` + after;
+        offset += 67; // Length of added markup
       });
     }
-    
+
     return highlightedText;
   };
 
