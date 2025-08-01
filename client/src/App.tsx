@@ -11,21 +11,35 @@ import { Contact } from "@/pages/Contact";
 import { Pricing } from "@/pages/Pricing";
 import { About } from "@/pages/About";
 import { Tools } from "@/pages/Tools";
+import { Dashboard } from "@/pages/Dashboard";
+import { UsageStatistics } from "@/pages/UsageStatistics";
+import { APISetup } from "@/pages/APISetup";
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        {/* Add pages below */}
-        <Route path="/" component={Body} />
-        <Route path="/tools" component={Tools} />
-        <Route path="/contact" component={Contact} />
-        <Route path="/pricing" component={Pricing} />
-        <Route path="/about" component={About} />
-        {/* Fallback to 404 */}
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      {/* Dashboard routes without Layout */}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/usage" component={UsageStatistics} />
+      <Route path="/dashboard/api-setup" component={APISetup} />
+
+      {/* Regular pages with Layout */}
+      <Route>
+        {(params) => (
+          <Layout>
+            <Switch>
+              <Route path="/" component={Body} />
+              <Route path="/tools" component={Tools} />
+              <Route path="/contact" component={Contact} />
+              <Route path="/pricing" component={Pricing} />
+              <Route path="/about" component={About} />
+              {/* Fallback to 404 */}
+              <Route component={NotFound} />
+            </Switch>
+          </Layout>
+        )}
+      </Route>
+    </Switch>
   );
 }
 
