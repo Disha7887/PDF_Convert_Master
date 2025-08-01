@@ -17,7 +17,7 @@ export const FooterSection = (): JSX.Element => {
   ];
 
   const companyLinks = [
-    { text: "Privacy Policy", path: null },
+    { text: "Privacy Policy", path: "/privacy-policy" },
     { text: "Terms of Service", path: "/terms-of-service" },
     { text: "Support", path: "/contact" },
     { text: "Report Bug", path: null },
