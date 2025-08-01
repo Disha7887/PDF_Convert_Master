@@ -10,6 +10,7 @@ import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 export const Support = (): JSX.Element => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
 
   // Knowledge base categories
   const knowledgeBaseCategories = [
