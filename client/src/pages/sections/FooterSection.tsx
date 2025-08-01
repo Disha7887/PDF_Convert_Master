@@ -7,6 +7,18 @@ import { useLocation } from "wouter";
 export const FooterSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
 
+  // Enhanced navigation handler
+  const handleNavigation = (path: string | null, linkText: string) => {
+    if (path) {
+      console.log(`Navigating to: ${path} (from ${linkText})`);
+      setLocation(path);
+      // Ensure page scroll to top on navigation
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      console.log(`No path defined for: ${linkText}`);
+    }
+  };
+
   // Footer links data
   const quickLinks = [
     { text: "PDF Tools", path: "/tools" },
