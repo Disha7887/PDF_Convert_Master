@@ -303,19 +303,19 @@ export const PrivacyPolicy = (): JSX.Element => {
                 </div>
 
                 <nav className="space-y-2">
-                  {tableOfContentsItems.map((item, index) => (
+                  {filteredItems.map((item, index) => (
                     <button
                       key={index}
                       onClick={() => scrollToSection(item.id)}
                       className={`w-full flex items-center gap-3 px-3 py-3 text-left text-sm rounded-lg transition-all ${
-                        activeSection === item.id
+                        activeSection === item.id || highlightedSection === item.id
                           ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
                           : 'text-gray-600 hover:bg-gray-50'
-                      }`}
+                      } ${highlightedSection === item.id ? 'ring-2 ring-yellow-300 ring-opacity-50' : ''}`}
                     >
                       <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
                         <item.icon className={`w-[18.75px] h-[18px] ${
-                          activeSection === item.id ? 'text-blue-600' : 'text-gray-500'
+                          activeSection === item.id || highlightedSection === item.id ? 'text-blue-600' : 'text-gray-500'
                         }`} />
                       </div>
                       <span className="font-medium">{item.text}</span>
