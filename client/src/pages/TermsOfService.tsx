@@ -131,6 +131,27 @@ export const TermsOfService = (): JSX.Element => {
     }
   ], []);
 
+  // State declarations
+  const [activeSection, setActiveSection] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [filteredItems, setFilteredItems] = useState(tableOfContentsItems);
+  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
+
+  // Search functionality
+  const {
+    handleSearchChange,
+    handleResultClick,
+    clearSearch
+  } = useDocumentSearch({
+    sections: searchableSections,
+    onSectionHighlight: setHighlightedSection,
+    onNavigationFilter: (sectionIds) => {
+      const filtered = tableOfContentsItems.filter(item => sectionIds.includes(item.id));
+      setFilteredItems(filtered.length > 0 ? filtered : tableOfContentsItems);
+    }
+  });
+
   // Smooth scroll to section
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
