@@ -95,15 +95,17 @@ export const NavigationSection = (): JSX.Element => {
             </Button>
 
             {/* Auth Buttons */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <Button
                 variant="outline"
-                className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base hover:bg-[#374050] hover:text-white transition-colors"
+                className="h-[38px] sm:h-[42px] px-3 sm:px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-sm sm:text-base hover:bg-[#374050] hover:text-white transition-colors"
               >
-                Log In
+                <span className="hidden sm:inline">Log In</span>
+                <span className="sm:hidden">Login</span>
               </Button>
-              <Button className="h-10 px-6 py-2 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] bg-[linear-gradient(90deg,rgba(220,38,38,1)_0%,rgba(185,28,28,1)_100%)] [font-family:'Roboto',Helvetica] font-medium text-white text-base [text-shadow:0px_10px_15px_#0000001a] hover:shadow-[0px_15px_25px_-5px_#0000001a] transition-all duration-200">
-                Get Started
+              <Button className="h-[38px] sm:h-10 px-4 sm:px-6 py-2 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] bg-[linear-gradient(90deg,rgba(220,38,38,1)_0%,rgba(185,28,28,1)_100%)] [font-family:'Roboto',Helvetica] font-medium text-white text-sm sm:text-base [text-shadow:0px_10px_15px_#0000001a] hover:shadow-[0px_15px_25px_-5px_#0000001a] transition-all duration-200">
+                <span className="hidden sm:inline">Get Started</span>
+                <span className="sm:hidden">Start</span>
               </Button>
             </div>
           </div>
