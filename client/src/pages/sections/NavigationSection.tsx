@@ -52,12 +52,12 @@ export const NavigationSection = (): JSX.Element => {
           </div>
 
           {/* Navigation Menu */}
-          <NavigationMenu className="flex justify-center">
-            <NavigationMenuList className="flex space-x-8">
+          <NavigationMenu className="hidden lg:flex flex-1 justify-center">
+            <NavigationMenuList className="flex space-x-6 xl:space-x-8">
               {navItems.map((item, index) => (
-                <NavigationMenuItem key={index} className={item.width}>
+                <NavigationMenuItem key={index}>
                   <NavigationMenuLink
-                    className="[font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base leading-6 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
+                    className="[font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-sm xl:text-base leading-6 whitespace-nowrap cursor-pointer hover:text-white transition-colors duration-200"
                     onClick={() => handleNavClick(item.href)}
                   >
                     {item.name}
