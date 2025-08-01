@@ -428,6 +428,19 @@ export const Tools: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* File Upload Modal */}
+      {selectedTool && (
+        <FileUploadModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          toolTitle={selectedTool.title}
+          toolDescription={selectedTool.description}
+          toolIcon={selectedTool.icon}
+          toolIconBgColor={selectedTool.iconBgColor}
+          toolIconBorderColor={selectedTool.iconBorderColor}
+        />
+      )}
     </div>
   );
 };
