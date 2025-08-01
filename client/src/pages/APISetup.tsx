@@ -112,7 +112,11 @@ export const APISetup: React.FC = () => {
                   <div className="w-2 h-2 rounded-full bg-white"></div>
                 </Button>
 
-                <Button variant="ghost" className="w-full justify-start p-3">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start p-3"
+                  onClick={() => handleNavigation('/dashboard/api-reference')}
+                >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
                     <Book className="w-5 h-5 text-gray-600" />
                   </div>
@@ -122,7 +126,11 @@ export const APISetup: React.FC = () => {
                   </div>
                 </Button>
 
-                <Button variant="ghost" className="w-full justify-start p-3">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start p-3"
+                  onClick={() => handleNavigation('/dashboard/manage-plans')}
+                >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
                     <GitBranch className="w-5 h-5 text-gray-600" />
                   </div>
@@ -143,7 +151,11 @@ export const APISetup: React.FC = () => {
                   <ArrowRight className="w-4 h-4 text-gray-400" />
                 </Button>
 
-                <Button variant="ghost" className="w-full justify-start p-3">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start p-3"
+                  onClick={() => handleNavigation('/dashboard/live-tools')}
+                >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
                     <Wrench className="w-5 h-5 text-gray-600" />
                   </div>
@@ -180,7 +192,11 @@ export const APISetup: React.FC = () => {
                 <p className="text-xs text-red-700 mb-3">
                   Get unlimited conversions and advanced features
                 </p>
-                <Button variant="outline" className="w-full text-sm">
+                <Button
+                  variant="outline"
+                  className="w-full text-sm"
+                  onClick={() => handleNavigation('/dashboard/manage-plans')}
+                >
                   View Plans
                 </Button>
               </div>
@@ -249,7 +265,7 @@ export const APISetup: React.FC = () => {
                         <div className="flex-1">
                           <h3 className="text-base font-medium text-gray-900 mb-2">Production Key</h3>
                           <div className="flex items-center space-x-2">
-                            <p className="text-sm font-mono text-gray-600">sk_live_••••••••••••••••••••••••••••</p>
+                            <p className="text-sm font-mono text-gray-600">sk_live_•••���••••••••••••••••••••••••</p>
                           </div>
                         </div>
                         <Button variant="outline" className="text-sm">

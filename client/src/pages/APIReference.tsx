@@ -5,43 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useLocation } from "wouter";
-import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown } from "lucide-react";
+import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown, Eye } from "lucide-react";
 
-interface StatCardProps {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  trend?: string;
-  trendPositive?: boolean;
-  iconBg: string;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, trend, trendPositive, iconBg, icon }) => {
-  return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-          {trend && (
-            <p className={`text-sm mt-2 ${trendPositive ? 'text-green-600' : 'text-gray-500'}`}>
-              {trend}
-            </p>
-          )}
-          {subtitle && !trend && (
-            <p className="text-sm text-gray-500 mt-2">{subtitle}</p>
-          )}
-        </div>
-        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${iconBg}`}>
-          {icon}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-export const UsageStatistics: React.FC = () => {
+export const APIReference: React.FC = () => {
   const [location, setLocation] = useLocation();
 
   const handleNavigation = (path: string) => {
@@ -68,7 +34,9 @@ export const UsageStatistics: React.FC = () => {
                 <span className="text-sm font-medium text-blue-800">Pro Plan</span>
               </div>
               <Button variant="outline" className="text-sm">
-                <ArrowUp className="w-4 h-4 mr-2" />
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 15 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2.60961 9.04167V2.04167H1.44336V0.875H3.19273C3.35601 0.875 3.49402 0.931389 3.60675 1.04417C3.71949 1.15694 3.77586 1.295 3.77586 1.45833V8.45833H11.0299L12.1962 3.79167H4.94211V2.625H12.9426C13.1059 2.625 13.2439 2.68139 13.3566 2.79417C13.4693 2.90694 13.5257 3.045 13.5257 3.20833C13.5257 3.255 13.5179 3.30167 13.5024 3.34833L12.0446 9.18167C12.0135 9.31389 11.9454 9.42083 11.8405 9.5025C11.7355 9.58417 11.6169 9.625 11.4848 9.625H3.19273C3.02946 9.625 2.89145 9.56861 2.77872 9.45583C2.66598 9.34306 2.60961 9.205 2.60961 9.04167ZM3.77586 13.125C3.56593 13.125 3.37156 13.0725 3.19273 12.9675C3.01391 12.8625 2.87202 12.7206 2.76705 12.5417C2.66209 12.3628 2.60961 12.1683 2.60961 11.9583C2.60961 11.7483 2.66209 11.5539 2.76705 11.375C2.87202 11.1961 3.01391 11.0542 3.19273 10.9492C3.37156 10.8442 3.56593 10.7917 3.77586 10.7917C3.98578 10.7917 4.18016 10.8442 4.35898 10.9492C4.53781 11.0542 4.6797 11.1961 4.78467 11.375C4.88963 11.5539 4.94211 11.7483 4.94211 11.9583C4.94211 12.1683 4.88963 12.3628 4.78467 12.5417C4.6797 12.7206 4.53781 12.8625 4.35898 12.9675C4.18016 13.0725 3.98578 13.125 3.77586 13.125ZM10.7734 13.125C10.5634 13.125 10.3691 13.0725 10.1902 12.9675C10.0114 12.8625 9.86952 12.7206 9.76455 12.5417C9.65959 12.3628 9.60711 12.1683 9.60711 11.9583C9.60711 11.7483 9.65959 11.5539 9.76455 11.375C9.86952 11.1961 10.0114 11.0542 10.1902 10.9492C10.3691 10.8442 10.5634 10.7917 10.7734 10.7917C10.9833 10.7917 11.1777 10.8442 11.3565 10.9492C11.5353 11.0542 11.6772 11.1961 11.7822 11.375C11.8871 11.5539 11.9396 11.7483 11.9396 11.9583C11.9396 12.1683 11.8871 12.3628 11.7822 12.5417C11.6772 12.7206 11.5353 12.8625 11.3565 12.9675C11.1777 13.0725 10.9833 13.125 10.7734 13.125Z" fill="#374151"/>
+                </svg>
                 Manage Plan
               </Button>
             </div>
@@ -107,8 +75,8 @@ export const UsageStatistics: React.FC = () => {
 
               {/* Navigation */}
               <nav className="space-y-2">
-                <Button
-                  variant="ghost"
+                <Button 
+                  variant="ghost" 
                   className="w-full justify-start p-3"
                   onClick={() => handleNavigation('/dashboard')}
                 >
@@ -121,19 +89,22 @@ export const UsageStatistics: React.FC = () => {
                   </div>
                 </Button>
 
-                <Button className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white justify-start p-3 rounded-lg shadow-md">
-                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center mr-3">
-                    <BarChart3 className="w-5 h-5" />
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start p-3"
+                  onClick={() => handleNavigation('/dashboard/usage')}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
+                    <BarChart3 className="w-5 h-5 text-gray-600" />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-sm font-medium">Total Usage</p>
-                    <p className="text-xs text-red-100">Usage statistics</p>
+                    <p className="text-sm font-medium text-gray-700">Total Usage</p>
+                    <p className="text-xs text-gray-500">Usage statistics</p>
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-white"></div>
                 </Button>
 
-                <Button
-                  variant="ghost"
+                <Button 
+                  variant="ghost" 
                   className="w-full justify-start p-3"
                   onClick={() => handleNavigation('/dashboard/api-setup')}
                 >
@@ -146,18 +117,15 @@ export const UsageStatistics: React.FC = () => {
                   </div>
                 </Button>
 
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3"
-                  onClick={() => handleNavigation('/dashboard/api-reference')}
-                >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
-                    <Book className="w-5 h-5 text-gray-600" />
+                <Button className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white justify-start p-3 rounded-lg shadow-md">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center mr-3">
+                    <Book className="w-5 h-5" />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-sm font-medium text-gray-700">API Reference</p>
-                    <p className="text-xs text-gray-500">Documentation</p>
+                    <p className="text-sm font-medium">API Reference</p>
+                    <p className="text-xs text-red-100">Documentation</p>
                   </div>
+                  <div className="w-2 h-2 rounded-full bg-white"></div>
                 </Button>
 
                 <Button
@@ -241,45 +209,81 @@ export const UsageStatistics: React.FC = () => {
           <main className="flex-1 p-6">
             <div className="max-w-7xl mx-auto">
               {/* Page Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Usage Statistics</h1>
-                <Button variant="outline" className="text-sm">
-                  Export Report
-                </Button>
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-6">API Reference</h1>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                  title="Files Converted"
-                  value="2,847"
-                  trend="+12% from last month"
-                  trendPositive={true}
-                  icon={<FileText className="w-5 h-5 text-blue-600" />}
-                  iconBg="bg-blue-100"
-                />
-                <StatCard
-                  title="API Calls"
-                  value="8,654"
-                  trend="+8% from last month"
-                  trendPositive={true}
-                  icon={<Activity className="w-5 h-5 text-purple-600" />}
-                  iconBg="bg-purple-100"
-                />
-                <StatCard
-                  title="Storage Used"
-                  value="45.2 GB"
-                  subtitle="of 100 GB limit"
-                  icon={<ArrowDown className="w-5 h-5 text-orange-600" />}
-                  iconBg="bg-orange-100"
-                />
-                <StatCard
-                  title="Success Rate"
-                  value="99.8%"
-                  subtitle="Excellent performance"
-                  icon={<Check className="w-5 h-5 text-green-600" />}
-                  iconBg="bg-green-100"
-                />
+              {/* Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Quick Reference Card */}
+                <Card className="h-fit">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">Quick Reference</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Base URL */}
+                    <div className="p-3 rounded-lg bg-gray-50">
+                      <div className="mb-2">
+                        <p className="text-base font-medium text-gray-900">Base URL</p>
+                      </div>
+                      <p className="text-sm font-mono text-gray-600">https://api.pdfconverter.com/v1</p>
+                    </div>
+
+                    {/* Authentication */}
+                    <div className="p-3 rounded-lg bg-gray-50">
+                      <div className="mb-2">
+                        <p className="text-base font-medium text-gray-900">Authentication</p>
+                      </div>
+                      <p className="text-sm text-gray-600">Bearer Token in Authorization header</p>
+                    </div>
+
+                    {/* Rate Limit */}
+                    <div className="p-3 rounded-lg bg-gray-50">
+                      <div className="mb-2">
+                        <p className="text-base font-medium text-gray-900">Rate Limit</p>
+                      </div>
+                      <p className="text-sm text-gray-600">1000 requests per minute</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Available Endpoints Card */}
+                <Card className="h-fit">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">Available Endpoints</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {/* PDF to Word Endpoint */}
+                    <div className="p-2 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-mono text-gray-900">POST /convert/pdf-to-word</span>
+                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                      </div>
+                    </div>
+
+                    {/* PDF to Excel Endpoint */}
+                    <div className="p-2 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-mono text-gray-900">POST /convert/pdf-to-excel</span>
+                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                      </div>
+                    </div>
+
+                    {/* Merge Endpoint */}
+                    <div className="p-2 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-mono text-gray-900">POST /merge</span>
+                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                      </div>
+                    </div>
+
+                    {/* Split Endpoint */}
+                    <div className="p-2 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-mono text-gray-900">POST /split</span>
+                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </main>

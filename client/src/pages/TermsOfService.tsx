@@ -1,0 +1,529 @@
+import React, { useState, useEffect } from "react";
+import { Calendar, Clock, CheckCircle, Book, Heart, User, Shield, FileText, Copyright, DollarSign, Lock, X, AlertCircle, Gavel, MessageSquare, Edit, Phone, ChevronUp, Menu } from "lucide-react";
+
+export const TermsOfService = (): JSX.Element => {
+  const [activeSection, setActiveSection] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const tableOfContentsItems = [
+    { icon: CheckCircle, text: "Acceptance of Terms", id: "acceptance-of-terms" },
+    { icon: Book, text: "Definitions", id: "definitions" },
+    { icon: Heart, text: "Description of Services", id: "description-of-services" },
+    { icon: User, text: "User Accounts", id: "user-accounts" },
+    { icon: Shield, text: "Acceptable Use Policy", id: "acceptable-use-policy" },
+    { icon: FileText, text: "User Content and Files", id: "user-content-and-files" },
+    { icon: Copyright, text: "Intellectual Property", id: "intellectual-property" },
+    { icon: DollarSign, text: "Payment Terms", id: "payment-terms" },
+    { icon: Lock, text: "Privacy and Security", id: "privacy-and-security" },
+    { icon: X, text: "Termination", id: "termination" },
+    { icon: AlertCircle, text: "Warranty Disclaimer", id: "warranty-disclaimer" },
+    { icon: Shield, text: "Limitation of Liability", id: "limitation-of-liability" },
+    { icon: Gavel, text: "Indemnification", id: "indemnification" },
+    { icon: Gavel, text: "Governing Law", id: "governing-law" },
+    { icon: MessageSquare, text: "Dispute Resolution", id: "dispute-resolution" },
+    { icon: Edit, text: "Modifications", id: "modifications" },
+    { icon: Phone, text: "Contact Information", id: "contact-information" }
+  ];
+
+  // Smooth scroll to section
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const headerOffset = 100; // Account for sticky header
+      const elementPosition = element.offsetTop;
+      const offsetPosition = elementPosition - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+  // Scroll to top
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Track scroll position and active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 200);
+
+      // Find the active section
+      const sections = tableOfContentsItems.map(item => item.id);
+      let currentActiveSection = "";
+
+      for (const sectionId of sections) {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 150 && rect.bottom >= 150) {
+            currentActiveSection = sectionId;
+            break;
+          }
+        }
+      }
+
+      if (currentActiveSection !== activeSection) {
+        setActiveSection(currentActiveSection);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [activeSection, tableOfContentsItems]);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Progress Bar */}
+      <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 z-50">
+        <div
+          className="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300"
+          style={{
+            width: `${Math.min(100, (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100)}%`
+          }}
+        />
+      </div>
+
+      {/* Sticky Header */}
+      <header className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold text-gray-900">PDF Convert Master</h1>
+              <span className="text-sm text-gray-500">Terms of Service</span>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            Terms of Service
+          </h1>
+
+          {/* Subtitle */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <p className="text-lg text-gray-600 leading-relaxed mb-1">
+              Please read these Terms of Service carefully before using PDF Convert Master services provided
+            </p>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              by Mizan Store Ltd.
+            </p>
+          </div>
+
+          {/* Date Information Card */}
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white/70 backdrop-blur-sm border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                {/* Last Updated */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-6 h-6">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    Last Updated: January 15, 2024
+                  </span>
+                </div>
+
+                {/* Effective Date */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-6 h-6">
+                    <Clock className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    Effective Date: January 15, 2024
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Overlay */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div className="absolute top-0 right-0 w-80 h-full bg-white shadow-xl overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Table of Contents</h3>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-lg hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <nav className="space-y-2">
+                  {tableOfContentsItems.map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-3 text-left text-sm rounded-lg transition-all ${
+                        activeSection === item.id
+                          ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
+                        <item.icon className={`w-[18.75px] h-[18px] ${
+                          activeSection === item.id ? 'text-blue-600' : 'text-gray-500'
+                        }`} />
+                      </div>
+                      <span className="font-medium">{item.text}</span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Layout */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Sidebar - Table of Contents */}
+          <aside className="hidden lg:block w-72 sticky top-24 self-start">
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Table of Contents
+              </h3>
+
+              <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+                {tableOfContentsItems.map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 text-left text-sm rounded-lg transition-all ${
+                      activeSection === item.id
+                        ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
+                      <item.icon className={`w-[18.75px] h-[18px] ${
+                        activeSection === item.id ? 'text-blue-600' : 'text-gray-500'
+                      }`} />
+                    </div>
+                    <span className="font-medium">{item.text}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <main className="flex-1">
+            <div className="bg-white rounded-lg shadow-sm p-8">
+              <div className="prose prose-gray max-w-none space-y-12">
+
+                {/* 1. Acceptance of Terms */}
+                <section id="acceptance-of-terms" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                    1. Acceptance of Terms
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    By accessing and using PDF Convert Master (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.
+                  </p>
+                </section>
+
+                {/* 2. Definitions */}
+                <section id="definitions" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Book className="w-6 h-6 text-blue-600" />
+                    2. Definitions
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-2">
+                    <p><strong>"Service"</strong> refers to PDF Convert Master, our web-based platform and all related tools and features.</p>
+                    <p><strong>"User," "you," or "your"</strong> refers to any individual or entity using our Service.</p>
+                    <p><strong>"Company," "we," "us," or "our"</strong> refers to Mizan Store Ltd, a company incorporated in England and Wales.</p>
+                    <p><strong>"Content"</strong> refers to any files, documents, data, or information uploaded to or processed through our Service.</p>
+                    <p><strong>"Account"</strong> refers to your registered user account on our platform.</p>
+                    <p><strong>"Personal Data"</strong> has the meaning set out in the UK General Data Protection Regulation (UK GDPR).</p>
+                  </div>
+                </section>
+
+                {/* 3. Description of Services */}
+                <section id="description-of-services" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Heart className="w-6 h-6 text-blue-600" />
+                    3. Description of Services
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    PDF Convert Master provides online document conversion and processing services, including but not limited to:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+                    <li>PDF to various format conversions (Word, Excel, PowerPoint, images, etc.)</li>
+                    <li>Multiple format to PDF conversions</li>
+                    <li>PDF merging, splitting, and editing tools</li>
+                    <li>Document compression and optimization</li>
+                    <li>Password protection and security features</li>
+                    <li>Batch processing capabilities</li>
+                  </ul>
+                  <p className="text-gray-700 leading-relaxed">
+                    We reserve the right to modify, suspend, or discontinue any aspect of our Service at any time with reasonable notice to users.
+                  </p>
+                </section>
+
+                {/* 4. User Accounts */}
+                <section id="user-accounts" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <User className="w-6 h-6 text-blue-600" />
+                    4. User Accounts
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    While many features are available without registration, creating an account provides access to enhanced features and processing history.
+                  </p>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Account Security:</strong> You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.</p>
+                    <p><strong>Accurate Information:</strong> You must provide accurate, current, and complete information when creating your account.</p>
+                    <p><strong>Age Requirement:</strong> You must be at least 16 years old to create an account and use our Service.</p>
+                    <p><strong>Single Account:</strong> You may maintain only one account per individual or business entity.</p>
+                  </div>
+                </section>
+
+                {/* 5. Acceptable Use Policy */}
+                <section id="acceptable-use-policy" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Shield className="w-6 h-6 text-blue-600" />
+                    5. Acceptable Use Policy
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">You agree not to use our Service to:</p>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+                    <li>Upload, process, or distribute illegal, harmful, or copyrighted content without authorization</li>
+                    <li>Attempt to gain unauthorized access to our systems or other users' accounts</li>
+                    <li>Distribute malware, viruses, or other malicious code</li>
+                    <li>Engage in activities that could damage, disable, or impair our Service</li>
+                    <li>Use automated scripts or bots to abuse our Service</li>
+                    <li>Violate any applicable laws or regulations</li>
+                    <li>Infringe upon intellectual property rights of others</li>
+                  </ul>
+                  <p className="text-gray-700 leading-relaxed">
+                    Violation of this policy may result in immediate termination of your access to our Service.
+                  </p>
+                </section>
+
+                {/* 6. User Content and Files */}
+                <section id="user-content-and-files" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                    6. User Content and Files
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>File Processing:</strong> Files uploaded to our Service are processed temporarily and automatically deleted after completion. We do not permanently store your documents.</p>
+                    <p><strong>Content Ownership:</strong> You retain full ownership of all content you upload. We do not claim any ownership rights to your files.</p>
+                    <p><strong>Processing License:</strong> By uploading files, you grant us a limited, temporary license to process your content solely for providing our conversion services.</p>
+                    <p><strong>File Limitations:</strong> We may impose reasonable limits on file size, processing time, and usage volume to ensure optimal service performance.</p>
+                    <p><strong>Prohibited Content:</strong> You may not upload content that violates laws, infringes copyrights, or contains malicious code.</p>
+                  </div>
+                </section>
+
+                {/* 7. Intellectual Property */}
+                <section id="intellectual-property" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Copyright className="w-6 h-6 text-blue-600" />
+                    7. Intellectual Property
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Our Rights:</strong> The Service, including all software, designs, text, graphics, and other content, is owned by Mizan Store Ltd and protected by copyright, trademark, and other intellectual property laws.</p>
+                    <p><strong>Limited License:</strong> We grant you a limited, non-exclusive, non-transferable license to use our Service for its intended purpose.</p>
+                    <p><strong>Restrictions:</strong> You may not copy, modify, distribute, sell, or lease any part of our Service or attempt to reverse engineer our software.</p>
+                    <p><strong>Feedback:</strong> Any feedback, suggestions, or ideas you provide about our Service may be used by us without compensation or attribution.</p>
+                  </div>
+                </section>
+
+                {/* 8. Payment Terms */}
+                <section id="payment-terms" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <DollarSign className="w-6 h-6 text-blue-600" />
+                    8. Payment Terms
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Free Services:</strong> Basic conversion services are provided free of charge with usage limitations.</p>
+                    <p><strong>Premium Services:</strong> Enhanced features, higher processing limits, and priority support are available through paid subscriptions.</p>
+                    <p><strong>Billing:</strong> Subscription fees are billed in advance on a recurring basis. All fees are non-refundable except as required by law.</p>
+                    <p><strong>Price Changes:</strong> We may modify subscription prices with 30 days' written notice to existing subscribers.</p>
+                    <p><strong>Taxes:</strong> You are responsible for any applicable taxes, duties, or government charges.</p>
+                  </div>
+                </section>
+
+                {/* 9. Privacy and Security */}
+                <section id="privacy-and-security" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Lock className="w-6 h-6 text-blue-600" />
+                    9. Privacy and Security
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Data Protection:</strong> We implement industry-standard security measures to protect your data and comply with UK GDPR requirements.</p>
+                    <p><strong>File Security:</strong> All file uploads and downloads are encrypted in transit using SSL/TLS encryption.</p>
+                    <p><strong>Automatic Deletion:</strong> Uploaded files are automatically deleted from our servers after processing, typically within 24 hours.</p>
+                    <p><strong>Privacy Policy:</strong> Our collection and use of personal information is governed by our Privacy Policy, which forms part of these Terms.</p>
+                    <p><strong>No Guarantee:</strong> While we implement robust security measures, no system is completely secure, and we cannot guarantee absolute security.</p>
+                  </div>
+                </section>
+
+                {/* 10. Termination */}
+                <section id="termination" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <X className="w-6 h-6 text-blue-600" />
+                    10. Termination
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Your Right to Terminate:</strong> You may stop using our Service at any time and delete your account through your account settings.</p>
+                    <p><strong>Our Right to Terminate:</strong> We may suspend or terminate your access immediately if you violate these Terms or engage in harmful activities.</p>
+                    <p><strong>Effect of Termination:</strong> Upon termination, your right to use the Service ceases, and we may delete any data associated with your account.</p>
+                    <p><strong>Survival:</strong> Provisions regarding intellectual property, limitation of liability, and indemnification survive termination.</p>
+                  </div>
+                </section>
+
+                {/* 11. Warranty Disclaimer */}
+                <section id="warranty-disclaimer" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <AlertCircle className="w-6 h-6 text-blue-600" />
+                    11. Warranty Disclaimer
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>AS IS BASIS:</strong> The Service is provided "as is" without warranties of any kind, either express or implied.</p>
+                    <p><strong>NO WARRANTIES:</strong> We disclaim all warranties, including but not limited to merchantability, fitness for a particular purpose, and non-infringement.</p>
+                    <p><strong>NO GUARANTEE:</strong> We do not guarantee that the Service will be error-free, uninterrupted, or meet your specific requirements.</p>
+                    <p><strong>RESULTS:</strong> We do not warrant the accuracy, completeness, or quality of conversion results.</p>
+                  </div>
+                </section>
+
+                {/* 12. Limitation of Liability */}
+                <section id="limitation-of-liability" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Shield className="w-6 h-6 text-blue-600" />
+                    12. Limitation of Liability
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>LIMITED LIABILITY:</strong> To the maximum extent permitted by law, our total liability for any claims arising from your use of the Service shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
+                    <p><strong>EXCLUDED DAMAGES:</strong> We shall not be liable for indirect, incidental, special, consequential, or punitive damages, including lost profits or data.</p>
+                    <p><strong>USER RESPONSIBILITY:</strong> You acknowledge that you use the Service at your own risk and are responsible for backing up important documents.</p>
+                    <p><strong>STATUTORY RIGHTS:</strong> Nothing in these Terms excludes or limits liability that cannot be excluded or limited under applicable law.</p>
+                  </div>
+                </section>
+
+                {/* 13. Indemnification */}
+                <section id="indemnification" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Gavel className="w-6 h-6 text-blue-600" />
+                    13. Indemnification
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed">
+                    You agree to indemnify, defend, and hold harmless Mizan Store Ltd, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.
+                  </p>
+                </section>
+
+                {/* 14. Governing Law */}
+                <section id="governing-law" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Gavel className="w-6 h-6 text-blue-600" />
+                    14. Governing Law
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed">
+                    These Terms shall be governed by and construed in accordance with the laws of England and Wales, without regard to conflict of law principles. Any legal action or proceeding arising under these Terms will be brought exclusively in the courts of England and Wales, and you consent to personal jurisdiction and venue in such courts.
+                  </p>
+                </section>
+
+                {/* 15. Dispute Resolution */}
+                <section id="dispute-resolution" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <MessageSquare className="w-6 h-6 text-blue-600" />
+                    15. Dispute Resolution
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Informal Resolution:</strong> Before initiating formal legal proceedings, you agree to first contact us to attempt to resolve any disputes informally.</p>
+                    <p><strong>Mediation:</strong> If informal resolution fails, disputes may be resolved through mediation by a mutually agreed mediator in London, UK.</p>
+                    <p><strong>Court Proceedings:</strong> As a last resort, disputes may be brought before the competent courts of England and Wales.</p>
+                    <p><strong>Consumer Rights:</strong> Nothing in this section affects your statutory rights as a consumer under UK law.</p>
+                  </div>
+                </section>
+
+                {/* 16. Modifications */}
+                <section id="modifications" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Edit className="w-6 h-6 text-blue-600" />
+                    16. Modifications
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Right to Modify:</strong> We reserve the right to modify these Terms at any time to reflect changes in our Service, legal requirements, or business practices.</p>
+                    <p><strong>Notice:</strong> Significant changes will be communicated through email notification and prominent notice on our website at least 30 days before taking effect.</p>
+                    <p><strong>Acceptance:</strong> Your continued use of the Service after changes take effect constitutes acceptance of the modified Terms.</p>
+                    <p><strong>Disagreement:</strong> If you disagree with modifications, you may terminate your account before the changes take effect.</p>
+                  </div>
+                </section>
+
+                {/* 17. Contact Information */}
+                <section id="contact-information" className="scroll-mt-24">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Phone className="w-6 h-6 text-blue-600" />
+                    17. Contact Information
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p>For questions about these Terms of Service or our Service, please contact us:</p>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p><strong>Company:</strong> Mizan Store Ltd</p>
+                      <p><strong>Service:</strong> PDF Convert Master</p>
+                      <p><strong>Phone:</strong> +447429919748</p>
+                      <p><strong>Location:</strong> London, United Kingdom</p>
+                      <p><strong>Website:</strong> PDF Convert Master</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Document Information */}
+                <div className="border-t pt-6 mt-8 text-sm text-gray-500">
+                  <p className="mb-2"><strong>Document Version:</strong> 1.0</p>
+                  <p className="mb-2"><strong>Last Updated:</strong> January 15, 2024</p>
+                  <p><strong>Effective Date:</strong> January 15, 2024</p>
+                </div>
+
+              </div>
+            </div>
+          </main>
+        </div>
+
+        {/* Scroll to Top Button */}
+        {isScrolled && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-40 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 hover:scale-110"
+            aria-label="Scroll to top"
+          >
+            <ChevronUp className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};

@@ -2,22 +2,25 @@ import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLocation } from "wouter";
 
 export const FooterSection = (): JSX.Element => {
+  const [, setLocation] = useLocation();
+
   // Footer links data
   const quickLinks = [
-    { text: "PDF Tools" },
-    { text: "Pricing" },
-    { text: "About Us" },
-    { text: "Support" },
-    { text: "Contact" },
+    { text: "PDF Tools", path: "/tools" },
+    { text: "Pricing", path: "/pricing" },
+    { text: "About Us", path: "/about" },
+    { text: "Support", path: "/contact" },
+    { text: "Contact", path: "/contact" },
   ];
 
   const companyLinks = [
-    { text: "Privacy Policy" },
-    { text: "Terms of Service" },
-    { text: "Support" },
-    { text: "Report Bug" },
+    { text: "Privacy Policy", path: null },
+    { text: "Terms of Service", path: "/terms-of-service" },
+    { text: "Support", path: "/contact" },
+    { text: "Report Bug", path: null },
   ];
 
   // Footer bottom info items
@@ -71,7 +74,10 @@ export const FooterSection = (): JSX.Element => {
                     key={`quick-link-${index}`}
                     className="flex items-center"
                   >
-                    <div className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors">
+                    <div
+                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
+                      onClick={() => link.path && setLocation(link.path)}
+                    >
                       {link.text}
                     </div>
                   </div>
@@ -95,7 +101,10 @@ export const FooterSection = (): JSX.Element => {
                     key={`company-link-${index}`}
                     className="flex items-center"
                   >
-                    <div className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors">
+                    <div
+                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
+                      onClick={() => link.path && setLocation(link.path)}
+                    >
                       {link.text}
                     </div>
                   </div>
