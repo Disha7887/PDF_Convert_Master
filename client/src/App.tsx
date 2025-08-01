@@ -17,6 +17,7 @@ import { APISetup } from "@/pages/APISetup";
 import { APIReference } from "@/pages/APIReference";
 import { ManagePlans } from "@/pages/ManagePlans";
 import { LiveTools } from "@/pages/LiveTools";
+import { TermsOfService } from "@/pages/TermsOfService";
 
 function Router() {
   return (
