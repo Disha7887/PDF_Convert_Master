@@ -9,14 +9,22 @@ import {
 import { useLocation } from "wouter";
 
 export const NavigationSection = (): JSX.Element => {
+  const [, setLocation] = useLocation();
+
   // Navigation menu items data
   const navItems = [
-    { name: "Home", width: "w-[42.98px]" },
-    { name: "Tools", width: "w-[38.66px]" },
-    { name: "Pricing", width: "w-[50.38px]" },
-    { name: "About", width: "w-[42.98px]" },
-    { name: "Contact", width: "w-[56.12px]" },
+    { name: "Home", width: "w-[42.98px]", href: "/" },
+    { name: "Tools", width: "w-[38.66px]", href: "#" },
+    { name: "Pricing", width: "w-[50.38px]", href: "#" },
+    { name: "About", width: "w-[42.98px]", href: "#" },
+    { name: "Contact", width: "w-[56.12px]", href: "/contact" },
   ];
+
+  const handleNavClick = (href: string) => {
+    if (href.startsWith("/")) {
+      setLocation(href);
+    }
+  };
 
   return (
     <header className="w-full h-[65px] bg-[#111726] border-b border-[#374050] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
