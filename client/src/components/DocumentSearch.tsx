@@ -419,21 +419,36 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
 
             {/* No Results */}
             {query && results.length === 0 && (
-              <div className="p-6 text-center bg-white">
-                <p className="text-gray-700 mb-4 font-medium">No results found for "{query}"</p>
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Try searching for:</p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {popularSearches[pageType].slice(0, 3).map((item, index) => (
-                      <Badge
-                        key={index}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors bg-white"
-                        onClick={() => handleSuggestionClick(item)}
-                      >
-                        {item}
-                      </Badge>
-                    ))}
+              <div className="p-8 text-center bg-white">
+                <div className="mb-4">
+                  <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No results found</h3>
+                  <p className="text-gray-600 mb-6">We couldn't find anything matching "{query}"</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-3">Try these popular searches:</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {popularSearches[pageType].map((item, index) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="cursor-pointer hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors bg-white"
+                          onClick={() => handleSuggestionClick(item)}
+                        >
+                          {item}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100">
+                    <p className="text-xs text-gray-500">
+                      Tips: Try using different keywords, check spelling, or use more general terms
+                    </p>
                   </div>
                 </div>
               </div>
