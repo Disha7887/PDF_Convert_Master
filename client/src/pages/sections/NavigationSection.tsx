@@ -6,6 +6,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
+import { useLocation } from "wouter";
 
 export const NavigationSection = (): JSX.Element => {
   // Navigation menu items data
