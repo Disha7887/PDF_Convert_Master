@@ -64,7 +64,10 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgCol
         </p>
         
         {/* Button */}
-        <Button className="w-full h-14 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl shadow-lg transition-all">
+        <Button
+          onClick={onSelectFiles}
+          className="w-full h-14 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl shadow-lg transition-all"
+        >
           <Upload className="w-4 h-4 mr-2" />
           Select Files
         </Button>
