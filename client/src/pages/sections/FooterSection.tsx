@@ -114,12 +114,16 @@ export const FooterSection = (): JSX.Element => {
                     key={`company-link-${index}`}
                     className="flex items-center"
                   >
-                    <div
-                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
-                      onClick={() => link.path && setLocation(link.path)}
+                    <button
+                      className={`w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap transition-colors duration-200 border-0 bg-transparent p-0 text-left ${
+                        link.path ? 'cursor-pointer hover:text-white' : 'cursor-default opacity-50'
+                      }`}
+                      onClick={() => handleNavigation(link.path, link.text)}
+                      disabled={!link.path}
+                      type="button"
                     >
                       {link.text}
-                    </div>
+                    </button>
                   </div>
                 ))}
               </div>
