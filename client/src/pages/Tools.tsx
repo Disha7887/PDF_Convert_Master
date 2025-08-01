@@ -283,6 +283,14 @@ export const Tools: React.FC = () => {
       iconBorderColor: "border-indigo-200",
       category: "Security"
     },
+    {
+      title: "Redact PDF",
+      description: "Redact text and graphics to permanently remove sensitive information",
+      icon: <Edit3 className="w-9 h-9 text-red-500" />,
+      iconBgColor: "bg-red-50",
+      iconBorderColor: "border-red-200",
+      category: "Security"
+    },
     // Additional Edit Tools from Figma Design
     {
       title: "Repair PDF",
