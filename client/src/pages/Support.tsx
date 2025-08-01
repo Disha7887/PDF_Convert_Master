@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
+import { PageSearch } from "@/components/PageSearch";
 
 export const Support = (): JSX.Element => {
   const [searchQuery, setSearchQuery] = useState("");
