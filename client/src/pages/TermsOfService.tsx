@@ -10,6 +10,20 @@ export const TermsOfService = (): JSX.Element => {
   const [filteredItems, setFilteredItems] = useState(tableOfContentsItems);
   const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
 
+  // Search functionality
+  const {
+    handleSearchChange,
+    handleResultClick,
+    clearSearch
+  } = useDocumentSearch({
+    sections: searchableSections,
+    onSectionHighlight: setHighlightedSection,
+    onNavigationFilter: (sectionIds) => {
+      const filtered = tableOfContentsItems.filter(item => sectionIds.includes(item.id));
+      setFilteredItems(filtered.length > 0 ? filtered : tableOfContentsItems);
+    }
+  });
+
   const tableOfContentsItems = [
     { icon: CheckCircle, text: "Acceptance of Terms", id: "acceptance-of-terms" },
     { icon: Book, text: "Definitions", id: "definitions" },
