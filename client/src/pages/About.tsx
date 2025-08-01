@@ -1,8 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { NavigationSection } from "./sections/NavigationSection";
-import { FooterSection } from "./sections/FooterSection";
 import { useLocation } from "wouter";
 import { 
   Shield, 
