@@ -9,7 +9,7 @@ import {
 import { useLocation } from "wouter";
 
 export const NavigationSection = (): JSX.Element => {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Navigation menu items data
   const navItems = [
