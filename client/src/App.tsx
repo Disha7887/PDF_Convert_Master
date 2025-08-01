@@ -17,6 +17,7 @@ function Router() {
       <Route path="/" component={Body} />
       <Route path="/contact" component={Contact} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/about" component={About} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
