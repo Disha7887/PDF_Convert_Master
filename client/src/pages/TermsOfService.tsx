@@ -1,26 +1,88 @@
-import React from "react";
-import { Calendar, Clock, CheckCircle, Book, Heart, User, Shield, FileText, Copyright, DollarSign, Lock, X, AlertCircle, Gavel, MessageSquare, Edit, Phone } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Calendar, Clock, CheckCircle, Book, Heart, User, Shield, FileText, Copyright, DollarSign, Lock, X, AlertCircle, Gavel, MessageSquare, Edit, Phone, ChevronUp, Menu } from "lucide-react";
 
 export const TermsOfService = (): JSX.Element => {
+  const [activeSection, setActiveSection] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const tableOfContentsItems = [
-    { icon: CheckCircle, text: "Acceptance of Terms" },
-    { icon: Book, text: "Definitions" },
-    { icon: Heart, text: "Description of Services" },
-    { icon: User, text: "User Accounts" },
-    { icon: Shield, text: "Acceptable Use Policy" },
-    { icon: FileText, text: "User Content and Files" },
-    { icon: Copyright, text: "Intellectual Property" },
-    { icon: DollarSign, text: "Payment Terms" },
-    { icon: Lock, text: "Privacy and Security" },
-    { icon: X, text: "Termination" },
-    { icon: AlertCircle, text: "Warranty Disclaimer" },
-    { icon: Shield, text: "Limitation of Liability" },
-    { icon: Gavel, text: "Indemnification" },
-    { icon: Gavel, text: "Governing Law" },
-    { icon: MessageSquare, text: "Dispute Resolution" },
-    { icon: Edit, text: "Modifications" },
-    { icon: Phone, text: "Contact Information" }
+    { icon: CheckCircle, text: "Acceptance of Terms", id: "acceptance-of-terms" },
+    { icon: Book, text: "Definitions", id: "definitions" },
+    { icon: Heart, text: "Description of Services", id: "description-of-services" },
+    { icon: User, text: "User Accounts", id: "user-accounts" },
+    { icon: Shield, text: "Acceptable Use Policy", id: "acceptable-use-policy" },
+    { icon: FileText, text: "User Content and Files", id: "user-content-and-files" },
+    { icon: Copyright, text: "Intellectual Property", id: "intellectual-property" },
+    { icon: DollarSign, text: "Payment Terms", id: "payment-terms" },
+    { icon: Lock, text: "Privacy and Security", id: "privacy-and-security" },
+    { icon: X, text: "Termination", id: "termination" },
+    { icon: AlertCircle, text: "Warranty Disclaimer", id: "warranty-disclaimer" },
+    { icon: Shield, text: "Limitation of Liability", id: "limitation-of-liability" },
+    { icon: Gavel, text: "Indemnification", id: "indemnification" },
+    { icon: Gavel, text: "Governing Law", id: "governing-law" },
+    { icon: MessageSquare, text: "Dispute Resolution", id: "dispute-resolution" },
+    { icon: Edit, text: "Modifications", id: "modifications" },
+    { icon: Phone, text: "Contact Information", id: "contact-information" }
   ];
+
+  // Smooth scroll to section
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const headerOffset = 100; // Account for sticky header
+      const elementPosition = element.offsetTop;
+      const offsetPosition = elementPosition - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+  // Scroll to top
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Track scroll position and active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 200);
+
+      // Find the active section
+      const sections = tableOfContentsItems.map(item => item.id);
+      let currentActiveSection = "";
+
+      for (const sectionId of sections) {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 150 && rect.bottom >= 150) {
+            currentActiveSection = sectionId;
+            break;
+          }
+        }
+      }
+
+      if (currentActiveSection !== activeSection) {
+        setActiveSection(currentActiveSection);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [activeSection, tableOfContentsItems]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
