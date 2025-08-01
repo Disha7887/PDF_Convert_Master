@@ -196,14 +196,6 @@ export const Tools: React.FC = () => {
       category: "Organize"
     },
     {
-      title: "PDF Compressor",
-      description: "Reduce PDF file size without quality loss",
-      icon: <Archive className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200",
-      category: "Organize"
-    },
-    {
       title: "PDF Protector",
       description: "Add password protection to PDF files",
       icon: <Shield className="w-9 h-9 text-indigo-600" />,
