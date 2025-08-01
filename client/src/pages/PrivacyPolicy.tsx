@@ -164,9 +164,6 @@ export const PrivacyPolicy = (): JSX.Element => {
   // Track scroll position and active section
   useEffect(() => {
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 200);
-
       // Find the active section
       const sections = tableOfContentsItems.map(item => item.id);
       let currentActiveSection = "";
