@@ -107,7 +107,11 @@ export const UsageStatistics: React.FC = () => {
 
               {/* Navigation */}
               <nav className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start p-3">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start p-3"
+                  onClick={() => handleNavigation('/dashboard')}
+                >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
                     <Home className="w-5 h-5 text-gray-600" />
                   </div>
