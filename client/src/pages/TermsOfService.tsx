@@ -4,26 +4,7 @@ import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 
 export const TermsOfService = (): JSX.Element => {
-  const [activeSection, setActiveSection] = useState("");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [filteredItems, setFilteredItems] = useState(tableOfContentsItems);
-  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
-
-  // Search functionality
-  const {
-    handleSearchChange,
-    handleResultClick,
-    clearSearch
-  } = useDocumentSearch({
-    sections: searchableSections,
-    onSectionHighlight: setHighlightedSection,
-    onNavigationFilter: (sectionIds) => {
-      const filtered = tableOfContentsItems.filter(item => sectionIds.includes(item.id));
-      setFilteredItems(filtered.length > 0 ? filtered : tableOfContentsItems);
-    }
-  });
-
+  // Define table of contents items first
   const tableOfContentsItems = [
     { icon: CheckCircle, text: "Acceptance of Terms", id: "acceptance-of-terms" },
     { icon: Book, text: "Definitions", id: "definitions" },
