@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Calendar, Clock, CheckCircle, Book, Heart, User, Shield, FileText, Copyright, DollarSign, Lock, X, AlertCircle, Gavel, MessageSquare, Edit, Phone } from "lucide-react";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
-import { PageSearch } from "@/components/PageSearch";
 
 export const TermsOfService = (): JSX.Element => {
   // Define table of contents items first
@@ -202,13 +201,7 @@ export const TermsOfService = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Page Search Component */}
-      <PageSearch
-        sections={searchableSections}
-        onResultClick={handleResultClick}
-        onSearchChange={handleSearchChange}
-        pageType="terms"
-      />
+
 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
