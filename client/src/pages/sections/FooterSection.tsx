@@ -9,11 +9,19 @@ export const FooterSection = (): JSX.Element => {
 
   // Enhanced navigation handler
   const handleNavigation = (path: string | null, linkText: string) => {
+    console.log(`Footer link clicked: ${linkText}`);
     if (path) {
-      console.log(`Navigating to: ${path} (from ${linkText})`);
-      setLocation(path);
-      // Ensure page scroll to top on navigation
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      console.log(`Navigating to: ${path}`);
+      try {
+        setLocation(path);
+        // Ensure page scroll to top on navigation
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
+        console.log(`Navigation to ${path} completed`);
+      } catch (error) {
+        console.error(`Navigation error:`, error);
+      }
     } else {
       console.log(`No path defined for: ${linkText}`);
     }
