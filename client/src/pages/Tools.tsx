@@ -84,67 +84,132 @@ export const Tools: React.FC = () => {
       category: "Convert"
     },
     {
-      title: "Word to PDF", 
+      title: "Word to PDF",
       description: "Convert Word documents to PDF format",
-      icon: <FileText className="w-9 h-9 text-red-500" />,
+      icon: <BookOpen className="w-9 h-9 text-red-500" />,
       iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200"
-    },
-    {
-      title: "PDF Merger",
-      description: "Combine multiple PDF files into one",
-      icon: <Copy className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50", 
-      iconBorderColor: "border-green-200"
-    },
-    {
-      title: "PDF Splitter",
-      description: "Split PDF into separate pages or sections",
-      icon: <Scissors className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200"
-    },
-    {
-      title: "PDF Compressor",
-      description: "Reduce PDF file size without quality loss",
-      icon: <Archive className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200"
-    },
-    {
-      title: "PDF Protector",
-      description: "Add password protection to PDF files",
-      icon: <Shield className="w-9 h-9 text-indigo-600" />,
-      iconBgColor: "bg-indigo-50",
-      iconBorderColor: "border-indigo-200"
+      iconBorderColor: "border-red-200",
+      category: "Convert"
     },
     {
       title: "PDF to Excel",
       description: "Extract data from PDF to Excel spreadsheets",
-      icon: <Download className="w-9 h-9 text-green-600" />,
+      icon: <FileStack className="w-9 h-9 text-green-600" />,
       iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200"
+      iconBorderColor: "border-green-200",
+      category: "Convert"
     },
     {
       title: "Excel to PDF",
       description: "Convert Excel files to PDF format",
       icon: <FileStack className="w-9 h-9 text-cyan-600" />,
       iconBgColor: "bg-cyan-50",
-      iconBorderColor: "border-cyan-200"
+      iconBorderColor: "border-cyan-200",
+      category: "Convert"
     },
     {
       title: "PDF to Images",
       description: "Convert PDF pages to image files",
       icon: <Image className="w-9 h-9 text-pink-600" />,
       iconBgColor: "bg-pink-50",
-      iconBorderColor: "border-pink-200"
+      iconBorderColor: "border-pink-200",
+      category: "Convert"
     },
     {
       title: "Images to PDF",
       description: "Create PDF from multiple image files",
-      icon: <Camera className="w-9 h-9 text-yellow-600" />,
+      icon: <Image className="w-9 h-9 text-yellow-600" />,
       iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200"
+      iconBorderColor: "border-yellow-200",
+      category: "Convert"
+    },
+    {
+      title: "HTML to PDF",
+      description: "Convert webpages in HTML to PDF with a click",
+      icon: <Globe className="w-9 h-9 text-yellow-600" />,
+      iconBgColor: "bg-yellow-50",
+      iconBorderColor: "border-yellow-200",
+      category: "Convert"
+    },
+    {
+      title: "PDF to PDF/A",
+      description: "Transform your PDF to PDF/A, the ISO-standardized version",
+      icon: <FileStack className="w-9 h-9 text-teal-600" />,
+      iconBgColor: "bg-teal-50",
+      iconBorderColor: "border-teal-200",
+      category: "Convert"
+    },
+    {
+      title: "Scan to PDF",
+      description: "Capture document scans from your mobile device",
+      icon: <Scan className="w-9 h-9 text-orange-600" />,
+      iconBgColor: "bg-orange-50",
+      iconBorderColor: "border-orange-200",
+      category: "Convert"
+    },
+    {
+      title: "PDF to PowerPoint",
+      description: "Turn your PDF files into editable PowerPoint PPT and PPTX files",
+      icon: <Presentation className="w-9 h-9 text-orange-600" />,
+      iconBgColor: "bg-orange-50",
+      iconBorderColor: "border-orange-200",
+      category: "Convert"
+    },
+    {
+      title: "PowerPoint to PDF",
+      description: "Make PPT and PPTX slideshows easy to view by converting them to PDF",
+      icon: <Presentation className="w-9 h-9 text-orange-600" />,
+      iconBgColor: "bg-orange-50",
+      iconBorderColor: "border-orange-200",
+      category: "Convert"
+    },
+    {
+      title: "PDF to JPG",
+      description: "Convert each PDF page into a JPG or extract all images contained in a PDF",
+      icon: <Image className="w-9 h-9 text-yellow-600" />,
+      iconBgColor: "bg-yellow-50",
+      iconBorderColor: "border-yellow-200",
+      category: "Convert"
+    },
+    {
+      title: "JPG to PDF",
+      description: "Convert JPG images to PDF in seconds. Easily adjust orientation and margins",
+      icon: <Image className="w-9 h-9 text-yellow-600" />,
+      iconBgColor: "bg-yellow-50",
+      iconBorderColor: "border-yellow-200",
+      category: "Convert"
+    },
+    {
+      title: "PDF Merger",
+      description: "Combine multiple PDF files into one",
+      icon: <Copy className="w-9 h-9 text-green-600" />,
+      iconBgColor: "bg-green-50",
+      iconBorderColor: "border-green-200",
+      category: "Organize"
+    },
+    {
+      title: "PDF Splitter",
+      description: "Split PDF into separate pages or sections",
+      icon: <Scissors className="w-9 h-9 text-purple-600" />,
+      iconBgColor: "bg-purple-50",
+      iconBorderColor: "border-purple-200",
+      category: "Organize"
+    },
+    {
+      title: "PDF Compressor",
+      description: "Reduce PDF file size without quality loss",
+      icon: <Archive className="w-9 h-9 text-orange-600" />,
+      iconBgColor: "bg-orange-50",
+      iconBorderColor: "border-orange-200",
+      category: "Organize"
+    },
+    {
+      title: "PDF Protector",
+      description: "Add password protection to PDF files",
+      icon: <Shield className="w-9 h-9 text-indigo-600" />,
+      iconBgColor: "bg-indigo-50",
+      iconBorderColor: "border-indigo-200",
+      category: "Security"
     },
     {
       title: "PDF Editor",
