@@ -34,11 +34,29 @@ export const NavigationSection = (): JSX.Element => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // For now, navigate to support page with search - could be enhanced later
+      // Navigate to support page where search functionality is available
       setLocation(`/support`);
       console.log('Header search:', searchQuery);
+      // Clear search after navigation
+      setTimeout(() => setSearchQuery(''), 100);
     }
   };
+
+  // Add keyboard shortcut for search (Ctrl/Cmd + K)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('.header-search-input') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <header className="w-full h-[65px] bg-[#111726] border-b border-[#374050] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
