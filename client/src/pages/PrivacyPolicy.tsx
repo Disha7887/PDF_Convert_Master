@@ -243,6 +243,18 @@ export const PrivacyPolicy = (): JSX.Element => {
             </p>
           </div>
 
+          {/* Search Component */}
+          <div className="max-w-4xl mx-auto mb-8">
+            <DocumentSearch
+              sections={searchableSections}
+              placeholder="Search privacy information..."
+              onResultClick={handleResultClick}
+              onSearchChange={handleSearchChange}
+              pageType="privacy"
+              className="mb-6"
+            />
+          </div>
+
           {/* Date Information Card */}
           <div className="max-w-3xl mx-auto">
             <div className="bg-white/70 backdrop-blur-sm border border-gray-200 rounded-lg p-6 shadow-sm">
