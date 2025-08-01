@@ -42,6 +42,12 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, trend, tren
 };
 
 export const UsageStatistics: React.FC = () => {
+  const [location, setLocation] = useLocation();
+
+  const handleNavigation = (path: string) => {
+    setLocation(path);
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
