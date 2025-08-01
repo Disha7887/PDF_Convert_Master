@@ -398,16 +398,16 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
 
             {/* No Results */}
             {query && results.length === 0 && (
-              <div className="p-6 text-center">
-                <p className="text-gray-500 mb-4">No results found for "{query}"</p>
+              <div className="p-6 text-center bg-white">
+                <p className="text-gray-700 mb-4 font-medium">No results found for "{query}"</p>
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-400">Try searching for:</p>
+                  <p className="text-sm text-gray-600">Try searching for:</p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {popularSearches[pageType].slice(0, 3).map((item, index) => (
                       <Badge
                         key={index}
                         variant="outline"
-                        className="cursor-pointer hover:bg-gray-100 transition-colors"
+                        className="cursor-pointer hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors bg-white"
                         onClick={() => handleSuggestionClick(item)}
                       >
                         {item}
