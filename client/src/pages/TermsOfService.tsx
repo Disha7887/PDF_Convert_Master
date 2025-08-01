@@ -97,10 +97,274 @@ export const TermsOfService = (): JSX.Element => {
           {/* Main Content Area */}
           <main className="flex-1">
             <div className="bg-white rounded-lg shadow-sm p-8">
-              <div className="prose prose-gray max-w-none">
-                <p className="text-gray-600 text-center">
-                  Terms of Service content will be displayed here.
-                </p>
+              <div className="prose prose-gray max-w-none space-y-8">
+
+                {/* 1. Acceptance of Terms */}
+                <section id="acceptance-of-terms">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                    1. Acceptance of Terms
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    By accessing and using PDF Convert Master (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.
+                  </p>
+                </section>
+
+                {/* 2. Definitions */}
+                <section id="definitions">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Book className="w-6 h-6 text-blue-600" />
+                    2. Definitions
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-2">
+                    <p><strong>"Service"</strong> refers to PDF Convert Master, our web-based platform and all related tools and features.</p>
+                    <p><strong>"User," "you," or "your"</strong> refers to any individual or entity using our Service.</p>
+                    <p><strong>"Company," "we," "us," or "our"</strong> refers to Mizan Store Ltd, a company incorporated in England and Wales.</p>
+                    <p><strong>"Content"</strong> refers to any files, documents, data, or information uploaded to or processed through our Service.</p>
+                    <p><strong>"Account"</strong> refers to your registered user account on our platform.</p>
+                    <p><strong>"Personal Data"</strong> has the meaning set out in the UK General Data Protection Regulation (UK GDPR).</p>
+                  </div>
+                </section>
+
+                {/* 3. Description of Services */}
+                <section id="description-of-services">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Heart className="w-6 h-6 text-blue-600" />
+                    3. Description of Services
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    PDF Convert Master provides online document conversion and processing services, including but not limited to:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+                    <li>PDF to various format conversions (Word, Excel, PowerPoint, images, etc.)</li>
+                    <li>Multiple format to PDF conversions</li>
+                    <li>PDF merging, splitting, and editing tools</li>
+                    <li>Document compression and optimization</li>
+                    <li>Password protection and security features</li>
+                    <li>Batch processing capabilities</li>
+                  </ul>
+                  <p className="text-gray-700 leading-relaxed">
+                    We reserve the right to modify, suspend, or discontinue any aspect of our Service at any time with reasonable notice to users.
+                  </p>
+                </section>
+
+                {/* 4. User Accounts */}
+                <section id="user-accounts">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <User className="w-6 h-6 text-blue-600" />
+                    4. User Accounts
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    While many features are available without registration, creating an account provides access to enhanced features and processing history.
+                  </p>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Account Security:</strong> You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.</p>
+                    <p><strong>Accurate Information:</strong> You must provide accurate, current, and complete information when creating your account.</p>
+                    <p><strong>Age Requirement:</strong> You must be at least 16 years old to create an account and use our Service.</p>
+                    <p><strong>Single Account:</strong> You may maintain only one account per individual or business entity.</p>
+                  </div>
+                </section>
+
+                {/* 5. Acceptable Use Policy */}
+                <section id="acceptable-use-policy">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Shield className="w-6 h-6 text-blue-600" />
+                    5. Acceptable Use Policy
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed mb-4">You agree not to use our Service to:</p>
+                  <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+                    <li>Upload, process, or distribute illegal, harmful, or copyrighted content without authorization</li>
+                    <li>Attempt to gain unauthorized access to our systems or other users' accounts</li>
+                    <li>Distribute malware, viruses, or other malicious code</li>
+                    <li>Engage in activities that could damage, disable, or impair our Service</li>
+                    <li>Use automated scripts or bots to abuse our Service</li>
+                    <li>Violate any applicable laws or regulations</li>
+                    <li>Infringe upon intellectual property rights of others</li>
+                  </ul>
+                  <p className="text-gray-700 leading-relaxed">
+                    Violation of this policy may result in immediate termination of your access to our Service.
+                  </p>
+                </section>
+
+                {/* 6. User Content and Files */}
+                <section id="user-content-and-files">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                    6. User Content and Files
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>File Processing:</strong> Files uploaded to our Service are processed temporarily and automatically deleted after completion. We do not permanently store your documents.</p>
+                    <p><strong>Content Ownership:</strong> You retain full ownership of all content you upload. We do not claim any ownership rights to your files.</p>
+                    <p><strong>Processing License:</strong> By uploading files, you grant us a limited, temporary license to process your content solely for providing our conversion services.</p>
+                    <p><strong>File Limitations:</strong> We may impose reasonable limits on file size, processing time, and usage volume to ensure optimal service performance.</p>
+                    <p><strong>Prohibited Content:</strong> You may not upload content that violates laws, infringes copyrights, or contains malicious code.</p>
+                  </div>
+                </section>
+
+                {/* 7. Intellectual Property */}
+                <section id="intellectual-property">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Copyright className="w-6 h-6 text-blue-600" />
+                    7. Intellectual Property
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Our Rights:</strong> The Service, including all software, designs, text, graphics, and other content, is owned by Mizan Store Ltd and protected by copyright, trademark, and other intellectual property laws.</p>
+                    <p><strong>Limited License:</strong> We grant you a limited, non-exclusive, non-transferable license to use our Service for its intended purpose.</p>
+                    <p><strong>Restrictions:</strong> You may not copy, modify, distribute, sell, or lease any part of our Service or attempt to reverse engineer our software.</p>
+                    <p><strong>Feedback:</strong> Any feedback, suggestions, or ideas you provide about our Service may be used by us without compensation or attribution.</p>
+                  </div>
+                </section>
+
+                {/* 8. Payment Terms */}
+                <section id="payment-terms">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <DollarSign className="w-6 h-6 text-blue-600" />
+                    8. Payment Terms
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Free Services:</strong> Basic conversion services are provided free of charge with usage limitations.</p>
+                    <p><strong>Premium Services:</strong> Enhanced features, higher processing limits, and priority support are available through paid subscriptions.</p>
+                    <p><strong>Billing:</strong> Subscription fees are billed in advance on a recurring basis. All fees are non-refundable except as required by law.</p>
+                    <p><strong>Price Changes:</strong> We may modify subscription prices with 30 days' written notice to existing subscribers.</p>
+                    <p><strong>Taxes:</strong> You are responsible for any applicable taxes, duties, or government charges.</p>
+                  </div>
+                </section>
+
+                {/* 9. Privacy and Security */}
+                <section id="privacy-and-security">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Lock className="w-6 h-6 text-blue-600" />
+                    9. Privacy and Security
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Data Protection:</strong> We implement industry-standard security measures to protect your data and comply with UK GDPR requirements.</p>
+                    <p><strong>File Security:</strong> All file uploads and downloads are encrypted in transit using SSL/TLS encryption.</p>
+                    <p><strong>Automatic Deletion:</strong> Uploaded files are automatically deleted from our servers after processing, typically within 24 hours.</p>
+                    <p><strong>Privacy Policy:</strong> Our collection and use of personal information is governed by our Privacy Policy, which forms part of these Terms.</p>
+                    <p><strong>No Guarantee:</strong> While we implement robust security measures, no system is completely secure, and we cannot guarantee absolute security.</p>
+                  </div>
+                </section>
+
+                {/* 10. Termination */}
+                <section id="termination">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <X className="w-6 h-6 text-blue-600" />
+                    10. Termination
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Your Right to Terminate:</strong> You may stop using our Service at any time and delete your account through your account settings.</p>
+                    <p><strong>Our Right to Terminate:</strong> We may suspend or terminate your access immediately if you violate these Terms or engage in harmful activities.</p>
+                    <p><strong>Effect of Termination:</strong> Upon termination, your right to use the Service ceases, and we may delete any data associated with your account.</p>
+                    <p><strong>Survival:</strong> Provisions regarding intellectual property, limitation of liability, and indemnification survive termination.</p>
+                  </div>
+                </section>
+
+                {/* 11. Warranty Disclaimer */}
+                <section id="warranty-disclaimer">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <AlertCircle className="w-6 h-6 text-blue-600" />
+                    11. Warranty Disclaimer
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>AS IS BASIS:</strong> The Service is provided "as is" without warranties of any kind, either express or implied.</p>
+                    <p><strong>NO WARRANTIES:</strong> We disclaim all warranties, including but not limited to merchantability, fitness for a particular purpose, and non-infringement.</p>
+                    <p><strong>NO GUARANTEE:</strong> We do not guarantee that the Service will be error-free, uninterrupted, or meet your specific requirements.</p>
+                    <p><strong>RESULTS:</strong> We do not warrant the accuracy, completeness, or quality of conversion results.</p>
+                  </div>
+                </section>
+
+                {/* 12. Limitation of Liability */}
+                <section id="limitation-of-liability">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Shield className="w-6 h-6 text-blue-600" />
+                    12. Limitation of Liability
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>LIMITED LIABILITY:</strong> To the maximum extent permitted by law, our total liability for any claims arising from your use of the Service shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
+                    <p><strong>EXCLUDED DAMAGES:</strong> We shall not be liable for indirect, incidental, special, consequential, or punitive damages, including lost profits or data.</p>
+                    <p><strong>USER RESPONSIBILITY:</strong> You acknowledge that you use the Service at your own risk and are responsible for backing up important documents.</p>
+                    <p><strong>STATUTORY RIGHTS:</strong> Nothing in these Terms excludes or limits liability that cannot be excluded or limited under applicable law.</p>
+                  </div>
+                </section>
+
+                {/* 13. Indemnification */}
+                <section id="indemnification">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Gavel className="w-6 h-6 text-blue-600" />
+                    13. Indemnification
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed">
+                    You agree to indemnify, defend, and hold harmless Mizan Store Ltd, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.
+                  </p>
+                </section>
+
+                {/* 14. Governing Law */}
+                <section id="governing-law">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Gavel className="w-6 h-6 text-blue-600" />
+                    14. Governing Law
+                  </h2>
+                  <p className="text-gray-700 leading-relaxed">
+                    These Terms shall be governed by and construed in accordance with the laws of England and Wales, without regard to conflict of law principles. Any legal action or proceeding arising under these Terms will be brought exclusively in the courts of England and Wales, and you consent to personal jurisdiction and venue in such courts.
+                  </p>
+                </section>
+
+                {/* 15. Dispute Resolution */}
+                <section id="dispute-resolution">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <MessageSquare className="w-6 h-6 text-blue-600" />
+                    15. Dispute Resolution
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Informal Resolution:</strong> Before initiating formal legal proceedings, you agree to first contact us to attempt to resolve any disputes informally.</p>
+                    <p><strong>Mediation:</strong> If informal resolution fails, disputes may be resolved through mediation by a mutually agreed mediator in London, UK.</p>
+                    <p><strong>Court Proceedings:</strong> As a last resort, disputes may be brought before the competent courts of England and Wales.</p>
+                    <p><strong>Consumer Rights:</strong> Nothing in this section affects your statutory rights as a consumer under UK law.</p>
+                  </div>
+                </section>
+
+                {/* 16. Modifications */}
+                <section id="modifications">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Edit className="w-6 h-6 text-blue-600" />
+                    16. Modifications
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p><strong>Right to Modify:</strong> We reserve the right to modify these Terms at any time to reflect changes in our Service, legal requirements, or business practices.</p>
+                    <p><strong>Notice:</strong> Significant changes will be communicated through email notification and prominent notice on our website at least 30 days before taking effect.</p>
+                    <p><strong>Acceptance:</strong> Your continued use of the Service after changes take effect constitutes acceptance of the modified Terms.</p>
+                    <p><strong>Disagreement:</strong> If you disagree with modifications, you may terminate your account before the changes take effect.</p>
+                  </div>
+                </section>
+
+                {/* 17. Contact Information */}
+                <section id="contact-information">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <Phone className="w-6 h-6 text-blue-600" />
+                    17. Contact Information
+                  </h2>
+                  <div className="text-gray-700 leading-relaxed space-y-3">
+                    <p>For questions about these Terms of Service or our Service, please contact us:</p>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p><strong>Company:</strong> Mizan Store Ltd</p>
+                      <p><strong>Service:</strong> PDF Convert Master</p>
+                      <p><strong>Phone:</strong> +447429919748</p>
+                      <p><strong>Location:</strong> London, United Kingdom</p>
+                      <p><strong>Website:</strong> PDF Convert Master</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Document Information */}
+                <div className="border-t pt-6 mt-8 text-sm text-gray-500">
+                  <p className="mb-2"><strong>Document Version:</strong> 1.0</p>
+                  <p className="mb-2"><strong>Last Updated:</strong> January 15, 2024</p>
+                  <p><strong>Effective Date:</strong> January 15, 2024</p>
+                </div>
+
               </div>
             </div>
           </main>
