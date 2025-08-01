@@ -182,31 +182,44 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
     }
   };
 
-  // Highlight matching text - Fixed to prevent malformed HTML
+  // Highlight matching text with proper HTML escaping
   const highlightText = (text: string, matches: Fuse.FuseResultMatch[]) => {
     if (!matches.length || !text) return text;
 
-    // Clean the text first to prevent HTML issues
-    const cleanText = text.replace(/<[^>]*>/g, '').trim();
+    // Clean and escape the text to prevent HTML injection
+    const cleanText = text
+      .replace(/<[^>]*>/g, '') // Remove any HTML tags
+      .replace(/&lt;/g, '<')   // Decode HTML entities
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;/g, "'")
+      .trim();
 
     const contentMatch = matches.find(match => match.key === "content");
 
     if (contentMatch && contentMatch.indices && contentMatch.indices.length > 0) {
-      // Sort indices in reverse order to avoid position shifts
-      const sortedIndices = [...contentMatch.indices].sort((a, b) => b[0] - a[0]);
-
       let result = cleanText;
 
-      sortedIndices.forEach(([start, end]) => {
-        // Ensure indices are within bounds
-        if (start >= 0 && end < cleanText.length && start <= end) {
-          const before = result.slice(0, start);
-          const match = result.slice(start, end + 1);
-          const after = result.slice(end + 1);
+      // Process indices from end to start to maintain positions
+      const sortedIndices = [...contentMatch.indices]
+        .filter(([start, end]) => start >= 0 && end < cleanText.length && start <= end)
+        .sort((a, b) => b[0] - a[0]);
 
-          // Simple highlight without nested HTML
-          result = before + `<mark class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium">${match}</mark>` + after;
-        }
+      sortedIndices.forEach(([start, end]) => {
+        const before = result.slice(0, start);
+        const matchText = result.slice(start, end + 1);
+        const after = result.slice(end + 1);
+
+        // Escape the match text to prevent HTML issues
+        const escapedMatch = matchText
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#x27;');
+
+        result = before + `<mark class="bg-blue-100 text-blue-900 px-1 py-0.5 rounded font-medium">${escapedMatch}</mark>` + after;
       });
 
       return result;
