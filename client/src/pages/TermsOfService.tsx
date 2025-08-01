@@ -164,7 +164,7 @@ export const TermsOfService = (): JSX.Element => {
         behavior: 'smooth'
       });
     }
-    setIsMobileMenuOpen(false);
+
   };
 
   // Scroll to top
