@@ -12,14 +12,14 @@ export const FooterSection = (): JSX.Element => {
     { text: "PDF Tools", path: "/tools" },
     { text: "Pricing", path: "/pricing" },
     { text: "About Us", path: "/about" },
-    { text: "Support", path: "/contact" },
+    { text: "Support", path: "/support" },
     { text: "Contact", path: "/contact" },
   ];
 
   const companyLinks = [
     { text: "Privacy Policy", path: "/privacy-policy" },
     { text: "Terms of Service", path: "/terms-of-service" },
-    { text: "Support", path: "/contact" },
+    { text: "Support", path: "/support" },
     { text: "Report Bug", path: null },
   ];
 
