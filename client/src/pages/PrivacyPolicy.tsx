@@ -10,6 +10,20 @@ export const PrivacyPolicy = (): JSX.Element => {
   const [filteredItems, setFilteredItems] = useState(tableOfContentsItems);
   const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
 
+  // Search functionality
+  const {
+    handleSearchChange,
+    handleResultClick,
+    clearSearch
+  } = useDocumentSearch({
+    sections: searchableSections,
+    onSectionHighlight: setHighlightedSection,
+    onNavigationFilter: (sectionIds) => {
+      const filtered = tableOfContentsItems.filter(item => sectionIds.includes(item.id));
+      setFilteredItems(filtered.length > 0 ? filtered : tableOfContentsItems);
+    }
+  });
+
   const tableOfContentsItems = [
     { icon: Database, text: "Information We Collect", id: "information-we-collect" },
     { icon: Eye, text: "How We Use Your Information", id: "how-we-use-your-information" },
