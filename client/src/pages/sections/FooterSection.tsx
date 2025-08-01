@@ -2,6 +2,7 @@ import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLocation } from "wouter";
 
 export const FooterSection = (): JSX.Element => {
   // Footer links data
