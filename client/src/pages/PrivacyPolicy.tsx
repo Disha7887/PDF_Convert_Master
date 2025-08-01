@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Calendar, Clock, Shield, Database, FileText, Lock, Cookie, Cloud, Timer, UserCheck, Globe, AlertTriangle, Mail, Edit, X, ChevronUp, Menu, Eye, UserX, HardDrive, Trash2, FileCheck } from "lucide-react";
+import { Calendar, Clock, Shield, Database, FileText, Lock, Cookie, Cloud, Timer, UserCheck, Globe, AlertTriangle, Mail, Edit, X, ChevronUp, Eye, UserX, HardDrive, Trash2, FileCheck } from "lucide-react";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { PageSearch } from "@/components/PageSearch";
