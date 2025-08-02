@@ -31,7 +31,7 @@ export const ManagePlans: React.FC = () => {
         <main className="max-w-7xl mx-auto px-20 py-8">
           {/* Current Plan */}
           <Card className="mb-8">
-            <CardContent className="p-6">
+            <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center mb-2">
@@ -46,14 +46,14 @@ export const ManagePlans: React.FC = () => {
                   <Button variant="outline" className="bg-gray-100">Cancel Subscription</Button>
                 </div>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Usage Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* API Calls */}
             <Card>
-              <CardContent className="p-6">
+              <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">API Calls</h3>
                   <Code2 className="w-5 h-5 text-blue-600" />
@@ -68,12 +68,12 @@ export const ManagePlans: React.FC = () => {
                   </div>
                   <p className="text-sm text-gray-600">17.3% used</p>
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             {/* Storage */}
             <Card>
-              <CardContent className="p-6">
+              <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">Storage</h3>
                   <Archive className="w-5 h-5 text-orange-600" />
@@ -88,12 +88,12 @@ export const ManagePlans: React.FC = () => {
                   </div>
                   <p className="text-sm text-gray-600">45.2% used</p>
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             {/* Conversions */}
             <Card>
-              <CardContent className="p-6">
+              <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">Conversions</h3>
                   <FileImage className="w-5 h-5 text-green-600" />
@@ -108,7 +108,7 @@ export const ManagePlans: React.FC = () => {
                   </div>
                   <p className="text-sm text-gray-600">28.5% used</p>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
 
@@ -117,7 +117,7 @@ export const ManagePlans: React.FC = () => {
             <CardHeader>
               <CardTitle>Available Plans</CardTitle>
             </CardHeader>
-            <CardContent>
+            <div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Basic Plan */}
                 <div className="border rounded-lg p-6">
@@ -236,7 +236,7 @@ export const ManagePlans: React.FC = () => {
                   <Button variant="outline" className="w-full">Upgrade</Button>
                 </div>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Billing History */}
@@ -247,7 +247,7 @@ export const ManagePlans: React.FC = () => {
                 <Button variant="outline">Download All Invoices</Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -296,7 +296,7 @@ export const ManagePlans: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-            </CardContent>
+            </div>
           </Card>
         </main>
       </div>
