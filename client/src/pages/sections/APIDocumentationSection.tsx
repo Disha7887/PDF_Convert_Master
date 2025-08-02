@@ -52,13 +52,13 @@ export const APIDocumentationSection = (): JSX.Element => {
             Powerful PDF API for Developers
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Integrate PDF conversion, merging, and processing capabilities directly into your applications 
-            with our RESTful API. Trusted by 10,000+ developers worldwide.
+            Integrate PDF conversion and processing directly into your applications.
+            Trusted by 10,000+ developers worldwide.
           </p>
         </div>
 
         {/* API Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {apiFeatures.map((feature, index) => (
             <Card key={index} className="bg-white/5 border-white/10 backdrop-blur-sm">
               <CardContent className="p-6 text-center">
@@ -72,90 +72,28 @@ export const APIDocumentationSection = (): JSX.Element => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Left Column - Code Examples */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
-                <Terminal className="w-6 h-6 mr-3 text-blue-400" />
-                Quick Start
-              </h3>
-              <p className="text-gray-300 mb-6">
-                Get started with our API in minutes. Choose your preferred language and start converting documents.
-              </p>
-            </div>
-
-            <Tabs defaultValue="curl" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/10">
-                <TabsTrigger value="curl" className="data-[state=active]:bg-blue-600">cURL</TabsTrigger>
-                <TabsTrigger value="javascript" className="data-[state=active]:bg-blue-600">JavaScript</TabsTrigger>
-                <TabsTrigger value="python" className="data-[state=active]:bg-blue-600">Python</TabsTrigger>
-              </TabsList>
-              
-              {Object.entries(codeExamples).map(([language, code]) => (
-                <TabsContent key={language} value={language} className="mt-4">
-                  <div className="relative">
-                    <pre className="bg-black/40 border border-white/10 rounded-lg p-4 text-sm text-gray-300 overflow-x-auto">
-                      <code>{code}</code>
-                    </pre>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="absolute top-2 right-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-                      onClick={() => copyToClipboard(code, language)}
-                    >
-                      {copiedEndpoint === language ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+        {/* Code Example */}
+        <div className="mb-16">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-white mb-4">Simple Integration</h3>
+            <p className="text-gray-300">Get started with just a few lines of code</p>
           </div>
 
-          {/* Right Column - API Endpoints */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
-                <Layers className="w-6 h-6 mr-3 text-green-400" />
-                API Endpoints
-              </h3>
-              <p className="text-gray-300 mb-6">
-                Comprehensive API endpoints for all your PDF processing needs.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {endpoints.map((endpoint, index) => (
-                <Card key={index} className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <Badge 
-                          variant="outline" 
-                          className={`font-mono text-xs ${
-                            endpoint.method === 'POST' ? 'border-green-500/50 text-green-400' : 'border-blue-500/50 text-blue-400'
-                          }`}
-                        >
-                          {endpoint.method}
-                        </Badge>
-                        <code className="text-white font-mono text-sm">{endpoint.path}</code>
-                      </div>
-                    </div>
-                    <p className="text-gray-300 text-sm mb-2">{endpoint.description}</p>
-                    <p className="text-gray-400 text-xs">{endpoint.example}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          <Card className="bg-black/40 border-white/10 max-w-3xl mx-auto">
+            <CardContent className="p-6">
+              <pre className="text-sm text-gray-300 overflow-x-auto">
+                <code>{`curl -X POST "https://api.pdfconvertmaster.com/v1/convert" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: multipart/form-data" \\
+  -F "file=@document.docx" \\
+  -F "format=pdf"`}</code>
+              </pre>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Stats Section */}
-        <div className="mt-16 pt-16 border-t border-white/10">
+        <div className="mb-16 pt-16 border-t border-white/10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold text-white mb-2">10,000+</div>
@@ -177,7 +115,7 @@ export const APIDocumentationSection = (): JSX.Element => {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-16 text-center">
+        <div className="text-center">
           <div className="max-w-2xl mx-auto">
             <h3 className="text-2xl font-bold text-white mb-4">
               Ready to integrate PDF processing into your app?
@@ -186,19 +124,19 @@ export const APIDocumentationSection = (): JSX.Element => {
               Get started with our free tier - 1,000 API calls per month, no credit card required.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
+              <Button
                 size="lg"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4"
-                onClick={() => setLocation('/api-setup')}
+                onClick={() => setLocation('/dashboard/api-setup')}
               >
                 <Code2 className="w-5 h-5 mr-2" />
                 Get API Key
               </Button>
-              <Button 
+              <Button
                 size="lg"
                 variant="outline"
                 className="border-white/20 text-white hover:bg-white/10 px-8 py-4"
-                onClick={() => setLocation('/api-reference')}
+                onClick={() => setLocation('/dashboard/api-reference')}
               >
                 <BookOpen className="w-5 h-5 mr-2" />
                 View Documentation
