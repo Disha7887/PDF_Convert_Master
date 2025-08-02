@@ -1,12 +1,6 @@
-console.log("Starting server initialization...");
 import express, { type Request, Response, NextFunction } from "express";
-console.log("Express imported");
-import { createServer } from "http";
-console.log("HTTP imported");
 import { registerRoutes } from "./routes";
-console.log("Routes imported successfully");
 import { setupVite, serveStatic, log } from "./vite";
-console.log("Vite imported");
 
 const app = express();
 app.use(express.json());
