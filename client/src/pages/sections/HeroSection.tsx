@@ -254,13 +254,12 @@ export const HeroSection = (): JSX.Element => {
                   <div className="flex flex-col items-center justify-center w-full p-0">
                     <BouncingUploadIcon
                       className="mb-3"
-                      iconType="image"
-                      src="/figmaAssets/margin-wrap-7.svg"
-                      alt="UploadIcon icon"
-                      iconClassName="w-20 h-20"
+                      iconType="lucide"
+                      alt="Upload icon"
+                      iconClassName="text-white"
                       size="2xl"
                       animationSpeed="fast"
-                      bgColor="bg-red-500/20"
+                      bgColor="bg-red-500"
                     />
 
                     <h2 className="font-bold text-white text-xl text-center mb-3">
