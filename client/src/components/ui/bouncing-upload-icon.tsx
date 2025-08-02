@@ -26,16 +26,16 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
   // Size configurations
   const sizeClasses = {
     sm: "w-12 h-12",
-    md: "w-16 h-16", 
-    lg: "w-20 h-20",
-    xl: "w-24 h-24"
+    md: "w-16 h-16",
+    lg: "w-28 h-28",
+    xl: "w-32 h-32"
   };
 
   const iconSizeClasses = {
     sm: "w-5 h-5",
     md: "w-6 h-6",
-    lg: "w-8 h-8", 
-    xl: "w-10 h-10"
+    lg: "w-12 h-12",
+    xl: "w-14 h-14"
   };
 
   // Animation speed configurations
@@ -85,14 +85,6 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-      {/* Shadow effect for depth */}
-      <motion.div
-        className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 w-8 h-2 bg-gray-400 rounded-full blur-sm`}
-        variants={shadowVariants}
-        animate="animate"
-        initial={{ scale: 1, opacity: 0.3 }}
-      />
-      
       {/* Main bouncing icon container */}
       <motion.div
         className={`${sizeClasses[size]} rounded-full ${bgColor} flex items-center justify-center relative z-10 shadow-lg`}
