@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
+  const { login } = useAuth();
 
   // Navigation menu items data
   const navItems = [
@@ -25,6 +26,28 @@ export const NavigationSection = (): JSX.Element => {
     if (href.startsWith("/")) {
       setLocation(href);
     }
+  };
+
+  // Simulated login function (replace with real authentication)
+  const handleLogin = () => {
+    const mandaUser = {
+      id: 'manda_onzale_001',
+      name: 'Manda Onzale',
+      email: 'manda@example.com',
+      location: 'London, UK',
+      initials: 'MO',
+      plan: 'Pro Plan'
+    };
+
+    login(mandaUser);
+    console.log('User logged in successfully');
+  };
+
+  const handleGetStarted = () => {
+    // For demo purposes, also log in the user
+    handleLogin();
+    // Then redirect to dashboard
+    setLocation('/dashboard');
   };
 
   return (
