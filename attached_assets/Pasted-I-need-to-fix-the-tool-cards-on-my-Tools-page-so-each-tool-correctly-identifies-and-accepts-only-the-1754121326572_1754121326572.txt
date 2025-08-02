@@ -1,0 +1,70 @@
+I need to fix the tool cards on my Tools page so each tool correctly identifies and accepts only the appropriate file types. Currently all tools are showing generic "Select Files" without proper file type validation.
+
+CURRENT ISSUES TO FIX:
+- All tool cards look identical and don't specify accepted file types
+- File input accepts any file type regardless of the tool's purpose
+- No visual indication of what file formats each tool supports
+- Missing file type validation before upload
+- Tool cards don't reflect their specific conversion purpose
+
+REQUIRED FILE TYPE MAPPING FOR EACH TOOL:
+
+PDF CONVERSION TOOLS:
+- PDF to Word → Accept: .pdf only
+- PDF to Excel → Accept: .pdf only  
+- PDF to PowerPoint → Accept: .pdf only
+- PDF to Images → Accept: .pdf only
+- Word to PDF → Accept: .doc, .docx only
+- Excel to PDF → Accept: .xls, .xlsx only
+- PowerPoint to PDF → Accept: .ppt, .pptx only
+- HTML to PDF → Accept: .html, .htm only
+
+IMAGE TOOLS:
+- Images to PDF → Accept: .jpg, .jpeg, .png, .gif, .bmp, .webp only
+- JPG to PDF → Accept: .jpg, .jpeg only
+- Resize Images → Accept: .jpg, .jpeg, .png, .gif, .bmp, .webp only
+- Crop Images → Accept: .jpg, .jpeg, .png, .gif, .bmp, .webp only
+- Rotate Images → Accept: .jpg, .jpeg, .png, .gif, .bmp, .webp only
+- Convert Image Format → Accept: .jpg, .jpeg, .png, .gif, .bmp, .webp only
+- Compress Images → Accept: .jpg, .jpeg, .png, .gif, .bmp, .webp only
+- Upscale Images → Accept: .jpg, .jpeg, .png, .gif, .bmp, .webp only
+- Remove Background → Accept: .jpg, .jpeg, .png only
+
+PDF MANAGEMENT TOOLS:
+- All PDF management tools → Accept: .pdf only
+
+SPECIFIC IMPROVEMENTS NEEDED:
+
+BUTTON TEXT UPDATES:
+- Change generic "Select Files" to specific text like:
+  - "Select PDF Files" for PDF input tools
+  - "Select Images" for image input tools  
+  - "Select Word Document" for Word to PDF
+  - "Select Excel File" for Excel to PDF
+  - etc.
+
+FILE TYPE VALIDATION:
+- Add client-side validation before file selection
+- Show error messages for wrong file types
+- Display supported formats under each tool
+- Add file type icons next to each tool title
+
+VISUAL IDENTITY FOR EACH TOOL:
+- Add specific icons for each tool type (PDF icon, Word icon, etc.)
+- Use different accent colors for different tool categories
+- Show supported file formats prominently on each card
+- Add file size limits for each tool type
+
+DRAG-DROP AREA CUSTOMIZATION:
+- Update placeholder text to match tool purpose
+- Show appropriate file type hints in drop area
+- Validate file types during drag-drop operations
+- Display tool-specific upload instructions
+
+ERROR HANDLING:
+- Show clear error messages for unsupported file types
+- Provide suggestions for correct file formats
+- Add file format conversion suggestions if needed
+- Implement proper user feedback for validation failures
+
+Please update all tool cards to have proper file type validation, specific button text, and clear visual identity that matches each tool's conversion purpose.

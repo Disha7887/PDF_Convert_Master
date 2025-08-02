@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileUploadModal } from "@/components/FileUploadModal";
+import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
+import { useLocation } from "wouter";
 import {
   Upload,
   FileText,
@@ -36,45 +38,66 @@ import {
 } from "lucide-react";
 
 interface ToolCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  iconBgColor: string;
-  iconBorderColor: string;
-  category: string;
+  toolConfig: ToolConfig;
   onSelectFiles: () => void;
+  onNavigateToTool?: () => void;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgColor, iconBorderColor, onSelectFiles }) => {
+const ToolCard: React.FC<ToolCardProps> = ({ toolConfig, onSelectFiles, onNavigateToTool }) => {
+  const IconComponent = toolConfig.icon;
+  
+  const handleCardClick = () => {
+    if (toolConfig.route && onNavigateToTool) {
+      onNavigateToTool();
+    } else {
+      onSelectFiles();
+    }
+  };
+
+  const getFormatIcons = () => {
+    const formats = toolConfig.acceptedFormats.map(f => f.replace('.', '').toUpperCase());
+    return formats.slice(0, 3).join(', ') + (formats.length > 3 ? '...' : '');
+  };
+
   return (
-    <div className="w-full max-w-[290px] h-[344.5px] p-6 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+    <div className="w-full max-w-[290px] h-[380px] p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]">
       <div className="flex flex-col h-full">
         {/* Icon */}
         <div className="flex justify-center mb-4">
-          <div className={`w-16 h-16 p-1 flex items-center justify-center rounded-2xl border ${iconBorderColor} ${iconBgColor}`}>
+          <div className={`w-16 h-16 p-1 flex items-center justify-center rounded-2xl border ${toolConfig.iconBorderColor} ${toolConfig.iconBgColor} shadow-md`}>
             <div className="w-8 h-8 flex items-center justify-center">
-              {icon}
+              <IconComponent className={`w-9 h-9 ${toolConfig.iconColor}`} />
             </div>
           </div>
         </div>
         
         {/* Title */}
-        <h3 className="text-lg font-bold text-gray-900 text-center mb-3">
-          {title}
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center mb-3">
+          {toolConfig.title}
         </h3>
 
         {/* Description */}
-        <p className="text-sm text-gray-600 text-center mb-6 flex-grow flex items-center justify-center px-2">
-          {description}
+        <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-4 flex-grow flex items-center justify-center px-2">
+          {toolConfig.description}
         </p>
+        
+        {/* File Type Hint */}
+        <div className="text-center mb-4">
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 border">
+            <span className="font-medium">Accepts:</span> {getFormatIcons()}
+          </div>
+          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Max: {toolConfig.maxFileSize}
+          </div>
+        </div>
         
         {/* Button */}
         <Button
-          onClick={onSelectFiles}
-          className="w-full h-14 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl shadow-lg transition-all"
+          onClick={handleCardClick}
+          className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 dark:from-blue-600 dark:to-blue-700 text-white font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
         >
           <Upload className="w-4 h-4 mr-2" />
-          Select Files
+          {toolConfig.buttonText}
         </Button>
       </div>
     </div>
@@ -82,25 +105,20 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgCol
 };
 
 export const Tools: React.FC = () => {
-  const [activeFilter, setActiveFilter] = useState("Security");
+  const [activeFilter, setActiveFilter] = useState("Convert");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTool, setSelectedTool] = useState<{
-    title: string;
-    description: string;
-    icon: React.ReactNode;
-    iconBgColor: string;
-    iconBorderColor: string;
-  } | null>(null);
+  const [selectedTool, setSelectedTool] = useState<ToolConfig | null>(null);
+  const [, setLocation] = useLocation();
 
-  const handleSelectFiles = (tool: any) => {
-    setSelectedTool({
-      title: tool.title,
-      description: tool.description,
-      icon: tool.icon,
-      iconBgColor: tool.iconBgColor,
-      iconBorderColor: tool.iconBorderColor,
-    });
+  const handleSelectFiles = (toolConfig: ToolConfig) => {
+    setSelectedTool(toolConfig);
     setIsModalOpen(true);
+  };
+
+  const handleNavigateToTool = (toolConfig: ToolConfig) => {
+    if (toolConfig.route) {
+      setLocation(toolConfig.route);
+    }
   };
 
   const handleCloseModal = () => {
@@ -108,347 +126,16 @@ export const Tools: React.FC = () => {
     setSelectedTool(null);
   };
 
-  const toolsData = [
-    {
-      title: "PDF to Word",
-      description: "Convert PDF documents to editable Word files",
-      icon: <BookOpen className="w-9 h-9 text-blue-600" />,
-      iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200",
-      category: "Convert"
-    },
-    {
-      title: "Word to PDF",
-      description: "Convert Word documents to PDF format",
-      icon: <BookOpen className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200",
-      category: "Convert"
-    },
-    {
-      title: "PDF to Excel",
-      description: "Extract data from PDF to Excel spreadsheets",
-      icon: <FileStack className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200",
-      category: "Convert"
-    },
-    {
-      title: "Excel to PDF",
-      description: "Convert Excel files to PDF format",
-      icon: <FileStack className="w-9 h-9 text-cyan-600" />,
-      iconBgColor: "bg-cyan-50",
-      iconBorderColor: "border-cyan-200",
-      category: "Convert"
-    },
-    {
-      title: "PDF to Images",
-      description: "Convert PDF pages to image files",
-      icon: <Image className="w-9 h-9 text-pink-600" />,
-      iconBgColor: "bg-pink-50",
-      iconBorderColor: "border-pink-200",
-      category: "Convert"
-    },
-    {
-      title: "Images to PDF",
-      description: "Create PDF from multiple image files",
-      icon: <Image className="w-9 h-9 text-yellow-600" />,
-      iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200",
-      category: "Convert"
-    },
-    {
-      title: "HTML to PDF",
-      description: "Convert webpages in HTML to PDF with a click",
-      icon: <Globe className="w-9 h-9 text-yellow-600" />,
-      iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200",
-      category: "Convert"
-    },
-    {
-      title: "PDF to PDF/A",
-      description: "Transform your PDF to PDF/A, the ISO-standardized version",
-      icon: <FileStack className="w-9 h-9 text-teal-600" />,
-      iconBgColor: "bg-teal-50",
-      iconBorderColor: "border-teal-200",
-      category: "Convert"
-    },
-    {
-      title: "Scan to PDF",
-      description: "Capture document scans from your mobile device",
-      icon: <Scan className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200",
-      category: "Convert"
-    },
-    {
-      title: "PDF to PowerPoint",
-      description: "Turn your PDF files into editable PowerPoint PPT and PPTX files",
-      icon: <Presentation className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200",
-      category: "Convert"
-    },
-    {
-      title: "PowerPoint to PDF",
-      description: "Make PPT and PPTX slideshows easy to view by converting them to PDF",
-      icon: <Presentation className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200",
-      category: "Convert"
-    },
-    {
-      title: "PDF to JPG",
-      description: "Convert each PDF page into a JPG or extract all images contained in a PDF",
-      icon: <Image className="w-9 h-9 text-yellow-600" />,
-      iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200",
-      category: "Convert"
-    },
-    {
-      title: "JPG to PDF",
-      description: "Convert JPG images to PDF in seconds. Easily adjust orientation and margins",
-      icon: <Image className="w-9 h-9 text-yellow-600" />,
-      iconBgColor: "bg-yellow-50",
-      iconBorderColor: "border-yellow-200",
-      category: "Convert"
-    },
-    {
-      title: "PDF Merger",
-      description: "Combine multiple PDF files into one",
-      icon: <Copy className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200",
-      category: "Organize"
-    },
-    {
-      title: "PDF Splitter",
-      description: "Split PDF into separate pages or sections",
-      icon: <Scissors className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200",
-      category: "Organize"
-    },
-    {
-      title: "PDF Protector",
-      description: "Add password protection to PDF files",
-      icon: <Shield className="w-9 h-9 text-indigo-600" />,
-      iconBgColor: "bg-indigo-50",
-      iconBorderColor: "border-indigo-200",
-      category: "Security"
-    },
-    {
-      title: "PDF Editor",
-      description: "Edit text and images in PDF documents",
-      icon: <Edit3 className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200",
-      category: "Edit"
-    },
-    {
-      title: "PDF Organizer",
-      description: "Reorder and organize PDF pages",
-      icon: <FileText className="w-9 h-9 text-teal-600" />,
-      iconBgColor: "bg-teal-50",
-      iconBorderColor: "border-teal-200",
-      category: "Organize"
-    },
-    {
-      title: "Organize PDF",
-      description: "Sort pages of your PDF file however you like",
-      icon: <FileStack className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200",
-      category: "Organize"
-    },
-    {
-      title: "Sign PDF",
-      description: "Add yourself or request electronic signatures from others",
-      icon: <PenTool className="w-9 h-9 text-blue-600" />,
-      iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200",
-      category: "Edit"
-    },
-    {
-      title: "Watermark",
-      description: "Stamp an image or text over your PDF in seconds",
-      icon: <Palette className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200",
-      category: "Edit"
-    },
-    {
-      title: "Rotate PDF",
-      description: "Rotate your PDFs the way you need them",
-      icon: <RotateCw className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200",
-      category: "Organize"
-    },
-    {
-      title: "Merge PDF",
-      description: "Combine PDFs in the order you want with the easiest PDF merger available",
-      icon: <Copy className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200",
-      category: "Organize"
-    },
-    {
-      title: "Split PDF",
-      description: "Separate one page or a whole set for easy conversion into independent PDF files",
-      icon: <Scissors className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200",
-      category: "Organize"
-    },
-    {
-      title: "Unlock PDF",
-      description: "Remove PDF password security, giving you freedom to use your PDFs",
-      icon: <Lock className="w-9 h-9 text-blue-600" />,
-      iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200",
-      category: "Security"
-    },
-    {
-      title: "Protect PDF",
-      description: "Protect PDF files with a password to prevent unauthorized access",
-      icon: <Shield className="w-9 h-9 text-indigo-600" />,
-      iconBgColor: "bg-indigo-50",
-      iconBorderColor: "border-indigo-200",
-      category: "Security"
-    },
-    {
-      title: "Redact PDF",
-      description: "Redact text and graphics to permanently remove sensitive information",
-      icon: <Edit3 className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200",
-      category: "Security"
-    },
-    // Additional Edit Tools from Figma Design
-    {
-      title: "Repair PDF",
-      description: "Repair a damaged PDF and recover data from corrupt PDF",
-      icon: <Wrench className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200",
-      category: "Edit"
-    },
-    {
-      title: "Page Numbers",
-      description: "Add page numbers into PDFs with ease",
-      icon: <Hash className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200",
-      category: "Edit"
-    },
-    {
-      title: "OCR PDF",
-      description: "Easily convert scanned PDF into searchable and selectable documents",
-      icon: <Eye className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200",
-      category: "Edit"
-    },
-    {
-      title: "Compare PDF",
-      description: "Show a side-by-side document comparison and easily spot changes",
-      icon: <Split className="w-9 h-9 text-blue-600" />,
-      iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200",
-      category: "Edit"
-    },
-    {
-      title: "Crop PDF",
-      description: "Crop margins of PDF documents or select specific areas",
-      icon: <Crop className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200",
-      category: "Edit"
-    },
-    {
-      title: "Compress PDF",
-      description: "Reduce file size while optimizing for maximal PDF quality",
-      icon: <Archive className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200",
-      category: "Edit"
-    },
-    {
-      title: "Edit PDF",
-      description: "Add text, images, shapes or freehand annotations to PDF files",
-      icon: <Edit3 className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200",
-      category: "Edit"
-    },
-
-    // Image Tools Category
-    {
-      title: "Resize Images",
-      description: "Change image dimensions, scale by percentage, or use preset sizes",
-      icon: <Maximize className="w-9 h-9 text-blue-600" />,
-      iconBgColor: "bg-blue-50",
-      iconBorderColor: "border-blue-200",
-      category: "Image Tools"
-    },
-    {
-      title: "Crop Images",
-      description: "Cut specific parts of images with freeform or preset ratios",
-      icon: <Crop className="w-9 h-9 text-green-600" />,
-      iconBgColor: "bg-green-50",
-      iconBorderColor: "border-green-200",
-      category: "Image Tools"
-    },
-    {
-      title: "Rotate Images",
-      description: "Rotate images by any angle with automatic background fill",
-      icon: <RefreshCw className="w-9 h-9 text-purple-600" />,
-      iconBgColor: "bg-purple-50",
-      iconBorderColor: "border-purple-200",
-      category: "Image Tools"
-    },
-    {
-      title: "Convert Image Format",
-      description: "Convert between JPG, PNG, WebP, GIF, BMP with quality settings",
-      icon: <Monitor className="w-9 h-9 text-orange-600" />,
-      iconBgColor: "bg-orange-50",
-      iconBorderColor: "border-orange-200",
-      category: "Image Tools"
-    },
-    {
-      title: "Compress Images",
-      description: "Reduce image file size without losing quality for web optimization",
-      icon: <Archive className="w-9 h-9 text-red-500" />,
-      iconBgColor: "bg-red-50",
-      iconBorderColor: "border-red-200",
-      category: "Image Tools"
-    },
-    {
-      title: "Upscale Images",
-      description: "Enhance image resolution using AI technology up to 4x",
-      icon: <ZoomIn className="w-9 h-9 text-indigo-600" />,
-      iconBgColor: "bg-indigo-50",
-      iconBorderColor: "border-indigo-200",
-      category: "Image Tools"
-    },
-    {
-      title: "Remove Background",
-      description: "Remove image backgrounds automatically using AI technology",
-      icon: <Eraser className="w-9 h-9 text-pink-600" />,
-      iconBgColor: "bg-pink-50",
-      iconBorderColor: "border-pink-200",
-      category: "Image Tools"
-    },
-    {
-      title: "Add Image Watermarks",
-      description: "Add text or image watermarks to protect your photos",
-      icon: <Palette className="w-9 h-9 text-cyan-600" />,
-      iconBgColor: "bg-cyan-50",
-      iconBorderColor: "border-cyan-200",
-      category: "Image Tools"
-    }
+  // Get tools from configuration that match our 20 main tools
+  const mainToolKeys = [
+    'pdf-to-word', 'pdf-to-excel', 'pdf-to-powerpoint', 'pdf-to-images',
+    'word-to-pdf', 'excel-to-pdf', 'powerpoint-to-pdf', 'html-to-pdf',
+    'images-to-pdf', 'resize-images', 'crop-images', 'rotate-images',
+    'convert-image-format', 'compress-images', 'upscale-images', 'remove-background',
+    'merge-pdfs', 'split-pdf', 'compress-pdf', 'rotate-pdf'
   ];
+
+  const toolsData = mainToolKeys.map(key => toolConfigs[key]).filter(Boolean);
 
   const filterButtons = ["All Tools", "Convert", "Edit", "Organize", "Security", "Image Tools"];
 
@@ -487,13 +174,9 @@ export const Tools: React.FC = () => {
             {filteredTools.map((tool, index) => (
               <ToolCard
                 key={index}
-                title={tool.title}
-                description={tool.description}
-                icon={tool.icon}
-                iconBgColor={tool.iconBgColor}
-                iconBorderColor={tool.iconBorderColor}
-                category={tool.category}
+                toolConfig={tool}
                 onSelectFiles={() => handleSelectFiles(tool)}
+                onNavigateToTool={() => handleNavigateToTool(tool)}
               />
             ))}
           </div>
@@ -507,7 +190,7 @@ export const Tools: React.FC = () => {
           onClose={handleCloseModal}
           toolTitle={selectedTool.title}
           toolDescription={selectedTool.description}
-          toolIcon={selectedTool.icon}
+          toolIcon={React.createElement(selectedTool.icon, { className: `w-6 h-6 ${selectedTool.iconColor}` })}
           toolIconBgColor={selectedTool.iconBgColor}
           toolIconBorderColor={selectedTool.iconBorderColor}
         />
