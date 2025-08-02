@@ -28,6 +28,7 @@ import { WordToPdfUpload } from "@/pages/upload/WordToPdf";
 import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
 import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
 import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
+import { UploadDemo } from "@/pages/UploadDemo";
 
 function Router() {
   return (
