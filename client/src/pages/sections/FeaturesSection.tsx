@@ -258,7 +258,7 @@ export const FeaturesSection = (): JSX.Element => {
           {featureCards.map((card, index) => (
             <Card
               key={index}
-              className={`bg-[#ffffff0d] rounded-2xl ${card.borderColor} backdrop-blur-[2px] border`}
+              className={`bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px]`}
             >
               <div className="p-[33px]">
                 <img src={card.icon} alt="" className="mb-4" />
