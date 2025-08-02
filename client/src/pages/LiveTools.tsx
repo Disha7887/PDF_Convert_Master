@@ -240,7 +240,7 @@ export const LiveTools: React.FC = () => {
   };
 
   return (
-    
+    <>
       <div className="min-h-screen bg-gray-50">
         {/* Main Content */}
         <main className="flex-1 px-64 py-6">
@@ -343,6 +343,16 @@ export const LiveTools: React.FC = () => {
           </div>
         </main>
       </div>
-    
+
+      {/* Upload Modal */}
+      {selectedToolId && (
+        <UploadModal
+          isOpen={isUploadModalOpen}
+          onClose={handleCloseModal}
+          toolConfig={toolConfigs[selectedToolId]}
+          onFileUpload={handleFileUpload}
+        />
+      )}
+    </>
   );
 };
