@@ -73,7 +73,7 @@ export default function Dashboard() {
     queryKey: ['/api/usage'],
   });
 
-  // Fetch conversions
+  // Fetch conversions history
   const { data: conversionsData } = useQuery({
     queryKey: ['/api/conversions'],
   });
@@ -137,10 +137,10 @@ export default function Dashboard() {
     });
   };
 
-  const user = profile?.user as User;
-  const apiKeys = apiKeysData?.apiKeys as ApiKey[] || [];
+  const user = profile as User;
+  const apiKeys = apiKeysData as ApiKey[] || [];
   const usage = usageData;
-  const conversions = conversionsData?.conversions as Conversion[] || [];
+  const conversions = conversionsData as Conversion[] || [];
 
   const dailyProgress = user ? (user.usage.daily / user.limits.daily) * 100 : 0;
   const monthlyProgress = user ? (user.usage.monthly / user.limits.monthly) * 100 : 0;

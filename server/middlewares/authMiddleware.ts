@@ -24,7 +24,8 @@ export const authenticateToken = async (
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+    const secret = process.env.JWT_SECRET || 'fallback-dev-secret-change-in-production';
+    const decoded = jwt.verify(token, secret) as { userId: string };
     const user = await storage.getUserById(decoded.userId);
     
     if (!user) {
@@ -45,5 +46,6 @@ export const authenticateToken = async (
 };
 
 export const generateJWT = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+  const secret = process.env.JWT_SECRET || 'fallback-dev-secret-change-in-production';
+  return jwt.sign({ userId }, secret, { expiresIn: '7d' });
 };
