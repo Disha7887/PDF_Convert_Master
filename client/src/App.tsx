@@ -51,53 +51,41 @@ import { LearnMore } from "@/pages/LearnMore";
 function Router() {
   return (
     <Switch>
-      {/* Protected Dashboard routes */}
+      {/* Dashboard routes - now accessible without authentication */}
       <Route path="/dashboard">
-        <ProtectedRoute requireAuth={true}>
-          <DynamicLayout isDashboardPage={true}>
-            <Dashboard />
-          </DynamicLayout>
-        </ProtectedRoute>
+        <DynamicLayout isDashboardPage={true}>
+          <Dashboard />
+        </DynamicLayout>
       </Route>
 
       <Route path="/dashboard/usage">
-        <ProtectedRoute requireAuth={true}>
-          <DynamicLayout isDashboardPage={true}>
-            <UsageStatistics />
-          </DynamicLayout>
-        </ProtectedRoute>
+        <DynamicLayout isDashboardPage={true}>
+          <UsageStatistics />
+        </DynamicLayout>
       </Route>
 
       <Route path="/dashboard/api-setup">
-        <ProtectedRoute requireAuth={true}>
-          <DynamicLayout isDashboardPage={true}>
-            <APISetup />
-          </DynamicLayout>
-        </ProtectedRoute>
+        <DynamicLayout isDashboardPage={true}>
+          <APISetup />
+        </DynamicLayout>
       </Route>
 
       <Route path="/dashboard/api-reference">
-        <ProtectedRoute requireAuth={true}>
-          <DynamicLayout isDashboardPage={true}>
-            <APIReference />
-          </DynamicLayout>
-        </ProtectedRoute>
+        <DynamicLayout isDashboardPage={true}>
+          <APIReference />
+        </DynamicLayout>
       </Route>
 
       <Route path="/dashboard/manage-plans">
-        <ProtectedRoute requireAuth={true}>
-          <DynamicLayout isDashboardPage={true}>
-            <ManagePlans />
-          </DynamicLayout>
-        </ProtectedRoute>
+        <DynamicLayout isDashboardPage={true}>
+          <ManagePlans />
+        </DynamicLayout>
       </Route>
 
       <Route path="/dashboard/live-tools">
-        <ProtectedRoute requireAuth={true}>
-          <DynamicLayout isDashboardPage={true}>
-            <LiveTools />
-          </DynamicLayout>
-        </ProtectedRoute>
+        <DynamicLayout isDashboardPage={true}>
+          <LiveTools />
+        </DynamicLayout>
       </Route>
 
       {/* Public pages with dynamic header based on auth status */}
