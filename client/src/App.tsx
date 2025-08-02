@@ -132,6 +132,12 @@ function Router() {
         </DynamicLayout>
       </Route>
 
+      <Route path="/signin">
+        <DynamicLayout>
+          <SignIn />
+        </DynamicLayout>
+      </Route>
+
       {/* Fallback to 404 */}
       <Route>
         <DynamicLayout>
