@@ -519,7 +519,7 @@ export const Contact = (): JSX.Element => {
                   <Shield className="w-4 h-4 mr-2 text-green-600" />
                   Your information is secure and confidential
                 </div>
-                <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white px-8">
+                <Button type="submit" className="px-8">
                   Send Message
                 </Button>
               </div>
@@ -642,7 +642,7 @@ export const Contact = (): JSX.Element => {
             <h3 className="text-xl font-bold text-red-800 mb-2">Still Have Questions?</h3>
             <p className="text-red-700 mb-4">Can't find the answer you're looking for? Our support team is here to help!</p>
             <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className=""
               onClick={() => {
                 const contactForm = document.getElementById('contact-form');
                 if (contactForm) {
