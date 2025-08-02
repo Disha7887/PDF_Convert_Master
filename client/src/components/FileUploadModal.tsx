@@ -139,18 +139,18 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   onDrop={handleDrop}
                 >
                   {/* Upload Icon */}
-                  <div className="flex justify-center mb-8">
-                    <div className="w-20 h-20 flex items-center justify-center rounded-full bg-red-50">
-                      <Upload className="w-8 h-8 text-red-500" />
+                  <div className="flex justify-center mb-4">
+                    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-50">
+                      <Upload className="w-6 h-6 text-red-500" />
                     </div>
                   </div>
 
                   {/* Upload Text */}
                   <div className="text-center mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">
                       {getFileTypeText()}
                     </h3>
-                    <p className="text-lg text-gray-500 mb-8">
+                    <p className="text-sm text-gray-500 mb-4">
                       or click to browse files
                     </p>
                   </div>
