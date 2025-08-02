@@ -124,6 +124,9 @@ export const HeroSection = (): JSX.Element => {
       <div className="flex flex-col w-full items-start relative">
         {/* Background decorative elements */}
         <div className="absolute w-full h-full top-0 left-0">
+          {/* Animated particles background */}
+          <AnimatedParticles count={35} />
+
           {gradientBlurs.map((blur, index) => (
             <div key={`blur-${index}`} className={blur.className} />
           ))}
