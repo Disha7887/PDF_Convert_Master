@@ -96,6 +96,48 @@
     transform: none;
   }
 
+  /* Shimmer animation for animated select button */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) skewX(12deg);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(200%) skewX(12deg);
+      opacity: 0;
+    }
+  }
+
+  /* Enhanced shimmer effect with gradient animation */
+  .animate-shimmer {
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* Alternative shimmer with background color shift */
+  @keyframes shimmer-bg {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg,
+      rgba(220, 38, 38, 1) 0%,
+      rgba(185, 28, 28, 1) 25%,
+      rgba(248, 113, 113, 0.8) 50%,
+      rgba(185, 28, 28, 1) 75%,
+      rgba(220, 38, 38, 1) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-bg 1.5s ease-in-out infinite;
+  }
+
   /* Search highlight improvements */
   .search-highlight {
     background-color: rgb(219 234 254) !important;
