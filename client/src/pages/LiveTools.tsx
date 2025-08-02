@@ -55,11 +55,16 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
           
           {/* Buttons */}
           <div className="space-y-2">
-            <Button variant="outline" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => uploadUrl && setLocation(uploadUrl)}
+            >
               Use Tool
             </Button>
             <Button variant="outline" className="w-full">
               <Info className="w-4 h-4 mr-2" />
+              Learn More
             </Button>
           </div>
         </div>
