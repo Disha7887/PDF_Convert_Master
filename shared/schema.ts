@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -18,6 +19,7 @@ export const apiKeys = pgTable("api_keys", {
   apiKey: text("api_key").unique().notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
 
 // User schemas
 export const insertUserSchema = createInsertSchema(users, {
@@ -142,3 +144,23 @@ export const fileConversionResponseSchema = z.object({
 
 export type FileConversionRequest = z.infer<typeof fileConversionRequestSchema>;
 export type FileConversionResponse = z.infer<typeof fileConversionResponseSchema>;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  apiKeys: many(apiKeys),
+  conversionJobs: many(conversionJobs),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [apiKeys.userId],
+    references: [users.id],
+  }),
+}));
+
+export const conversionJobsRelations = relations(conversionJobs, ({ one }) => ({
+  user: one(users, {
+    fields: [conversionJobs.userId],
+    references: [users.id],
+  }),
+}));
