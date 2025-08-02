@@ -93,7 +93,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className="absolute rounded-full"
+          className="absolute rounded-full particle-layer"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
