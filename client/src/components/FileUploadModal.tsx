@@ -200,31 +200,31 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 </div>
 
                 {/* Fast Conversion */}
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 flex items-center justify-center rounded-full bg-green-50">
-                      <Zap className="w-6 h-6 text-green-600" />
+                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex justify-center mb-2">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-green-50">
+                      <Zap className="w-4 h-4 text-green-600" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
                     Fast Conversion
                   </h3>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
+                  <p className="text-xs text-gray-600 text-center leading-relaxed">
                     Lightning-fast processing with high-quality results
                   </p>
                 </div>
 
                 {/* Easy Download */}
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 flex items-center justify-center rounded-full bg-purple-50">
-                      <Download className="w-6 h-6 text-purple-600" />
+                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex justify-center mb-2">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-purple-50">
+                      <Download className="w-4 h-4 text-purple-600" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
                     Easy Download
                   </h3>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
+                  <p className="text-xs text-gray-600 text-center leading-relaxed">
                     Download your converted files instantly after processing
                   </p>
                 </div>
