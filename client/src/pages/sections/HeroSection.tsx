@@ -262,12 +262,12 @@ export const HeroSection = (): JSX.Element => {
                       or click to browse files
                     </p>
 
-                    <Button className="h-[57px] px-12 py-4 mb-8 rounded-xl shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+                    <AnimatedSelectButton className="h-[57px] px-12 py-4 mb-8 rounded-xl shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
                       <UploadIcon className="mr-2 h-5 w-5" />
-                      <span className="font-semibold text-white text-base">
+                      <span className="text-base">
                         Select PDF File
                       </span>
-                    </Button>
+                    </AnimatedSelectButton>
 
                     <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
                       {fileFormats.map((format, index) => (
