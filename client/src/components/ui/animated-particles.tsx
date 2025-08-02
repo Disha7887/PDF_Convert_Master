@@ -21,8 +21,12 @@ interface AnimatedParticlesProps {
 
 export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
   count = 50,
+  mobileCount,
   className = ""
 }) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const effectiveCount = isMobile ? (mobileCount || Math.floor(count * 0.6)) : count;
+
   const particles = useMemo(() => {
     const particleArray: Particle[] = [];
     
