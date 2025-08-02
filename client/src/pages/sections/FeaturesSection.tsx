@@ -21,7 +21,8 @@ export const FeaturesSection = (): JSX.Element => {
       description:
         "Transform your documents between different formats with perfect quality preservation.",
       features: ["PDF to Word", "Word to PDF", "Excel to PDF", "Image to PDF"],
-      borderColor: "border-[#f7707080]",
+      borderColor: "border-red-500/30",
+      iconColor: "#ef4444",
     },
     {
       title: "Organize",
@@ -29,7 +30,8 @@ export const FeaturesSection = (): JSX.Element => {
       description:
         "Merge, split, and reorganize your PDF documents with powerful editing tools.",
       features: ["Merge PDFs", "Split PDFs", "Compress Files", "Rotate Pages"],
-      borderColor: "border-[#ffffff1a]",
+      borderColor: "border-blue-500/30",
+      iconColor: "#3b82f6",
     },
     {
       title: "Secure",
@@ -42,7 +44,8 @@ export const FeaturesSection = (): JSX.Element => {
         "Add Watermark",
         "Digital Signature",
       ],
-      borderColor: "border-[#ffffff1a]",
+      borderColor: "border-emerald-500/30",
+      iconColor: "#10b981",
     },
   ];
 
