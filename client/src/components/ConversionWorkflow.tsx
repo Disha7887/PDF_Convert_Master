@@ -228,6 +228,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Check completion status using state callback to get current state
+      let completionResults: { completed: number; failed: number } | null = null;
+      
       setSelectedFiles(currentFiles => {
         const completedFiles = currentFiles.filter(f => f.status === 'completed');
         const failedFiles = currentFiles.filter(f => f.status === 'failed');
@@ -236,21 +238,12 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         if (completedFiles.length === processedFiles) {
           setStage('completed');
           setBatchProgress(100);
-          
-          toast({
-            title: "All Conversions Complete!",
-            description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully`,
-          });
+          completionResults = { completed: completedFiles.length, failed: 0 };
         } else if (completedFiles.length + failedFiles.length === processedFiles) {
           // Some completed, some failed
           setStage('completed');
           setBatchProgress(100);
-          
-          toast({
-            title: "Batch Conversion Finished",
-            description: `${completedFiles.length} completed, ${failedFiles.length} failed`,
-            variant: failedFiles.length > 0 ? "destructive" : "default"
-          });
+          completionResults = { completed: completedFiles.length, failed: failedFiles.length };
         } else {
           // Still processing or unknown state - wait a bit more
           setTimeout(() => {
@@ -261,11 +254,14 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               setStage('completed');
               setBatchProgress(100);
               
-              toast({
-                title: "Batch Conversion Finished",
-                description: `${finalCompleted.length} completed, ${finalFailed.length} failed`,
-                variant: finalFailed.length > 0 ? "destructive" : "default"
-              });
+              // Toast outside of state update
+              setTimeout(() => {
+                toast({
+                  title: "Batch Conversion Finished",
+                  description: `${finalCompleted.length} completed, ${finalFailed.length} failed`,
+                  variant: finalFailed.length > 0 ? "destructive" : "default"
+                });
+              }, 0);
               
               return finalFiles;
             });
@@ -274,6 +270,24 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         
         return currentFiles;
       });
+      
+      // Show toast outside of state update to avoid setState during render warning
+      if (completionResults) {
+        setTimeout(() => {
+          if (completionResults!.failed === 0) {
+            toast({
+              title: "All Conversions Complete!",
+              description: `${completionResults!.completed} file${completionResults!.completed !== 1 ? 's' : ''} converted successfully`,
+            });
+          } else {
+            toast({
+              title: "Batch Conversion Finished",
+              description: `${completionResults!.completed} completed, ${completionResults!.failed} failed`,
+              variant: "destructive"
+            });
+          }
+        }, 0);
+      }
 
     } catch (error) {
       console.error('Batch conversion error:', error);
