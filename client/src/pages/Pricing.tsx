@@ -1,10 +1,8 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { useLocation } from "wouter";
-import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown, Eye, ArrowLeft, Code2, Archive, FileImage } from "lucide-react";
+import { Check, Code2, Archive, FileImage } from "lucide-react";
 
 export const Pricing: React.FC = () => {
   const [location, setLocation] = useLocation();
