@@ -2,6 +2,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AnimatedParticles } from "@/components/ui/animated-particles";
 
 export const FeaturesSection = (): JSX.Element => {
   // Stats data for the metrics section
