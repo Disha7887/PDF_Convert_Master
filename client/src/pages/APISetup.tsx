@@ -17,50 +17,6 @@ export const APISetup: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-            </div>
-
-            {/* Center - Plan and Manage */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center px-3 py-2 rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
-                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-sm font-medium text-blue-800">Pro Plan</span>
-              </div>
-              <Button variant="outline" className="text-sm">
-                <ArrowUp className="w-4 h-4 mr-2" />
-                Manage Plan
-              </Button>
-            </div>
-
-            {/* Right - Notifications and Profile */}
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center">
-                  2
-                </span>
-              </Button>
-              <Button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                  <span className="text-sm font-semibold">SJ</span>
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium">Sarah Johnson</p>
-                  <p className="text-xs text-red-100">sarah@company.com</p>
-                </div>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </header>
-
         <div className="flex">
           {/* Sidebar */}
           <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
