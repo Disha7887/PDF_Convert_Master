@@ -183,7 +183,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Secure Processing */}
                 <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
                   <div className="flex justify-center mb-4">
