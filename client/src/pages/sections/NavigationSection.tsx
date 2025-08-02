@@ -44,10 +44,8 @@ export const NavigationSection = (): JSX.Element => {
   };
 
   const handleGetStarted = () => {
-    // For demo purposes, also log in the user
-    handleLogin();
-    // Then redirect to dashboard
-    setLocation('/dashboard');
+    // Redirect to signup page
+    setLocation('/signup');
   };
 
   return (
