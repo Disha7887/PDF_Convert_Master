@@ -22,7 +22,9 @@ export const Pricing: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-20 py-8">
-        {/* Current Plan */}
+        {isAuthenticated && (
+          <>
+            {/* Current Plan */}
         <Card className="mb-8">
           <div className="p-6">
             <div className="flex items-center justify-between">
@@ -42,7 +44,7 @@ export const Pricing: React.FC = () => {
           </div>
         </Card>
 
-        {/* Usage Statistics */}
+            {/* Usage Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* API Calls */}
           <Card>
@@ -104,6 +106,8 @@ export const Pricing: React.FC = () => {
             </div>
           </Card>
         </div>
+          </>
+        )}
 
         {/* Available Plans */}
         <Card className="mb-8">
@@ -232,7 +236,8 @@ export const Pricing: React.FC = () => {
           </div>
         </Card>
 
-        {/* Billing History */}
+        {isAuthenticated && (
+          /* Billing History */
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -291,6 +296,7 @@ export const Pricing: React.FC = () => {
             </div>
           </div>
         </Card>
+        )}
       </main>
     </div>
   );
