@@ -53,6 +53,14 @@ async function performActualConversion(
   outputFilename: string
 ): Promise<{ success: boolean; convertedBuffer?: Buffer; mimeType?: string; error?: string }> {
   try {
+    console.log(`DEBUG: performActualConversion called with outputFilename:`, outputFilename);
+    
+    // Safety check for outputFilename
+    if (!outputFilename || outputFilename === 'null' || outputFilename === 'undefined') {
+      console.error(`ERROR: outputFilename is invalid:`, outputFilename);
+      return { success: false, error: 'Invalid output filename' };
+    }
+    
     const inputExtension = inputFilename.split('.').pop()?.toLowerCase();
     const outputExtension = outputFilename.split('.').pop()?.toLowerCase();
     
@@ -905,16 +913,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get the output filename from job or generate it
       let outputFilename = job.outputFilename;
+      console.log(`DEBUG: Initial outputFilename from job:`, outputFilename);
+      
       if (!outputFilename) {
         // Generate output filename if not set
-        const inputName = job.inputFilename.substring(0, job.inputFilename.lastIndexOf('.'));
-        const fileExtension = job.inputFilename.split('.').pop()?.toLowerCase();
+        const inputName = job.inputFilename.substring(0, job.inputFilename.lastIndexOf('.')) || 'converted_file';
+        const fileExtension = job.inputFilename.split('.').pop()?.toLowerCase() || 'txt';
         const tool = await storage.getToolByType(job.toolType as any);
         const outputExtension = tool?.outputFormat === "same" ? fileExtension : tool?.outputFormat || "txt";
         outputFilename = `${inputName}_converted.${outputExtension}`;
+        console.log(`DEBUG: Generated outputFilename:`, outputFilename);
+      }
+      
+      // Ensure outputFilename is never undefined
+      if (!outputFilename || outputFilename === 'null' || outputFilename === 'undefined') {
+        outputFilename = `converted_file_${jobId}.txt`;
+        console.log(`DEBUG: Fallback outputFilename:`, outputFilename);
       }
       
       // Perform actual file conversion based on tool type
+      console.log(`DEBUG: About to call performActualConversion with:`, {
+        inputFilename: job.inputFilename,
+        toolType: job.toolType,
+        outputFilename: outputFilename
+      });
+      
       const conversionResult = await performActualConversion(
         fileBuffer, 
         job.inputFilename, 
