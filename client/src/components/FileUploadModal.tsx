@@ -100,8 +100,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="px-6 py-24 sm:px-12">
-            <div className="max-w-4xl mx-auto">
+          <div className="px-6 py-12 sm:px-8">
+            <div className="max-w-2xl mx-auto">
               
               {/* Header */}
               <div className="text-center mb-16">
