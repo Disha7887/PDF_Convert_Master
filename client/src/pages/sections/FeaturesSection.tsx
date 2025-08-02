@@ -6,6 +6,24 @@ import { AnimatedParticles } from "@/components/ui/animated-particles";
 import { useLocation } from "wouter";
 
 export const FeaturesSection = (): JSX.Element => {
+  // Add CSS keyframes for the rotating border animation
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes rotateBorder {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   const [location, setLocation] = useLocation();
 
   // Stats data for the metrics section
@@ -268,41 +286,66 @@ export const FeaturesSection = (): JSX.Element => {
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featureCards.map((card, index) => (
-            <Card
-              key={index}
-              className={`bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px] border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300`}
-            >
-              <div className="p-[33px]">
+            <div key={index} className="relative group">
+              {/* Animated border container */}
+              <div className="absolute inset-0 rounded-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-300">
                 <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                  style={{ backgroundColor: `${card.iconColor}20` }}
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    background: `conic-gradient(from 0deg, transparent 340deg, ${card.iconColor}80 360deg)`,
+                    animation: 'rotateBorder 3.5s linear infinite',
+                    padding: '2px'
+                  }}
                 >
-                  <img
-                    src={card.icon}
-                    alt=""
-                    className="w-8 h-8"
-                    style={{ filter: `drop-shadow(0 0 4px ${card.iconColor}40)` }}
-                  />
+                  <div className="w-full h-full bg-[#111726] rounded-2xl" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4 font-['Roboto',Helvetica]">
-                  {card.title}
-                </h3>
-                <p className="text-base text-[#d0d5da] mb-6 font-['Roboto',Helvetica]">
-                  {card.description}
-                </p>
-                <ul>
-                  {card.features.map((feature, featureIndex) => (
-                    <li
-                      key={featureIndex}
-                      className="flex items-center text-sm text-[#9ca2af] mb-2 font-['Roboto',Helvetica]"
-                    >
-                      <span className="mr-1">• </span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                <div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    background: `conic-gradient(from 120deg, transparent 340deg, ${card.iconColor}60 360deg)`,
+                    animation: 'rotateBorder 3.5s linear infinite reverse',
+                    padding: '2px'
+                  }}
+                >
+                  <div className="w-full h-full bg-transparent rounded-2xl" />
+                </div>
               </div>
-            </Card>
+
+              <Card
+                className={`relative bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px] border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300 z-10`}
+              >
+                <div className="p-[33px]">
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                    style={{ backgroundColor: `${card.iconColor}20` }}
+                  >
+                    <img
+                      src={card.icon}
+                      alt=""
+                      className="w-8 h-8"
+                      style={{ filter: `drop-shadow(0 0 4px ${card.iconColor}40)` }}
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-4 font-['Roboto',Helvetica]">
+                    {card.title}
+                  </h3>
+                  <p className="text-base text-[#d0d5da] mb-6 font-['Roboto',Helvetica]">
+                    {card.description}
+                  </p>
+                  <ul>
+                    {card.features.map((feature, featureIndex) => (
+                      <li
+                        key={featureIndex}
+                        className="flex items-center text-sm text-[#9ca2af] mb-2 font-['Roboto',Helvetica]"
+                      >
+                        <span className="mr-1">• </span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Card>
+            </div>
           ))}
         </div>
       </div>
