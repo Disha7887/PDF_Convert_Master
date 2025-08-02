@@ -12,23 +12,25 @@ import { LayoutDashboard } from "lucide-react";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
-  const { login, user, isAuthenticated } = useAuth();
 
-  // Navigation menu items data
-  const baseNavItems = [
+  // Navigation menu items data - always include Dashboard
+  const navItems = [
+    { name: "Dashboard", width: "w-[75px]", href: "/dashboard" },
     { name: "Home", width: "w-[42.98px]", href: "/" },
     { name: "Tools", width: "w-[38.66px]", href: "/tools" },
     { name: "Pricing", width: "w-[50.38px]", href: "/pricing" },
     { name: "About", width: "w-[42.98px]", href: "/about" },
   ];
 
-  // Add Dashboard link when authenticated
-  const navItems = isAuthenticated
-    ? [
-        { name: "Dashboard", width: "w-[75px]", href: "/dashboard" },
-        ...baseNavItems
-      ]
-    : baseNavItems;
+  // Static user data for display
+  const staticUser = {
+    id: 'user_001',
+    name: 'John Doe',
+    email: 'john@example.com',
+    location: 'New York, US',
+    initials: 'JD',
+    plan: 'Pro Plan'
+  };
 
   const handleNavClick = (href: string) => {
     if (href.startsWith("/")) {
