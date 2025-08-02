@@ -176,7 +176,7 @@ export const FeaturesSection = (): JSX.Element => {
                   alt=""
                   className="mr-2"
                 />
-                Try Tools Now
+                Learn More...
               </Button>
               <Button
                 variant="outline"
