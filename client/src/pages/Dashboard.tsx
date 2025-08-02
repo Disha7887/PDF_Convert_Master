@@ -138,9 +138,9 @@ export default function Dashboard() {
   };
 
   const user = profile as User;
-  const apiKeys = apiKeysData as ApiKey[] || [];
+  const apiKeys = (apiKeysData?.apiKeys || apiKeysData || []) as ApiKey[];
   const usage = usageData;
-  const conversions = conversionsData as Conversion[] || [];
+  const conversions = (conversionsData?.conversions || conversionsData || []) as Conversion[];
 
   const dailyProgress = user && user.usage && user.limits ? (user.usage.daily / user.limits.daily) * 100 : 0;
   const monthlyProgress = user && user.usage && user.limits ? (user.usage.monthly / user.limits.monthly) * 100 : 0;
