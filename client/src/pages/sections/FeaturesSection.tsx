@@ -3,8 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
+import { useLocation } from "wouter";
 
 export const FeaturesSection = (): JSX.Element => {
+  const [location, setLocation] = useLocation();
+
   // Stats data for the metrics section
   const stats = [
     { value: "10M+", label: "Active Users" },
@@ -161,7 +164,10 @@ export const FeaturesSection = (): JSX.Element => {
 
             {/* CTA Buttons */}
             <div className="flex gap-4">
-              <Button className="font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]">
+              <Button
+                className="font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]"
+                onClick={() => setLocation('/tools')}
+              >
                 <img
                   src="/figmaAssets/margin-wrap-8.svg"
                   alt=""
