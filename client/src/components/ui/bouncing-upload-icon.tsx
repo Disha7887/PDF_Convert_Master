@@ -37,7 +37,7 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
     md: "w-6 h-6",
     lg: "w-10 h-10",
     xl: "w-14 h-14",
-    "2xl": "w-18 h-18"
+    "2xl": "w-16 h-16"
   };
 
   // Animation speed configurations
