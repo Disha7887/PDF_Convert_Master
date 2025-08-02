@@ -69,8 +69,7 @@ export const FooterSection = (): JSX.Element => {
 
   return (
     <footer className="flex flex-col w-full items-start bg-[#111726] border-t border-[#374050]">
-      <div className="flex items-start px-20 py-0 w-full">
-        <div className="flex flex-col max-w-screen-xl w-full items-start px-8 py-12">
+      <div className="max-w-screen-xl mx-auto px-8 py-12 w-full">
           <div className="flex flex-wrap w-full items-start gap-8">
             {/* Brand Column */}
             <div className="flex flex-col w-[280px] items-start">
@@ -202,7 +201,6 @@ export const FooterSection = (): JSX.Element => {
               </div>
             </div>
           </div>
-        </div>
       </div>
     </footer>
   );
