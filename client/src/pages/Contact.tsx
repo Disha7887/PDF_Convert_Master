@@ -11,9 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 export const Contact = (): JSX.Element => {
   const [selectedPriority, setSelectedPriority] = useState("medium");
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0); // First FAQ expanded by default
+  const { toast } = useToast();
 
-  // Utility function to copy text with fallback
-  const copyToClipboard = async (text: string) => {
+  // Enhanced utility function to copy text with beautiful notifications
+  const copyToClipboard = async (text: string, label: string) => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
@@ -28,8 +29,26 @@ export const Contact = (): JSX.Element => {
         document.execCommand('copy');
         document.body.removeChild(textArea);
       }
+
+      // Show beautiful success toast
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-green-600" />
+            <span>Copied Successfully!</span>
+          </div>
+        ),
+        description: (
+          <div className="flex items-center gap-2 mt-1">
+            <Copy className="w-3 h-3 text-gray-500" />
+            <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{text}</code>
+          </div>
+        ),
+        className: "border-green-200 bg-green-50",
+      });
+
     } catch (error) {
-      // Final fallback
+      // Final fallback with error toast
       const textArea = document.createElement('textarea');
       textArea.value = text;
       textArea.style.position = 'fixed';
@@ -38,6 +57,23 @@ export const Contact = (): JSX.Element => {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
+
+      // Show beautiful success toast even for fallback
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-green-600" />
+            <span>Copied Successfully!</span>
+          </div>
+        ),
+        description: (
+          <div className="flex items-center gap-2 mt-1">
+            <Copy className="w-3 h-3 text-gray-500" />
+            <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{text}</code>
+          </div>
+        ),
+        className: "border-green-200 bg-green-50",
+      });
     }
   };
 
