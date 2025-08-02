@@ -126,28 +126,32 @@ export const Contact = (): JSX.Element => {
             </div>
 
             {/* Live Chat */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full relative">
+              {/* Coming Soon Badge */}
+              <div className="absolute top-4 right-4 z-10 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                Coming Soon
+              </div>
+              <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white opacity-75">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">Live Chat</h3>
                 <p className="text-purple-100 text-sm">Chat with our support team in real-time</p>
               </div>
-              <div className="p-6 flex-grow flex flex-col">
+              <div className="p-6 flex-grow flex flex-col opacity-75">
                 <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
-                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
+                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs" disabled>Copy</Button>
                   </div>
-                  <p className="text-sm font-medium">Available on website</p>
+                  <p className="text-sm font-medium text-gray-500">Feature in development</p>
                 </div>
                 <div className="flex items-center text-sm text-gray-600 mb-4">
                   <Clock className="w-4 h-4 mr-2" />
-                  Mon-Fri 9AM-6PM GMT
+                  Coming Q2 2024
                 </div>
-                <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white mt-auto">
-                  Start Chat
+                <Button className="w-full bg-gray-400 text-white mt-auto cursor-not-allowed" disabled>
+                  Coming Soon
                 </Button>
               </div>
             </div>
