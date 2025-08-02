@@ -11,6 +11,35 @@ export const Contact = (): JSX.Element => {
   const [selectedPriority, setSelectedPriority] = useState("medium");
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0); // First FAQ expanded by default
 
+  // Utility function to copy text with fallback
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      // Final fallback
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-[#FEF2F2] via-[#FFF7ED] to-[#FEFCE8]">
 
