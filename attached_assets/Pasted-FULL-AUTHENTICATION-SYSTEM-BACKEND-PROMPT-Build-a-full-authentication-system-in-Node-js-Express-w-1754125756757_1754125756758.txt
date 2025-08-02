@@ -1,0 +1,104 @@
+FULL AUTHENTICATION SYSTEM BACKEND PROMPT
+Build a full authentication system in Node.js + Express, with a PostgreSQL database, supporting:
+
+User Auth:
+
+Register a user with email + password
+
+Passwords hashed using bcrypt
+
+Login returns a signed JWT token using jsonwebtoken
+
+API Key Generation:
+
+After login, a logged-in user can generate an API key using a protected route:
+POST /api/auth/generate-api-key
+
+Each key is stored in the api_keys table linked to the user
+
+Clients can use the API key to call /api/convert and other tool endpoints
+
+API key must be passed in headers as:
+Authorization: Bearer <API_KEY>
+
+JWT Middleware:
+
+Create a middleware that protects certain routes using the JWT token
+
+Decode and attach the user_id to req.user
+
+API Key Middleware:
+
+Another middleware checks if an incoming request contains a valid API key
+
+Matches the key in the database and links it to a user
+
+Database (PostgreSQL):
+
+sql
+Copy
+Edit
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  plan VARCHAR(50) DEFAULT 'free',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE api_keys (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  api_key TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+API Endpoints:
+
+POST /api/auth/register → Register with email/password
+
+POST /api/auth/login → Login, return JWT
+
+POST /api/auth/generate-api-key → (JWT protected) Generate an API key
+
+GET /api/usage → (JWT protected) Returns real-time usage stats
+
+POST /api/convert?tool=xyz → (API key protected) Process PDF tool
+
+Environment Setup (.env):
+
+env
+Copy
+Edit
+PORT=4000
+DATABASE_URL=postgres://user:password@localhost:5432/yourdb
+JWT_SECRET=your_jwt_secret
+Folder Structure:
+
+bash
+Copy
+Edit
+backend/
+├── controllers/
+│   ├── authController.js
+│   └── toolController.js
+├── middlewares/
+│   ├── authMiddleware.js   # for JWT
+│   └── apiKeyMiddleware.js # for API key
+├── routes/
+│   ├── authRoutes.js
+│   └── toolRoutes.js
+├── uploads/
+├── utils/
+│   └── generateApiKey.js
+├── db.js
+├── server.js
+└── .env
+Security Considerations:
+
+Limit API key generation (e.g., max 3 keys per user)
+
+Hash passwords before saving
+
+Validate email format
+
+Rate-limit auth routes via NGINX or middleware

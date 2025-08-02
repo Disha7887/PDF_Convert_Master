@@ -1,8 +1,12 @@
+import crypto from "crypto";
 import { 
   users, 
+  apiKeys,
   conversionJobs,
   type User, 
   type InsertUser,
+  type ApiKey,
+  type InsertApiKey,
   type ConversionJob,
   type InsertConversionJob,
   type ToolConfig,
@@ -15,14 +19,19 @@ import {
 
 export interface IStorage {
   // User methods
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // API Key methods
+  createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
+  getApiKeyByKey(key: string): Promise<ApiKey | undefined>;
+  getUserApiKeys(userId: string): Promise<ApiKey[]>;
   
   // Conversion job methods
   createConversionJob(job: InsertConversionJob): Promise<ConversionJob>;
   getConversionJob(id: number): Promise<ConversionJob | undefined>;
-  getConversionJobsByUser(userId: number): Promise<ConversionJob[]>;
+  getUserConversionJobs(userId: string): Promise<ConversionJob[]>;
   updateConversionJobStatus(id: number, status: string, outputFilename?: string, errorMessage?: string, processingTime?: number): Promise<ConversionJob | undefined>;
   
   // Tool configuration methods
@@ -32,16 +41,16 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
+  private users: Map<string, User>;
+  private apiKeys: Map<string, ApiKey>;
   private conversionJobs: Map<number, ConversionJob>;
   private tools: ToolConfig[] = [];
-  private currentUserId: number;
   private currentJobId: number;
 
   constructor() {
     this.users = new Map();
+    this.apiKeys = new Map();
     this.conversionJobs = new Map();
-    this.currentUserId = 1;
     this.currentJobId = 1;
     this.initializeTools();
   }
@@ -277,21 +286,52 @@ export class MemStorage implements IStorage {
   }
 
   // User methods
-  async getUser(id: number): Promise<User | undefined> {
+  async getUserById(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+      (user) => user.email === email,
     );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const id = crypto.randomUUID();
+    const now = new Date();
+    const user: User = { 
+      id,
+      email: insertUser.email!,
+      passwordHash: insertUser.passwordHash!,
+      plan: insertUser.plan || "free",
+      createdAt: now
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  // API Key methods
+  async createApiKey(insertApiKey: InsertApiKey): Promise<ApiKey> {
+    const id = crypto.randomUUID();
+    const now = new Date();
+    const apiKey: ApiKey = {
+      id,
+      userId: insertApiKey.userId,
+      apiKey: insertApiKey.apiKey,
+      createdAt: now
+    };
+    this.apiKeys.set(insertApiKey.apiKey, apiKey);
+    return apiKey;
+  }
+
+  async getApiKeyByKey(key: string): Promise<ApiKey | undefined> {
+    return this.apiKeys.get(key);
+  }
+
+  async getUserApiKeys(userId: string): Promise<ApiKey[]> {
+    return Array.from(this.apiKeys.values()).filter(
+      (apiKey) => apiKey.userId === userId,
+    );
   }
 
   // Conversion job methods
@@ -320,7 +360,7 @@ export class MemStorage implements IStorage {
     return this.conversionJobs.get(id);
   }
 
-  async getConversionJobsByUser(userId: number): Promise<ConversionJob[]> {
+  async getUserConversionJobs(userId: string): Promise<ConversionJob[]> {
     return Array.from(this.conversionJobs.values()).filter(
       (job) => job.userId === userId,
     );

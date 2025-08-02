@@ -13,6 +13,9 @@ import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
+import { authRoutes } from "./routes/authRoutes";
+import { authenticateJWT } from "./middlewares/authMiddleware";
+import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -48,17 +51,43 @@ const uploadMultiple = multer({
   },
 });
 
-// Extend Request interface to include session
-interface RequestWithSession extends Request {
-  session?: {
-    user?: {
-      id: number;
-      username: string;
-    };
+// Extend Request interface for authentication
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+  };
+  apiKey?: {
+    id: string;
+    apiKey: string;
+    userId: string;
   };
 }
 
+// Middleware to support both JWT and API key authentication
+const optionalAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    // No authentication provided, continue without user
+    return next();
+  }
+
+  const token = authHeader.split(" ")[1];
+  
+  if (token && token.startsWith("sk-")) {
+    // API key authentication
+    return authenticateApiKey(req, res, next);
+  } else {
+    // JWT token authentication
+    return authenticateJWT(req, res, next);
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.use("/api/auth", authRoutes);
+
   // Get all available tools
   app.get("/api/tools", async (req, res) => {
     try {
@@ -190,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const job = await storage.createConversionJob({
-        userId: (req as RequestWithSession).session?.user?.id || null,
+        userId: (req as AuthenticatedRequest).user?.id || null,
         toolType,
         status: "pending",
         inputFilename: fileName,

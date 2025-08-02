@@ -1,20 +1,55 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Users table with authentication system
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  plan: text("plan").notNull().default("free"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+// API Keys table
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  apiKey: text("api_key").unique().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User schemas
+export const insertUserSchema = createInsertSchema(users, {
+  email: z.string().email("Invalid email format")
+}).pick({
+  email: true,
+  passwordHash: true,
+  plan: true,
+});
+
+export const registerUserSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const loginUserSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(1, "Password is required"),
+});
+
+// API Key schemas
+export const insertApiKeySchema = createInsertSchema(apiKeys).pick({
+  userId: true,
+  apiKey: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type RegisterUser = z.infer<typeof registerUserSchema>;
+export type LoginUser = z.infer<typeof loginUserSchema>;
+export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
+export type ApiKey = typeof apiKeys.$inferSelect;
 
 // Tool categories and types
 export enum ToolCategory {
@@ -51,10 +86,10 @@ export enum ToolType {
   ROTATE_PDF = "rotate_pdf"
 }
 
-// Conversion jobs table
+// Conversion jobs table  
 export const conversionJobs = pgTable("conversion_jobs", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
+  userId: uuid("user_id").references(() => users.id),
   toolType: text("tool_type").notNull(),
   status: text("status").notNull().default("pending"), // pending, processing, completed, failed
   inputFilename: text("input_filename").notNull(),
