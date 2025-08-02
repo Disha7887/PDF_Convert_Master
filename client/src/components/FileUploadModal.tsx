@@ -126,9 +126,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               </div>
 
               {/* Upload Area */}
-              <div className="mb-16">
+              <div className="mb-8">
                 <div
-                  className={`relative w-full h-96 p-16 border-2 border-dashed rounded-3xl transition-all duration-200 ${
+                  className={`relative w-full h-64 p-8 border-2 border-dashed rounded-2xl transition-all duration-200 ${
                     isDragOver
                       ? 'border-red-400 bg-red-50'
                       : 'border-gray-300 bg-white'
