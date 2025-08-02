@@ -25,7 +25,7 @@ export const AnimatedSelectButton = React.forwardRef<
         "shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]",
         "border-0 outline-none",
         "before:absolute before:inset-0",
-        "before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent",
+        "before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent",
         "before:w-[25%] before:h-full",
         "before:animate-[shimmer_1.5s_ease-in-out_infinite]",
         "before:transform before:skew-x-[15deg]",
