@@ -1,21 +1,20 @@
 import React from "react";
-import { UploadPage } from "@/components/UploadPage";
+import { ConversionWorkflow } from "@/components/ConversionWorkflow";
+import { Presentation } from "lucide-react";
 
 export const PowerPointToPdfUpload: React.FC = () => {
   return (
-    <UploadPage
-      toolId="powerpoint-to-pdf"
-      title="PowerPoint to PDF Converter"
-      description="Convert your PowerPoint presentations (.ppt, .pptx) to PDF format with perfect slide layouts."
-      acceptedFormats={[".ppt", ".pptx"]}
-      maxFileSize="100MB"
-      outputFormat="PDF"
-      features={[
-        "Preserves slide animations",
-        "Maintains formatting and fonts",
-        "High-resolution output",
-        "Secure processing"
-      ]}
-    />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <ConversionWorkflow
+        toolType="powerpoint-to-pdf"
+        toolTitle="PowerPoint to PDF Converter"
+        toolDescription="Convert your PowerPoint presentations (.ppt, .pptx) to PDF format with perfect slide layouts and formatting."
+        acceptedFormats={[".ppt", ".pptx"]}
+        maxFileSize="100MB"
+        outputFormat="PDF"
+        toolIcon={<Presentation className="w-8 h-8 text-orange-500" />}
+        iconBg="bg-orange-50 border-orange-200 dark:bg-orange-900 dark:border-orange-800"
+      />
+    </div>
   );
 };

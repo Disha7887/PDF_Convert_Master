@@ -1,22 +1,20 @@
 import React from "react";
-import { UploadPage } from "@/components/UploadPage";
+import { ConversionWorkflow } from "@/components/ConversionWorkflow";
+import { Image } from "lucide-react";
 
 export const ImagesToPdfUpload: React.FC = () => {
   return (
-    <UploadPage
-      toolId="images-to-pdf"
-      title="Images to PDF Converter"
-      description="Combine multiple images (JPG, PNG, GIF, BMP) into a single PDF document with customizable page layouts."
-      acceptedFormats={[".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]}
-      maxFileSize="20MB per image"
-      outputFormat="PDF"
-      multiple={true}
-      features={[
-        "Multiple image formats supported",
-        "Drag & drop reordering",
-        "Page size optimization",
-        "Compression options"
-      ]}
-    />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <ConversionWorkflow
+        toolType="images-to-pdf"
+        toolTitle="Images to PDF Converter"
+        toolDescription="Combine multiple images (JPG, PNG, GIF, WebP) into a single PDF document with customizable page layouts and ordering."
+        acceptedFormats={[".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]}
+        maxFileSize="20MB"
+        outputFormat="PDF"
+        toolIcon={<Image className="w-8 h-8 text-purple-500" />}
+        iconBg="bg-purple-50 border-purple-200 dark:bg-purple-900 dark:border-purple-800"
+      />
+    </div>
   );
 };

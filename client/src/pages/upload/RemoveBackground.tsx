@@ -1,21 +1,20 @@
 import React from "react";
-import { UploadPage } from "@/components/UploadPage";
+import { ConversionWorkflow } from "@/components/ConversionWorkflow";
+import { Scissors } from "lucide-react";
 
 export const RemoveBackgroundUpload: React.FC = () => {
   return (
-    <UploadPage
-      toolId="remove-background"
-      title="Background Remover"
-      description="Remove image backgrounds automatically using AI. Perfect for product photos, portraits, and graphic design."
-      acceptedFormats={[".jpg", ".jpeg", ".png", ".webp"]}
-      maxFileSize="15MB"
-      outputFormat="PNG with transparency"
-      features={[
-        "AI-powered detection",
-        "Automatic processing",
-        "High-quality edges",
-        "Transparent background"
-      ]}
-    />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <ConversionWorkflow
+        toolType="remove-background"
+        toolTitle="AI Background Remover"
+        toolDescription="Remove image backgrounds automatically using AI. Perfect for product photos, portraits, and graphic design with transparent output."
+        acceptedFormats={[".jpg", ".jpeg", ".png", ".webp"]}
+        maxFileSize="15MB"
+        outputFormat="PNG with Transparency"
+        toolIcon={<Scissors className="w-8 h-8 text-violet-500" />}
+        iconBg="bg-violet-50 border-violet-200 dark:bg-violet-900 dark:border-violet-800"
+      />
+    </div>
   );
 };

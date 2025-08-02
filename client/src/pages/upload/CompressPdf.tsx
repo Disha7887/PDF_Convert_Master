@@ -1,21 +1,20 @@
 import React from "react";
-import { UploadPage } from "@/components/UploadPage";
+import { ConversionWorkflow } from "@/components/ConversionWorkflow";
+import { Minimize2 } from "lucide-react";
 
 export const CompressPdfUpload: React.FC = () => {
   return (
-    <UploadPage
-      toolId="compress-pdf"
-      title="PDF Compressor"
-      description="Reduce PDF file size while maintaining document quality. Choose from different compression levels."
-      acceptedFormats={[".pdf"]}
-      maxFileSize="200MB"
-      outputFormat="Compressed PDF"
-      features={[
-        "Multiple compression levels",
-        "Maintains document quality",
-        "Reduces file size up to 90%",
-        "Fast processing"
-      ]}
-    />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <ConversionWorkflow
+        toolType="compress-pdf"
+        toolTitle="PDF Compressor"
+        toolDescription="Reduce PDF file size while maintaining document quality. Choose from different compression levels to optimize for your needs."
+        acceptedFormats={[".pdf"]}
+        maxFileSize="200MB"
+        outputFormat="Compressed PDF"
+        toolIcon={<Minimize2 className="w-8 h-8 text-green-600" />}
+        iconBg="bg-green-50 border-green-200 dark:bg-green-900 dark:border-green-800"
+      />
+    </div>
   );
 };

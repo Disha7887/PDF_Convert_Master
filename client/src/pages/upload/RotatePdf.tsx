@@ -1,21 +1,20 @@
 import React from "react";
-import { UploadPage } from "@/components/UploadPage";
+import { ConversionWorkflow } from "@/components/ConversionWorkflow";
+import { RotateCw } from "lucide-react";
 
 export const RotatePdfUpload: React.FC = () => {
   return (
-    <UploadPage
-      toolId="rotate-pdf"
-      title="PDF Rotator"
-      description="Rotate PDF pages clockwise or counterclockwise. Rotate all pages or select specific ones."
-      acceptedFormats={[".pdf"]}
-      maxFileSize="100MB"
-      outputFormat="Rotated PDF"
-      features={[
-        "Rotate by 90°, 180°, 270°",
-        "Select specific pages",
-        "Batch rotation",
-        "Preview before saving"
-      ]}
-    />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <ConversionWorkflow
+        toolType="rotate-pdf"
+        toolTitle="PDF Rotator"
+        toolDescription="Rotate PDF pages clockwise or counterclockwise by 90°, 180°, or 270°. Rotate all pages or select specific ones with preview."
+        acceptedFormats={[".pdf"]}
+        maxFileSize="100MB"
+        outputFormat="Rotated PDF"
+        toolIcon={<RotateCw className="w-8 h-8 text-purple-600" />}
+        iconBg="bg-purple-50 border-purple-200 dark:bg-purple-900 dark:border-purple-800"
+      />
+    </div>
   );
 };
