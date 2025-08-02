@@ -124,7 +124,7 @@ export const Pricing: React.FC = () => {
           <div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Basic Plan */}
-              <div className="border rounded-lg p-6">
+              <div className="border rounded-lg p-6 flex flex-col h-full">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Basic</h3>
                   <div className="flex items-end justify-center mb-4">
@@ -133,7 +133,7 @@ export const Pricing: React.FC = () => {
                   </div>
                   <p className="text-sm text-gray-600">or $90/year (save 17%)</p>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
                     <Check className="w-5 h-5 text-green-600 mr-3" />
                     <span className="text-sm text-gray-700">1,000 API calls/month</span>
@@ -155,13 +155,13 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Standard processing speed</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full mt-auto">
                   {isAuthenticated ? "Downgrade" : "Get Started"}
                 </Button>
               </div>
 
               {/* Pro Plan - Current */}
-              <div className="border-2 border-red-200 bg-red-50 rounded-lg p-6 relative">
+              <div className="border-2 border-red-200 bg-red-50 rounded-lg p-6 relative flex flex-col h-full">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
                   <div className="flex items-end justify-center mb-4">
@@ -170,7 +170,7 @@ export const Pricing: React.FC = () => {
                   </div>
                   <p className="text-sm text-gray-600">or $290/year (save 17%)</p>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
                     <Check className="w-5 h-5 text-green-600 mr-3" />
                     <span className="text-sm text-gray-700">50,000 API calls/month</span>
@@ -196,13 +196,13 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Advanced tools</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full mt-auto">
                   {isAuthenticated ? "Current Plan" : "Most Popular"}
                 </Button>
               </div>
 
               {/* Enterprise Plan */}
-              <div className="border rounded-lg p-6">
+              <div className="border rounded-lg p-6 flex flex-col h-full">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Enterprise</h3>
                   <div className="flex items-end justify-center mb-4">
@@ -211,7 +211,7 @@ export const Pricing: React.FC = () => {
                   </div>
                   <p className="text-sm text-gray-600">or $990/year (save 17%)</p>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
                     <Check className="w-5 h-5 text-green-600 mr-3" />
                     <span className="text-sm text-gray-700">Unlimited API calls</span>
@@ -241,7 +241,7 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">SLA guarantee</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full mt-auto">
                   {isAuthenticated ? "Upgrade" : "Contact Sales"}
                 </Button>
               </div>
