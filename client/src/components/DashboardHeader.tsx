@@ -20,11 +20,7 @@ import {
   ChevronDown,
   User,
   Settings,
-  LogOut,
-  Home,
-  Wrench,
-  BookOpen,
-  LayoutDashboard
+  LogOut
 } from "lucide-react";
 
 export const DashboardHeader = (): JSX.Element => {
