@@ -7,44 +7,34 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
+import { LayoutDashboard } from "lucide-react";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
-  const { login } = useAuth();
 
-  // Navigation menu items data
+  // Navigation menu items data - always include Dashboard
   const navItems = [
+    { name: "Dashboard", width: "w-[75px]", href: "/dashboard" },
     { name: "Home", width: "w-[42.98px]", href: "/" },
     { name: "Tools", width: "w-[38.66px]", href: "/tools" },
     { name: "Pricing", width: "w-[50.38px]", href: "/pricing" },
     { name: "About", width: "w-[42.98px]", href: "/about" },
   ];
 
+  // Static user data for display
+  const staticUser = {
+    id: 'user_001',
+    name: 'John Doe',
+    email: 'john@example.com',
+    location: 'New York, US',
+    initials: 'JD',
+    plan: 'Pro Plan'
+  };
+
   const handleNavClick = (href: string) => {
     if (href.startsWith("/")) {
       setLocation(href);
     }
-  };
-
-  // Simulated login function (replace with real authentication)
-  const handleLogin = () => {
-    const mandaUser = {
-      id: 'manda_onzale_001',
-      name: 'Manda Onzale',
-      email: 'manda@example.com',
-      location: 'London, UK',
-      initials: 'MO',
-      plan: 'Pro Plan'
-    };
-
-    login(mandaUser);
-    console.log('User logged in successfully');
-  };
-
-  const handleGetStarted = () => {
-    // Redirect to signup page
-    setLocation('/signup');
   };
 
   return (
@@ -74,21 +64,22 @@ export const NavigationSection = (): JSX.Element => {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Auth Buttons */}
+          {/* Dashboard Button and User Info */}
           <div className="flex items-center space-x-3">
             <Button
               variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium !text-white text-base hover:!text-white hover:bg-[#4a5462] transition-colors bg-transparent"
-              onClick={() => setLocation('/signin')}
+              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium !text-white text-base hover:!text-white hover:bg-[#4a5462] transition-colors bg-transparent flex items-center space-x-2"
+              onClick={() => setLocation('/dashboard')}
             >
-              Log In
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Dashboard</span>
             </Button>
-            <Button
-              className="h-10 px-6 py-2 rounded-lg [font-family:'Roboto',Helvetica] font-medium text-base [text-shadow:0px_10px_15px_#0000001a]"
-              onClick={handleGetStarted}
-            >
-              Get Started
-            </Button>
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-[#4a5462]/20 border border-[#4a5462]">
+              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                <span className="text-xs font-semibold text-white">{staticUser.initials}</span>
+              </div>
+              <span className="text-sm text-white font-medium">{staticUser.name}</span>
+            </div>
           </div>
         </div>
       </div>
