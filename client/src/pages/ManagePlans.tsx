@@ -15,7 +15,7 @@ export const ManagePlans: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="min-h-screen bg-gray-50">
         {/* Page Title Section */}
         <div className="bg-white border-b border-gray-200 px-6 py-8">

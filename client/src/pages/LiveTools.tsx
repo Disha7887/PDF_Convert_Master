@@ -199,7 +199,7 @@ export const LiveTools: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="min-h-screen bg-gray-50">
         {/* Main Content */}
         <main className="flex-1 px-64 py-6">
