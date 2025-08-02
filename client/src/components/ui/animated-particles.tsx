@@ -112,7 +112,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
       {Array.from({ length: 8 }).map((_, i) => (
         <motion.div
           key={`line-${i}`}
-          className="absolute"
+          className="absolute particle-layer"
           style={{
             left: `${Math.random() * 90}%`,
             top: `${Math.random() * 90}%`,
@@ -141,7 +141,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
       {Array.from({ length: 12 }).map((_, i) => (
         <motion.div
           key={`pulse-dot-${i}`}
-          className="absolute rounded-full"
+          className="absolute rounded-full particle-layer"
           style={{
             left: `${Math.random() * 95}%`,
             top: `${Math.random() * 95}%`,
