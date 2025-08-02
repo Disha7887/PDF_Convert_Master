@@ -78,7 +78,7 @@ export const NavigationSection = (): JSX.Element => {
           <div className="flex items-center space-x-3">
             <Button
               variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base hover:text-white hover:bg-[#4a5462] transition-colors"
+              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium !text-white text-base hover:!text-white hover:bg-[#4a5462] transition-colors bg-transparent"
               onClick={() => setLocation('/signin')}
             >
               Log In
