@@ -17,7 +17,8 @@ interface ToolCardProps {
   uploadUrl?: string;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, icon, iconBg, isFavorite = false }) => {
+const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, icon, iconBg, isFavorite = false, uploadUrl }) => {
+  const [location, setLocation] = useLocation();
   return (
     <Card className="relative">
       <CardContent className="p-6">
