@@ -325,7 +325,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Knowledge Base Section */}
-      <section id="troubleshooting" className="py-16 bg-white">
+      <section id="troubleshooting" className={`py-16 bg-white transition-all duration-300 ${
+        highlightedSection === "troubleshooting" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-50" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Knowledge Base</h2>
@@ -358,7 +360,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Getting Started Section */}
-      <section id="getting-started" className="py-16 bg-gray-50">
+      <section id="getting-started" className={`py-16 bg-gray-50 transition-all duration-300 ${
+        highlightedSection === "getting-started" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-100" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -387,7 +391,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Multiple Ways to Get Help */}
-      <section id="api-documentation" className="py-16 bg-white">
+      <section id="api-documentation" className={`py-16 bg-white transition-all duration-300 ${
+        highlightedSection === "api-documentation" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-50" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Multiple Ways to Get Help</h2>
@@ -415,7 +421,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Statistics Section */}
-      <section id="account-billing" className="py-16 bg-gray-900 text-white">
+      <section id="account-billing" className={`py-16 bg-gray-900 text-white transition-all duration-300 ${
+        highlightedSection === "account-billing" ? "ring-4 ring-blue-500 ring-opacity-50" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Support Performance</h2>
@@ -440,7 +448,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Video Tutorials Section */}
-      <section id="video-tutorials" className="py-16 bg-white">
+      <section id="video-tutorials" className={`py-16 bg-white transition-all duration-300 ${
+        highlightedSection === "video-tutorials" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-50" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-12">
             <div>
@@ -472,7 +482,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* System Status Section */}
-      <section id="system-status" className="py-16 bg-gray-50">
+      <section id="system-status" className={`py-16 bg-gray-50 transition-all duration-300 ${
+        highlightedSection === "system-status" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-100" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">System Status & Performance</h2>
@@ -538,7 +550,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* Team Insights Section */}
-      <section id="advanced-features" className="py-16 bg-white">
+      <section id="advanced-features" className={`py-16 bg-white transition-all duration-300 ${
+        highlightedSection === "advanced-features" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-50" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Team Insights</h2>
