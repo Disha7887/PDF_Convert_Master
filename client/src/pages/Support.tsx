@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Search, MessageCircle, Mail, Phone, Play, CheckCircle, BookOpen, Settings, CreditCard, Code, FileText, Wrench, Users, TrendingUp, Server, Clock, Target, Award, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
