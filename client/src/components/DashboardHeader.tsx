@@ -1,24 +1,25 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
-import { 
-  Bell, 
-  ChevronDown, 
-  User, 
-  Settings, 
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Bell,
+  ChevronDown,
+  User,
+  Settings,
   LogOut,
   Home,
   Wrench,
