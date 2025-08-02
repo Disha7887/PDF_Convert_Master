@@ -85,6 +85,9 @@ export const FeaturesSection = (): JSX.Element => {
     <section className="relative w-full py-24 bg-[#111726]">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
+        {/* Animated particles background */}
+        <AnimatedParticles count={25} />
+
         <div className="absolute w-96 h-96 top-[84px] left-36 rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(239,68,68,0.1)_0%,rgba(249,115,22,0.1)_100%)]" />
         <div className="absolute w-80 h-80 top-[675px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(59,130,246,0.15)_0%,rgba(168,85,247,0.15)_100%)]" />
         <div className="absolute w-56 h-56 top-[789px] left-[856px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(249,115,22,0.1)_0%,rgba(239,68,68,0.1)_100%)]" />
