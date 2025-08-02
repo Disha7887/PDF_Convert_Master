@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -46,12 +47,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600 mb-6">You need to be logged in to access this page.</p>
-          <button 
+          <Button
             onClick={() => setLocation('/')}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            className="px-6 py-2 rounded-lg"
           >
             Go to Home
-          </button>
+          </Button>
         </div>
       </div>
     );
