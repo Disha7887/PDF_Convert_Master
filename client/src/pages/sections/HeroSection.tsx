@@ -179,7 +179,7 @@ export const HeroSection = (): JSX.Element => {
 
                     <div className="pt-8">
                       <div className="flex gap-4">
-                        <Button className="h-[61px] px-8 py-4 bg-red-500 text-white rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+                        <Button className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
                           <img
                             className="mr-2"
                             alt="Margin wrap"
