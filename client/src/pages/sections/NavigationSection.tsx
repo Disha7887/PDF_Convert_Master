@@ -19,7 +19,6 @@ export const NavigationSection = (): JSX.Element => {
     { name: "Tools", width: "w-[38.66px]", href: "/tools" },
     { name: "Pricing", width: "w-[50.38px]", href: "/pricing" },
     { name: "About", width: "w-[42.98px]", href: "/about" },
-    { name: "Dashboard", width: "w-[70px]", href: "/dashboard" },
   ];
 
   const handleNavClick = (href: string) => {
