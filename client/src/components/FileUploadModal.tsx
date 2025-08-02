@@ -85,8 +85,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl shadow-2xl">
+      <div className="relative w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-2xl">
           {/* Close Button */}
           <div className="absolute top-6 right-6 z-10">
             <Button
