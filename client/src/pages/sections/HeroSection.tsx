@@ -257,7 +257,7 @@ export const HeroSection = (): JSX.Element => {
                       iconType="lucide"
                       alt="Upload icon"
                       iconClassName="text-white"
-                      size="2xl"
+                      size="3xl"
                       animationSpeed="fast"
                       bgColor="bg-red-500"
                     />
