@@ -142,6 +142,31 @@ function Router() {
         </DynamicLayout>
       </Route>
 
+      {/* Upload pages for tools */}
+      <Route path="/upload/word-to-pdf">
+        <DynamicLayout>
+          <WordToPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/pdf-to-word">
+        <DynamicLayout>
+          <PdfToWordUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/pdf-to-excel">
+        <DynamicLayout>
+          <PdfToExcelUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/merge-pdfs">
+        <DynamicLayout>
+          <MergePdfsUpload />
+        </DynamicLayout>
+      </Route>
+
       {/* Fallback to 404 */}
       <Route>
         <DynamicLayout>
