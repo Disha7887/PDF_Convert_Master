@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Fuse from "fuse.js";
+import Fuse, { type FuseResult, type FuseResultMatch } from "fuse.js";
 
 export interface SearchableSection {
   id: string;
@@ -15,7 +15,7 @@ export interface SearchableSection {
 
 export interface SearchResult {
   section: SearchableSection;
-  matches: Fuse.FuseResultMatch[];
+  matches: readonly FuseResultMatch[];
   score: number;
 }
 
@@ -84,7 +84,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
     }
 
     const fuseResults = fuse.search(searchQuery);
-    const searchResults: SearchResult[] = fuseResults.map(result => ({
+    const searchResults: SearchResult[] = fuseResults.map((result: FuseResult<SearchableSection>) => ({
       section: result.item,
       matches: result.matches || [],
       score: result.score || 0
@@ -183,7 +183,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
   };
 
   // Safe highlight function that avoids HTML malformation
-  const highlightText = (text: string, matches: Fuse.FuseResultMatch[]) => {
+  const highlightText = (text: string, matches: readonly FuseResultMatch[]) => {
     if (!matches.length || !text) {
       return text.replace(/<[^>]*>/g, '').trim();
     }
