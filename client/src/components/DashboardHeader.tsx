@@ -92,7 +92,7 @@ export const DashboardHeader = (): JSX.Element => {
           {/* Plan Status */}
           <div className="flex items-center px-3 py-2 rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
             <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-sm font-medium text-blue-800">Pro Plan</span>
+            <span className="text-sm font-medium text-blue-800">{user?.plan || 'Pro Plan'}</span>
           </div>
 
           {/* Manage Plan Button */}
@@ -114,11 +114,11 @@ export const DashboardHeader = (): JSX.Element => {
             <DropdownMenuTrigger asChild>
               <Button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-3 hover:from-red-600 hover:to-red-700 transition-all">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <span className="text-sm font-semibold">MO</span>
+                  <span className="text-sm font-semibold">{user?.initials || 'U'}</span>
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium">Manda Onzale</p>
-                  <p className="text-xs text-red-100">London, UK</p>
+                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <p className="text-xs text-red-100">{user?.location || 'Location'}</p>
                 </div>
                 <ChevronDown className="w-4 h-4" />
               </Button>
@@ -133,7 +133,7 @@ export const DashboardHeader = (): JSX.Element => {
                 <span>Account Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setLocation("/")}>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>
