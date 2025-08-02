@@ -589,8 +589,11 @@ const optionalAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  console.log("registerRoutes called");
   // Authentication routes
+  console.log("About to register auth routes");
   app.use("/api/auth", authRoutes);
+  console.log("Auth routes registered");
 
   // Get all available tools
   app.get("/api/tools", async (req, res) => {
