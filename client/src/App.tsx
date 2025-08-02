@@ -22,6 +22,7 @@ import { LiveTools } from "@/pages/LiveTools";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { Support } from "@/pages/Support";
+import { SignUp } from "@/pages/SignUp";
 
 function Router() {
   return (
