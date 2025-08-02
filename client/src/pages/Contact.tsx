@@ -434,7 +434,15 @@ export const Contact = (): JSX.Element => {
           <div className="mt-12 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
             <h3 className="text-xl font-bold text-red-800 mb-2">Still Have Questions?</h3>
             <p className="text-red-700 mb-4">Can't find the answer you're looking for? Our support team is here to help!</p>
-            <Button className="bg-red-600 hover:bg-red-700 text-white">
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                const contactForm = document.getElementById('contact-form');
+                if (contactForm) {
+                  contactForm.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
               Contact Support
             </Button>
           </div>
