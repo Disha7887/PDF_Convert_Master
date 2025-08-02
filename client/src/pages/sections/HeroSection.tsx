@@ -252,10 +252,14 @@ export const HeroSection = (): JSX.Element => {
                 {/* Right column - File upload card */}
                 <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-[#ffffff1a] rounded-3xl border-2 border-dashed border-[#6a7280] backdrop-blur-[2px]">
                   <div className="flex flex-col items-center justify-center w-full p-0">
-                    <img
+                    <BouncingUploadIcon
                       className="mb-3"
-                      alt="UploadIcon icon"
+                      iconType="image"
                       src="/figmaAssets/margin-wrap-7.svg"
+                      alt="UploadIcon icon"
+                      size="lg"
+                      animationSpeed="fast"
+                      bgColor="bg-red-500/20"
                     />
 
                     <h2 className="font-bold text-white text-xl text-center mb-3">
