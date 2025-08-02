@@ -47,7 +47,7 @@ interface ToolCardProps {
 
 const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgColor, iconBorderColor, onSelectFiles }) => {
   return (
-    <div className="w-[290px] h-[344.5px] p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+    <div className="w-full max-w-[290px] h-[344.5px] p-6 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
       <div className="flex flex-col h-full">
         {/* Icon */}
         <div className="flex justify-center mb-6">
