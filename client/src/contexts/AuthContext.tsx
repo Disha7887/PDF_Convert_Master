@@ -45,12 +45,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const savedUser = localStorage.getItem('user');
         if (savedUser) {
           setUser(JSON.parse(savedUser));
-        } else {
-          // For demo purposes, auto-login as Manda Onzale
-          // Remove this in production and implement proper authentication
-          setUser(mandaUser);
-          localStorage.setItem('user', JSON.stringify(mandaUser));
         }
+        // For demo purposes, start logged out so we can test the authentication flow
+        // Remove the auto-login to see the header switching in action
       } catch (error) {
         console.error('Error checking auth status:', error);
       } finally {
