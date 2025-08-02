@@ -115,12 +115,12 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 </div>
 
                 {/* Title */}
-                <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">
                   {toolTitle}
                 </h1>
 
                 {/* Description */}
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                <p className="text-base text-gray-600 max-w-xl mx-auto">
                   {toolDescription}
                 </p>
               </div>
