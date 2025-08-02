@@ -81,11 +81,15 @@ export const NavigationSection = (): JSX.Element => {
           <div className="flex items-center space-x-3">
             <Button
               variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base"
+              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base hover:text-white hover:bg-[#4a5462] transition-colors"
+              onClick={handleLogin}
             >
               Log In
             </Button>
-            <Button className="h-10 px-6 py-2 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] bg-[linear-gradient(90deg,rgba(220,38,38,1)_0%,rgba(185,28,28,1)_100%)] [font-family:'Roboto',Helvetica] font-medium text-white text-base [text-shadow:0px_10px_15px_#0000001a]">
+            <Button
+              className="h-10 px-6 py-2 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] bg-[linear-gradient(90deg,rgba(220,38,38,1)_0%,rgba(185,28,28,1)_100%)] [font-family:'Roboto',Helvetica] font-medium text-white text-base [text-shadow:0px_10px_15px_#0000001a] hover:bg-[linear-gradient(90deg,rgba(185,28,28,1)_0%,rgba(153,27,27,1)_100%)] transition-all"
+              onClick={handleGetStarted}
+            >
               Get Started
             </Button>
           </div>
