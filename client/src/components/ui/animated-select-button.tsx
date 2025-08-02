@@ -22,7 +22,7 @@ export const AnimatedSelectButton = React.forwardRef<
         "bg-gradient-to-r from-red-600 via-red-600 to-red-700",
         "hover:from-red-700 hover:via-red-700 hover:to-red-800",
         "transition-all duration-300 ease-out",
-        "shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]",
+        "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 active:scale-[0.98]",
         "border-0 outline-none",
         "before:absolute before:inset-0",
         "before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent",
