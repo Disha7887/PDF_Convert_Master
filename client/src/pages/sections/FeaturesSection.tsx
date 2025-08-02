@@ -154,7 +154,7 @@ export const FeaturesSection = (): JSX.Element => {
 
             {/* CTA Buttons */}
             <div className="flex gap-4">
-              <Button className="bg-red-500 text-white font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]">
+              <Button className="font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]">
                 <img
                   src="/figmaAssets/margin-wrap-8.svg"
                   alt=""
@@ -202,7 +202,7 @@ export const FeaturesSection = (): JSX.Element => {
                   <p className="text-sm text-[#4a5462] text-center mb-2 font-['Roboto',Helvetica]">
                     Drop your files here
                   </p>
-                  <Button className="bg-red-500 text-white text-sm px-4 py-2 rounded-lg font-['Roboto',Helvetica]">
+                  <Button className="text-sm px-4 py-2 rounded-lg font-['Roboto',Helvetica]">
                     Browse Files
                   </Button>
                 </div>
