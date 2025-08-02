@@ -384,7 +384,7 @@ export const Tools: React.FC = () => {
     }
   ];
 
-  const filterButtons = ["All Tools", "Convert", "Edit", "Organize", "Security"];
+  const filterButtons = ["All Tools", "Convert", "Edit", "Organize", "Security", "Image Tools"];
 
   const filteredTools = activeFilter === "All Tools"
     ? toolsData
