@@ -72,7 +72,7 @@ export const Contact = (): JSX.Element => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {/* Phone Support */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
               <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Phone className="w-6 h-6" />
@@ -80,8 +80,8 @@ export const Contact = (): JSX.Element => {
                 <h3 className="text-lg font-bold mb-2">Phone Support</h3>
                 <p className="text-green-100 text-sm">Call us directly for immediate assistance</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
                     <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
@@ -92,14 +92,14 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   24/7 Available
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white">
+                <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white mt-auto">
                   Call Now
                 </Button>
               </div>
             </div>
 
             {/* Email Support */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
               <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Mail className="w-6 h-6" />
@@ -107,8 +107,8 @@ export const Contact = (): JSX.Element => {
                 <h3 className="text-lg font-bold mb-2">Email Support</h3>
                 <p className="text-blue-100 text-sm">Send us an email for detailed inquiries</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
                     <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
@@ -119,14 +119,14 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Response within 1 hour
                 </div>
-                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white mt-auto">
                   Send Email
                 </Button>
               </div>
             </div>
 
             {/* Live Chat */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
               <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
@@ -134,23 +134,26 @@ export const Contact = (): JSX.Element => {
                 <h3 className="text-lg font-bold mb-2">Live Chat</h3>
                 <p className="text-purple-100 text-sm">Chat with our support team in real-time</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
-                  <span className="text-sm text-gray-600">Contact Info:</span>
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4 flex-grow">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-600">Contact Info:</span>
+                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
+                  </div>
                   <p className="text-sm font-medium">Available on website</p>
                 </div>
                 <div className="flex items-center text-sm text-gray-600 mb-4">
                   <Clock className="w-4 h-4 mr-2" />
                   Mon-Fri 9AM-6PM GMT
                 </div>
-                <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white">
+                <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white mt-auto">
                   Start Chat
                 </Button>
               </div>
             </div>
 
             {/* WhatsApp */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
               <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
@@ -158,8 +161,8 @@ export const Contact = (): JSX.Element => {
                 <h3 className="text-lg font-bold mb-2">WhatsApp</h3>
                 <p className="text-green-100 text-sm">Quick support via WhatsApp messaging</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
                     <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
@@ -170,7 +173,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Quick response
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white">
+                <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white mt-auto">
                   Message Us
                 </Button>
               </div>
