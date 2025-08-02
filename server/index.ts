@@ -42,8 +42,9 @@ app.use((req, res, next) => {
 
 (async () => {
   console.log("Starting server...");
-  const server = await registerRoutes(app);
-  console.log("Routes registered successfully");
+  // const server = await registerRoutes(app);
+  const server = require("http").createServer(app);
+  console.log("HTTP server created");
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
