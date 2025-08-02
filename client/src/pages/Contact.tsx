@@ -153,8 +153,8 @@ export const Contact = (): JSX.Element => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-blue-600 text-xs"
-                      onClick={() => copyToClipboard('+447429919748')}
+                      className="text-blue-600 text-xs hover:bg-blue-50 transition-colors"
+                      onClick={() => copyToClipboard('+447429919748', 'Phone Number')}
                     >
                       Copy
                     </Button>
