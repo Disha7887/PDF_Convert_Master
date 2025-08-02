@@ -3,8 +3,10 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Code2, Archive, FileImage } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Pricing: React.FC = () => {
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
