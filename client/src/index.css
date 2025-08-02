@@ -99,14 +99,20 @@
   /* Shimmer animation for animated select button */
   @keyframes shimmer {
     0% {
-      transform: translateX(-100%) skewX(12deg);
+      transform: translateX(-120%) skewX(15deg);
       opacity: 0;
+    }
+    25% {
+      opacity: 0.6;
     }
     50% {
       opacity: 1;
     }
+    75% {
+      opacity: 0.6;
+    }
     100% {
-      transform: translateX(200%) skewX(12deg);
+      transform: translateX(220%) skewX(15deg);
       opacity: 0;
     }
   }
