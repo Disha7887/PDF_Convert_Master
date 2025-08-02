@@ -149,8 +149,7 @@ export const HeroSection = (): JSX.Element => {
         </div>
 
         <div className="flex w-full items-center relative">
-          <div className="flex items-start px-20 py-0 relative w-full">
-            <div className="flex flex-col max-w-screen-xl w-full items-start px-8 py-0 relative">
+          <div className="max-w-screen-xl mx-auto px-8 py-20 w-full relative">
               <div className="flex flex-wrap w-full items-center gap-12 relative">
                 {/* Left column - Text content */}
                 <div className="flex flex-col w-full md:w-[584px] items-start relative">
@@ -293,7 +292,6 @@ export const HeroSection = (): JSX.Element => {
                   </div>
                 </Card>
               </div>
-            </div>
           </div>
         </div>
       </div>
