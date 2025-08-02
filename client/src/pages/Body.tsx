@@ -66,6 +66,7 @@ export const Body = (): JSX.Element => {
       {/* Main content sections */}
       <HeroSection />
       <FeaturesSection />
+      <APIDocumentationSection />
       <TestimonialsSection />
 
       {/* Background decorative elements */}
