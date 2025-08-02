@@ -127,9 +127,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               </div>
 
               {/* Upload Area */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <div
-                  className={`relative w-full h-64 p-8 border-2 border-dashed rounded-2xl transition-all duration-200 ${
+                  className={`relative w-full h-48 p-4 border-2 border-dashed rounded-xl transition-all duration-200 ${
                     isDragOver
                       ? 'border-red-400 bg-red-50'
                       : 'border-gray-300 bg-white'
@@ -140,25 +140,25 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   onDrop={handleDrop}
                 >
                   {/* Upload Icon */}
-                  <div className="flex justify-center mb-4">
+                  <div className="flex justify-center mb-3">
                     <BouncingUploadIcon
-                      size="lg"
+                      size="md"
                       animationSpeed="fast"
                       bgColor="bg-red-50"
                     />
                   </div>
 
                   {/* Upload Text */}
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  <div className="text-center mb-3">
+                    <h3 className="text-base font-bold text-gray-900 mb-1">
                       {getFileTypeText()}
                     </h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-xs text-gray-500 mb-3">
                       or click to browse files
                     </p>
                   </div>
 
-                  {/* File Input */}
+                  {/* File Input Button - Centered and properly positioned */}
                   <div className="flex justify-center">
                     <label className="cursor-pointer">
                       <input
@@ -168,7 +168,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                         onChange={handleFileSelect}
                         className="hidden"
                       />
-                      <div className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all">
+                      <div className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium text-sm rounded-lg shadow-lg hover:shadow-xl transition-all">
                         {getButtonText()}
                       </div>
                     </label>
@@ -176,8 +176,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
                   {/* Selected Files */}
                   {selectedFiles.length > 0 && (
-                    <div className="mt-6 text-center">
-                      <p className="text-sm text-gray-600">
+                    <div className="mt-3 text-center">
+                      <p className="text-xs text-gray-600">
                         {selectedFiles.length} file(s) selected
                       </p>
                     </div>
