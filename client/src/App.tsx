@@ -3,7 +3,9 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Layout } from "@/components/Layout";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { DynamicLayout } from "@/components/DynamicLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 
 import { Body } from "@/pages/Body";
@@ -24,32 +26,109 @@ import { Support } from "@/pages/Support";
 function Router() {
   return (
     <Switch>
-      {/* Dashboard routes without Layout */}
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/dashboard/usage" component={UsageStatistics} />
-      <Route path="/dashboard/api-setup" component={APISetup} />
-      <Route path="/dashboard/api-reference" component={APIReference} />
-      <Route path="/dashboard/manage-plans" component={ManagePlans} />
-      <Route path="/dashboard/live-tools" component={LiveTools} />
+      {/* Protected Dashboard routes */}
+      <Route path="/dashboard">
+        <ProtectedRoute requireAuth={true}>
+          <DynamicLayout isDashboardPage={true}>
+            <Dashboard />
+          </DynamicLayout>
+        </ProtectedRoute>
+      </Route>
 
-      {/* Regular pages with Layout */}
+      <Route path="/dashboard/usage">
+        <ProtectedRoute requireAuth={true}>
+          <DynamicLayout isDashboardPage={true}>
+            <UsageStatistics />
+          </DynamicLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/api-setup">
+        <ProtectedRoute requireAuth={true}>
+          <DynamicLayout isDashboardPage={true}>
+            <APISetup />
+          </DynamicLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/api-reference">
+        <ProtectedRoute requireAuth={true}>
+          <DynamicLayout isDashboardPage={true}>
+            <APIReference />
+          </DynamicLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/manage-plans">
+        <ProtectedRoute requireAuth={true}>
+          <DynamicLayout isDashboardPage={true}>
+            <ManagePlans />
+          </DynamicLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/live-tools">
+        <ProtectedRoute requireAuth={true}>
+          <DynamicLayout isDashboardPage={true}>
+            <LiveTools />
+          </DynamicLayout>
+        </ProtectedRoute>
+      </Route>
+
+      {/* Public pages with dynamic header based on auth status */}
+      <Route path="/">
+        <DynamicLayout>
+          <Body />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/tools">
+        <DynamicLayout>
+          <Tools />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/contact">
+        <DynamicLayout>
+          <Contact />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/pricing">
+        <DynamicLayout>
+          <Pricing />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/about">
+        <DynamicLayout>
+          <About />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/terms-of-service">
+        <DynamicLayout>
+          <TermsOfService />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/privacy-policy">
+        <DynamicLayout>
+          <PrivacyPolicy />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/support">
+        <DynamicLayout>
+          <Support />
+        </DynamicLayout>
+      </Route>
+
+      {/* Fallback to 404 */}
       <Route>
-        {(params) => (
-          <Layout>
-            <Switch>
-              <Route path="/" component={Body} />
-              <Route path="/tools" component={Tools} />
-              <Route path="/contact" component={Contact} />
-              <Route path="/pricing" component={Pricing} />
-              <Route path="/about" component={About} />
-              <Route path="/terms-of-service" component={TermsOfService} />
-              <Route path="/privacy-policy" component={PrivacyPolicy} />
-              <Route path="/support" component={Support} />
-              {/* Fallback to 404 */}
-              <Route component={NotFound} />
-            </Switch>
-          </Layout>
-        )}
+        <DynamicLayout>
+          <NotFound />
+        </DynamicLayout>
       </Route>
     </Switch>
   );
@@ -59,8 +138,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <AuthProvider>
+          <Toaster />
+          <Router />
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
