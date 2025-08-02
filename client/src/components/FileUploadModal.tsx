@@ -186,48 +186,48 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Secure Processing */}
-                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50">
-                      <Shield className="w-4 h-4 text-blue-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50">
+                      <Shield className="w-3 h-3 text-blue-600" />
                     </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
+                  <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">
                     Secure Processing
                   </h3>
-                  <p className="text-xs text-gray-600 text-center leading-relaxed">
+                  <p className="text-[10px] text-gray-600 text-center leading-relaxed">
                     Your files are processed securely and deleted after conversion
                   </p>
                 </div>
 
                 {/* Fast Conversion */}
-                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-green-50">
-                      <Zap className="w-4 h-4 text-green-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-50">
+                      <Zap className="w-3 h-3 text-green-600" />
                     </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
+                  <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">
                     Fast Conversion
                   </h3>
-                  <p className="text-xs text-gray-600 text-center leading-relaxed">
+                  <p className="text-[10px] text-gray-600 text-center leading-relaxed">
                     Lightning-fast processing with high-quality results
                   </p>
                 </div>
 
                 {/* Easy Download */}
-                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-purple-50">
-                      <Download className="w-4 h-4 text-purple-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-50">
+                      <Download className="w-3 h-3 text-purple-600" />
                     </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
+                  <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">
                     Easy Download
                   </h3>
-                  <p className="text-xs text-gray-600 text-center leading-relaxed">
+                  <p className="text-[10px] text-gray-600 text-center leading-relaxed">
                     Download your converted files instantly after processing
                   </p>
                 </div>
