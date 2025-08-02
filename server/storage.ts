@@ -388,11 +388,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateApiKeyUsage(id: string): Promise<ApiKey | undefined> {
+    // First get current usage count
+    const [currentKey] = await db.select({ usageCount: apiKeys.usageCount }).from(apiKeys).where(eq(apiKeys.id, id));
+    
     const [updatedApiKey] = await db
       .update(apiKeys)
       .set({ 
         lastUsed: new Date(),
-        usageCount: db.select({ count: count() }).from(apiKeys).where(eq(apiKeys.id, id))
+        usageCount: (currentKey?.usageCount || 0) + 1
       })
       .where(eq(apiKeys.id, id))
       .returning();

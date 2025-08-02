@@ -1,0 +1,136 @@
+FULL BACKEND DEVELOPMENT PROMPT (Replit-Ready)
+
+🚀 Build a complete backend server for a PDF Conversion & Image Editing SaaS website hosted on Replit. The backend must support:
+- Multiple file tools via unique REST API endpoints
+- Client dashboard to show plan, API key, and usage limits
+- Real-time usage tracking (daily/monthly) per user
+- API key-based access to tools via external API usage
+- Live payment tracking using Stripe and webhook-based limit resets
+- Fully operational without any dummy data — all file conversion/editing should be real-time
+
+Tech Stack:
+- Node.js (Express)
+- PostgreSQL (Replit PostgreSQL or Supabase as DB)
+- Multer (file upload)
+- pdf-lib or sharp (for real file conversions/editing)
+- Stripe (for live payments)
+- NGINX (for reverse proxy and HTTPS if deployed outside Replit)
+
+Functional Modules to Build:
+
+1. TOOL API SYSTEM
+- Unique tool identifiers per endpoint (e.g., POST /api/convert?tool=jpg_to_pdf)
+- Multer for file uploads
+- Real file processing using pdf-lib, sharp, or internal logic
+- Store results in /uploads/ and return real download URLs
+
+2. CLIENT AUTH + API KEY SYSTEM
+- Email/password registration & JWT-based login
+- Dashboard feature to generate unique API keys
+- API key storage in PostgreSQL
+- API key middleware to protect tool routes
+
+3. REAL-TIME USAGE TRACKING
+- Log each conversion in conversions table (user_id, tool_id, file_name, timestamp, file_size)
+- Calculate daily/monthly usage stats and enforce quotas
+- API endpoints:
+  GET /api/usage
+  GET /api/downloads
+  GET /api/plan
+
+4. PAYMENT SYSTEM (LIVE TRACKING + RESET LIMITS)
+- Stripe Checkout integration (POST /api/payment/subscribe)
+- Stripe webhook for checkout.session.completed to update plans and reset quotas
+- Handle plan renewal, cancellation, and payment failures
+
+5. REST API SUPPORT
+- All features accessible via REST APIs authenticated with API keys
+- Example usage:
+  POST /api/convert?tool=compress_pdf
+  Authorization: Bearer <API_KEY>
+  Body: file upload
+
+Database Structure (PostgreSQL):
+
+users (
+  id UUID PRIMARY KEY,
+  email VARCHAR UNIQUE,
+  password_hash TEXT,
+  plan VARCHAR DEFAULT 'free',
+  created_at TIMESTAMP
+)
+
+api_keys (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  api_key TEXT UNIQUE,
+  created_at TIMESTAMP
+)
+
+conversions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  tool VARCHAR,
+  file_name TEXT,
+  download_url TEXT,
+  file_size BIGINT,
+  created_at TIMESTAMP
+)
+
+payments (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  stripe_session_id TEXT,
+  status TEXT,
+  created_at TIMESTAMP
+)
+
+Project Structure:
+
+backend/
+├── controllers/
+│   ├── authController.js
+│   ├── toolController.js
+│   ├── usageController.js
+│   ├── paymentController.js
+├── routes/
+│   ├── authRoutes.js
+│   ├── toolRoutes.js
+│   ├── usageRoutes.js
+│   ├── paymentRoutes.js
+├── middlewares/
+│   ├── authMiddleware.js
+│   └── apiKeyMiddleware.js
+├── uploads/                    ← stores real converted files
+├── utils/
+│   ├── generateApiKey.js
+│   └── stripe.js
+├── db.js                       ← PostgreSQL connection
+├── server.js
+└── .env
+
+.env Configuration:
+
+PORT=4000
+DATABASE_URL=your_postgres_url
+JWT_SECRET=your_jwt_secret
+STRIPE_SECRET_KEY=your_stripe_secret
+FRONTEND_URL=https://your-client-frontend.repl.co
+
+Deployment Notes (Replit):
+- Run Express server directly
+- Store secrets using Replit "Secrets"
+- Use Replit DB or Supabase for PostgreSQL
+- CORS enabled and HTTPS by default in Replit
+
+Final Developer Prompt Summary:
+Build a full-stack backend on Replit using Node.js, Express, PostgreSQL, Multer, and Stripe, for a PDF conversion SaaS.
+Include:
+- Unique tool APIs for each conversion type
+- Real-time file processing and downloads
+- API key auth with quota enforcement
+- Client dashboard routes for usage, downloads, and plan
+- Stripe integration with auto-limit reset
+- PostgreSQL database for auth, usage, and payments
+
+Code must be modular, secure, and production-ready—no dummy data, all features must work live.
