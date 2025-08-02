@@ -241,7 +241,7 @@ export const HeroSection = (): JSX.Element => {
                       or click to browse files
                     </p>
 
-                    <Button className="h-[57px] px-12 py-4 mb-8 rounded-xl shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] bg-[linear-gradient(90deg,rgba(239,68,68,1)_0%,rgba(220,38,38,1)_100%)]">
+                    <Button className="h-[57px] px-12 py-4 mb-8 rounded-xl shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
                       <UploadIcon className="mr-2 h-5 w-5" />
                       <span className="font-semibold text-white text-base">
                         Select PDF File
