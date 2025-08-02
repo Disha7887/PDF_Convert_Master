@@ -298,6 +298,7 @@ export const LiveTools: React.FC = () => {
                   icon={tool.icon}
                   iconBg={tool.iconBg}
                   isFavorite={tool.isFavorite}
+                  uploadUrl={tool.uploadUrl}
                 />
               ))}
             </div>
