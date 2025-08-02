@@ -7,19 +7,49 @@ import { useLocation } from "wouter";
 export const FooterSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
 
+  // Enhanced navigation handler with better error handling
+  const handleNavigation = (path: string | null, linkText: string) => {
+    console.log(`🔗 Footer link clicked: ${linkText}`, { path });
+
+    if (!path) {
+      console.log(`❌ No path defined for: ${linkText}`);
+      return;
+    }
+
+    try {
+      console.log(`🚀 Navigating to: ${path}`);
+      setLocation(path);
+
+      // Scroll to top after a short delay to ensure page loads
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      console.log(`✅ Navigation to ${path} initiated successfully`);
+    } catch (error) {
+      console.error(`❌ Navigation error for ${path}:`, error);
+      // Fallback: try direct window navigation
+      try {
+        window.location.href = path;
+      } catch (fallbackError) {
+        console.error(`❌ Fallback navigation failed:`, fallbackError);
+      }
+    }
+  };
+
   // Footer links data
   const quickLinks = [
     { text: "PDF Tools", path: "/tools" },
     { text: "Pricing", path: "/pricing" },
     { text: "About Us", path: "/about" },
-    { text: "Support", path: "/contact" },
+    { text: "Support", path: "/support" },
     { text: "Contact", path: "/contact" },
   ];
 
   const companyLinks = [
-    { text: "Privacy Policy", path: null },
+    { text: "Privacy Policy", path: "/privacy-policy" },
     { text: "Terms of Service", path: "/terms-of-service" },
-    { text: "Support", path: "/contact" },
+    { text: "Support", path: "/support" },
     { text: "Report Bug", path: null },
   ];
 
@@ -74,12 +104,13 @@ export const FooterSection = (): JSX.Element => {
                     key={`quick-link-${index}`}
                     className="flex items-center"
                   >
-                    <div
-                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
-                      onClick={() => link.path && setLocation(link.path)}
+                    <button
+                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors duration-200 border-0 bg-transparent p-0 text-left"
+                      onClick={() => handleNavigation(link.path, link.text)}
+                      type="button"
                     >
                       {link.text}
-                    </div>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -101,12 +132,16 @@ export const FooterSection = (): JSX.Element => {
                     key={`company-link-${index}`}
                     className="flex items-center"
                   >
-                    <div
-                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
-                      onClick={() => link.path && setLocation(link.path)}
+                    <button
+                      className={`w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap transition-colors duration-200 border-0 bg-transparent p-0 text-left ${
+                        link.path ? 'cursor-pointer hover:text-white' : 'cursor-default opacity-50'
+                      }`}
+                      onClick={() => handleNavigation(link.path, link.text)}
+                      disabled={!link.path}
+                      type="button"
                     >
                       {link.text}
-                    </div>
+                    </button>
                   </div>
                 ))}
               </div>

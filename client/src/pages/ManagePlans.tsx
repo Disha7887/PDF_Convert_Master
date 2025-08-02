@@ -17,36 +17,15 @@ export const ManagePlans: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="max-w-7xl mx-auto px-14">
-            <div className="flex items-center justify-between">
-              {/* Left - Back button and title */}
-              <div className="flex items-center">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="mr-4"
-                  onClick={() => handleNavigation('/dashboard')}
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Manage Plans</h1>
-                  <p className="text-sm text-gray-600">Manage your subscription and billing</p>
-                </div>
-              </div>
-
-              {/* Right - Logo and branding */}
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center mr-2">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-lg font-bold text-gray-900">PDFConverter Pro</h2>
-              </div>
+        {/* Page Title Section */}
+        <div className="bg-white border-b border-gray-200 px-6 py-8">
+          <div className="max-w-7xl mx-auto px-20">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Manage Plans</h1>
+              <p className="text-lg text-gray-600">Manage your subscription and billing</p>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-20 py-8">
