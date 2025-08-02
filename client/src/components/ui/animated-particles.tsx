@@ -18,9 +18,9 @@ interface AnimatedParticlesProps {
   className?: string;
 }
 
-export const AnimatedParticles: React.FC<AnimatedParticlesProps> = ({ 
-  count = 50, 
-  className = "" 
+export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
+  count = 50,
+  className = ""
 }) => {
   const particles = useMemo(() => {
     const particleArray: Particle[] = [];
@@ -167,4 +167,4 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = ({
       ))}
     </div>
   );
-};
+});
