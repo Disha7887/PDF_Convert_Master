@@ -117,7 +117,7 @@ export const Dashboard: React.FC = () => {
 
             {/* Navigation */}
             <nav className="space-y-2">
-              <Button className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white justify-start p-3 rounded-lg shadow-md">
+              <Button className="w-full justify-start p-3 rounded-lg shadow-md">
                 <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center mr-3">
                   <Home className="w-5 h-5" />
                 </div>
