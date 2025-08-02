@@ -7,8 +7,11 @@ import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
 import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
+import { useLocation } from "wouter";
 
 export const HeroSection = (): JSX.Element => {
+  const [location, setLocation] = useLocation();
+
   // Background decoration elements data
   const gradientBlurs = [
     {
@@ -185,7 +188,10 @@ export const HeroSection = (): JSX.Element => {
 
                     <div className="pt-8">
                       <div className="flex gap-4">
-                        <Button className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+                        <Button
+                          className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
+                          onClick={() => setLocation('/tools')}
+                        >
                           <img
                             className="mr-2"
                             alt="Margin wrap"
