@@ -3,299 +3,99 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { DynamicLayout } from "@/components/DynamicLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { NavigationSection } from "@/pages/sections/NavigationSection";
+import { FooterSection } from "@/pages/sections/FooterSection";
+import { HeroSection } from "@/pages/sections/HeroSection";
+import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 
+// Import pages
 import { Body } from "@/pages/Body";
 import { Contact } from "@/pages/Contact";
 import { Pricing } from "@/pages/Pricing";
 import { About } from "@/pages/About";
 import { Tools } from "@/pages/Tools";
-import { Dashboard } from "@/pages/Dashboard";
-import { UsageStatistics } from "@/pages/UsageStatistics";
-import { APISetup } from "@/pages/APISetup";
-import { APIReference } from "@/pages/APIReference";
-import { ManagePlans } from "@/pages/ManagePlans";
-import { LiveTools } from "@/pages/LiveTools";
+import Dashboard from "@/pages/Dashboard";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { Support } from "@/pages/Support";
-import { SignUp } from "@/pages/SignUp";
-import { SignIn } from "@/pages/SignIn";
-import { WordToPdfUpload } from "@/pages/upload/WordToPdf";
-import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
-import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
-import { ExcelToPdfUpload } from "@/pages/upload/ExcelToPdf";
-import { PowerPointToPdfUpload } from "@/pages/upload/PowerPointToPdf";
-import { PdfToPowerPointUpload } from "@/pages/upload/PdfToPowerPoint";
-import { PdfToImagesUpload } from "@/pages/upload/PdfToImages";
-import { ImagesToPdfUpload } from "@/pages/upload/ImagesToPdf";
-import { HtmlToPdfUpload } from "@/pages/upload/HtmlToPdf";
-import { SplitPdfUpload } from "@/pages/upload/SplitPdf";
-import { CompressPdfUpload } from "@/pages/upload/CompressPdf";
-import { RotatePdfUpload } from "@/pages/upload/RotatePdf";
-import { ResizeImageUpload } from "@/pages/upload/ResizeImage";
-import { CropImageUpload } from "@/pages/upload/CropImage";
-import { RotateImageUpload } from "@/pages/upload/RotateImage";
-import { ConvertImageFormatUpload } from "@/pages/upload/ConvertImageFormat";
-import { CompressImageUpload } from "@/pages/upload/CompressImage";
-import { UpscaleImageUpload } from "@/pages/upload/UpscaleImage";
-import { RemoveBackgroundUpload } from "@/pages/upload/RemoveBackground";
-import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
-import { UploadDemo } from "@/pages/UploadDemo";
 import { Features } from "@/pages/Features";
 import { LearnMore } from "@/pages/LearnMore";
 
-function Router() {
+// Layout wrapper for public pages (with header and footer)
+function PublicPageLayout({ children, showHero = false }: { children: React.ReactNode; showHero?: boolean }) {
   return (
-    <Switch>
-      {/* Dashboard routes - now accessible without authentication */}
-      <Route path="/dashboard">
-        <DynamicLayout isDashboardPage={true}>
-          <Dashboard />
-        </DynamicLayout>
+
       </Route>
 
-      <Route path="/dashboard/usage">
-        <DynamicLayout isDashboardPage={true}>
-          <UsageStatistics />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/dashboard/api-setup">
-        <DynamicLayout isDashboardPage={true}>
-          <APISetup />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/dashboard/api-reference">
-        <DynamicLayout isDashboardPage={true}>
-          <APIReference />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/dashboard/manage-plans">
-        <DynamicLayout isDashboardPage={true}>
-          <ManagePlans />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/dashboard/live-tools">
-        <DynamicLayout isDashboardPage={true}>
-          <LiveTools />
-        </DynamicLayout>
-      </Route>
-
-      {/* Public pages with dynamic header based on auth status */}
+      {/* Public pages WITH header and footer */}
       <Route path="/">
-        <DynamicLayout>
+        <PublicPageLayout showHero={true}>
           <Body />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/tools">
-        <DynamicLayout>
+        <PublicPageLayout>
           <Tools />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/contact">
-        <DynamicLayout>
+        <PublicPageLayout>
           <Contact />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/pricing">
-        <DynamicLayout>
+        <PublicPageLayout>
           <Pricing />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/about">
-        <DynamicLayout>
+        <PublicPageLayout>
           <About />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/features">
-        <DynamicLayout>
+        <PublicPageLayout>
           <Features />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/learn-more">
-        <DynamicLayout>
+        <PublicPageLayout>
           <LearnMore />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
-      <Route path="/terms-of-service">
-        <DynamicLayout>
+      <Route path="/terms">
+        <PublicPageLayout>
           <TermsOfService />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
-      <Route path="/privacy-policy">
-        <DynamicLayout>
+      <Route path="/privacy">
+        <PublicPageLayout>
           <PrivacyPolicy />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/support">
-        <DynamicLayout>
+        <PublicPageLayout>
           <Support />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
 
-      <Route path="/signup">
-        <DynamicLayout>
-          <SignUp />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/signin">
-        <DynamicLayout>
-          <SignIn />
-        </DynamicLayout>
-      </Route>
-
-      {/* Upload pages for tools */}
-      <Route path="/upload/word-to-pdf">
-        <DynamicLayout>
-          <WordToPdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/pdf-to-word">
-        <DynamicLayout>
-          <PdfToWordUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/pdf-to-excel">
-        <DynamicLayout>
-          <PdfToExcelUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/merge-pdfs">
-        <DynamicLayout>
-          <MergePdfsUpload />
-        </DynamicLayout>
-      </Route>
-
-      {/* New PDF conversion tools */}
-      <Route path="/upload/excel-to-pdf">
-        <DynamicLayout>
-          <ExcelToPdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/powerpoint-to-pdf">
-        <DynamicLayout>
-          <PowerPointToPdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/pdf-to-powerpoint">
-        <DynamicLayout>
-          <PdfToPowerPointUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/pdf-to-images">
-        <DynamicLayout>
-          <PdfToImagesUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/images-to-pdf">
-        <DynamicLayout>
-          <ImagesToPdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/html-to-pdf">
-        <DynamicLayout>
-          <HtmlToPdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      {/* PDF document management tools */}
-      <Route path="/upload/split-pdf">
-        <DynamicLayout>
-          <SplitPdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/compress-pdf">
-        <DynamicLayout>
-          <CompressPdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/rotate-pdf">
-        <DynamicLayout>
-          <RotatePdfUpload />
-        </DynamicLayout>
-      </Route>
-
-      {/* Image editing tools */}
-      <Route path="/upload/resize-image">
-        <DynamicLayout>
-          <ResizeImageUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/crop-image">
-        <DynamicLayout>
-          <CropImageUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/rotate-image">
-        <DynamicLayout>
-          <RotateImageUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/convert-image-format">
-        <DynamicLayout>
-          <ConvertImageFormatUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/compress-image">
-        <DynamicLayout>
-          <CompressImageUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/upscale-image">
-        <DynamicLayout>
-          <UpscaleImageUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload/remove-background">
-        <DynamicLayout>
-          <RemoveBackgroundUpload />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload-demo">
-        <DynamicLayout>
-          <UploadDemo />
-        </DynamicLayout>
-      </Route>
-
-      {/* Fallback to 404 */}
+      {/* 404 Not Found */}
       <Route>
-        <DynamicLayout>
+        <PublicPageLayout>
           <NotFound />
-        </DynamicLayout>
+        </PublicPageLayout>
       </Route>
     </Switch>
   );
@@ -305,10 +105,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Router />
-        </AuthProvider>
+        <Router />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );

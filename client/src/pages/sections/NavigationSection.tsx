@@ -8,10 +8,6 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
 
-
-export const NavigationSection = (): JSX.Element => {
-  const [location, setLocation] = useLocation();
-
   // Navigation menu items data - always include Dashboard
   const navItems = [
     { name: "Dashboard", width: "w-[75px]", href: "/dashboard" },
@@ -36,6 +32,7 @@ export const NavigationSection = (): JSX.Element => {
       setLocation(href);
     }
   };
+
 
   return (
     <header className="w-full h-[65px] bg-[#111726] border-b border-[#374050] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
@@ -66,12 +63,7 @@ export const NavigationSection = (): JSX.Element => {
 
           {/* User Info */}
           <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-[#4a5462]/20 border border-[#4a5462]">
-              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-xs font-semibold text-white">{staticUser.initials}</span>
-              </div>
-              <span className="text-sm text-white font-medium">{staticUser.name}</span>
-            </div>
+
           </div>
         </div>
       </div>

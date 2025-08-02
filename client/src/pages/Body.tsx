@@ -64,7 +64,6 @@ export const Body = (): JSX.Element => {
       <div className="absolute w-[130px] h-1 top-0 left-0 bg-red-500" />
 
       {/* Main content sections */}
-      <HeroSection />
       <FeaturesSection />
       <APIDocumentationSection />
       <TestimonialsSection />

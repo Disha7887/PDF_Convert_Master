@@ -1,0 +1,204 @@
+FULL BACKEND DEVELOPMENT PROMPT (Replit-Ready)
+🚀 Build a complete backend server for a PDF Conversion & Image Editing SaaS website hosted on Replit. The backend must support:
+
+Multiple file tools via unique REST API endpoints
+
+A client dashboard to show plan, API key, usage limits
+
+Real-time usage tracking (daily/monthly) per user
+
+API key-based access to tools via external API usage
+
+Live payment tracking using Stripe and webhook-based limit resets
+
+Fully operational without any dummy data — all file conversion/editing should be real-time
+
+🧱 Tech Stack:
+
+Node.js (Express)
+
+PostgreSQL (Replit PostgreSQL or Supabase as DB)
+
+Multer (file upload)
+
+pdf-lib or sharp (for real file conversions/editing)
+
+Stripe (for live payments)
+
+NGINX (for reverse proxy and HTTPS if deployed outside Replit)
+
+📦 FUNCTIONAL MODULES TO BUILD:
+📌 1. TOOL API SYSTEM
+Each tool (e.g., JPG to PDF, Merge PDF, Edit Image) must be accessible via a unique tool identifier:
+
+POST /api/convert?tool=jpg_to_pdf
+
+POST /api/edit?tool=crop_image
+
+Handle uploads with Multer
+
+Process files using real libraries (pdf-lib, sharp, etc.)
+
+Save converted file to /uploads/ and return a real download URL
+
+🔐 2. CLIENT AUTH + API KEY SYSTEM
+Clients can register/login using email & password (JWT-based auth)
+
+After login, users can generate a unique API key
+
+API keys are stored in DB and used to:
+
+Authenticate requests
+
+Identify client for usage tracking
+
+Secure all /api/convert routes with API key middleware
+
+📈 3. REAL-TIME USAGE TRACKING
+Track every conversion and file operation in a conversions table:
+
+user_id, tool_id, file_name, timestamp, size
+
+Calculate:
+
+Daily/Monthly usage count
+
+File size processed
+
+Active quota based on subscription plan
+
+API Endpoints:
+
+GET /api/usage – return daily/monthly stats
+
+GET /api/downloads – list previous conversions
+
+GET /api/plan – show active plan and quota
+
+💳 4. PAYMENT SYSTEM (LIVE TRACKING + RESET LIMITS)
+Integrate Stripe Checkout:
+
+POST /api/payment/subscribe → create Stripe session
+
+On success, Stripe webhook updates user’s plan in DB
+
+Auto-reset usage limits on:
+
+Payment success
+
+Plan renewal
+
+Cancel/expire access on payment failure
+
+🌐 5. REST API SUPPORT
+All features (conversion, tracking, plan, API key generation) must be accessible via authenticated REST APIs
+
+External systems can access tools with:
+
+makefile
+Copy
+Edit
+Authorization: Bearer <API_KEY>
+Example:
+
+yaml
+Copy
+Edit
+POST /api/convert?tool=compress_pdf
+Headers:
+  Authorization: Bearer user_api_key
+Body:
+  file: PDF file
+🗄 DATABASE STRUCTURE (PostgreSQL)
+sql
+Copy
+Edit
+users (
+  id UUID PRIMARY KEY,
+  email VARCHAR UNIQUE,
+  password_hash TEXT,
+  plan VARCHAR DEFAULT 'free',
+  created_at TIMESTAMP
+)
+
+api_keys (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  api_key TEXT UNIQUE,
+  created_at TIMESTAMP
+)
+
+conversions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  tool VARCHAR,
+  file_name TEXT,
+  download_url TEXT,
+  file_size BIGINT,
+  created_at TIMESTAMP
+)
+
+payments (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  stripe_session_id TEXT,
+  status TEXT,
+  created_at TIMESTAMP
+)
+🧱 PROJECT STRUCTURE (Organized & Modular)
+pgsql
+Copy
+Edit
+backend/
+├── controllers/
+│   ├── authController.js
+│   ├── toolController.js
+│   ├── usageController.js
+│   ├── paymentController.js
+├── routes/
+│   ├── authRoutes.js
+│   ├── toolRoutes.js
+│   ├── usageRoutes.js
+│   ├── paymentRoutes.js
+├── middlewares/
+│   ├── authMiddleware.js       ← JWT check
+│   └── apiKeyMiddleware.js     ← API key check
+├── uploads/                    ← stores real converted files
+├── utils/
+│   ├── generateApiKey.js
+│   └── stripe.js
+├── db.js                       ← PostgreSQL connection
+├── server.js
+└── .env
+🔐 ENV CONFIG (.env)
+env
+Copy
+Edit
+PORT=4000
+DATABASE_URL=your_postgres_url
+JWT_SECRET=your_jwt_secret
+STRIPE_SECRET_KEY=your_stripe_secret
+FRONTEND_URL=https://your-client-frontend.repl.co
+🌐 DEPLOYMENT NOTE (for Replit)
+Use Replit's built-in web server with Express
+
+PostgreSQL can be set up via Supabase or Replit DB
+
+No NGINX needed if using Replit’s reverse proxy, but ensure:
+
+CORS enabled
+
+HTTPS if live
+
+Use Replit Secrets for env vars
+
+✅ FINAL OUTPUT FEATURES
+🔧 Real PDF tool conversions with unique IDs
+
+🔐 API key auth for tool access
+
+📊 Live dashboard usage stats
+
+💳 Real payment handling & quota auto reset
+
+🔁 Replit-hosted backend with public REST APIs
