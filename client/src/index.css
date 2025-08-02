@@ -144,6 +144,27 @@
     animation: shimmer-bg 1.5s ease-in-out infinite;
   }
 
+  /* Custom red color variants for precise gradient control */
+  .from-red-650 {
+    --tw-gradient-from: #dc2626 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(220 38 38 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .via-red-650 {
+    --tw-gradient-to: rgb(203 32 32 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #cb2020 var(--tw-gradient-via-position), var(--tw-gradient-to);
+  }
+
+  .to-red-750 {
+    --tw-gradient-to: #991b1b var(--tw-gradient-to-position);
+  }
+
+  .hover\\:via-red-750:hover {
+    --tw-gradient-to: rgb(153 27 27 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #991b1b var(--tw-gradient-via-position), var(--tw-gradient-to);
+  }
+
   /* Search highlight improvements */
   .search-highlight {
     background-color: rgb(219 234 254) !important;
