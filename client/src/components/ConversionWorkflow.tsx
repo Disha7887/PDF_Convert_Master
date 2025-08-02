@@ -122,18 +122,18 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setErrorMessage(null);
 
     try {
-      // Start conversion job
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('toolType', toolType.replace(/-/g, '_')); // Convert kebab-case to snake_case
+      formData.append('fileName', selectedFile.name);
+      formData.append('fileSize', selectedFile.size.toString());
+      formData.append('options', JSON.stringify({}));
+
+      // Start conversion job with file upload
       const response = await fetch('/api/convert', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          toolType: toolType.replace('-', '_'),
-          fileName: selectedFile.name,
-          fileSize: selectedFile.size,
-          options: {}
-        }),
+        body: formData, // Using FormData for file upload
       });
 
       const responseData = await response.json();
