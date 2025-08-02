@@ -241,6 +241,6 @@ export const UsageStatistics: React.FC = () => {
           </main>
         </div>
       </div>
-    </DashboardLayout>
+    
   );
 };

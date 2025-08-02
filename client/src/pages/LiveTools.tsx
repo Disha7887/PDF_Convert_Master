@@ -299,6 +299,6 @@ export const LiveTools: React.FC = () => {
           </div>
         </main>
       </div>
-    </DashboardLayout>
+    
   );
 };

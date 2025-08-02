@@ -300,6 +300,6 @@ export const ManagePlans: React.FC = () => {
           </Card>
         </main>
       </div>
-    </DashboardLayout>
+    
   );
 };

@@ -243,6 +243,6 @@ export const APIReference: React.FC = () => {
           </main>
         </div>
       </div>
-    </DashboardLayout>
+    
   );
 };

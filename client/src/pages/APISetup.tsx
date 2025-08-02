@@ -248,6 +248,6 @@ export const APISetup: React.FC = () => {
           </main>
         </div>
       </div>
-    </DashboardLayout>
+    
   );
 };
