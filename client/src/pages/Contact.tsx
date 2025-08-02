@@ -124,23 +124,23 @@ export const Contact = (): JSX.Element => {
 
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#DC2626] via-[#EA580C] to-[#B91C1C] py-24">
+      <section className="relative bg-gradient-to-br from-[#1E40AF] via-[#7C3AED] to-[#1E3A8A] py-24">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-6xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white">
               <h1 className="text-5xl font-bold mb-6">Get Expert Help & Support</h1>
-              <p className="text-xl text-orange-100 mb-8">
+              <p className="text-xl text-blue-100 mb-8">
                 Our dedicated team is here to assist you with any questions, technical issues, or business inquiries. Choose how you'd like to connect with us.
               </p>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-orange-200 mb-1">24/7</div>
+                  <div className="text-3xl font-bold text-blue-200 mb-1">24/7</div>
                   <div className="text-sm text-gray-200">Support Available</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-orange-200 mb-1">&lt;1hr</div>
+                  <div className="text-3xl font-bold text-blue-200 mb-1">&lt;1hr</div>
                   <div className="text-sm text-gray-200">Response Time</div>
                 </div>
               </div>
@@ -148,21 +148,92 @@ export const Contact = (): JSX.Element => {
 
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-4 py-2 bg-white rounded-full text-red-600 text-sm font-semibold flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedCategory("technical")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 transition-all ${
+                    selectedCategory === "technical"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
                   <HeadphonesIcon className="w-4 h-4" />
                   Technical Support
-                </span>
-                <span className="px-4 py-2 bg-white/20 rounded-full text-white text-sm">Business Inquiry</span>
-                <span className="px-4 py-2 bg-white/20 rounded-full text-white text-sm">Feedback</span>
-                <span className="px-4 py-2 bg-white/20 rounded-full text-white text-sm">Partnership</span>
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("business")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCategory === "business"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Business Inquiry
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("feedback")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCategory === "feedback"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Feedback
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("partnership")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCategory === "partnership"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Partnership
+                </button>
               </div>
-              
-              <h3 className="text-white text-lg font-semibold mb-3">Technical Support</h3>
-              <p className="text-gray-200 text-sm mb-3">Having trouble with our tools? Get instant help from our technical team.</p>
-              <div className="flex items-center text-orange-200 text-sm">
-                <Clock className="w-4 h-4 mr-2" />
-                Average response: 15 minutes
-              </div>
+
+              {selectedCategory === "technical" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Technical Support</h3>
+                  <p className="text-gray-200 text-sm mb-3">Having trouble with our tools? Get instant help from our technical team.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Average response: 15 minutes
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === "business" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Business Inquiry</h3>
+                  <p className="text-gray-200 text-sm mb-3">Explore enterprise solutions, custom integrations, and volume pricing options for your organization.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Response within: 2 hours
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === "feedback" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Feedback</h3>
+                  <p className="text-gray-200 text-sm mb-3">Share your experience, suggest improvements, or report issues to help us enhance our services.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Response within: 24 hours
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === "partnership" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Partnership</h3>
+                  <p className="text-gray-200 text-sm mb-3">Join our partner network, explore collaboration opportunities, or discuss integration possibilities.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Response within: 3 business days
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
