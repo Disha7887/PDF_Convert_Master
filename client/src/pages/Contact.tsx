@@ -187,8 +187,8 @@ export const Contact = (): JSX.Element => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-blue-600 text-xs"
-                      onClick={() => copyToClipboard('support@pdfconvertmaster.com')}
+                      className="text-blue-600 text-xs hover:bg-blue-50 transition-colors"
+                      onClick={() => copyToClipboard('support@pdfconvertmaster.com', 'Email Address')}
                     >
                       Copy
                     </Button>
