@@ -466,7 +466,7 @@ export const Tools: React.FC = () => {
               <Button
                 key={index}
                 variant={activeFilter === buttonName ? "default" : "outline"}
-                className={`px-6 py-3 rounded-full font-medium ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-full font-medium text-sm sm:text-base ${
                   activeFilter === buttonName
                     ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
