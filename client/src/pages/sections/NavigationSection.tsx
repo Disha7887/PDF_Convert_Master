@@ -80,7 +80,7 @@ export const NavigationSection = (): JSX.Element => {
             <Button
               variant="outline"
               className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base hover:text-white hover:bg-[#4a5462] transition-colors"
-              onClick={handleLogin}
+              onClick={() => setLocation('/signin')}
             >
               Log In
             </Button>
