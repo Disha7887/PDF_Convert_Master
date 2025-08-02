@@ -1,27 +1,18 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Upload, 
-  FileText, 
-  Download, 
   CheckCircle, 
   AlertCircle, 
-  Loader2, 
   FileCheck,
   Settings,
-  Clock,
   Trash2,
-  Archive,
   RefreshCw
 } from "lucide-react";
-import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 import { EnhancedUploadArea } from "@/components/ui/enhanced-upload-area";
 import { FileItem } from "@/components/ui/file-item";
-import { BatchProgressTracker } from "@/components/ui/batch-progress-tracker";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ConversionWorkflowProps {
   toolType: string;
@@ -34,16 +25,6 @@ interface ConversionWorkflowProps {
   iconBg: string;
 }
 
-interface ConversionJob {
-  jobId: number;
-  status: string;
-  inputFilename: string;
-  outputFilename?: string;
-  processingTime?: number;
-  errorMessage?: string;
-  downloadUrl?: string;
-}
-
 interface FileUpload {
   id: string;
   file: File;
@@ -53,15 +34,6 @@ interface FileUpload {
   errorMessage?: string;
   validationMessage?: string;
   downloadUrl?: string;
-  job?: ConversionJob;
-}
-
-interface BatchJob {
-  id: string;
-  fileName: string;
-  status: 'pending' | 'converting' | 'completed' | 'failed';
-  progress: number;
-  errorMessage?: string;
 }
 
 type ConversionStage = 'upload' | 'files-selected' | 'converting' | 'completed' | 'error';
@@ -81,12 +53,9 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
   const [isConverting, setIsConverting] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   
   const maxFiles = 10;
   const maxSizeInBytes = parseFloat(maxFileSize) * 1024 * 1024;
@@ -192,7 +161,6 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setStage('upload');
     setBatchProgress(0);
     setIsConverting(false);
-    setIsPaused(false);
     setErrorMessage(null);
     
     toast({
@@ -218,63 +186,33 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     ));
 
     try {
-      // Process files one by one (can be enhanced for parallel processing)
-      for (let i = 0; i < validFiles.length; i++) {
-        const fileUpload = validFiles[i];
-        await processIndividualFile(fileUpload, i, validFiles.length);
-      }
+      // Process all files
+      await Promise.all(validFiles.map((fileUpload, index) => 
+        processIndividualFile(fileUpload, index, validFiles.length)
+      ));
 
-      // Wait for all individual polling to complete
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Set completion state
+      setStage('completed');
+      setBatchProgress(100);
+      setIsConverting(false);
       
-      // Final completion check (only once, no polling to avoid state conflicts)
-      setSelectedFiles(currentFiles => {
-        const completedFiles = currentFiles.filter(f => f.status === 'completed');
-        const failedFiles = currentFiles.filter(f => f.status === 'failed');
-        
-        console.log('Final completion check:', {
-          total: currentFiles.length,
-          completed: completedFiles.length,
-          failed: failedFiles.length,
-          validFiles: validFiles.length
-        });
-        
-        // Set stage to completed
-        setStage('completed');
-        setBatchProgress(100);
-        setIsConverting(false);
-        
-        // Show completion toast
-        setTimeout(() => {
-          if (completedFiles.length === validFiles.length) {
-            toast({
-              title: "All Conversions Complete!",
-              description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully. Click download buttons to get your files.`,
-            });
-          } else {
-            toast({
-              title: "Batch Conversion Finished",
-              description: `${completedFiles.length} completed, ${failedFiles.length} failed. Download buttons available for completed files.`,
-              variant: failedFiles.length > 0 ? "destructive" : "default"
-            });
-          }
-        }, 100);
-        
-        return currentFiles;
+      // Show completion toast
+      const completedFiles = selectedFiles.filter(f => f.status === 'completed');
+      toast({
+        title: "Conversions Complete!",
+        description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully. Download buttons are now available.`,
       });
 
     } catch (error) {
-      console.error('Batch conversion error:', error);
       setErrorMessage(error instanceof Error ? error.message : 'Batch conversion failed');
       setStage('error');
+      setIsConverting(false);
       
       toast({
         title: "Conversion Failed",
         description: "Please try again or contact support",
         variant: "destructive",
       });
-    } finally {
-      // Cleanup handled in the completion check above
     }
   };
 
@@ -302,19 +240,10 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
       const jobData = responseData.data;
       
-      // Update file with job info
-      setSelectedFiles(prev => prev.map(f => 
-        f.id === fileUpload.id 
-          ? { ...f, jobId: jobData.jobId, job: jobData }
-          : f
-      ));
-
-      // Poll for job status
-      await pollIndividualJobStatus(fileUpload.id, jobData.jobId, index, total);
+      // Update file with job info and start polling
+      await pollJobStatus(fileUpload.id, jobData.jobId);
       
     } catch (error) {
-      console.error(`Conversion error for ${fileUpload.file.name}:`, error);
-      
       // Mark file as failed
       setSelectedFiles(prev => prev.map(f => 
         f.id === fileUpload.id 
@@ -328,11 +257,11 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     }
   };
 
-  const pollIndividualJobStatus = async (fileId: string, jobId: number, fileIndex: number, totalFiles: number) => {
+  const pollJobStatus = async (fileId: string, jobId: number) => {
     let attempts = 0;
-    const maxAttempts = 30; // 1 minute max (optimized for speed)
+    const maxAttempts = 30; // 45 seconds max
     
-    const poll = async () => {
+    const poll = async (): Promise<void> => {
       try {
         const response = await fetch(`/api/jobs/${jobId}`);
         const responseData = await response.json();
@@ -343,55 +272,45 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
         const job = responseData.data;
         
-        // Update file progress based on status
-        setSelectedFiles(prev => {
-          const updated = prev.map(f => {
-            if (f.id === fileId) {
-              if (job.status === 'processing') {
-                const progress = Math.min(30 + (attempts * 2), 90);
-                return { ...f, progress, job };
-              } else if (job.status === 'completed') {
-                console.log(`File ${fileId} completed, setting download URL: /api/download/${jobId}`);
-                return { 
+        if (job.status === 'completed') {
+          // File completed successfully
+          setSelectedFiles(prev => prev.map(f => 
+            f.id === fileId 
+              ? { 
                   ...f, 
                   status: 'completed' as const, 
-                  progress: 100, 
-                  job,
+                  progress: 100,
                   downloadUrl: `/api/download/${jobId}`
-                };
-              } else if (job.status === 'failed') {
-                return { 
+                }
+              : f
+          ));
+          return;
+        } else if (job.status === 'failed') {
+          // File failed
+          setSelectedFiles(prev => prev.map(f => 
+            f.id === fileId 
+              ? { 
                   ...f, 
                   status: 'failed' as const, 
-                  errorMessage: job.errorMessage || 'Conversion failed',
-                  job 
-                };
-              }
-            }
-            return f;
-          });
-          
-          // Log current state for debugging
-          const completedCount = updated.filter(f => f.status === 'completed').length;
-          console.log(`State update: ${completedCount} completed files out of ${updated.length} total`);
-          
-          return updated;
-        });
-
-        // Update overall batch progress
-        const currentProgress = ((fileIndex) / totalFiles) * 100 + (Math.min(30 + (attempts * 2), 90) / totalFiles);
-        setBatchProgress(Math.min(currentProgress, 100));
-
-        if (job.status === 'completed' || job.status === 'failed') {
-          return; // Job finished
+                  errorMessage: job.errorMessage || 'Conversion failed'
+                }
+              : f
+          ));
+          return;
+        } else if (job.status === 'processing') {
+          // Update progress
+          const progress = Math.min(30 + (attempts * 2), 90);
+          setSelectedFiles(prev => prev.map(f => 
+            f.id === fileId ? { ...f, progress } : f
+          ));
         }
 
-        // Continue polling
+        // Continue polling if not finished
         attempts++;
         if (attempts < maxAttempts) {
-          setTimeout(poll, 1500); // Poll every 1.5 seconds (faster)
+          setTimeout(poll, 1500);
         } else {
-          // Mark as failed due to timeout
+          // Timeout - mark as failed
           setSelectedFiles(prev => prev.map(f => 
             f.id === fileId 
               ? { 
@@ -403,7 +322,6 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           ));
         }
       } catch (error) {
-        console.error('Polling error:', error);
         setSelectedFiles(prev => prev.map(f => 
           f.id === fileId 
             ? { 
@@ -416,7 +334,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       }
     };
 
-    // Initial delay before polling (reduced for faster response)
+    // Start polling after 500ms
     setTimeout(poll, 500);
   };
 
@@ -440,7 +358,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         if (file.downloadUrl) {
           window.open(file.downloadUrl, '_blank');
         }
-      }, index * 500); // Stagger downloads by 500ms
+      }, index * 500);
     });
     
     toast({
@@ -454,70 +372,14 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setSelectedFiles([]);
     setBatchProgress(0);
     setIsConverting(false);
-    setIsPaused(false);
     setErrorMessage(null);
     setIsDragOver(false);
-  };
-
-  const pauseConversion = () => {
-    setIsPaused(true);
-    toast({
-      title: "Conversion Paused",
-      description: "You can resume the conversion anytime",
-    });
-  };
-
-  const resumeConversion = () => {
-    setIsPaused(false);
-    toast({
-      title: "Conversion Resumed",
-      description: "Continuing with the conversion process",
-    });
-  };
-
-  const stopConversion = () => {
-    setIsConverting(false);
-    setIsPaused(false);
-    setStage('files-selected');
-    
-    // Reset all converting files back to valid
-    setSelectedFiles(prev => prev.map(f => 
-      f.status === 'converting' 
-        ? { ...f, status: 'valid', progress: 0 }
-        : f
-    ));
-    
-    toast({
-      title: "Conversion Stopped",
-      description: "You can restart the conversion anytime",
-    });
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const getBatchJobs = (): BatchJob[] => {
-    return selectedFiles.map(file => ({
-      id: file.id,
-      fileName: file.file.name,
-      status: file.status === 'valid' ? 'pending' : 
-               file.status === 'converting' ? 'converting' : 
-               file.status === 'completed' ? 'completed' : 'failed',
-      progress: file.progress,
-      errorMessage: file.errorMessage
-    }));
   };
 
   const validFilesCount = selectedFiles.filter(f => f.status === 'valid').length;
   const completedFilesCount = selectedFiles.filter(f => f.status === 'completed').length;
   const hasValidFiles = validFilesCount > 0;
   const hasCompletedFiles = completedFilesCount > 0;
-  const allFilesCompleted = selectedFiles.length > 0 && completedFilesCount === selectedFiles.length;
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6">
@@ -585,10 +447,10 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               {/* File Management Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                  <h3 className="text-xl font-semibold text-gray-900">
                     {selectedFiles.length} File{selectedFiles.length !== 1 ? 's' : ''} Selected
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-gray-600">
                     {validFilesCount} ready • {selectedFiles.length - validFilesCount} with issues
                   </p>
                 </div>
@@ -625,7 +487,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               </div>
 
               {/* Add More Files Area */}
-              <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div className="border-2 border-dashed border-gray-200 rounded-lg p-4">
                 <EnhancedUploadArea
                   acceptedFormats={acceptedFormats}
                   maxFileSize={maxFileSize}
@@ -648,11 +510,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                     className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3"
                     disabled={isConverting}
                   >
-                    {isConverting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Settings className="w-4 h-4 mr-2" />
-                    )}
+                    <Settings className="w-4 h-4 mr-2" />
                     Convert {validFilesCount} File{validFilesCount !== 1 ? 's' : ''} to {outputFormat.toUpperCase()}
                   </Button>
                   <Button
@@ -671,163 +529,104 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
           {/* Converting Stage */}
           {stage === 'converting' && (
-            <div className="space-y-6">
-              <BatchProgressTracker
-                jobs={getBatchJobs()}
-                overallProgress={batchProgress}
-                isRunning={isConverting}
-                isPaused={isPaused}
-                onPause={pauseConversion}
-                onResume={resumeConversion}
-                onStop={stopConversion}
-                onDownloadAll={downloadAllFiles}
-                onDownloadIndividual={(jobId: string) => {
-                  const fileIndex = selectedFiles.findIndex(f => f.id === jobId);
-                  if (fileIndex !== -1) downloadIndividualFile(fileIndex);
-                }}
-                showIndividualDownloads={true}
-              />
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <Settings className="w-16 h-16 text-orange-600 animate-spin" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Converting Files...</h3>
+                <p className="text-gray-600">Please wait while we process your files</p>
+              </div>
               
-              <div className="text-center">
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  <span>Each file usually takes 30-60 seconds to convert</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Completed Stage */}
-          {(stage === 'completed' || hasCompletedFiles) && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  {allFilesCompleted ? 'All Conversions Complete!' : 'Conversions Complete!'}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-2">
-                  {completedFilesCount} file{completedFilesCount !== 1 ? 's' : ''} successfully converted to {outputFormat.toUpperCase()}
-                </p>
-              </div>
-
-              {/* Completed Files List */}
-              <div className="space-y-3">
-                {selectedFiles.filter(f => f.status === 'completed').map((fileUpload, index) => (
+              {/* File List During Conversion */}
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {selectedFiles.map((fileUpload, index) => (
                   <FileItem
                     key={fileUpload.id}
                     file={fileUpload.file}
-                    index={selectedFiles.indexOf(fileUpload)}
+                    index={index}
                     status={fileUpload.status}
                     progress={fileUpload.progress}
+                    errorMessage={fileUpload.errorMessage}
+                    validationMessage={fileUpload.validationMessage}
                     downloadUrl={fileUpload.downloadUrl}
                     onRemove={removeFile}
                     onDownload={downloadIndividualFile}
                   />
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Completed Stage */}
+          {stage === 'completed' && (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <CheckCircle className="w-16 h-16 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Conversion Complete!</h3>
+                <p className="text-gray-600">Your files have been successfully converted</p>
+              </div>
               
-              <div className="flex justify-center space-x-4">
-                {hasCompletedFiles && (
+              {/* File List After Completion */}
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {selectedFiles.map((fileUpload, index) => (
+                  <FileItem
+                    key={fileUpload.id}
+                    file={fileUpload.file}
+                    index={index}
+                    status={fileUpload.status}
+                    progress={fileUpload.progress}
+                    errorMessage={fileUpload.errorMessage}
+                    validationMessage={fileUpload.validationMessage}
+                    downloadUrl={fileUpload.downloadUrl}
+                    onRemove={removeFile}
+                    onDownload={downloadIndividualFile}
+                  />
+                ))}
+              </div>
+
+              {/* Download Actions */}
+              {hasCompletedFiles && (
+                <div className="flex justify-center space-x-4 pt-4">
                   <Button
                     onClick={downloadAllFiles}
                     className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
                   >
-                    <Archive className="w-4 h-4 mr-2" />
-                    Download All Files ({completedFilesCount})
+                    Download All Files
                   </Button>
-                )}
-                <Button
-                  onClick={resetWorkflow}
-                  variant="outline"
-                  className="px-8 py-3"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Convert More Files
-                </Button>
-              </div>
+                  <Button
+                    onClick={resetWorkflow}
+                    variant="outline"
+                    className="px-8 py-3"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Convert More Files
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
           {/* Error Stage */}
-          {stage === 'error' && (
-            <div className="text-center">
-              <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertCircle className="w-8 h-8 text-red-600" />
-                </div>
+          {stage === 'error' && errorMessage && (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <AlertCircle className="w-16 h-16 text-red-600" />
               </div>
-              
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Conversion Failed
-              </h3>
-              
-              {errorMessage && (
-                <Alert className="max-w-md mx-auto mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{errorMessage}</AlertDescription>
-                </Alert>
-              )}
-              
-              <div className="flex justify-center space-x-4">
-                <Button
-                  onClick={resetWorkflow}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
-                >
-                  Try Again
-                </Button>
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Conversion Failed</h3>
+                <p className="text-red-600">{errorMessage}</p>
               </div>
+              <Button
+                onClick={resetWorkflow}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+              >
+                Try Again
+              </Button>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div className="bg-white rounded-lg p-6 shadow-md">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-            High Quality
-          </h3>
-          <p className="text-gray-600 text-center text-sm">
-            Professional-grade conversion with layout preservation
-          </p>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-md">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-            Secure & Private
-          </h3>
-          <p className="text-gray-600 text-center text-sm">
-            Files are processed securely and deleted after conversion
-          </p>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-md">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-              <Download className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-            Instant Download
-          </h3>
-          <p className="text-gray-600 text-center text-sm">
-            Download your converted files immediately after processing
-          </p>
         </div>
       </div>
     </div>
