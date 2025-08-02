@@ -24,6 +24,10 @@ import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { Support } from "@/pages/Support";
 import { SignUp } from "@/pages/SignUp";
 import { SignIn } from "@/pages/SignIn";
+import { WordToPdfUpload } from "@/pages/upload/WordToPdf";
+import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
+import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
+import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
 
 function Router() {
   return (
