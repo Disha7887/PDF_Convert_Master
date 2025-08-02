@@ -203,7 +203,7 @@ export const About = (): JSX.Element => {
       </section>
 
       {/* Get in Touch Section */}
-      <section className="py-20 bg-gradient-to-r from-red-600 to-orange-600">
+      <section className="py-20 bg-gradient-to-r from-slate-800 to-slate-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">Get in Touch</h2>
