@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, X, Clock, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Fuse, { type FuseResult, type FuseResultMatch } from "fuse.js";
 
@@ -284,7 +284,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
           {/* Backdrop for mobile */}
           <div className="fixed inset-0 z-[90] bg-black/10 md:hidden" onClick={() => setShowSuggestions(false)} />
           <Card className="search-dropdown absolute top-full left-0 right-0 mt-2 z-[100] max-h-96 overflow-y-auto rounded-lg">
-            <CardContent className="p-0 bg-white rounded-lg">
+            <div className="p-0 bg-white rounded-lg">
             {/* Search History */}
             {!query && searchHistory.length > 0 && (
               <div className="p-4 border-b border-gray-100">
@@ -461,7 +461,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
                 </div>
               </div>
             )}
-            </CardContent>
+            </div>
           </Card>
         </>
       )}
