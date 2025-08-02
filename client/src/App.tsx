@@ -115,6 +115,18 @@ function Router() {
         </DynamicLayout>
       </Route>
 
+      <Route path="/features">
+        <DynamicLayout>
+          <Features />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/learn-more">
+        <DynamicLayout>
+          <LearnMore />
+        </DynamicLayout>
+      </Route>
+
       <Route path="/terms-of-service">
         <DynamicLayout>
           <TermsOfService />
