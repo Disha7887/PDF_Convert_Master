@@ -344,23 +344,57 @@ export const Contact = (): JSX.Element => {
             </div>
 
             {[
-              "Is there a file size limit for uploads?",
-              "How secure is my data during conversion?",
-              "Can I use your tools offline?",
-              "Do you offer API access for developers?",
-              "What payment methods do you accept?",
-              "Can I cancel my subscription anytime?",
-              "Do you provide technical support?",
-              "Are there any usage limits?",
-              "How can I get a refund?"
-            ].map((question, index) => (
+              {
+                question: "Is there a file size limit for uploads?",
+                answer: "Yes, we have different file size limits based on your plan. Free users can upload files up to 10MB, Basic plan users up to 50MB, Pro plan users up to 200MB, and Enterprise users up to 1GB per file. For larger files, please contact our support team for assistance."
+              },
+              {
+                question: "How secure is my data during conversion?",
+                answer: "Your data security is our top priority. We use industry-standard 256-bit SSL encryption for all file transfers. All uploaded files are automatically deleted from our servers within 24 hours after conversion. We never store, share, or access your personal documents."
+              },
+              {
+                question: "Can I use your tools offline?",
+                answer: "Our PDF tools are web-based and require an internet connection to function. However, we're developing a desktop application that will allow offline conversions for Pro and Enterprise users. This feature will be available in Q2 2024."
+              },
+              {
+                question: "Do you offer API access for developers?",
+                answer: "Yes! We provide robust REST API access for Pro and Enterprise plan users. Our API supports all conversion tools, batch processing, and webhooks. Comprehensive documentation, SDKs for popular languages, and 24/7 developer support are included."
+              },
+              {
+                question: "What payment methods do you accept?",
+                answer: "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, Apple Pay, Google Pay, and bank transfers for Enterprise accounts. All payments are processed securely through our PCI-compliant payment partners."
+              },
+              {
+                question: "Can I cancel my subscription anytime?",
+                answer: "Absolutely! You can cancel your subscription at any time from your account settings. There are no cancellation fees or long-term commitments. Your subscription will remain active until the end of your current billing period."
+              },
+              {
+                question: "Do you provide technical support?",
+                answer: "Yes, we offer comprehensive technical support. Free users get community support, Basic users get email support within 24 hours, Pro users get priority email and chat support within 1 hour, and Enterprise users get 24/7 dedicated support with phone access."
+              },
+              {
+                question: "Are there any usage limits?",
+                answer: "Usage limits vary by plan. Basic plan includes 100 conversions/month, Pro plan includes 10,000 conversions/month, and Enterprise plan offers unlimited conversions. API calls, storage, and processing speed also increase with higher tier plans."
+              },
+              {
+                question: "How can I get a refund?",
+                answer: "We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied with our service, contact our support team within 30 days of your purchase for a full refund. Refunds are processed within 5-7 business days to your original payment method."
+              }
+            ].map((faq, index) => (
               <div key={index} className="bg-white rounded-xl shadow-lg">
                 <button className="w-full px-6 py-4 text-left flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">{question}</span>
+                  <span className="text-lg font-semibold text-gray-900">{faq.question}</span>
                   <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
+                <div className="px-6 pb-4">
+                  <div className="border-l-4 border-red-600 pl-4">
+                    <p className="text-gray-700">
+                      {faq.answer}
+                    </p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
