@@ -3,6 +3,9 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
+import { AnimatedParticles } from "@/components/ui/animated-particles";
 
 export const HeroSection = (): JSX.Element => {
   // Background decoration elements data
@@ -117,10 +120,13 @@ export const HeroSection = (): JSX.Element => {
   ];
 
   return (
-    <div className="flex flex-col w-full items-start relative">
+    <section className="flex flex-col w-full items-start relative bg-[#111726] min-h-screen">
       <div className="flex flex-col w-full items-start relative">
         {/* Background decorative elements */}
         <div className="absolute w-full h-full top-0 left-0">
+          {/* Animated particles background */}
+          <AnimatedParticles count={35} />
+
           {gradientBlurs.map((blur, index) => (
             <div key={`blur-${index}`} className={blur.className} />
           ))}
@@ -143,8 +149,7 @@ export const HeroSection = (): JSX.Element => {
         </div>
 
         <div className="flex w-full items-center relative">
-          <div className="flex items-start px-20 py-0 relative w-full">
-            <div className="flex flex-col max-w-screen-xl w-full items-start px-8 py-0 relative">
+          <div className="max-w-screen-xl mx-auto px-8 py-20 w-full relative">
               <div className="flex flex-wrap w-full items-center gap-12 relative">
                 {/* Left column - Text content */}
                 <div className="flex flex-col w-full md:w-[584px] items-start relative">
@@ -179,7 +184,7 @@ export const HeroSection = (): JSX.Element => {
 
                     <div className="pt-8">
                       <div className="flex gap-4">
-                        <Button className="h-[61px] px-8 py-4 bg-red-500 text-white rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+                        <Button className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
                           <img
                             className="mr-2"
                             alt="Margin wrap"
@@ -208,17 +213,36 @@ export const HeroSection = (): JSX.Element => {
 
                     <div className="pt-8">
                       <div className="flex items-center">
-                        {trustIndicators.map((indicator, index) => (
-                          <div
-                            key={`indicator-${index}`}
-                            className={`flex h-5 items-center ${indicator.className}`}
-                          >
-                            {indicator.icon}
-                            <span className="font-normal text-[#d0d5da] text-sm leading-5">
-                              {indicator.text}
-                            </span>
-                          </div>
-                        ))}
+                        {trustIndicators.map((indicator, index) => {
+                          // Different animation timing for each element
+                          const animationDelay = index * 0.8; // 0s, 0.8s, 1.6s delays
+                          const floatingVariants = {
+                            animate: {
+                              y: [-4, 4, -4],
+                              transition: {
+                                duration: 3 + index * 0.5, // Different durations: 3s, 3.5s, 4s
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                                delay: animationDelay,
+                              }
+                            }
+                          };
+
+                          return (
+                            <motion.div
+                              key={`indicator-${index}`}
+                              className={`flex h-5 items-center ${indicator.className}`}
+                              variants={floatingVariants}
+                              animate="animate"
+                              initial={{ y: 0 }}
+                            >
+                              {indicator.icon}
+                              <span className="font-normal text-[#d0d5da] text-sm leading-5">
+                                {indicator.text}
+                              </span>
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -241,12 +265,12 @@ export const HeroSection = (): JSX.Element => {
                       or click to browse files
                     </p>
 
-                    <Button className="h-[57px] px-12 py-4 mb-8 rounded-xl shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] bg-[linear-gradient(90deg,rgba(239,68,68,1)_0%,rgba(220,38,38,1)_100%)]">
+                    <AnimatedSelectButton className="h-[57px] px-12 py-4 mb-8 rounded-xl shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
                       <UploadIcon className="mr-2 h-5 w-5" />
-                      <span className="font-semibold text-white text-base">
+                      <span className="text-base">
                         Select PDF File
                       </span>
-                    </Button>
+                    </AnimatedSelectButton>
 
                     <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
                       {fileFormats.map((format, index) => (
@@ -268,10 +292,9 @@ export const HeroSection = (): JSX.Element => {
                   </div>
                 </Card>
               </div>
-            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };

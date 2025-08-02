@@ -69,8 +69,7 @@ export const FooterSection = (): JSX.Element => {
 
   return (
     <footer className="flex flex-col w-full items-start bg-[#111726] border-t border-[#374050]">
-      <div className="flex items-start px-20 py-0 w-full">
-        <div className="flex flex-col max-w-screen-xl w-full items-start px-8 py-12">
+      <div className="max-w-screen-xl mx-auto px-8 py-12 w-full">
           <div className="flex flex-wrap w-full items-start gap-8">
             {/* Brand Column */}
             <div className="flex flex-col w-[280px] items-start">
@@ -168,7 +167,7 @@ export const FooterSection = (): JSX.Element => {
                   className="h-[38px] bg-gray-800 text-white border-[#4a5462] placeholder:text-[#9ca2af] [font-family:'Inter',Helvetica] font-medium text-sm"
                   placeholder="Enter your email"
                 />
-                <Button className="w-full h-9 bg-red-600 hover:bg-red-700 [font-family:'Roboto',Helvetica] font-medium text-white text-sm text-center">
+                <Button className="w-full h-9 [font-family:'Roboto',Helvetica] font-medium text-sm text-center">
                   Subscribe
                 </Button>
               </div>
@@ -202,7 +201,6 @@ export const FooterSection = (): JSX.Element => {
               </div>
             </div>
           </div>
-        </div>
       </div>
     </footer>
   );

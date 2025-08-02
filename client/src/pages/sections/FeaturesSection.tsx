@@ -2,6 +2,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AnimatedParticles } from "@/components/ui/animated-particles";
 
 export const FeaturesSection = (): JSX.Element => {
   // Stats data for the metrics section
@@ -20,7 +21,8 @@ export const FeaturesSection = (): JSX.Element => {
       description:
         "Transform your documents between different formats with perfect quality preservation.",
       features: ["PDF to Word", "Word to PDF", "Excel to PDF", "Image to PDF"],
-      borderColor: "border-[#f7707080]",
+      borderColor: "border-red-500/30",
+      iconColor: "#ef4444",
     },
     {
       title: "Organize",
@@ -28,7 +30,8 @@ export const FeaturesSection = (): JSX.Element => {
       description:
         "Merge, split, and reorganize your PDF documents with powerful editing tools.",
       features: ["Merge PDFs", "Split PDFs", "Compress Files", "Rotate Pages"],
-      borderColor: "border-[#ffffff1a]",
+      borderColor: "border-blue-500/30",
+      iconColor: "#3b82f6",
     },
     {
       title: "Secure",
@@ -41,7 +44,8 @@ export const FeaturesSection = (): JSX.Element => {
         "Add Watermark",
         "Digital Signature",
       ],
-      borderColor: "border-[#ffffff1a]",
+      borderColor: "border-emerald-500/30",
+      iconColor: "#10b981",
     },
   ];
 
@@ -84,6 +88,9 @@ export const FeaturesSection = (): JSX.Element => {
     <section className="relative w-full py-24 bg-[#111726]">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
+        {/* Animated particles background */}
+        <AnimatedParticles count={25} />
+
         <div className="absolute w-96 h-96 top-[84px] left-36 rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(239,68,68,0.1)_0%,rgba(249,115,22,0.1)_100%)]" />
         <div className="absolute w-80 h-80 top-[675px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(59,130,246,0.15)_0%,rgba(168,85,247,0.15)_100%)]" />
         <div className="absolute w-56 h-56 top-[789px] left-[856px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(249,115,22,0.1)_0%,rgba(239,68,68,0.1)_100%)]" />
@@ -102,7 +109,7 @@ export const FeaturesSection = (): JSX.Element => {
         <div className="absolute w-px h-28 top-[1069px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(96,165,250,0.25)_50%,rgba(0,0,0,0)_100%)]" />
       </div>
 
-      <div className="container mx-auto px-6">
+      <div className="max-w-screen-xl mx-auto px-8">
         {/* Section Header */}
         <div className="mb-20 text-center">
           <h2 className="text-5xl font-bold text-white mb-6 font-['Roboto',Helvetica] leading-[48px]">
@@ -154,7 +161,7 @@ export const FeaturesSection = (): JSX.Element => {
 
             {/* CTA Buttons */}
             <div className="flex gap-4">
-              <Button className="bg-red-500 text-white font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]">
+              <Button className="font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]">
                 <img
                   src="/figmaAssets/margin-wrap-8.svg"
                   alt=""
@@ -202,7 +209,7 @@ export const FeaturesSection = (): JSX.Element => {
                   <p className="text-sm text-[#4a5462] text-center mb-2 font-['Roboto',Helvetica]">
                     Drop your files here
                   </p>
-                  <Button className="bg-red-500 text-white text-sm px-4 py-2 rounded-lg font-['Roboto',Helvetica]">
+                  <Button className="text-sm px-4 py-2 rounded-lg font-['Roboto',Helvetica]">
                     Browse Files
                   </Button>
                 </div>
@@ -254,10 +261,20 @@ export const FeaturesSection = (): JSX.Element => {
           {featureCards.map((card, index) => (
             <Card
               key={index}
-              className={`bg-[#ffffff0d] rounded-2xl ${card.borderColor} backdrop-blur-[2px] border`}
+              className={`bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px] border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300`}
             >
               <div className="p-[33px]">
-                <img src={card.icon} alt="" className="mb-4" />
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `${card.iconColor}20` }}
+                >
+                  <img
+                    src={card.icon}
+                    alt=""
+                    className="w-8 h-8"
+                    style={{ filter: `drop-shadow(0 0 4px ${card.iconColor}40)` }}
+                  />
+                </div>
                 <h3 className="text-xl font-bold text-white mb-4 font-['Roboto',Helvetica]">
                   {card.title}
                 </h3>

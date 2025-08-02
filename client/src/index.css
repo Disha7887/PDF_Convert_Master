@@ -6,6 +6,183 @@
     all: unset;
   }
 
+  /* Enhanced button styles for better hover effects */
+  .btn-red-gradient {
+    background: linear-gradient(90deg, rgba(220, 38, 38, 1) 0%, rgba(185, 28, 28, 1) 100%);
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    outline: none;
+  }
+
+  .btn-red-gradient:hover {
+    background: linear-gradient(90deg, rgba(185, 28, 28, 1) 0%, rgba(153, 27, 27, 1) 100%);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .btn-red-gradient:active {
+    transform: translateY(0px) scale(0.98);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-red-gradient:focus-visible {
+    outline: 2px solid rgba(220, 38, 38, 0.5);
+    outline-offset: 2px;
+  }
+
+  .btn-red-gradient:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    transform: none;
+  }
+
+  /* Blue gradient variant for special buttons */
+  .btn-blue-gradient {
+    background: linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(29, 78, 216, 1) 100%);
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    outline: none;
+  }
+
+  .btn-blue-gradient:hover {
+    background: linear-gradient(90deg, rgba(29, 78, 216, 1) 0%, rgba(30, 64, 175, 1) 100%);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  /* Green gradient variant */
+  .btn-green-gradient {
+    background: linear-gradient(90deg, rgba(34, 197, 94, 1) 0%, rgba(22, 163, 74, 1) 100%);
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    outline: none;
+  }
+
+  .btn-green-gradient:hover {
+    background: linear-gradient(90deg, rgba(22, 163, 74, 1) 0%, rgba(21, 128, 61, 1) 100%);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  /* Common active and disabled states for all gradient buttons */
+  .btn-blue-gradient:active,
+  .btn-green-gradient:active {
+    transform: translateY(0px) scale(0.98);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-blue-gradient:focus-visible,
+  .btn-green-gradient:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 2px;
+  }
+
+  .btn-blue-gradient:disabled,
+  .btn-green-gradient:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    transform: none;
+  }
+
+  /* Shimmer animation for animated select button */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-120%) skewX(15deg);
+      opacity: 0;
+    }
+    30% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateX(220%) skewX(15deg);
+      opacity: 0;
+    }
+  }
+
+  /* Enhanced shimmer effect with gradient animation */
+  .animate-shimmer {
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+
+
+  /* Alternative shimmer with background color shift */
+  @keyframes shimmer-bg {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg,
+      rgba(220, 38, 38, 1) 0%,
+      rgba(185, 28, 28, 1) 25%,
+      rgba(248, 113, 113, 0.8) 50%,
+      rgba(185, 28, 28, 1) 75%,
+      rgba(220, 38, 38, 1) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-bg 1.5s ease-in-out infinite;
+  }
+
+  /* Custom red color variants for precise gradient control */
+  .from-red-650 {
+    --tw-gradient-from: #dc2626 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(220 38 38 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .via-red-650 {
+    --tw-gradient-to: rgb(203 32 32 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #cb2020 var(--tw-gradient-via-position), var(--tw-gradient-to);
+  }
+
+  .to-red-750 {
+    --tw-gradient-to: #991b1b var(--tw-gradient-to-position);
+  }
+
+  .hover\\:via-red-750:hover {
+    --tw-gradient-to: rgb(153 27 27 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #991b1b var(--tw-gradient-via-position), var(--tw-gradient-to);
+  }
+
+  /* Performance optimizations for particle animations */
+  .particle-layer {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .particle-layer {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   /* Search highlight improvements */
   .search-highlight {
     background-color: rgb(219 234 254) !important;

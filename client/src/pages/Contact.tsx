@@ -278,7 +278,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   24/7 Available
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white mt-auto">
+                <Button variant="green" className="w-full mt-auto">
                   Call Now
                 </Button>
               </div>
@@ -312,7 +312,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Response within 1 hour
                 </div>
-                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white mt-auto">
+                <Button variant="blue" className="w-full mt-auto">
                   Send Email
                 </Button>
               </div>
@@ -377,7 +377,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Quick response
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white mt-auto">
+                <Button variant="green" className="w-full mt-auto">
                   Message Us
                 </Button>
               </div>
@@ -519,7 +519,7 @@ export const Contact = (): JSX.Element => {
                   <Shield className="w-4 h-4 mr-2 text-green-600" />
                   Your information is secure and confidential
                 </div>
-                <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white px-8">
+                <Button type="submit" className="px-8">
                   Send Message
                 </Button>
               </div>
@@ -642,7 +642,7 @@ export const Contact = (): JSX.Element => {
             <h3 className="text-xl font-bold text-red-800 mb-2">Still Have Questions?</h3>
             <p className="text-red-700 mb-4">Can't find the answer you're looking for? Our support team is here to help!</p>
             <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className=""
               onClick={() => {
                 const contactForm = document.getElementById('contact-form');
                 if (contactForm) {
