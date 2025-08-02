@@ -256,7 +256,7 @@ export const FeaturesSection = (): JSX.Element => {
               key={index}
               className={`bg-[#ffffff0d] rounded-2xl ${card.borderColor} backdrop-blur-[2px] border`}
             >
-              <CardContent className="p-[33px]">
+              <div className="p-[33px]">
                 <img src={card.icon} alt="" className="mb-4" />
                 <h3 className="text-xl font-bold text-white mb-4 font-['Roboto',Helvetica]">
                   {card.title}
@@ -275,7 +275,7 @@ export const FeaturesSection = (): JSX.Element => {
                     </li>
                   ))}
                 </ul>
-              </CardContent>
+              </div>
             </Card>
           ))}
         </div>
