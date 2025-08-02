@@ -40,9 +40,12 @@ export default function Login() {
       localStorage.setItem('auth_token', data.token);
       toast({
         title: 'Login Successful',
-        description: `Welcome back! You're now logged in.`,
+        description: `Welcome back! Redirecting to dashboard...`,
       });
-      setLocation('/dashboard');
+      // Small delay to ensure token is stored and user can see the success message
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
     },
     onError: (error: any) => {
       toast({

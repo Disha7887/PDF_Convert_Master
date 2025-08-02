@@ -47,7 +47,8 @@ export function useAuth() {
     // Fetch user profile
     apiRequest('GET', '/api/auth/profile')
       .then((data) => {
-        setUser(data.user);
+        // Handle both old and new response formats for backwards compatibility
+        setUser(data.user || data);
       })
       .catch((error) => {
         console.error('Auth check failed:', error);

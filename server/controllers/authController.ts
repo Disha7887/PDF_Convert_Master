@@ -206,9 +206,7 @@ export const getUserApiKeys = async (req: Request, res: Response): Promise<void>
       createdAt: key.createdAt,
     }));
 
-    res.json({
-      apiKeys: safeApiKeys,
-    });
+    res.json(safeApiKeys);
   } catch (error) {
     console.error('Get API keys error:', error);
     res.status(500).json({ 
@@ -282,24 +280,22 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
     }
 
     res.json({
-      user: {
-        id: fullUser.id,
-        email: fullUser.email,
-        plan: fullUser.plan,
-        limits: {
-          daily: fullUser.dailyLimit,
-          monthly: fullUser.monthlyLimit,
-        },
-        usage: {
-          daily: fullUser.dailyUsage,
-          monthly: fullUser.monthlyUsage,
-        },
-        subscription: {
-          status: fullUser.subscriptionStatus,
-          stripeCustomerId: fullUser.stripeCustomerId,
-        },
-        createdAt: fullUser.createdAt,
+      id: fullUser.id,
+      email: fullUser.email,
+      plan: fullUser.plan,
+      limits: {
+        daily: fullUser.dailyLimit,
+        monthly: fullUser.monthlyLimit,
       },
+      usage: {
+        daily: fullUser.dailyUsage,
+        monthly: fullUser.monthlyUsage,
+      },
+      subscription: {
+        status: fullUser.subscriptionStatus || 'inactive',
+        stripeCustomerId: fullUser.stripeCustomerId,
+      },
+      createdAt: fullUser.createdAt?.toISOString(),
     });
   } catch (error) {
     console.error('Get profile error:', error);

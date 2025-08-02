@@ -142,8 +142,8 @@ export default function Dashboard() {
   const usage = usageData;
   const conversions = conversionsData as Conversion[] || [];
 
-  const dailyProgress = user ? (user.usage.daily / user.limits.daily) * 100 : 0;
-  const monthlyProgress = user ? (user.usage.monthly / user.limits.monthly) * 100 : 0;
+  const dailyProgress = user && user.usage && user.limits ? (user.usage.daily / user.limits.daily) * 100 : 0;
+  const monthlyProgress = user && user.usage && user.limits ? (user.usage.monthly / user.limits.monthly) * 100 : 0;
 
   if (profileLoading) {
     return (
