@@ -185,9 +185,11 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           >
             {/* Upload Icon */}
             <div className="flex justify-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
-                <Upload className="w-8 h-8 text-red-500" />
-              </div>
+              <BouncingUploadIcon
+                size="lg"
+                animationSpeed="fast"
+                bgColor="bg-red-100"
+              />
             </div>
 
             {/* Upload Text */}
