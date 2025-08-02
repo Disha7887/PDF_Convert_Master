@@ -224,70 +224,42 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         await processIndividualFile(fileUpload, i, validFiles.length);
       }
 
-      // Wait for all state updates to complete
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for all polling to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Check completion status using state callback to get current state
-      let completionResults: { completed: number; failed: number } | null = null;
+      // Simple completion check - just complete the batch
+      setStage('completed');
+      setBatchProgress(100);
       
-      setSelectedFiles(currentFiles => {
-        const completedFiles = currentFiles.filter(f => f.status === 'completed');
-        const failedFiles = currentFiles.filter(f => f.status === 'failed');
-        const processedFiles = validFiles.length;
-        
-        if (completedFiles.length === processedFiles) {
-          setStage('completed');
-          setBatchProgress(100);
-          completionResults = { completed: completedFiles.length, failed: 0 };
-        } else if (completedFiles.length + failedFiles.length === processedFiles) {
-          // Some completed, some failed
-          setStage('completed');
-          setBatchProgress(100);
-          completionResults = { completed: completedFiles.length, failed: failedFiles.length };
-        } else {
-          // Still processing or unknown state - wait a bit more
-          setTimeout(() => {
-            setSelectedFiles(finalFiles => {
-              const finalCompleted = finalFiles.filter(f => f.status === 'completed');
-              const finalFailed = finalFiles.filter(f => f.status === 'failed');
-              
-              setStage('completed');
-              setBatchProgress(100);
-              
-              // Toast outside of state update
-              setTimeout(() => {
-                toast({
-                  title: "Batch Conversion Finished",
-                  description: `${finalCompleted.length} completed, ${finalFailed.length} failed`,
-                  variant: finalFailed.length > 0 ? "destructive" : "default"
-                });
-              }, 0);
-              
-              return finalFiles;
-            });
-          }, 1000);
-        }
-        
-        return currentFiles;
-      });
-      
-      // Show toast outside of state update to avoid setState during render warning
-      if (completionResults) {
-        setTimeout(() => {
-          if (completionResults!.failed === 0) {
+      // Get final file counts
+      setTimeout(() => {
+        setSelectedFiles(currentFiles => {
+          const completedFiles = currentFiles.filter(f => f.status === 'completed');
+          const failedFiles = currentFiles.filter(f => f.status === 'failed');
+          
+          console.log('Batch completion check:', {
+            total: currentFiles.length,
+            completed: completedFiles.length,
+            failed: failedFiles.length,
+            validFiles: validFiles.length
+          });
+          
+          // Show completion toast
+          if (completedFiles.length > 0) {
             toast({
-              title: "All Conversions Complete!",
-              description: `${completionResults!.completed} file${completionResults!.completed !== 1 ? 's' : ''} converted successfully`,
-            });
-          } else {
-            toast({
-              title: "Batch Conversion Finished",
-              description: `${completionResults!.completed} completed, ${completionResults!.failed} failed`,
-              variant: "destructive"
+              title: completedFiles.length === validFiles.length 
+                ? "All Conversions Complete!" 
+                : "Batch Conversion Finished",
+              description: failedFiles.length > 0 
+                ? `${completedFiles.length} completed, ${failedFiles.length} failed`
+                : `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully`,
+              variant: failedFiles.length > 0 ? "destructive" : "default"
             });
           }
-        }, 0);
-      }
+          
+          return currentFiles;
+        });
+      }, 100);
 
     } catch (error) {
       console.error('Batch conversion error:', error);
