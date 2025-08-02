@@ -261,10 +261,20 @@ export const FeaturesSection = (): JSX.Element => {
           {featureCards.map((card, index) => (
             <Card
               key={index}
-              className={`bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px]`}
+              className={`bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px] border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300`}
             >
               <div className="p-[33px]">
-                <img src={card.icon} alt="" className="mb-4" />
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `${card.iconColor}20` }}
+                >
+                  <img
+                    src={card.icon}
+                    alt=""
+                    className="w-8 h-8"
+                    style={{ filter: `drop-shadow(0 0 4px ${card.iconColor}40)` }}
+                  />
+                </div>
                 <h3 className="text-xl font-bold text-white mb-4 font-['Roboto',Helvetica]">
                   {card.title}
                 </h3>
