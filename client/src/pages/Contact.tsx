@@ -5,33 +5,142 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Phone, Mail, MessageSquare, HeadphonesIcon, MapPin, Clock, Car, Train, Shield, Cloud, Lock } from "lucide-react";
+import { Phone, Mail, MessageSquare, HeadphonesIcon, MapPin, Clock, Car, Train, Shield, Cloud, Lock, CheckCircle, Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export const Contact = (): JSX.Element => {
   const [selectedPriority, setSelectedPriority] = useState("medium");
+  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0); // First FAQ expanded by default
+  const [selectedCategory, setSelectedCategory] = useState("technical");
+  const { toast } = useToast();
+
+  // Enhanced utility function to copy text with beautiful, contact-specific notifications
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      // Get contact-specific icon and styling
+      const getContactIcon = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-green-600" />;
+        if (label.includes('Email')) return <Mail className="w-4 h-4 text-blue-600" />;
+        return <Copy className="w-4 h-4 text-purple-600" />;
+      };
+
+      const getContactStyling = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50";
+        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50";
+        return "border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50";
+      };
+
+      // Show beautiful success toast with contact-specific styling
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm">
+              {getContactIcon()}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">{label} Copied!</div>
+              <div className="text-xs text-gray-600">Ready to paste anywhere</div>
+            </div>
+          </div>
+        ),
+        description: (
+          <div className="flex items-center gap-2 mt-2 p-2 bg-white/60 rounded-lg border">
+            <CheckCircle className="w-3 h-3 text-green-500" />
+            <code className="text-xs bg-gray-900 text-green-400 px-2 py-1 rounded font-mono tracking-wider">
+              {text}
+            </code>
+          </div>
+        ),
+        className: `${getContactStyling()} shadow-lg border-2`,
+        duration: 4000,
+      });
+
+    } catch (error) {
+      // Final fallback with the same beautiful styling
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      // Show the same beautiful toast for fallback
+      const getContactIcon = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-green-600" />;
+        if (label.includes('Email')) return <Mail className="w-4 h-4 text-blue-600" />;
+        return <Copy className="w-4 h-4 text-purple-600" />;
+      };
+
+      const getContactStyling = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50";
+        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50";
+        return "border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50";
+      };
+
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm">
+              {getContactIcon()}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">{label} Copied!</div>
+              <div className="text-xs text-gray-600">Ready to paste anywhere</div>
+            </div>
+          </div>
+        ),
+        description: (
+          <div className="flex items-center gap-2 mt-2 p-2 bg-white/60 rounded-lg border">
+            <CheckCircle className="w-3 h-3 text-green-500" />
+            <code className="text-xs bg-gray-900 text-green-400 px-2 py-1 rounded font-mono tracking-wider">
+              {text}
+            </code>
+          </div>
+        ),
+        className: `${getContactStyling()} shadow-lg border-2`,
+        duration: 4000,
+      });
+    }
+  };
 
   return (
     <div className="bg-gradient-to-br from-[#FEF2F2] via-[#FFF7ED] to-[#FEFCE8]">
 
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#DC2626] via-[#EA580C] to-[#B91C1C] py-24">
+      <section className="relative bg-gradient-to-br from-[#1E40AF] via-[#7C3AED] to-[#1E3A8A] py-24">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-6xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white">
               <h1 className="text-5xl font-bold mb-6">Get Expert Help & Support</h1>
-              <p className="text-xl text-orange-100 mb-8">
+              <p className="text-xl text-blue-100 mb-8">
                 Our dedicated team is here to assist you with any questions, technical issues, or business inquiries. Choose how you'd like to connect with us.
               </p>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-orange-200 mb-1">24/7</div>
+                  <div className="text-3xl font-bold text-blue-200 mb-1">24/7</div>
                   <div className="text-sm text-gray-200">Support Available</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold text-orange-200 mb-1">&lt;1hr</div>
+                  <div className="text-3xl font-bold text-blue-200 mb-1">&lt;1hr</div>
                   <div className="text-sm text-gray-200">Response Time</div>
                 </div>
               </div>
@@ -39,21 +148,92 @@ export const Contact = (): JSX.Element => {
 
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-4 py-2 bg-white rounded-full text-red-600 text-sm font-semibold flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedCategory("technical")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 transition-all ${
+                    selectedCategory === "technical"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
                   <HeadphonesIcon className="w-4 h-4" />
                   Technical Support
-                </span>
-                <span className="px-4 py-2 bg-white/20 rounded-full text-white text-sm">Business Inquiry</span>
-                <span className="px-4 py-2 bg-white/20 rounded-full text-white text-sm">Feedback</span>
-                <span className="px-4 py-2 bg-white/20 rounded-full text-white text-sm">Partnership</span>
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("business")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCategory === "business"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Business Inquiry
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("feedback")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCategory === "feedback"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Feedback
+                </button>
+                <button
+                  onClick={() => setSelectedCategory("partnership")}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                    selectedCategory === "partnership"
+                      ? "bg-white text-blue-600"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  Partnership
+                </button>
               </div>
-              
-              <h3 className="text-white text-lg font-semibold mb-3">Technical Support</h3>
-              <p className="text-gray-200 text-sm mb-3">Having trouble with our tools? Get instant help from our technical team.</p>
-              <div className="flex items-center text-orange-200 text-sm">
-                <Clock className="w-4 h-4 mr-2" />
-                Average response: 15 minutes
-              </div>
+
+              {selectedCategory === "technical" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Technical Support</h3>
+                  <p className="text-gray-200 text-sm mb-3">Having trouble with our tools? Get instant help from our technical team.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Average response: 15 minutes
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === "business" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Business Inquiry</h3>
+                  <p className="text-gray-200 text-sm mb-3">Explore enterprise solutions, custom integrations, and volume pricing options for your organization.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Response within: 2 hours
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === "feedback" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Feedback</h3>
+                  <p className="text-gray-200 text-sm mb-3">Share your experience, suggest improvements, or report issues to help us enhance our services.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Response within: 24 hours
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === "partnership" && (
+                <div className="transition-all duration-300">
+                  <h3 className="text-white text-lg font-semibold mb-3">Partnership</h3>
+                  <p className="text-gray-200 text-sm mb-3">Join our partner network, explore collaboration opportunities, or discuss integration possibilities.</p>
+                  <div className="flex items-center text-blue-200 text-sm">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Response within: 3 business days
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -71,7 +251,7 @@ export const Contact = (): JSX.Element => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {/* Phone Support */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
               <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Phone className="w-6 h-6" />
@@ -79,11 +259,18 @@ export const Contact = (): JSX.Element => {
                 <h3 className="text-lg font-bold mb-2">Phone Support</h3>
                 <p className="text-green-100 text-sm">Call us directly for immediate assistance</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
-                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 text-xs hover:bg-blue-50 transition-colors"
+                      onClick={() => copyToClipboard('+447429919748', 'Phone Number')}
+                    >
+                      Copy
+                    </Button>
                   </div>
                   <p className="text-sm font-medium">+447429919748</p>
                 </div>
@@ -91,14 +278,14 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   24/7 Available
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white">
+                <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white mt-auto">
                   Call Now
                 </Button>
               </div>
             </div>
 
             {/* Email Support */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
               <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Mail className="w-6 h-6" />
@@ -106,11 +293,18 @@ export const Contact = (): JSX.Element => {
                 <h3 className="text-lg font-bold mb-2">Email Support</h3>
                 <p className="text-blue-100 text-sm">Send us an email for detailed inquiries</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
-                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 text-xs hover:bg-blue-50 transition-colors"
+                      onClick={() => copyToClipboard('support@pdfconvertmaster.com', 'Email Address')}
+                    >
+                      Copy
+                    </Button>
                   </div>
                   <p className="text-sm font-medium">support@pdfconvertmaster.com</p>
                 </div>
@@ -118,38 +312,45 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Response within 1 hour
                 </div>
-                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white mt-auto">
                   Send Email
                 </Button>
               </div>
             </div>
 
             {/* Live Chat */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full relative">
+              {/* Coming Soon Badge */}
+              <div className="absolute top-4 right-4 z-10 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                Coming Soon
+              </div>
+              <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white opacity-75">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">Live Chat</h3>
                 <p className="text-purple-100 text-sm">Chat with our support team in real-time</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
-                  <span className="text-sm text-gray-600">Contact Info:</span>
-                  <p className="text-sm font-medium">Available on website</p>
+              <div className="p-6 flex-grow flex flex-col opacity-75">
+                <div className="mb-4 flex-grow">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-600">Contact Info:</span>
+                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs" disabled>Copy</Button>
+                  </div>
+                  <p className="text-sm font-medium text-gray-500">Feature in development</p>
                 </div>
                 <div className="flex items-center text-sm text-gray-600 mb-4">
                   <Clock className="w-4 h-4 mr-2" />
-                  Mon-Fri 9AM-6PM GMT
+                  Coming Q2 2024
                 </div>
-                <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white">
-                  Start Chat
+                <Button className="w-full bg-gray-400 text-white mt-auto cursor-not-allowed" disabled>
+                  Coming Soon
                 </Button>
               </div>
             </div>
 
             {/* WhatsApp */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
               <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
@@ -157,11 +358,18 @@ export const Contact = (): JSX.Element => {
                 <h3 className="text-lg font-bold mb-2">WhatsApp</h3>
                 <p className="text-green-100 text-sm">Quick support via WhatsApp messaging</p>
               </div>
-              <div className="p-6">
-                <div className="mb-4">
+              <div className="p-6 flex-grow flex flex-col">
+                <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
-                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 text-xs hover:bg-blue-50 transition-colors"
+                      onClick={() => copyToClipboard('+447429919748', 'WhatsApp Number')}
+                    >
+                      Copy
+                    </Button>
                   </div>
                   <p className="text-sm font-medium">+447429919748</p>
                 </div>
@@ -169,7 +377,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Quick response
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white">
+                <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white mt-auto">
                   Message Us
                 </Button>
               </div>
@@ -198,7 +406,7 @@ export const Contact = (): JSX.Element => {
       </section>
 
       {/* Contact Form */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+      <section id="contact-form" className="py-20 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Send Us a Message</h2>
@@ -253,9 +461,13 @@ export const Contact = (): JSX.Element => {
                         onClick={() => setSelectedPriority(priority)}
                         className={`px-3 py-1 rounded-full text-sm capitalize ${
                           selectedPriority === priority
-                            ? priority === "medium"
+                            ? priority === "low"
+                              ? "bg-green-100 text-green-800"
+                              : priority === "medium"
                               ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
+                              : priority === "high"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-red-100 text-red-800"
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >
@@ -328,47 +540,116 @@ export const Contact = (): JSX.Element => {
 
           <div className="space-y-4">
             <div className="bg-white rounded-xl shadow-lg">
-              <button className="w-full px-6 py-4 text-left flex justify-between items-center">
+              <button
+                className="w-full px-6 py-4 text-left flex justify-between items-center"
+                onClick={() => setExpandedFAQ(expandedFAQ === 0 ? null : 0)}
+              >
                 <span className="text-lg font-semibold text-gray-900">What file formats do you support for conversion?</span>
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className={`w-5 h-5 text-red-600 transition-transform duration-200 ${
+                    expandedFAQ === 0 ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              <div className="px-6 pb-4">
-                <div className="border-l-4 border-red-600 pl-4">
-                  <p className="text-gray-700">
-                    We support a wide range of file formats including PDF, Word (DOC/DOCX), Excel (XLS/XLSX), PowerPoint (PPT/PPTX), JPG, PNG, HTML, and many more. Our tools can handle most common document and image formats.
-                  </p>
+              {expandedFAQ === 0 && (
+                <div className="px-6 pb-4">
+                  <div className="border-l-4 border-red-600 pl-4">
+                    <p className="text-gray-700">
+                      We support a wide range of file formats including PDF, Word (DOC/DOCX), Excel (XLS/XLSX), PowerPoint (PPT/PPTX), JPG, PNG, HTML, and many more. Our tools can handle most common document and image formats.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {[
-              "Is there a file size limit for uploads?",
-              "How secure is my data during conversion?",
-              "Can I use your tools offline?",
-              "Do you offer API access for developers?",
-              "What payment methods do you accept?",
-              "Can I cancel my subscription anytime?",
-              "Do you provide technical support?",
-              "Are there any usage limits?",
-              "How can I get a refund?"
-            ].map((question, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg">
-                <button className="w-full px-6 py-4 text-left flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">{question}</span>
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+              {
+                question: "Is there a file size limit for uploads?",
+                answer: "Yes, we have different file size limits based on your plan. Free users can upload files up to 10MB, Basic plan users up to 50MB, Pro plan users up to 200MB, and Enterprise users up to 1GB per file. For larger files, please contact our support team for assistance."
+              },
+              {
+                question: "How secure is my data during conversion?",
+                answer: "Your data security is our top priority. We use industry-standard 256-bit SSL encryption for all file transfers. All uploaded files are automatically deleted from our servers within 24 hours after conversion. We never store, share, or access your personal documents."
+              },
+              {
+                question: "Can I use your tools offline?",
+                answer: "Our PDF tools are web-based and require an internet connection to function. However, we're developing a desktop application that will allow offline conversions for Pro and Enterprise users. This feature will be available in Q2 2024."
+              },
+              {
+                question: "Do you offer API access for developers?",
+                answer: "Yes! We provide robust REST API access for Pro and Enterprise plan users. Our API supports all conversion tools, batch processing, and webhooks. Comprehensive documentation, SDKs for popular languages, and 24/7 developer support are included."
+              },
+              {
+                question: "What payment methods do you accept?",
+                answer: "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, Apple Pay, Google Pay, and bank transfers for Enterprise accounts. All payments are processed securely through our PCI-compliant payment partners."
+              },
+              {
+                question: "Can I cancel my subscription anytime?",
+                answer: "Absolutely! You can cancel your subscription at any time from your account settings. There are no cancellation fees or long-term commitments. Your subscription will remain active until the end of your current billing period."
+              },
+              {
+                question: "Do you provide technical support?",
+                answer: "Yes, we offer comprehensive technical support. Free users get community support, Basic users get email support within 24 hours, Pro users get priority email and chat support within 1 hour, and Enterprise users get 24/7 dedicated support with phone access."
+              },
+              {
+                question: "Are there any usage limits?",
+                answer: "Usage limits vary by plan. Basic plan includes 100 conversions/month, Pro plan includes 10,000 conversions/month, and Enterprise plan offers unlimited conversions. API calls, storage, and processing speed also increase with higher tier plans."
+              },
+              {
+                question: "How can I get a refund?",
+                answer: "We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied with our service, contact our support team within 30 days of your purchase for a full refund. Refunds are processed within 5-7 business days to your original payment method."
+              }
+            ].map((faq, index) => {
+              const faqIndex = index + 1; // +1 because first FAQ is index 0
+              return (
+                <div key={index} className="bg-white rounded-xl shadow-lg">
+                  <button
+                    className="w-full px-6 py-4 text-left flex justify-between items-center"
+                    onClick={() => setExpandedFAQ(expandedFAQ === faqIndex ? null : faqIndex)}
+                  >
+                    <span className="text-lg font-semibold text-gray-900">{faq.question}</span>
+                    <svg
+                      className={`w-5 h-5 text-red-600 transition-transform duration-200 ${
+                        expandedFAQ === faqIndex ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedFAQ === faqIndex && (
+                    <div className="px-6 pb-4">
+                      <div className="border-l-4 border-red-600 pl-4">
+                        <p className="text-gray-700">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-12 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
             <h3 className="text-xl font-bold text-red-800 mb-2">Still Have Questions?</h3>
             <p className="text-red-700 mb-4">Can't find the answer you're looking for? Our support team is here to help!</p>
-            <Button className="bg-red-600 hover:bg-red-700 text-white">
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                const contactForm = document.getElementById('contact-form');
+                if (contactForm) {
+                  contactForm.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
               Contact Support
             </Button>
           </div>
