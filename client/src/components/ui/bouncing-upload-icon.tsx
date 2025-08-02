@@ -94,7 +94,7 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
             src={src}
           />
         ) : (
-          <Upload className={`${iconSizeClasses[size]} text-red-500 ${iconClassName}`} />
+          <Upload className={`${iconSizeClasses[size]} ${iconClassName || 'text-red-500'}`} />
         )}
       </motion.div>
     </div>
