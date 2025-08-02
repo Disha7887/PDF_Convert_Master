@@ -7,6 +7,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { AnimatedParticles } from "@/components/ui/animated-particles";
 
 export const TestimonialsSection = (): JSX.Element => {
   // Feature data for mapping
