@@ -59,12 +59,12 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgCol
         </div>
         
         {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 text-center mb-3">
+        <h3 className="text-lg font-bold text-gray-900 text-center mb-3">
           {title}
         </h3>
-        
+
         {/* Description */}
-        <p className="text-sm text-gray-600 text-center mb-8 flex-grow flex items-center justify-center">
+        <p className="text-sm text-gray-600 text-center mb-6 flex-grow flex items-center justify-center px-2">
           {description}
         </p>
         
