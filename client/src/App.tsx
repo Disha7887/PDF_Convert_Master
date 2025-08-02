@@ -3,7 +3,9 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { GlobalLayout } from "@/components/GlobalLayout";
+import { NavigationSection } from "@/pages/sections/NavigationSection";
+import { FooterSection } from "@/pages/sections/FooterSection";
+import { HeroSection } from "@/pages/sections/HeroSection";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 
@@ -22,109 +24,105 @@ import { Support } from "@/pages/Support";
 import { Features } from "@/pages/Features";
 import { LearnMore } from "@/pages/LearnMore";
 
+// Layout wrapper for public pages (with header and footer)
+function PublicPageLayout({ children, showHero = false }: { children: React.ReactNode; showHero?: boolean }) {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <NavigationSection />
+      {showHero && <HeroSection />}
+      <main className="flex-1">
+        {children}
+      </main>
+      <FooterSection />
+    </div>
+  );
+}
+
 function Router() {
   const { isAuthenticated } = useAuth();
 
   return (
     <Switch>
-      {/* Authentication routes - no header/footer for clean auth experience */}
+      {/* Authentication routes - NO header/footer, keep existing auth pages intact */}
       <Route path="/login">
-        {isAuthenticated ? (
-          <GlobalLayout>
-            <Dashboard />
-          </GlobalLayout>
-        ) : (
-          <Login />
-        )}
+        {isAuthenticated ? <Dashboard /> : <Login />}
       </Route>
       
       <Route path="/register">
-        {isAuthenticated ? (
-          <GlobalLayout>
-            <Dashboard />
-          </GlobalLayout>
-        ) : (
-          <Register />
-        )}
+        {isAuthenticated ? <Dashboard /> : <Register />}
       </Route>
 
-      {/* Protected Dashboard route */}
+      {/* Dashboard route - NO header/footer, keep existing dashboard intact */}
       <Route path="/dashboard">
-        {isAuthenticated ? (
-          <GlobalLayout>
-            <Dashboard />
-          </GlobalLayout>
-        ) : (
-          <Login />
-        )}
+        {isAuthenticated ? <Dashboard /> : <Login />}
       </Route>
 
-      {/* Public pages with full layout including header and footer */}
+      {/* Public pages WITH header and footer */}
       <Route path="/">
-        <GlobalLayout showHero={true}>
+        <PublicPageLayout showHero={true}>
           <Body />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/tools">
-        <GlobalLayout>
+        <PublicPageLayout>
           <Tools />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/contact">
-        <GlobalLayout>
+        <PublicPageLayout>
           <Contact />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/pricing">
-        <GlobalLayout>
+        <PublicPageLayout>
           <Pricing />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/about">
-        <GlobalLayout>
+        <PublicPageLayout>
           <About />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/features">
-        <GlobalLayout>
+        <PublicPageLayout>
           <Features />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/learn-more">
-        <GlobalLayout>
+        <PublicPageLayout>
           <LearnMore />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/terms">
-        <GlobalLayout>
+        <PublicPageLayout>
           <TermsOfService />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/privacy">
-        <GlobalLayout>
+        <PublicPageLayout>
           <PrivacyPolicy />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       <Route path="/support">
-        <GlobalLayout>
+        <PublicPageLayout>
           <Support />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
 
       {/* 404 Not Found */}
       <Route>
-        <GlobalLayout>
+        <PublicPageLayout>
           <NotFound />
-        </GlobalLayout>
+        </PublicPageLayout>
       </Route>
     </Switch>
   );
