@@ -16,6 +16,7 @@ interface Particle {
 interface AnimatedParticlesProps {
   count?: number;
   className?: string;
+  mobileCount?: number;
 }
 
 export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
