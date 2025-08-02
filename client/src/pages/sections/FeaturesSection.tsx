@@ -166,7 +166,10 @@ export const FeaturesSection = (): JSX.Element => {
             <div className="flex gap-4">
               <Button
                 className="font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]"
-                onClick={() => setLocation('/tools')}
+                onClick={() => {
+                  console.log('Try Tools Now button clicked');
+                  setLocation('/tools');
+                }}
               >
                 <img
                   src="/figmaAssets/margin-wrap-8.svg"

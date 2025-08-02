@@ -190,7 +190,10 @@ export const HeroSection = (): JSX.Element => {
                       <div className="flex gap-4">
                         <Button
                           className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
-                          onClick={() => setLocation('/tools')}
+                          onClick={() => {
+                            console.log('Start Converting Now button clicked');
+                            setLocation('/tools');
+                          }}
                         >
                           <img
                             className="mr-2"
