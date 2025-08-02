@@ -9,6 +9,7 @@ import { Phone, Mail, MessageSquare, HeadphonesIcon, MapPin, Clock, Car, Train, 
 
 export const Contact = (): JSX.Element => {
   const [selectedPriority, setSelectedPriority] = useState("medium");
+  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0); // First FAQ expanded by default
 
   return (
     <div className="bg-gradient-to-br from-[#FEF2F2] via-[#FFF7ED] to-[#FEFCE8]">
