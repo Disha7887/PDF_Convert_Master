@@ -25,7 +25,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
   const [location, setLocation] = useLocation();
   return (
     <Card className="relative">
-      <CardContent className="p-6">
+      <div className="p-6">
         <div className="pr-12">
           {/* Icon */}
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${iconBg}`}>
@@ -87,7 +87,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
         >
           <Star className={`w-4 h-4 ${isFavorite ? 'fill-white' : ''}`} />
         </Button>
-      </CardContent>
+      </div>
     </Card>
   );
 };
@@ -302,7 +302,7 @@ export const LiveTools: React.FC = () => {
                     Your Favorite Tools
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {favoriteTools.map((tool, index) => (
                       <div key={index} className="p-4 bg-white rounded-lg border border-red-200 text-center">
@@ -313,7 +313,7 @@ export const LiveTools: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             )}
 
