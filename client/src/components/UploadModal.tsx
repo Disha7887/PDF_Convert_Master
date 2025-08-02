@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Shield, Zap, Download, X } from "lucide-react";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 
 interface ToolConfig {
   id: string;
