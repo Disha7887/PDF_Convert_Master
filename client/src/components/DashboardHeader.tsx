@@ -88,36 +88,7 @@ export const DashboardHeader = (): JSX.Element => {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Dashboard Button */}
-        <div className="flex items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center space-x-2 px-4 py-2">
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Dashboard</span>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-56">
-              <DropdownMenuItem onClick={() => setLocation("/dashboard")}>
-                <Home className="mr-2 h-4 w-4" />
-                <span>Dashboard Home</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation("/dashboard/jobs")}>
-                <Wrench className="mr-2 h-4 w-4" />
-                <span>Conversion Jobs</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation("/dashboard/analytics")}>
-                <BookOpen className="mr-2 h-4 w-4" />
-                <span>Analytics</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation("/dashboard/api")}>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>API Management</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+
 
         {/* Right - Plan Status, Notifications and Profile */}
         <div className="flex items-center space-x-4">
