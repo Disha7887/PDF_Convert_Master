@@ -155,7 +155,9 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Standard processing speed</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">Downgrade</Button>
+                <Button variant="outline" className="w-full">
+                  {isAuthenticated ? "Downgrade" : "Get Started"}
+                </Button>
               </div>
 
               {/* Pro Plan - Current */}
@@ -194,7 +196,9 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Advanced tools</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">Downgrade</Button>
+                <Button variant="outline" className="w-full">
+                  {isAuthenticated ? "Current Plan" : "Most Popular"}
+                </Button>
               </div>
 
               {/* Enterprise Plan */}
@@ -237,7 +241,9 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">SLA guarantee</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">Upgrade</Button>
+                <Button variant="outline" className="w-full">
+                  {isAuthenticated ? "Upgrade" : "Contact Sales"}
+                </Button>
               </div>
             </div>
           </div>
