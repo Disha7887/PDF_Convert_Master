@@ -3,8 +3,8 @@ import express, { type Request, Response, NextFunction } from "express";
 console.log("Express imported");
 import { createServer } from "http";
 console.log("HTTP imported");
-// import { registerRoutes } from "./routes";
-console.log("Routes import commented out");
+import { registerRoutes } from "./routes";
+console.log("Routes imported successfully");
 import { setupVite, serveStatic, log } from "./vite";
 console.log("Vite imported");
 
