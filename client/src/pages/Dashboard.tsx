@@ -103,7 +103,6 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
 
       <div className="flex">
@@ -403,6 +402,5 @@ export const Dashboard: React.FC = () => {
         </main>
       </div>
     </div>
-    </DashboardLayout>
   );
 };
