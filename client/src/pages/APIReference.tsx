@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -172,7 +172,7 @@ export const APIReference: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold">Quick Reference</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <div className="p-6 pt-0 space-y-3">
                     {/* Base URL */}
                     <div className="p-3 rounded-lg bg-gray-50">
                       <div className="mb-2">
@@ -196,7 +196,7 @@ export const APIReference: React.FC = () => {
                       </div>
                       <p className="text-sm text-gray-600">1000 requests per minute</p>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
 
                 {/* Available Endpoints Card */}
@@ -204,7 +204,7 @@ export const APIReference: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold">Available Endpoints</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <div className="p-6 pt-0 space-y-2">
                     {/* PDF to Word Endpoint */}
                     <div className="p-2 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
@@ -236,7 +236,7 @@ export const APIReference: React.FC = () => {
                         <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
                       </div>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               </div>
             </div>
