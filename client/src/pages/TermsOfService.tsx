@@ -299,7 +299,9 @@ export const TermsOfService = (): JSX.Element => {
               <div className="prose prose-gray max-w-none space-y-12">
 
                 {/* 1. Acceptance of Terms */}
-                <section id="acceptance-of-terms" className="scroll-mt-24">
+                <section id="acceptance-of-terms" className={`scroll-mt-24 transition-all duration-300 ${
+                  highlightedSection === "acceptance-of-terms" ? "bg-blue-50 p-6 rounded-lg ring-4 ring-blue-500 ring-opacity-50" : ""
+                }`}>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <CheckCircle className="w-6 h-6 text-blue-600" />
                     1. Acceptance of Terms
