@@ -170,7 +170,7 @@ export const APISetup: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold">Getting Started</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <div className="space-y-4">
                     {/* Step 1 */}
                     <div className="flex items-start">
@@ -205,7 +205,7 @@ export const APISetup: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
 
               {/* API Key Management Section */}
@@ -213,7 +213,7 @@ export const APISetup: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold">API Key Management</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <div className="space-y-4">
                     {/* Production Key */}
                     <div className="p-4 rounded-lg bg-gray-50">
@@ -242,7 +242,7 @@ export const APISetup: React.FC = () => {
                       Generate New Key
                     </Button>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </div>
           </main>
