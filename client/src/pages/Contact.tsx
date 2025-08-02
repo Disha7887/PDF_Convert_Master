@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Phone, Mail, MessageSquare, HeadphonesIcon, MapPin, Clock, Car, Train, Shield, Cloud, Lock } from "lucide-react";
+import { Phone, Mail, MessageSquare, HeadphonesIcon, MapPin, Clock, Car, Train, Shield, Cloud, Lock, CheckCircle, Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export const Contact = (): JSX.Element => {
   const [selectedPriority, setSelectedPriority] = useState("medium");
