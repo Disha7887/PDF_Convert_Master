@@ -44,7 +44,7 @@ export const DashboardHeader = (): JSX.Element => {
   };
 
   const handleLogoClick = () => {
-    setLocation("/");
+    setLocation("/dashboard");
   };
 
   const handleManagePlan = () => {
