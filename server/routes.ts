@@ -787,6 +787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const actualProcessingTime = Date.now() - startTime;
 
+      // Update job status to completed with output filename
       await storage.updateConversionJobStatus(
         jobId,
         "completed",
@@ -794,14 +795,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         undefined,
         actualProcessingTime
       );
+      
+      console.log(`Job ${jobId} completed successfully: ${outputFilename}`);
 
     } catch (error) {
-      console.error("Error processing job:", error);
+      console.error(`Error processing job ${jobId}:`, error);
       await storage.updateConversionJobStatus(
         jobId,
         "failed",
         undefined,
-        "Processing failed due to internal error"
+        `Processing failed: ${error instanceof Error ? error.message : 'Internal error'}`
       );
     }
   }
@@ -842,10 +845,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("Error fetching job:", error);
+      console.error(`Error fetching job ${jobId}:`, error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch job status"
+        error: "Failed to fetch job status",
+        details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

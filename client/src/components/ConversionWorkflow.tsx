@@ -327,7 +327,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           setTimeout(poll, 1500);
         } else {
           // Timeout - mark as failed
-          const timeoutError = new Error('Conversion timed out. Please try again.');
+          console.error(`Job ${jobId} timed out after ${maxAttempts} attempts`);
+          const timeoutError = new Error('Processing took longer than expected');
           setSelectedFiles(prev => {
             const updated = prev.map(f => 
               f.id === fileId 
@@ -346,23 +347,33 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           reject?.(timeoutError);
         }
       } catch (error) {
-        const apiError = new Error('Failed to check conversion status');
-        setSelectedFiles(prev => {
-          const updated = prev.map(f => 
-            f.id === fileId 
-              ? { 
-                  ...f, 
-                  status: 'failed' as const, 
-                  errorMessage: apiError.message 
-                }
-              : f
-          );
-          
-          setTimeout(() => checkBatchCompletion(updated), 100);
-          return updated;
-        });
+        console.error(`Polling error for job ${jobId} (attempt ${attempts}):`, error);
         
-        reject?.(apiError);
+        // Only mark as failed if we've exhausted all attempts or it's a final timeout
+        if (attempts >= maxAttempts - 1) {
+          const apiError = new Error(`Unable to check status after ${maxAttempts} attempts`);
+          setSelectedFiles(prev => {
+            const updated = prev.map(f => 
+              f.id === fileId 
+                ? { 
+                    ...f, 
+                    status: 'failed' as const, 
+                    errorMessage: apiError.message 
+                  }
+                : f
+            );
+            
+            setTimeout(() => checkBatchCompletion(updated), 100);
+            return updated;
+          });
+          
+          reject?.(apiError);
+        } else {
+          // Continue polling on temporary errors
+          console.log(`Retrying status check for job ${jobId}, attempt ${attempts + 1}/${maxAttempts}`);
+          attempts++;
+          setTimeout(poll, 2000); // Longer delay on error
+        }
       }
     };
 
