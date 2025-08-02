@@ -381,6 +381,72 @@ export const Tools: React.FC = () => {
       iconBgColor: "bg-purple-50",
       iconBorderColor: "border-purple-200",
       category: "Edit"
+    },
+
+    // Image Tools Category
+    {
+      title: "Resize Images",
+      description: "Change image dimensions, scale by percentage, or use preset sizes",
+      icon: <Maximize className="w-9 h-9 text-blue-600" />,
+      iconBgColor: "bg-blue-50",
+      iconBorderColor: "border-blue-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Crop Images",
+      description: "Cut specific parts of images with freeform or preset ratios",
+      icon: <Crop className="w-9 h-9 text-green-600" />,
+      iconBgColor: "bg-green-50",
+      iconBorderColor: "border-green-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Rotate Images",
+      description: "Rotate images by any angle with automatic background fill",
+      icon: <RefreshCw className="w-9 h-9 text-purple-600" />,
+      iconBgColor: "bg-purple-50",
+      iconBorderColor: "border-purple-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Convert Image Format",
+      description: "Convert between JPG, PNG, WebP, GIF, BMP with quality settings",
+      icon: <Monitor className="w-9 h-9 text-orange-600" />,
+      iconBgColor: "bg-orange-50",
+      iconBorderColor: "border-orange-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Compress Images",
+      description: "Reduce image file size without losing quality for web optimization",
+      icon: <Archive className="w-9 h-9 text-red-500" />,
+      iconBgColor: "bg-red-50",
+      iconBorderColor: "border-red-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Upscale Images",
+      description: "Enhance image resolution using AI technology up to 4x",
+      icon: <ZoomIn className="w-9 h-9 text-indigo-600" />,
+      iconBgColor: "bg-indigo-50",
+      iconBorderColor: "border-indigo-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Remove Background",
+      description: "Remove image backgrounds automatically using AI technology",
+      icon: <Eraser className="w-9 h-9 text-pink-600" />,
+      iconBgColor: "bg-pink-50",
+      iconBorderColor: "border-pink-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Add Image Watermarks",
+      description: "Add text or image watermarks to protect your photos",
+      icon: <Palette className="w-9 h-9 text-cyan-600" />,
+      iconBgColor: "bg-cyan-50",
+      iconBorderColor: "border-cyan-200",
+      category: "Image Tools"
     }
   ];
 
