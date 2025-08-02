@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { Upload, Shield, Zap, Download, FileText, FileSpreadsheet, Presentation, FilePlus, Scissors, Archive, Lock, PenTool, ScanText, Edit, FileSignature } from "lucide-react";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 
 interface ToolConfig {
   id: string;
