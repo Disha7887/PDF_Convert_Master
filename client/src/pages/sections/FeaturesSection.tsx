@@ -109,7 +109,7 @@ export const FeaturesSection = (): JSX.Element => {
         <div className="absolute w-px h-28 top-[1069px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(96,165,250,0.25)_50%,rgba(0,0,0,0)_100%)]" />
       </div>
 
-      <div className="container mx-auto px-6">
+      <div className="max-w-screen-xl mx-auto px-8">
         {/* Section Header */}
         <div className="mb-20 text-center">
           <h2 className="text-5xl font-bold text-white mb-6 font-['Roboto',Helvetica] leading-[48px]">
