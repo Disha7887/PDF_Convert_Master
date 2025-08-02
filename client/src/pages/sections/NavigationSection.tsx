@@ -19,7 +19,6 @@ export const NavigationSection = (): JSX.Element => {
     { name: "Tools", width: "w-[38.66px]", href: "/tools" },
     { name: "Pricing", width: "w-[50.38px]", href: "/pricing" },
     { name: "About", width: "w-[42.98px]", href: "/about" },
-    { name: "Dashboard", width: "w-[70px]", href: "/dashboard" },
   ];
 
   const handleNavClick = (href: string) => {
@@ -44,10 +43,8 @@ export const NavigationSection = (): JSX.Element => {
   };
 
   const handleGetStarted = () => {
-    // For demo purposes, also log in the user
-    handleLogin();
-    // Then redirect to dashboard
-    setLocation('/dashboard');
+    // Redirect to signup page
+    setLocation('/signup');
   };
 
   return (
@@ -82,7 +79,7 @@ export const NavigationSection = (): JSX.Element => {
             <Button
               variant="outline"
               className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base hover:text-white hover:bg-[#4a5462] transition-colors"
-              onClick={handleLogin}
+              onClick={() => setLocation('/signin')}
             >
               Log In
             </Button>

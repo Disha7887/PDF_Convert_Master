@@ -2,7 +2,7 @@ import { ShieldIcon, SparklesIcon, UploadIcon, ZapIcon } from "lucide-react";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 export const HeroSection = (): JSX.Element => {
   // Background decoration elements data
@@ -226,7 +226,7 @@ export const HeroSection = (): JSX.Element => {
 
                 {/* Right column - File upload card */}
                 <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-[#ffffff1a] rounded-3xl border-2 border-dashed border-[#6a7280] backdrop-blur-[2px]">
-                  <CardContent className="flex flex-col items-center justify-center w-full p-0">
+                  <div className="flex flex-col items-center justify-center w-full p-0">
                     <img
                       className="mb-3"
                       alt="UploadIcon icon"
@@ -265,7 +265,7 @@ export const HeroSection = (): JSX.Element => {
                         </div>
                       ))}
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               </div>
             </div>

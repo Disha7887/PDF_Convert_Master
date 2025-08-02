@@ -1,10 +1,12 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Code2, Archive, FileImage } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Pricing: React.FC = () => {
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -12,17 +14,26 @@ export const Pricing: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-8">
         <div className="max-w-7xl mx-auto px-20">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Manage Plans</h1>
-            <p className="text-lg text-gray-600">Manage your subscription and billing</p>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {isAuthenticated ? "Manage Plans" : "Available Plans"}
+            </h1>
+            <p className="text-lg text-gray-600">
+              {isAuthenticated
+                ? "Manage your subscription and billing"
+                : "Choose a plan that fits your needs"
+              }
+            </p>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-20 py-8">
-        {/* Current Plan */}
+        {isAuthenticated && (
+          <>
+            {/* Current Plan */}
         <Card className="mb-8">
-          <CardContent className="p-6">
+          <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center mb-2">
@@ -37,14 +48,14 @@ export const Pricing: React.FC = () => {
                 <Button variant="outline" className="bg-gray-100">Cancel Subscription</Button>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
-        {/* Usage Statistics */}
+            {/* Usage Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* API Calls */}
           <Card>
-            <CardContent className="p-6">
+            <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-gray-900">API Calls</h3>
                 <Code2 className="w-5 h-5 text-blue-600" />
@@ -59,12 +70,12 @@ export const Pricing: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-600">17.3% used</p>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Storage */}
           <Card>
-            <CardContent className="p-6">
+            <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-gray-900">Storage</h3>
                 <Archive className="w-5 h-5 text-orange-600" />
@@ -79,12 +90,12 @@ export const Pricing: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-600">45.2% used</p>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Conversions */}
           <Card>
-            <CardContent className="p-6">
+            <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-gray-900">Conversions</h3>
                 <FileImage className="w-5 h-5 text-green-600" />
@@ -99,16 +110,18 @@ export const Pricing: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-600">28.5% used</p>
               </div>
-            </CardContent>
+            </div>
           </Card>
         </div>
+          </>
+        )}
 
         {/* Available Plans */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Available Plans</CardTitle>
           </CardHeader>
-          <CardContent>
+          <div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Basic Plan */}
               <div className="border rounded-lg p-6">
@@ -142,7 +155,9 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Standard processing speed</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">Downgrade</Button>
+                <Button variant="outline" className="w-full">
+                  {isAuthenticated ? "Downgrade" : "Get Started"}
+                </Button>
               </div>
 
               {/* Pro Plan - Current */}
@@ -181,7 +196,9 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Advanced tools</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">Downgrade</Button>
+                <Button variant="outline" className="w-full">
+                  {isAuthenticated ? "Current Plan" : "Most Popular"}
+                </Button>
               </div>
 
               {/* Enterprise Plan */}
@@ -224,13 +241,16 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">SLA guarantee</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full">Upgrade</Button>
+                <Button variant="outline" className="w-full">
+                  {isAuthenticated ? "Upgrade" : "Contact Sales"}
+                </Button>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
-        {/* Billing History */}
+        {isAuthenticated && (
+          /* Billing History */
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -238,7 +258,7 @@ export const Pricing: React.FC = () => {
               <Button variant="outline">Download All Invoices</Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -287,8 +307,9 @@ export const Pricing: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </CardContent>
+          </div>
         </Card>
+        )}
       </main>
     </div>
   );

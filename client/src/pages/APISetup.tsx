@@ -1,9 +1,9 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DashboardLayout } from "@/components/DashboardLayout";
+
 import { useLocation } from "wouter";
 import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown, Eye } from "lucide-react";
 
@@ -15,7 +15,7 @@ export const APISetup: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="min-h-screen bg-gray-50">
         <div className="flex">
           {/* Sidebar */}
@@ -170,7 +170,7 @@ export const APISetup: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold">Getting Started</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <div className="space-y-4">
                     {/* Step 1 */}
                     <div className="flex items-start">
@@ -205,7 +205,7 @@ export const APISetup: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
 
               {/* API Key Management Section */}
@@ -213,7 +213,7 @@ export const APISetup: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold">API Key Management</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <div className="space-y-4">
                     {/* Production Key */}
                     <div className="p-4 rounded-lg bg-gray-50">
@@ -242,12 +242,12 @@ export const APISetup: React.FC = () => {
                       Generate New Key
                     </Button>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </div>
           </main>
         </div>
       </div>
-    </DashboardLayout>
+    
   );
 };

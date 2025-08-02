@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { UploadModal } from "@/components/UploadModal";
+import { toolConfigs } from "@/components/UploadPage";
+
 import { useLocation } from "wouter";
 import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown, Eye, Star, Info, FileType, FileSpreadsheet, Presentation, FilePlus, Scissors, Archive, Lock, PenTool, ScanText, Edit, FileSignature } from "lucide-react";
 
@@ -14,12 +16,16 @@ interface ToolCardProps {
   icon: React.ReactNode;
   iconBg: string;
   isFavorite?: boolean;
+  uploadUrl?: string;
+  toolId?: string;
+  onUseToolClick?: (toolId: string) => void;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, icon, iconBg, isFavorite = false }) => {
+const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, icon, iconBg, isFavorite = false, uploadUrl, toolId, onUseToolClick }) => {
+  const [location, setLocation] = useLocation();
   return (
     <Card className="relative">
-      <CardContent className="p-6">
+      <div className="p-6">
         <div className="pr-12">
           {/* Icon */}
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${iconBg}`}>
@@ -53,11 +59,22 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
           
           {/* Buttons */}
           <div className="space-y-2">
-            <Button variant="outline" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                if (toolId && onUseToolClick) {
+                  onUseToolClick(toolId);
+                } else if (uploadUrl) {
+                  setLocation(uploadUrl);
+                }
+              }}
+            >
               Use Tool
             </Button>
             <Button variant="outline" className="w-full">
               <Info className="w-4 h-4 mr-2" />
+              Learn More
             </Button>
           </div>
         </div>
@@ -70,7 +87,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
         >
           <Star className={`w-4 h-4 ${isFavorite ? 'fill-white' : ''}`} />
         </Button>
-      </CardContent>
+      </div>
     </Card>
   );
 };
@@ -79,9 +96,25 @@ export const LiveTools: React.FC = () => {
   const [location, setLocation] = useLocation();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
 
   const handleNavigation = (path: string) => {
     setLocation(path);
+  };
+
+  const handleUseToolClick = (toolId: string) => {
+    setSelectedToolId(toolId);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsUploadModalOpen(false);
+    setSelectedToolId(null);
+  };
+
+  const handleFileUpload = (files: File[]) => {
+    console.log(`Files uploaded for tool ${selectedToolId}:`, files);
   };
 
   const tools = [
@@ -92,7 +125,9 @@ export const LiveTools: React.FC = () => {
       icon: <FileText className="w-5 h-5 text-blue-600" />,
       iconBg: "bg-blue-100",
       category: "convert",
-      isFavorite: true
+      isFavorite: true,
+      uploadUrl: "/upload/pdf-to-word",
+      toolId: "pdf-to-word"
     },
     {
       title: "PDF to Excel",
@@ -100,7 +135,9 @@ export const LiveTools: React.FC = () => {
       popularity: 88,
       icon: <FileSpreadsheet className="w-5 h-5 text-green-600" />,
       iconBg: "bg-green-100",
-      category: "convert"
+      category: "convert",
+      uploadUrl: "/upload/pdf-to-excel",
+      toolId: "pdf-to-excel"
     },
     {
       title: "PDF to PowerPoint",
@@ -116,7 +153,9 @@ export const LiveTools: React.FC = () => {
       popularity: 92,
       icon: <FileText className="w-5 h-5 text-red-600" />,
       iconBg: "bg-red-100",
-      category: "convert"
+      category: "convert",
+      uploadUrl: "/upload/word-to-pdf",
+      toolId: "word-to-pdf"
     },
     {
       title: "Merge PDFs",
@@ -125,7 +164,9 @@ export const LiveTools: React.FC = () => {
       icon: <FilePlus className="w-5 h-5 text-purple-600" />,
       iconBg: "bg-purple-100",
       category: "manipulate",
-      isFavorite: true
+      isFavorite: true,
+      uploadUrl: "/upload/merge-pdfs",
+      toolId: "merge-pdfs"
     },
     {
       title: "Split PDF",
@@ -199,7 +240,7 @@ export const LiveTools: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="min-h-screen bg-gray-50">
         {/* Main Content */}
         <main className="flex-1 px-64 py-6">
@@ -261,7 +302,7 @@ export const LiveTools: React.FC = () => {
                     Your Favorite Tools
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {favoriteTools.map((tool, index) => (
                       <div key={index} className="p-4 bg-white rounded-lg border border-red-200 text-center">
@@ -272,7 +313,7 @@ export const LiveTools: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             )}
 
@@ -287,6 +328,9 @@ export const LiveTools: React.FC = () => {
                   icon={tool.icon}
                   iconBg={tool.iconBg}
                   isFavorite={tool.isFavorite}
+                  uploadUrl={tool.uploadUrl}
+                  toolId={tool.toolId}
+                  onUseToolClick={handleUseToolClick}
                 />
               ))}
             </div>
@@ -299,6 +343,16 @@ export const LiveTools: React.FC = () => {
           </div>
         </main>
       </div>
-    </DashboardLayout>
+
+      {/* Upload Modal */}
+      {selectedToolId && (
+        <UploadModal
+          isOpen={isUploadModalOpen}
+          onClose={handleCloseModal}
+          toolConfig={toolConfigs[selectedToolId]}
+          onFileUpload={handleFileUpload}
+        />
+      )}
+    </>
   );
 };

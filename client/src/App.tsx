@@ -22,6 +22,13 @@ import { LiveTools } from "@/pages/LiveTools";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { Support } from "@/pages/Support";
+import { SignUp } from "@/pages/SignUp";
+import { SignIn } from "@/pages/SignIn";
+import { WordToPdfUpload } from "@/pages/upload/WordToPdf";
+import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
+import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
+import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
+import { UploadDemo } from "@/pages/UploadDemo";
 
 function Router() {
   return (
@@ -121,6 +128,49 @@ function Router() {
       <Route path="/support">
         <DynamicLayout>
           <Support />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/signup">
+        <DynamicLayout>
+          <SignUp />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/signin">
+        <DynamicLayout>
+          <SignIn />
+        </DynamicLayout>
+      </Route>
+
+      {/* Upload pages for tools */}
+      <Route path="/upload/word-to-pdf">
+        <DynamicLayout>
+          <WordToPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/pdf-to-word">
+        <DynamicLayout>
+          <PdfToWordUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/pdf-to-excel">
+        <DynamicLayout>
+          <PdfToExcelUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/merge-pdfs">
+        <DynamicLayout>
+          <MergePdfsUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload-demo">
+        <DynamicLayout>
+          <UploadDemo />
         </DynamicLayout>
       </Route>
 

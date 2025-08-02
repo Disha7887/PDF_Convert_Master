@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Search, MessageCircle, Mail, Phone, Play, CheckCircle, BookOpen, Settings, CreditCard, Code, FileText, Wrench, Users, TrendingUp, Server, Clock, Target, Award, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
@@ -348,11 +348,11 @@ export const Support = (): JSX.Element => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <CardDescription className="text-gray-600">
                     {category.description}
                   </CardDescription>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -410,10 +410,10 @@ export const Support = (): JSX.Element => {
                   <CardTitle className="text-lg">{option.title}</CardTitle>
                   <CardDescription>{option.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-0">
+                <div className="pt-0">
                   <Button className="w-full mb-2">{option.action}</Button>
                   <p className="text-sm text-gray-500">{option.availability}</p>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -437,10 +437,10 @@ export const Support = (): JSX.Element => {
                   <stat.icon className={`w-8 h-8 mx-auto mb-2 ${stat.color}`} />
                   <CardTitle className="text-3xl font-bold text-white">{stat.value}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <div>
                   <p className="text-gray-300 font-medium">{stat.title}</p>
                   <p className="text-sm text-gray-400">{stat.description}</p>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -471,10 +471,10 @@ export const Support = (): JSX.Element => {
                     {video.duration}
                   </div>
                 </div>
-                <CardContent className="p-4">
+                <div className="p-4">
                   <h3 className="font-semibold mb-2">{video.title}</h3>
                   <p className="text-sm text-gray-500">{video.views} views</p>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -499,7 +499,7 @@ export const Support = (): JSX.Element => {
                   Service Status
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span>PDF Conversion API</span>
                   <Badge className="bg-green-100 text-green-800">Operational</Badge>
@@ -516,7 +516,7 @@ export const Support = (): JSX.Element => {
                   <span>Payment Processing</span>
                   <Badge className="bg-green-100 text-green-800">Operational</Badge>
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             <Card>
@@ -526,7 +526,7 @@ export const Support = (): JSX.Element => {
                   Performance Metrics
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span>API Response Time</span>
                   <span className="font-semibold">245ms</span>
@@ -543,7 +543,7 @@ export const Support = (): JSX.Element => {
                   <span>Active Users</span>
                   <span className="font-semibold">15,432</span>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
         </div>
@@ -567,7 +567,7 @@ export const Support = (): JSX.Element => {
                   Latest Updates
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <div className="space-y-6">
                 <div className="border-l-4 border-blue-500 pl-4">
                   <h4 className="font-semibold mb-1">New Batch Processing Feature</h4>
                   <p className="text-gray-600 text-sm mb-2">Process multiple files simultaneously with our new batch conversion tool.</p>
@@ -583,7 +583,7 @@ export const Support = (): JSX.Element => {
                   <p className="text-gray-600 text-sm mb-2">New encryption standards and improved data protection.</p>
                   <p className="text-xs text-gray-500">Released 2 weeks ago</p>
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             <Card>
@@ -593,7 +593,7 @@ export const Support = (): JSX.Element => {
                   Coming Soon
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold mb-1">AI-Powered OCR</h4>
                   <p className="text-gray-600 text-sm">Advanced text recognition for scanned documents</p>
@@ -607,7 +607,7 @@ export const Support = (): JSX.Element => {
                 <div className="mt-6">
                   <Button className="w-full">Subscribe to Updates</Button>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
         </div>

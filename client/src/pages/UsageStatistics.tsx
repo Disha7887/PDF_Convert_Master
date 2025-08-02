@@ -1,9 +1,9 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DashboardLayout } from "@/components/DashboardLayout";
+
 import { useLocation } from "wouter";
 import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown } from "lucide-react";
 
@@ -49,7 +49,7 @@ export const UsageStatistics: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    
       <div className="min-h-screen bg-gray-50">
         <div className="flex">
           {/* Sidebar */}
@@ -241,6 +241,6 @@ export const UsageStatistics: React.FC = () => {
           </main>
         </div>
       </div>
-    </DashboardLayout>
+    
   );
 };

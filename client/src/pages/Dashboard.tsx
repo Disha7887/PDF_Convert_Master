@@ -1,9 +1,9 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DashboardLayout } from "@/components/DashboardLayout";
+
 import { useLocation } from "wouter";
 import { Bell, Search, FileText, FileX, Activity, Link, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Play, Square, Check, ArrowRight, ChevronDown } from "lucide-react";
 
@@ -103,7 +103,6 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
 
       <div className="flex">
@@ -316,7 +315,7 @@ export const Dashboard: React.FC = () => {
                 <CardTitle className="text-xl font-bold">Most Used Tools</CardTitle>
                 <Button variant="outline">View All Tools</Button>
               </CardHeader>
-              <CardContent>
+              <div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <ToolCard
                     title="PDF to Word"
@@ -355,7 +354,7 @@ export const Dashboard: React.FC = () => {
                     iconBg="bg-gray-100"
                   />
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             {/* Recent Activity */}
@@ -364,7 +363,7 @@ export const Dashboard: React.FC = () => {
                 <CardTitle className="text-xl font-bold">Recent Activity</CardTitle>
                 <Button variant="outline">View Full History</Button>
               </CardHeader>
-              <CardContent>
+              <div>
                 <div className="space-y-4">
                   <ActivityItem
                     title="PDF to Word conversion"
@@ -397,12 +396,11 @@ export const Dashboard: React.FC = () => {
                     status="completed"
                   />
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
         </main>
       </div>
     </div>
-    </DashboardLayout>
   );
 };
