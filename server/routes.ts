@@ -8,6 +8,11 @@ import {
   ToolCategory
 } from "@shared/schema";
 import { z } from "zod";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import fs from "fs/promises";
+import path from "path";
+import { promisify } from "util";
+import sharp from "sharp";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -17,6 +22,29 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     cb(null, true);
+  },
+});
+
+// Configure multer for multiple files (PDF generator)
+const uploadMultiple = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB per file
+    files: 10 // Max 10 files
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images and text files
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'text/plain'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.txt'];
+    
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const isValidType = allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension);
+    
+    if (isValidType) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images (JPG, PNG, GIF, BMP, WebP) and text files are allowed.'));
+    }
   },
 });
 
@@ -294,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const jobs = await storage.getAllConversionJobs(); // For now, return all jobs
+      const jobs: any[] = []; // For now, return empty array - getAllConversionJobs method doesn't exist
       res.json({
         success: true,
         data: jobs,
@@ -430,6 +458,270 @@ startxref
     }
   });
 
+  // PDF Generator endpoint - Real-time PDF generation
+  app.post("/api/generate-pdf", uploadMultiple.array('files', 10), async (req, res) => {
+    let tempFilePaths: string[] = [];
+    
+    try {
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "No files uploaded. Please upload images or text files."
+        });
+      }
+
+      // Validate file count
+      if (files.length > 10) {
+        return res.status(400).json({
+          success: false,
+          error: "Too many files. Maximum 10 files allowed."
+        });
+      }
+
+      console.log(`Generating PDF from ${files.length} files...`);
+      
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      let pageCount = 0;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log(`Processing file ${i + 1}: ${file.originalname} (${file.mimetype})`);
+        
+        if (file.mimetype.startsWith('image/')) {
+          // Process image file
+          try {
+            // Convert image to JPEG using sharp for consistency
+            const processedImageBuffer = await sharp(file.buffer)
+              .jpeg({
+                quality: 90,
+                progressive: false,
+                mozjpeg: true
+              })
+              .resize(1200, 1600, {
+                fit: 'inside',
+                withoutEnlargement: true
+              })
+              .toBuffer();
+            
+            // Embed image in PDF
+            const image = await pdfDoc.embedJpg(processedImageBuffer);
+            const imageDims = image.scale(1);
+            
+            // Calculate dimensions to fit page
+            const pageWidth = 595.28; // A4 width in points
+            const pageHeight = 841.89; // A4 height in points
+            const margin = 50;
+            
+            const availableWidth = pageWidth - (margin * 2);
+            const availableHeight = pageHeight - (margin * 2);
+            
+            const scaleX = availableWidth / imageDims.width;
+            const scaleY = availableHeight / imageDims.height;
+            const scale = Math.min(scaleX, scaleY, 1); // Don't upscale
+            
+            const scaledWidth = imageDims.width * scale;
+            const scaledHeight = imageDims.height * scale;
+            
+            // Center the image on the page
+            const x = (pageWidth - scaledWidth) / 2;
+            const y = (pageHeight - scaledHeight) / 2;
+            
+            // Add new page
+            const page = pdfDoc.addPage([pageWidth, pageHeight]);
+            page.drawImage(image, {
+              x,
+              y,
+              width: scaledWidth,
+              height: scaledHeight,
+            });
+            
+            pageCount++;
+            console.log(`Added image page ${pageCount}: ${file.originalname}`);
+            
+          } catch (imageError) {
+            console.error(`Error processing image ${file.originalname}:`, imageError);
+            // Add error page
+            const page = pdfDoc.addPage();
+            page.drawText(`Error processing image: ${file.originalname}`, {
+              x: 50,
+              y: 750,
+              size: 12,
+              font: helveticaFont,
+              color: rgb(1, 0, 0),
+            });
+            pageCount++;
+          }
+          
+        } else if (file.mimetype === 'text/plain') {
+          // Process text file
+          try {
+            const textContent = file.buffer.toString('utf8');
+            const lines = textContent.split('\n');
+            
+            const pageWidth = 595.28;
+            const pageHeight = 841.89;
+            const margin = 50;
+            const lineHeight = 14;
+            const maxLinesPerPage = Math.floor((pageHeight - margin * 2) / lineHeight);
+            
+            // Add title page for text file
+            let page = pdfDoc.addPage([pageWidth, pageHeight]);
+            let yPosition = pageHeight - margin;
+            
+            // Add title
+            page.drawText(`File: ${file.originalname}`, {
+              x: margin,
+              y: yPosition,
+              size: 16,
+              font: helveticaBold,
+              color: rgb(0, 0, 0),
+            });
+            
+            yPosition -= 30;
+            
+            // Add content
+            let linesOnCurrentPage = 2; // Account for title
+            
+            for (const line of lines) {
+              if (linesOnCurrentPage >= maxLinesPerPage) {
+                // Start new page
+                page = pdfDoc.addPage([pageWidth, pageHeight]);
+                yPosition = pageHeight - margin;
+                linesOnCurrentPage = 0;
+              }
+              
+              // Handle long lines by wrapping
+              const maxCharsPerLine = 80;
+              if (line.length > maxCharsPerLine) {
+                const wrappedLines = [];
+                for (let i = 0; i < line.length; i += maxCharsPerLine) {
+                  wrappedLines.push(line.substr(i, maxCharsPerLine));
+                }
+                
+                for (const wrappedLine of wrappedLines) {
+                  if (linesOnCurrentPage >= maxLinesPerPage) {
+                    page = pdfDoc.addPage([pageWidth, pageHeight]);
+                    yPosition = pageHeight - margin;
+                    linesOnCurrentPage = 0;
+                  }
+                  
+                  page.drawText(wrappedLine, {
+                    x: margin,
+                    y: yPosition,
+                    size: 10,
+                    font: helveticaFont,
+                    color: rgb(0, 0, 0),
+                  });
+                  
+                  yPosition -= lineHeight;
+                  linesOnCurrentPage++;
+                }
+              } else {
+                page.drawText(line, {
+                  x: margin,
+                  y: yPosition,
+                  size: 10,
+                  font: helveticaFont,
+                  color: rgb(0, 0, 0),
+                });
+                
+                yPosition -= lineHeight;
+                linesOnCurrentPage++;
+              }
+            }
+            
+            pageCount++;
+            console.log(`Added text content from: ${file.originalname}`);
+            
+          } catch (textError) {
+            console.error(`Error processing text file ${file.originalname}:`, textError);
+            // Add error page
+            const page = pdfDoc.addPage();
+            page.drawText(`Error processing text file: ${file.originalname}`, {
+              x: 50,
+              y: 750,
+              size: 12,
+              font: helveticaFont,
+              color: rgb(1, 0, 0),
+            });
+            pageCount++;
+          }
+        }
+      }
+      
+      if (pageCount === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "No valid content could be processed from the uploaded files."
+        });
+      }
+      
+      // Generate PDF bytes
+      const pdfBytes = await pdfDoc.save();
+      
+      // Create temporary file
+      const tempDir = path.join(process.cwd(), 'temp');
+      await fs.mkdir(tempDir, { recursive: true });
+      
+      const timestamp = Date.now();
+      const tempFileName = `generated-pdf-${timestamp}.pdf`;
+      const tempFilePath = path.join(tempDir, tempFileName);
+      tempFilePaths.push(tempFilePath);
+      
+      // Write PDF to temp file
+      await fs.writeFile(tempFilePath, pdfBytes);
+      
+      console.log(`PDF generated successfully: ${tempFileName} (${pageCount} pages)`);
+      
+      // Set response headers for file download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${tempFileName}"`);
+      res.setHeader('Content-Length', pdfBytes.length);
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      // Send the PDF file directly
+      res.send(Buffer.from(pdfBytes));
+      
+      // Clean up temp file after response
+      setTimeout(async () => {
+        try {
+          for (const filePath of tempFilePaths) {
+            await fs.unlink(filePath);
+            console.log(`Cleaned up temp file: ${path.basename(filePath)}`);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up temp files:', cleanupError);
+        }
+      }, 5000); // Clean up after 5 seconds
+      
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      
+      // Clean up temp files on error
+      try {
+        for (const filePath of tempFilePaths) {
+          await fs.unlink(filePath);
+        }
+      } catch (cleanupError) {
+        console.error('Error cleaning up temp files after error:', cleanupError);
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Failed to generate PDF",
+        details: error instanceof Error ? error.message : "Unknown error occurred"
+      });
+    }
+  });
+
   // API health check
   app.get("/api/health", (req, res) => {
     res.json({
@@ -447,9 +739,10 @@ startxref
       message: "PDF Conversion API Documentation",
       endpoints: {
         "GET /api/tools": "Get all available tools",
-        "GET /api/tools/category/:category": "Get tools by category",
+        "GET /api/tools/category/:category": "Get tools by category", 
         "GET /api/tools/:toolType": "Get specific tool details",
         "POST /api/convert": "Start file conversion job",
+        "POST /api/generate-pdf": "Generate PDF from images/text (real-time)",
         "GET /api/jobs/:jobId": "Get job status",
         "GET /api/jobs": "Get user's job history",
         "GET /api/download/:jobId": "Download converted file",
