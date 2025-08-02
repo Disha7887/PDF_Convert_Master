@@ -903,8 +903,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get the output filename from job
-      const outputFilename = job.outputFilename;
+      // Get the output filename from job or generate it
+      let outputFilename = job.outputFilename;
+      if (!outputFilename) {
+        // Generate output filename if not set
+        const inputName = job.inputFilename.substring(0, job.inputFilename.lastIndexOf('.'));
+        const fileExtension = job.inputFilename.split('.').pop()?.toLowerCase();
+        const tool = await storage.getToolByType(job.toolType as any);
+        const outputExtension = tool?.outputFormat === "same" ? fileExtension : tool?.outputFormat || "txt";
+        outputFilename = `${inputName}_converted.${outputExtension}`;
+      }
       
       // Perform actual file conversion based on tool type
       const conversionResult = await performActualConversion(
@@ -931,14 +939,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Set headers for proper file download
-      res.setHeader('Content-Disposition', `attachment; filename="${outputFilename}"`);
+      const safeFilename = outputFilename || `converted_file_${jobId}.${job.toolType.includes('pdf') ? 'pdf' : 'txt'}`;
+      res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
       res.setHeader('Content-Type', mimeType || 'application/octet-stream');
       res.setHeader('Content-Length', convertedBuffer.length.toString());
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       
-      console.log(`Serving download for job ${jobId}: ${outputFilename} (${mimeType})`);
+      console.log(`Serving download for job ${jobId}: ${safeFilename} (${mimeType || 'unknown'})`);
       
       // Send the actual converted file
       res.send(convertedBuffer);
