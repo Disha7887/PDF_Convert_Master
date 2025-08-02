@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Shield, Zap, Download, X } from "lucide-react";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 
 interface ToolConfig {
   id: string;
@@ -131,9 +132,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           >
             {/* Upload Icon */}
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                <Upload className="w-6 h-6 text-red-500" />
-              </div>
+              <BouncingUploadIcon
+                size="lg"
+                animationSpeed="fast"
+                bgColor="bg-red-100"
+              />
             </div>
 
             {/* Upload Text */}

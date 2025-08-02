@@ -6,8 +6,12 @@ import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
+import { useLocation } from "wouter";
 
 export const HeroSection = (): JSX.Element => {
+  const [location, setLocation] = useLocation();
+
   // Background decoration elements data
   const gradientBlurs = [
     {
@@ -184,7 +188,13 @@ export const HeroSection = (): JSX.Element => {
 
                     <div className="pt-8">
                       <div className="flex gap-4">
-                        <Button className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+                        <Button
+                          className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
+                          onClick={() => {
+                            console.log('Start Converting Now button clicked');
+                            setLocation('/tools');
+                          }}
+                        >
                           <img
                             className="mr-2"
                             alt="Margin wrap"
@@ -251,10 +261,14 @@ export const HeroSection = (): JSX.Element => {
                 {/* Right column - File upload card */}
                 <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-[#ffffff1a] rounded-3xl border-2 border-dashed border-[#6a7280] backdrop-blur-[2px]">
                   <div className="flex flex-col items-center justify-center w-full p-0">
-                    <img
+                    <BouncingUploadIcon
                       className="mb-3"
-                      alt="UploadIcon icon"
-                      src="/figmaAssets/margin-wrap-7.svg"
+                      iconType="lucide"
+                      alt="Upload icon"
+                      iconClassName="text-white"
+                      size="md"
+                      animationSpeed="fast"
+                      bgColor="bg-red-500"
                     />
 
                     <h2 className="font-bold text-white text-xl text-center mb-3">

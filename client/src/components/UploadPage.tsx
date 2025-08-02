@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { Upload, Shield, Zap, Download, FileText, FileSpreadsheet, Presentation, FilePlus, Scissors, Archive, Lock, PenTool, ScanText, Edit, FileSignature } from "lucide-react";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 
 interface ToolConfig {
   id: string;
@@ -184,9 +185,11 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           >
             {/* Upload Icon */}
             <div className="flex justify-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
-                <Upload className="w-8 h-8 text-red-500" />
-              </div>
+              <BouncingUploadIcon
+                size="xl"
+                animationSpeed="fast"
+                bgColor="bg-red-100"
+              />
             </div>
 
             {/* Upload Text */}

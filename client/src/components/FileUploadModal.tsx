@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { X, Upload, Shield, Zap, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 
 interface FileUploadModalProps {
   isOpen: boolean;
@@ -140,9 +141,11 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 >
                   {/* Upload Icon */}
                   <div className="flex justify-center mb-4">
-                    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-50">
-                      <Upload className="w-6 h-6 text-red-500" />
-                    </div>
+                    <BouncingUploadIcon
+                      size="lg"
+                      animationSpeed="fast"
+                      bgColor="bg-red-50"
+                    />
                   </div>
 
                   {/* Upload Text */}
