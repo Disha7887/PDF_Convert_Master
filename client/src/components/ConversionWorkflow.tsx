@@ -512,9 +512,9 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         <div className="px-6 py-4 bg-gray-50 border-b">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-4">
-              <div className={`flex items-center space-x-2 ${stage === 'upload' || stage === 'ready' ? 'text-blue-600' : stage === 'converting' ? 'text-yellow-600' : stage === 'completed' ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`flex items-center space-x-2 ${stage === 'upload' || stage === 'files-selected' ? 'text-blue-600' : stage === 'converting' ? 'text-yellow-600' : stage === 'completed' ? 'text-green-600' : 'text-red-600'}`}>
                 {stage === 'upload' && <Upload className="w-4 h-4" />}
-                {stage === 'ready' && <FileCheck className="w-4 h-4" />}
+                {stage === 'files-selected' && <FileCheck className="w-4 h-4" />}
                 {stage === 'converting' && <Settings className="w-4 h-4 animate-spin" />}
                 {stage === 'completed' && <CheckCircle className="w-4 h-4" />}
                 {stage === 'error' && <AlertCircle className="w-4 h-4" />}
@@ -529,7 +529,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           </div>
           
           {stage === 'converting' && (
-            <Progress value={progress} className="h-2" />
+            <Progress value={batchProgress} className="h-2" />
           )}
         </div>
 
