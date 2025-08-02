@@ -70,6 +70,9 @@ export const TestimonialsSection = (): JSX.Element => {
 
   return (
     <section className="w-full py-24 bg-[#111726] relative">
+      {/* Animated particles background */}
+      <AnimatedParticles count={20} />
+
       <img
         className="absolute w-full max-w-[1368px] h-auto top-[121px] left-1/2 -translate-x-1/2"
         alt="Background decoration"
