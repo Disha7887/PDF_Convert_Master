@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
 import { useLocation } from "wouter";
-import { ArrowRightLeft, FolderOrganize, Shield } from "lucide-react";
+import { ArrowRightLeft, Layers, Shield } from "lucide-react";
 
 export const FeaturesSection = (): JSX.Element => {
   // Add CSS keyframes for the rotating border animation
