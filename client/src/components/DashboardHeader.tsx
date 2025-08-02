@@ -28,6 +28,7 @@ import {
 
 export const DashboardHeader = (): JSX.Element => {
   const [location, setLocation] = useLocation();
+  const { user, logout } = useAuth();
 
   // Navigation menu items data (only Home, Tools, About)
   const navItems = [
@@ -48,6 +49,11 @@ export const DashboardHeader = (): JSX.Element => {
 
   const handleManagePlan = () => {
     setLocation("/dashboard/manage-plans");
+  };
+
+  const handleLogout = () => {
+    logout();
+    setLocation("/");
   };
 
   return (
