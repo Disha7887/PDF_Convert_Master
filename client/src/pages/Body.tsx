@@ -2,6 +2,7 @@ import React from "react";
 import { FeaturesSection } from "./sections/FeaturesSection";
 import { HeroSection } from "./sections/HeroSection";
 import { TestimonialsSection } from "./sections/TestimonialsSection";
+import { APIDocumentationSection } from "./sections/APIDocumentationSection";
 
 export const Body = (): JSX.Element => {
   // Background decorative elements data
@@ -65,6 +66,7 @@ export const Body = (): JSX.Element => {
       {/* Main content sections */}
       <HeroSection />
       <FeaturesSection />
+      <APIDocumentationSection />
       <TestimonialsSection />
 
       {/* Background decorative elements */}

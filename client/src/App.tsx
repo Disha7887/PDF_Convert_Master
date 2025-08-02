@@ -29,6 +29,8 @@ import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
 import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
 import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
 import { UploadDemo } from "@/pages/UploadDemo";
+import { Features } from "@/pages/Features";
+import { LearnMore } from "@/pages/LearnMore";
 
 function Router() {
   return (
@@ -110,6 +112,18 @@ function Router() {
       <Route path="/about">
         <DynamicLayout>
           <About />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/features">
+        <DynamicLayout>
+          <Features />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/learn-more">
+        <DynamicLayout>
+          <LearnMore />
         </DynamicLayout>
       </Route>
 

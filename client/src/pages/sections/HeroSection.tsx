@@ -208,6 +208,10 @@ export const HeroSection = (): JSX.Element => {
                         <Button
                           variant="outline"
                           className="h-[61px] px-[34px] py-[18px] bg-[#ffffff1a] text-white rounded-lg border-2 border-solid border-[#ffffff33] backdrop-blur-[2px]"
+                          onClick={() => {
+                            console.log('Learn More button clicked from hero');
+                            setLocation('/learn-more');
+                          }}
                         >
                           <img
                             className="mr-2"
@@ -215,7 +219,7 @@ export const HeroSection = (): JSX.Element => {
                             src="/figmaAssets/margin-wrap-5.svg"
                           />
                           <span className="font-semibold text-base">
-                            Watch Demo
+                            Learn More
                           </span>
                         </Button>
                       </div>
