@@ -27,7 +27,12 @@ import {
   Globe,
   Settings,
   BookOpen,
-  Presentation
+  Presentation,
+  Maximize,
+  ZoomIn,
+  Eraser,
+  RefreshCw,
+  Monitor
 } from "lucide-react";
 
 interface ToolCardProps {
