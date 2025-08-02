@@ -50,9 +50,9 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgCol
     <div className="w-full max-w-[290px] h-[344.5px] p-6 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
       <div className="flex flex-col h-full">
         {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div className={`w-20 h-20 p-1 flex items-center justify-center rounded-2xl border ${iconBorderColor} ${iconBgColor}`}>
-            <div className="w-9 h-10 flex items-center justify-center">
+        <div className="flex justify-center mb-4">
+          <div className={`w-16 h-16 p-1 flex items-center justify-center rounded-2xl border ${iconBorderColor} ${iconBgColor}`}>
+            <div className="w-8 h-8 flex items-center justify-center">
               {icon}
             </div>
           </div>
