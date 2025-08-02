@@ -49,7 +49,7 @@ export const FeaturesSection = (): JSX.Element => {
     },
     {
       title: "Organize",
-      IconComponent: FolderOrganize,
+      IconComponent: Layers,
       description:
         "Merge, split, and reorganize your PDF documents with powerful editing tools.",
       features: ["Merge PDFs", "Split PDFs", "Compress Files", "Rotate Pages"],
