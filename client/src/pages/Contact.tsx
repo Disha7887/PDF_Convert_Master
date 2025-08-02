@@ -393,23 +393,38 @@ export const Contact = (): JSX.Element => {
                 question: "How can I get a refund?",
                 answer: "We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied with our service, contact our support team within 30 days of your purchase for a full refund. Refunds are processed within 5-7 business days to your original payment method."
               }
-            ].map((faq, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg">
-                <button className="w-full px-6 py-4 text-left flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">{faq.question}</span>
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div className="px-6 pb-4">
-                  <div className="border-l-4 border-red-600 pl-4">
-                    <p className="text-gray-700">
-                      {faq.answer}
-                    </p>
-                  </div>
+            ].map((faq, index) => {
+              const faqIndex = index + 1; // +1 because first FAQ is index 0
+              return (
+                <div key={index} className="bg-white rounded-xl shadow-lg">
+                  <button
+                    className="w-full px-6 py-4 text-left flex justify-between items-center"
+                    onClick={() => setExpandedFAQ(expandedFAQ === faqIndex ? null : faqIndex)}
+                  >
+                    <span className="text-lg font-semibold text-gray-900">{faq.question}</span>
+                    <svg
+                      className={`w-5 h-5 text-red-600 transition-transform duration-200 ${
+                        expandedFAQ === faqIndex ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedFAQ === faqIndex && (
+                    <div className="px-6 pb-4">
+                      <div className="border-l-4 border-red-600 pl-4">
+                        <p className="text-gray-700">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-12 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
