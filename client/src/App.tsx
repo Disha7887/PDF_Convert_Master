@@ -168,6 +168,12 @@ function Router() {
         </DynamicLayout>
       </Route>
 
+      <Route path="/upload-demo">
+        <DynamicLayout>
+          <UploadDemo />
+        </DynamicLayout>
+      </Route>
+
       {/* Fallback to 404 */}
       <Route>
         <DynamicLayout>
