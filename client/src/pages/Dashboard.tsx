@@ -315,7 +315,7 @@ export const Dashboard: React.FC = () => {
                 <CardTitle className="text-xl font-bold">Most Used Tools</CardTitle>
                 <Button variant="outline">View All Tools</Button>
               </CardHeader>
-              <CardContent>
+              <div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <ToolCard
                     title="PDF to Word"
@@ -354,7 +354,7 @@ export const Dashboard: React.FC = () => {
                     iconBg="bg-gray-100"
                   />
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             {/* Recent Activity */}
@@ -363,7 +363,7 @@ export const Dashboard: React.FC = () => {
                 <CardTitle className="text-xl font-bold">Recent Activity</CardTitle>
                 <Button variant="outline">View Full History</Button>
               </CardHeader>
-              <CardContent>
+              <div>
                 <div className="space-y-4">
                   <ActivityItem
                     title="PDF to Word conversion"
@@ -396,7 +396,7 @@ export const Dashboard: React.FC = () => {
                     status="completed"
                   />
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
         </main>
