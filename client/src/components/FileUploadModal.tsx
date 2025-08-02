@@ -105,23 +105,23 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             <div className="w-full">
               
               {/* Header */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-6">
                 {/* Tool Icon */}
-                <div className="flex justify-center mb-6">
-                  <div className={`w-16 h-16 p-2 flex items-center justify-center rounded-2xl border-2 ${toolIconBorderColor} ${toolIconBgColor} shadow-lg`}>
-                    <div className="w-8 h-10 flex items-center justify-center">
+                <div className="flex justify-center mb-4">
+                  <div className={`w-12 h-12 p-2 flex items-center justify-center rounded-xl border-2 ${toolIconBorderColor} ${toolIconBgColor} shadow-lg`}>
+                    <div className="w-6 h-6 flex items-center justify-center">
                       {toolIcon}
                     </div>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                <h1 className="text-xl font-bold text-gray-900 mb-3">
                   {toolTitle}
                 </h1>
 
                 {/* Description */}
-                <p className="text-base text-gray-600 max-w-xl mx-auto">
+                <p className="text-sm text-gray-600 px-2">
                   {toolDescription}
                 </p>
               </div>
