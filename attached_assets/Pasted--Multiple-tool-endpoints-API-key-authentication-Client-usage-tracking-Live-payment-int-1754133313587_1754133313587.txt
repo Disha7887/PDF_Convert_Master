@@ -1,0 +1,234 @@
+🔧 Multiple tool endpoints
+
+🔐 API key authentication
+
+📊 Client usage tracking
+
+💳 Live payment integration
+
+🖥️ Client dashboard support
+
+🧱 1. Project Goal Recap
+You’re building a SaaS backend hosted on Replit where:
+
+Users can convert/edit files (PDFs, images, etc.) using REST API or your website.
+
+Each tool (e.g., JPG to PDF, Compress PDF) is available at a unique API endpoint.
+
+Users must be authenticated with a personal API key.
+
+You want to track how many times each user converts files, and check if they’re within their daily/monthly limits.
+
+You want to add Stripe payments, so paying users get more quota — and usage resets automatically after successful payment.
+
+🧩 2. Key Features You Need to Build
+🔧 File Conversion Tools (Backend APIs)
+Endpoint example:
+POST /api/convert?tool=jpg_to_pdf
+You upload a file, and the server:
+
+Verifies API key
+
+Converts file using pdf-lib, sharp, or iLovePDF
+
+Stores result in /uploads/
+
+Logs the usage to database
+
+Returns a real download link
+
+🔐 API Key Authentication
+When a client registers on your site, they can log in to the dashboard and generate an API key (example: d8a91f88-9c7e-491d-ae11-5e7f9ee1b4b5).
+
+Clients send this in headers to use tools:
+
+makefile
+Copy
+Edit
+Authorization: Bearer d8a91f88-9c7e-491d-ae11-5e7f9ee1b4b5
+The backend checks if the key is:
+
+Valid
+
+Not expired
+
+Matches the usage limits for that user
+
+📊 Real-Time Usage Tracking
+You’ll log every API usage:
+
+Tool used (e.g., compress_pdf)
+
+Timestamp
+
+File size
+
+User who used it
+
+In the database, you’ll store this in a conversions table.
+
+Your backend will expose:
+
+h
+Copy
+Edit
+GET /api/usage        → how much user used today/this month
+GET /api/downloads    → files converted/downloaded
+GET /api/plan         → current plan + quota
+💳 Stripe Payment Integration (Live)
+You’ll use Stripe to:
+
+Let users buy a plan (Free, Pro, etc.)
+
+On successful payment:
+
+Update user’s plan in database
+
+Reset their quota
+
+If user cancels/fails payment:
+
+Limit their account again
+
+You’ll do this using Stripe webhooks, which notify your backend of events like checkout.session.completed.
+
+🖥️ Dashboard Features (Frontend/Backend)
+In the frontend dashboard, your client can:
+
+View API key
+
+Generate/regenerate API key
+
+Track their usage
+
+Upgrade plan (Stripe Checkout button)
+
+Download files they’ve processed
+
+Backend routes will handle:
+
+POST /api/auth/register
+
+POST /api/auth/login
+
+POST /api/auth/generate-api-key
+
+GET /api/usage
+
+POST /api/payment/subscribe
+
+📁 3. Recommended Folder Structure
+bash
+Copy
+Edit
+backend/
+├── controllers/            # Business logic
+│   ├── authController.js
+│   ├── convertController.js
+│   ├── usageController.js
+│   ├── paymentController.js
+├── routes/                 # Route definitions
+│   ├── authRoutes.js
+│   ├── convertRoutes.js
+│   ├── usageRoutes.js
+│   ├── paymentRoutes.js
+├── middlewares/           # Auth/API key logic
+│   ├── authMiddleware.js
+│   └── apiKeyMiddleware.js
+├── utils/                 # Stripe, helper functions
+│   ├── generateApiKey.js
+│   └── stripe.js
+├── uploads/               # PDF output
+├── db.js                  # PostgreSQL connection
+├── server.js              # Express setup
+└── .env
+🗄️ 4. PostgreSQL Schema (Live Tracking)
+sql
+Copy
+Edit
+-- Users table
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  plan VARCHAR(50) DEFAULT 'free',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- API Keys table
+CREATE TABLE api_keys (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  api_key TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- File conversion usage
+CREATE TABLE conversions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  tool VARCHAR(50),
+  file_name TEXT,
+  download_url TEXT,
+  file_size BIGINT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Payments table
+CREATE TABLE payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  stripe_session_id TEXT,
+  status TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+🚀 5. Replit-Specific Setup
+✅ Yes:
+You can run the Express server directly in Replit
+
+Store secrets using the Replit "Secrets" tab (process.env.JWT_SECRET, etc.)
+
+Use PostgreSQL (via Supabase or external Replit DB)
+
+Use Replit static hosting for download URLs (if public)
+
+Connect Stripe in live mode
+
+🚫 Avoid:
+NGINX in Replit (it’s unnecessary)
+
+Manual SSL — Replit handles HTTPS for you
+
+🛠️ 6. Example Workflow
+User registers & logs in on your frontend
+
+User goes to dashboard → generates API key
+
+User uses the API key to hit:
+
+bash
+Copy
+Edit
+POST /api/convert?tool=merge_pdf
+Server checks API key + quota → processes file → returns download
+
+User buys new plan → payment webhook triggers limit reset
+
+📝 7. Final Developer Prompt Summary (for Hiring or Yourself)
+Build a full-stack backend on Replit using Node.js, Express, PostgreSQL, Multer, and Stripe, for a PDF conversion SaaS.
+
+Include:
+
+Unique tool APIs for each conversion type
+
+Real-time file processing and downloads
+
+API key auth with quota enforcement
+
+Client dashboard routes for usage, downloads, plan
+
+Stripe integration with auto-limit reset
+
+PostgreSQL database for auth, usage, payments
+
+Code must be modular, secure, and production-ready — no dumm
