@@ -165,7 +165,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                         onChange={handleFileSelect}
                         className="hidden"
                       />
-                      <div className="px-10 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                      <div className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all">
                         {getButtonText()}
                       </div>
                     </label>
