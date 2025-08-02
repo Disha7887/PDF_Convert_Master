@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export const Contact = (): JSX.Element => {
   const [selectedPriority, setSelectedPriority] = useState("medium");
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0); // First FAQ expanded by default
+  const [selectedCategory, setSelectedCategory] = useState("technical");
   const { toast } = useToast();
 
   // Enhanced utility function to copy text with beautiful, contact-specific notifications
