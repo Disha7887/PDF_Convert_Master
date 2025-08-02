@@ -209,17 +209,36 @@ export const HeroSection = (): JSX.Element => {
 
                     <div className="pt-8">
                       <div className="flex items-center">
-                        {trustIndicators.map((indicator, index) => (
-                          <div
-                            key={`indicator-${index}`}
-                            className={`flex h-5 items-center ${indicator.className}`}
-                          >
-                            {indicator.icon}
-                            <span className="font-normal text-[#d0d5da] text-sm leading-5">
-                              {indicator.text}
-                            </span>
-                          </div>
-                        ))}
+                        {trustIndicators.map((indicator, index) => {
+                          // Different animation timing for each element
+                          const animationDelay = index * 0.8; // 0s, 0.8s, 1.6s delays
+                          const floatingVariants = {
+                            animate: {
+                              y: [-4, 4, -4],
+                              transition: {
+                                duration: 3 + index * 0.5, // Different durations: 3s, 3.5s, 4s
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                                delay: animationDelay,
+                              }
+                            }
+                          };
+
+                          return (
+                            <motion.div
+                              key={`indicator-${index}`}
+                              className={`flex h-5 items-center ${indicator.className}`}
+                              variants={floatingVariants}
+                              animate="animate"
+                              initial={{ y: 0 }}
+                            >
+                              {indicator.icon}
+                              <span className="font-normal text-[#d0d5da] text-sm leading-5">
+                                {indicator.text}
+                              </span>
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
