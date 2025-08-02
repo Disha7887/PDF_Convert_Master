@@ -256,7 +256,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
   const pollJobStatus = async (fileId: string, jobId: number, resolve?: () => void, reject?: (error: any) => void) => {
     let attempts = 0;
-    const maxAttempts = 30; // 45 seconds max
+    const maxAttempts = 60; // 90 seconds max (optimized for faster processing)
     
     const poll = async (): Promise<void> => {
       try {
@@ -311,8 +311,11 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           reject?.(new Error(job.errorMessage || 'Conversion failed'));
           return;
         } else if (job.status === 'processing') {
-          // Update progress
-          const progress = Math.min(30 + (attempts * 2), 90);
+          // Update progress - more responsive progress calculation
+          const baseProgress = 10; // Start at 10%
+          const progressIncrement = Math.min((attempts * 3), 85); // 3% per attempt, max 85%
+          const progress = Math.min(baseProgress + progressIncrement, 95); // Cap at 95% until completion
+          
           setSelectedFiles(prev => prev.map(f => 
             f.id === fileId ? { ...f, progress } : f
           ));
