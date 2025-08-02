@@ -257,8 +257,8 @@ export const HeroSection = (): JSX.Element => {
                       iconType="image"
                       src="/figmaAssets/margin-wrap-7.svg"
                       alt="UploadIcon icon"
-                      iconClassName="w-16 h-16"
-                      size="lg"
+                      iconClassName="w-20 h-20"
+                      size="2xl"
                       animationSpeed="fast"
                       bgColor="bg-red-500/20"
                     />
