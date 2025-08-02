@@ -165,7 +165,8 @@ export const LiveTools: React.FC = () => {
       iconBg: "bg-purple-100",
       category: "manipulate",
       isFavorite: true,
-      uploadUrl: "/upload/merge-pdfs"
+      uploadUrl: "/upload/merge-pdfs",
+      toolId: "merge-pdfs"
     },
     {
       title: "Split PDF",
