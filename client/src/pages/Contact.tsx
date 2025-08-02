@@ -151,9 +151,7 @@ export const Contact = (): JSX.Element => {
                       variant="ghost"
                       size="sm"
                       className="text-blue-600 text-xs"
-                      onClick={() => {
-                        navigator.clipboard.writeText('support@pdfconvertmaster.com');
-                      }}
+                      onClick={() => copyToClipboard('support@pdfconvertmaster.com')}
                     >
                       Copy
                     </Button>
