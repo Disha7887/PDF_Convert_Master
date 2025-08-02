@@ -136,7 +136,8 @@ export const LiveTools: React.FC = () => {
       icon: <FileSpreadsheet className="w-5 h-5 text-green-600" />,
       iconBg: "bg-green-100",
       category: "convert",
-      uploadUrl: "/upload/pdf-to-excel"
+      uploadUrl: "/upload/pdf-to-excel",
+      toolId: "pdf-to-excel"
     },
     {
       title: "PDF to PowerPoint",
