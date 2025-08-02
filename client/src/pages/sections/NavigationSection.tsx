@@ -84,7 +84,7 @@ export const NavigationSection = (): JSX.Element => {
               Log In
             </Button>
             <Button
-              className="h-10 px-6 py-2 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] bg-[linear-gradient(90deg,rgba(220,38,38,1)_0%,rgba(185,28,28,1)_100%)] [font-family:'Roboto',Helvetica] font-medium text-white text-base [text-shadow:0px_10px_15px_#0000001a] hover:bg-[linear-gradient(90deg,rgba(185,28,28,1)_0%,rgba(153,27,27,1)_100%)] transition-all"
+              className="h-10 px-6 py-2 rounded-lg [font-family:'Roboto',Helvetica] font-medium text-base [text-shadow:0px_10px_15px_#0000001a]"
               onClick={handleGetStarted}
             >
               Get Started
