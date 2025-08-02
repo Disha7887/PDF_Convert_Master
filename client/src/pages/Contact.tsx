@@ -329,19 +329,31 @@ export const Contact = (): JSX.Element => {
 
           <div className="space-y-4">
             <div className="bg-white rounded-xl shadow-lg">
-              <button className="w-full px-6 py-4 text-left flex justify-between items-center">
+              <button
+                className="w-full px-6 py-4 text-left flex justify-between items-center"
+                onClick={() => setExpandedFAQ(expandedFAQ === 0 ? null : 0)}
+              >
                 <span className="text-lg font-semibold text-gray-900">What file formats do you support for conversion?</span>
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className={`w-5 h-5 text-red-600 transition-transform duration-200 ${
+                    expandedFAQ === 0 ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              <div className="px-6 pb-4">
-                <div className="border-l-4 border-red-600 pl-4">
-                  <p className="text-gray-700">
-                    We support a wide range of file formats including PDF, Word (DOC/DOCX), Excel (XLS/XLSX), PowerPoint (PPT/PPTX), JPG, PNG, HTML, and many more. Our tools can handle most common document and image formats.
-                  </p>
+              {expandedFAQ === 0 && (
+                <div className="px-6 pb-4">
+                  <div className="border-l-4 border-red-600 pl-4">
+                    <p className="text-gray-700">
+                      We support a wide range of file formats including PDF, Word (DOC/DOCX), Excel (XLS/XLSX), PowerPoint (PPT/PPTX), JPG, PNG, HTML, and many more. Our tools can handle most common document and image formats.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {[
