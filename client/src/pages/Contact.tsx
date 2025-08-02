@@ -278,7 +278,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   24/7 Available
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white mt-auto">
+                <Button variant="green" className="w-full mt-auto">
                   Call Now
                 </Button>
               </div>
@@ -312,7 +312,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Response within 1 hour
                 </div>
-                <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white mt-auto">
+                <Button variant="blue" className="w-full mt-auto">
                   Send Email
                 </Button>
               </div>
@@ -377,7 +377,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Quick response
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white mt-auto">
+                <Button variant="green" className="w-full mt-auto">
                   Message Us
                 </Button>
               </div>
