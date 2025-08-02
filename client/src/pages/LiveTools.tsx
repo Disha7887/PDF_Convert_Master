@@ -103,6 +103,20 @@ export const LiveTools: React.FC = () => {
     setLocation(path);
   };
 
+  const handleUseToolClick = (toolId: string) => {
+    setSelectedToolId(toolId);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsUploadModalOpen(false);
+    setSelectedToolId(null);
+  };
+
+  const handleFileUpload = (files: File[]) => {
+    console.log(`Files uploaded for tool ${selectedToolId}:`, files);
+  };
+
   const tools = [
     {
       title: "PDF to Word",
