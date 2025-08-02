@@ -40,6 +40,42 @@
     transform: none;
   }
 
+  /* Blue gradient variant for special buttons */
+  .btn-blue-gradient {
+    background: linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(29, 78, 216, 1) 100%);
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    outline: none;
+  }
+
+  .btn-blue-gradient:hover {
+    background: linear-gradient(90deg, rgba(29, 78, 216, 1) 0%, rgba(30, 64, 175, 1) 100%);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  /* Green gradient variant */
+  .btn-green-gradient {
+    background: linear-gradient(90deg, rgba(34, 197, 94, 1) 0%, rgba(22, 163, 74, 1) 100%);
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    outline: none;
+  }
+
+  .btn-green-gradient:hover {
+    background: linear-gradient(90deg, rgba(22, 163, 74, 1) 0%, rgba(21, 128, 61, 1) 100%);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
   /* Search highlight improvements */
   .search-highlight {
     background-color: rgb(219 234 254) !important;
