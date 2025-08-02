@@ -64,16 +64,8 @@ export const NavigationSection = (): JSX.Element => {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Dashboard Button and User Info */}
+          {/* User Info */}
           <div className="flex items-center space-x-3">
-            <Button
-              variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium !text-white text-base hover:!text-white hover:bg-[#4a5462] transition-colors bg-transparent flex items-center space-x-2"
-              onClick={() => setLocation('/dashboard')}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Dashboard</span>
-            </Button>
             <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-[#4a5462]/20 border border-[#4a5462]">
               <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-xs font-semibold text-white">{staticUser.initials}</span>
