@@ -224,42 +224,71 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         await processIndividualFile(fileUpload, i, validFiles.length);
       }
 
-      // Wait for all polling to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait for all polling to complete and state updates to settle
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simple completion check - just complete the batch
-      setStage('completed');
-      setBatchProgress(100);
+      // Check completion status with polling to ensure state is updated
+      let completionCheckAttempts = 0;
+      const maxCompletionChecks = 10;
       
-      // Get final file counts
-      setTimeout(() => {
+      const checkCompletion = () => {
         setSelectedFiles(currentFiles => {
           const completedFiles = currentFiles.filter(f => f.status === 'completed');
           const failedFiles = currentFiles.filter(f => f.status === 'failed');
+          const processingFiles = currentFiles.filter(f => f.status === 'converting' || f.status === 'pending');
           
-          console.log('Batch completion check:', {
+          console.log('Batch completion check attempt', completionCheckAttempts + 1, ':', {
             total: currentFiles.length,
             completed: completedFiles.length,
             failed: failedFiles.length,
+            processing: processingFiles.length,
             validFiles: validFiles.length
           });
           
-          // Show completion toast
-          if (completedFiles.length > 0) {
-            toast({
-              title: completedFiles.length === validFiles.length 
-                ? "All Conversions Complete!" 
-                : "Batch Conversion Finished",
-              description: failedFiles.length > 0 
-                ? `${completedFiles.length} completed, ${failedFiles.length} failed`
-                : `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully`,
-              variant: failedFiles.length > 0 ? "destructive" : "default"
-            });
+          // If all files are done processing (completed or failed)
+          if (completedFiles.length + failedFiles.length === validFiles.length || processingFiles.length === 0) {
+            setStage('completed');
+            setBatchProgress(100);
+            
+            // Show completion toast
+            setTimeout(() => {
+              if (completedFiles.length === validFiles.length) {
+                toast({
+                  title: "All Conversions Complete!",
+                  description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully. Click download buttons to get your files.`,
+                });
+              } else {
+                toast({
+                  title: "Batch Conversion Finished",
+                  description: `${completedFiles.length} completed, ${failedFiles.length} failed. Download buttons available for completed files.`,
+                  variant: failedFiles.length > 0 ? "destructive" : "default"
+                });
+              }
+            }, 100);
+          } else if (completionCheckAttempts < maxCompletionChecks) {
+            // Still processing, check again
+            completionCheckAttempts++;
+            setTimeout(checkCompletion, 1000);
+          } else {
+            // Timeout, complete anyway
+            setStage('completed');
+            setBatchProgress(100);
+            
+            setTimeout(() => {
+              toast({
+                title: "Batch Processing Complete",
+                description: `${completedFiles.length} completed, ${failedFiles.length} failed. Some files may still be processing.`,
+                variant: "default"
+              });
+            }, 100);
           }
           
           return currentFiles;
         });
-      }, 100);
+      };
+      
+      // Start completion checking
+      checkCompletion();
 
     } catch (error) {
       console.error('Batch conversion error:', error);
@@ -342,30 +371,39 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         const job = responseData.data;
         
         // Update file progress based on status
-        setSelectedFiles(prev => prev.map(f => {
-          if (f.id === fileId) {
-            if (job.status === 'processing') {
-              const progress = Math.min(30 + (attempts * 2), 90);
-              return { ...f, progress, job };
-            } else if (job.status === 'completed') {
-              return { 
-                ...f, 
-                status: 'completed', 
-                progress: 100, 
-                job,
-                downloadUrl: `/api/download/${jobId}`
-              };
-            } else if (job.status === 'failed') {
-              return { 
-                ...f, 
-                status: 'failed', 
-                errorMessage: job.errorMessage || 'Conversion failed',
-                job 
-              };
+        setSelectedFiles(prev => {
+          const updated = prev.map(f => {
+            if (f.id === fileId) {
+              if (job.status === 'processing') {
+                const progress = Math.min(30 + (attempts * 2), 90);
+                return { ...f, progress, job };
+              } else if (job.status === 'completed') {
+                console.log(`File ${fileId} completed, setting download URL: /api/download/${jobId}`);
+                return { 
+                  ...f, 
+                  status: 'completed', 
+                  progress: 100, 
+                  job,
+                  downloadUrl: `/api/download/${jobId}`
+                };
+              } else if (job.status === 'failed') {
+                return { 
+                  ...f, 
+                  status: 'failed', 
+                  errorMessage: job.errorMessage || 'Conversion failed',
+                  job 
+                };
+              }
             }
-          }
-          return f;
-        }));
+            return f;
+          });
+          
+          // Log current state for debugging
+          const completedCount = updated.filter(f => f.status === 'completed').length;
+          console.log(`State update: ${completedCount} completed files out of ${updated.length} total`);
+          
+          return updated;
+        });
 
         // Update overall batch progress
         const currentProgress = ((fileIndex) / totalFiles) * 100 + (Math.min(30 + (attempts * 2), 90) / totalFiles);
