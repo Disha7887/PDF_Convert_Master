@@ -295,7 +295,9 @@ export const Support = (): JSX.Element => {
       </section>
 
       {/* File Conversion Section */}
-      <section id="file-conversion" className="py-16 bg-blue-50">
+      <section id="file-conversion" className={`py-16 bg-blue-50 transition-all duration-300 ${
+        highlightedSection === "file-conversion" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-100" : ""
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">File Conversion Guide</h2>
