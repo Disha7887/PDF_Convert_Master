@@ -112,7 +112,7 @@ export const DashboardHeader = (): JSX.Element => {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-3 hover:from-red-600 hover:to-red-700 transition-all">
+              <Button className="px-4 py-2 rounded-lg flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <span className="text-sm font-semibold">{user?.initials || 'U'}</span>
                 </div>
