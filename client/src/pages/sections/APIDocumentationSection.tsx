@@ -1,32 +1,19 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Code2, 
-  Zap, 
-  Shield, 
-  Globe, 
-  Copy, 
-  CheckCircle, 
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Code2,
+  Zap,
+  Shield,
+  Globe,
   ArrowRight,
-  Terminal,
-  BookOpen,
-  Layers,
-  Smartphone
+  BookOpen
 } from "lucide-react";
 import { useLocation } from "wouter";
 
 export const APIDocumentationSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
-  const [copiedEndpoint, setCopiedEndpoint] = useState<string | null>(null);
-
-  const copyToClipboard = (text: string, endpoint: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedEndpoint(endpoint);
-    setTimeout(() => setCopiedEndpoint(null), 2000);
-  };
 
   const apiFeatures = [
     {
