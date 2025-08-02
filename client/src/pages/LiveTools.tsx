@@ -62,7 +62,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => uploadUrl && setLocation(uploadUrl)}
+              onClick={() => {
+                if (toolId && onUseToolClick) {
+                  onUseToolClick(toolId);
+                } else if (uploadUrl) {
+                  setLocation(uploadUrl);
+                }
+              }}
             >
               Use Tool
             </Button>
