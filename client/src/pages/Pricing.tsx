@@ -1,234 +1,259 @@
 import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, FileText, Code, HardDrive, RefreshCw, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
+import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown, Eye, ArrowLeft, Code2, Archive, FileImage } from "lucide-react";
 
-export const Pricing = (): JSX.Element => {
-  const [, setLocation] = useLocation();
+export const Pricing: React.FC = () => {
+  const [location, setLocation] = useLocation();
 
-  const usageStats = [
-    {
-      title: "API Calls",
-      current: "8,654",
-      total: "50,000",
-      percentage: 17.3,
-      icon: Code,
-      color: "bg-blue-500"
-    },
-    {
-      title: "Storage", 
-      current: "45.2 GB",
-      total: "100 GB", 
-      percentage: 45.2,
-      icon: HardDrive,
-      color: "bg-orange-500"
-    },
-    {
-      title: "Conversions",
-      current: "2,847",
-      total: "10,000",
-      percentage: 28.5,
-      icon: RefreshCw,
-      color: "bg-green-500"
-    }
-  ];
-
-  const plans = [
-    {
-      name: "Basic",
-      price: "$9",
-      period: "/month",
-      yearlyNote: "or $90/year (save 17%)",
-      features: [
-        "1,000 API calls/month",
-        "10 GB storage", 
-        "100 conversions/month",
-        "Basic support",
-        "Standard processing speed"
-      ],
-      buttonText: "Downgrade",
-      buttonVariant: "outline" as const,
-      highlighted: false
-    },
-    {
-      name: "Pro",
-      price: "$29", 
-      period: "/month",
-      yearlyNote: "or $290/year (save 17%)",
-      features: [
-        "50,000 API calls/month",
-        "100 GB storage",
-        "10,000 conversions/month", 
-        "Priority support",
-        "Fast processing speed",
-        "Advanced tools"
-      ],
-      buttonText: "Downgrade",
-      buttonVariant: "outline" as const,
-      highlighted: true
-    },
-    {
-      name: "Enterprise",
-      price: "$99",
-      period: "/month", 
-      yearlyNote: "or $990/year (save 17%)",
-      features: [
-        "Unlimited API calls",
-        "1 TB storage",
-        "Unlimited conversions",
-        "24/7 dedicated support",
-        "Ultra-fast processing",
-        "Custom integrations",
-        "SLA guarantee"
-      ],
-      buttonText: "Upgrade",
-      buttonVariant: "outline" as const,
-      highlighted: false
-    }
-  ];
-
-  const billingHistory = [
-    {
-      date: "1/14/2024",
-      amount: "$29.00",
-      status: "Paid",
-      invoice: "INV-2024-001"
-    },
-    {
-      date: "12/14/2023", 
-      amount: "$29.00",
-      status: "Paid",
-      invoice: "INV-2023-012"
-    },
-    {
-      date: "11/14/2023",
-      amount: "$29.00", 
-      status: "Paid",
-      invoice: "INV-2023-011"
-    }
-  ];
+  const handleNavigation = (path: string) => {
+    setLocation(path);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              className="mr-4"
-              onClick={() => setLocation("/")}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Manage Plans</h1>
-              <p className="text-sm text-gray-600">Manage your subscription and billing</p>
+        <div className="max-w-7xl mx-auto px-14">
+          <div className="flex items-center justify-between">
+            {/* Left - Back button and title */}
+            <div className="flex items-center">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="mr-4"
+                onClick={() => handleNavigation('/')}
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Manage Plans</h1>
+                <p className="text-sm text-gray-600">Manage your subscription and billing</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-3">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <div>
+
+            {/* Right - Logo and branding */}
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center mr-2">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
               <h2 className="text-lg font-bold text-gray-900">PDFConverter Pro</h2>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-20 py-8">
         {/* Current Plan */}
-        <Card>
+        <Card className="mb-8">
           <CardContent className="p-6">
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center mb-2">
                   <h2 className="text-xl font-bold text-gray-900 mr-3">Current Plan</h2>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
+                  <Badge className="bg-green-100 text-green-700 border-green-200">Active</Badge>
                 </div>
                 <h3 className="text-3xl font-bold text-gray-900 mb-1">Pro Plan</h3>
                 <p className="text-gray-600">$29/monthly • Renews on 2/14/2024</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex space-x-3">
                 <Button variant="outline">Change Plan</Button>
-                <Button variant="outline" className="bg-gray-50">Cancel Subscription</Button>
+                <Button variant="outline" className="bg-gray-100">Cancel Subscription</Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Usage Stats */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {usageStats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index}>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-gray-900">{stat.title}</h3>
-                    <Icon className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-2xl font-bold text-gray-900">{stat.current}</span>
-                      <span className="text-sm text-gray-600">of {stat.total}</span>
-                    </div>
-                    <Progress value={stat.percentage} className="h-2" />
-                    <p className="text-sm text-gray-600">{stat.percentage}% used</p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Usage Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* API Calls */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-gray-900">API Calls</h3>
+                <Code2 className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-end justify-between">
+                  <span className="text-2xl font-bold text-gray-900">8,654</span>
+                  <span className="text-sm text-gray-600">of 50,000</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '17.3%' }}></div>
+                </div>
+                <p className="text-sm text-gray-600">17.3% used</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Storage */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-gray-900">Storage</h3>
+                <Archive className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-end justify-between">
+                  <span className="text-2xl font-bold text-gray-900">45.2 GB</span>
+                  <span className="text-sm text-gray-600">of 100 GB</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-orange-600 h-2 rounded-full" style={{ width: '45.2%' }}></div>
+                </div>
+                <p className="text-sm text-gray-600">45.2% used</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Conversions */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-gray-900">Conversions</h3>
+                <FileImage className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-end justify-between">
+                  <span className="text-2xl font-bold text-gray-900">2,847</span>
+                  <span className="text-sm text-gray-600">of 10,000</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '28.5%' }}></div>
+                </div>
+                <p className="text-sm text-gray-600">28.5% used</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Available Plans */}
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900">Available Plans</CardTitle>
+            <CardTitle>Available Plans</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid md:grid-cols-3 gap-6">
-              {plans.map((plan, index) => (
-                <div
-                  key={index}
-                  className={`border rounded-xl p-6 ${
-                    plan.highlighted 
-                      ? 'border-red-200 bg-red-50' 
-                      : 'border-gray-200 bg-white'
-                  }`}
-                >
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">{plan.name}</h3>
-                    <div className="flex items-end justify-center mb-2">
-                      <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                      <span className="text-gray-600 ml-1">{plan.period}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">{plan.yearlyNote}</p>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Basic Plan */}
+              <div className="border rounded-lg p-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Basic</h3>
+                  <div className="flex items-end justify-center mb-4">
+                    <span className="text-4xl font-bold text-gray-900">$9</span>
+                    <span className="text-gray-600 ml-1">/month</span>
                   </div>
-                  
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center">
-                        <Check className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Button 
-                    variant={plan.buttonVariant}
-                    className="w-full"
-                  >
-                    {plan.buttonText}
-                  </Button>
+                  <p className="text-sm text-gray-600">or $90/year (save 17%)</p>
                 </div>
-              ))}
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">1,000 API calls/month</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">10 GB storage</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">100 conversions/month</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Basic support</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Standard processing speed</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Downgrade</Button>
+              </div>
+
+              {/* Pro Plan - Current */}
+              <div className="border-2 border-red-200 bg-red-50 rounded-lg p-6 relative">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
+                  <div className="flex items-end justify-center mb-4">
+                    <span className="text-4xl font-bold text-gray-900">$29</span>
+                    <span className="text-gray-600 ml-1">/month</span>
+                  </div>
+                  <p className="text-sm text-gray-600">or $290/year (save 17%)</p>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">50,000 API calls/month</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">100 GB storage</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">10,000 conversions/month</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Priority support</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Fast processing speed</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Advanced tools</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Downgrade</Button>
+              </div>
+
+              {/* Enterprise Plan */}
+              <div className="border rounded-lg p-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Enterprise</h3>
+                  <div className="flex items-end justify-center mb-4">
+                    <span className="text-4xl font-bold text-gray-900">$99</span>
+                    <span className="text-gray-600 ml-1">/month</span>
+                  </div>
+                  <p className="text-sm text-gray-600">or $990/year (save 17%)</p>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Unlimited API calls</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">1 TB storage</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Unlimited conversions</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">24/7 dedicated support</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Ultra-fast processing</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">Custom integrations</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="w-5 h-5 text-green-600 mr-3" />
+                    <span className="text-sm text-gray-700">SLA guarantee</span>
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full">Upgrade</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -236,47 +261,63 @@ export const Pricing = (): JSX.Element => {
         {/* Billing History */}
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl font-bold text-gray-900">Billing History</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Billing History</CardTitle>
               <Button variant="outline">Download All Invoices</Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-1 font-semibold text-gray-900">Date</th>
-                    <th className="text-left py-3 px-1 font-semibold text-gray-900">Amount</th>
-                    <th className="text-left py-3 px-1 font-semibold text-gray-900">Status</th>
-                    <th className="text-left py-3 px-1 font-semibold text-gray-900">Invoice</th>
-                    <th className="text-right py-3 px-1 font-semibold text-gray-900">Actions</th>
+                    <th className="text-left py-3 px-1 text-sm font-semibold text-gray-900">Date</th>
+                    <th className="text-left py-3 px-1 text-sm font-semibold text-gray-900">Amount</th>
+                    <th className="text-left py-3 px-1 text-sm font-semibold text-gray-900">Status</th>
+                    <th className="text-left py-3 px-1 text-sm font-semibold text-gray-900">Invoice</th>
+                    <th className="text-right py-3 px-1 text-sm font-semibold text-gray-900">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {billingHistory.map((item, index) => (
-                    <tr key={index} className="border-b border-gray-100">
-                      <td className="py-4 px-1 text-gray-900">{item.date}</td>
-                      <td className="py-4 px-1 text-gray-900">{item.amount}</td>
-                      <td className="py-4 px-1">
-                        <Badge className="bg-green-100 text-green-800 text-xs">
-                          {item.status}
-                        </Badge>
-                      </td>
-                      <td className="py-4 px-1 text-gray-600 font-mono text-sm">{item.invoice}</td>
-                      <td className="py-4 px-1 text-right">
-                        <Button variant="outline" size="sm">
-                          Download
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  <tr className="border-b border-gray-100">
+                    <td className="py-4 px-1 text-sm text-gray-900">1/14/2024</td>
+                    <td className="py-4 px-1 text-sm text-gray-900">$29.00</td>
+                    <td className="py-4 px-1">
+                      <Badge className="bg-green-100 text-green-700 border-green-200">Paid</Badge>
+                    </td>
+                    <td className="py-4 px-1 text-sm font-mono text-gray-600">INV-2024-001</td>
+                    <td className="py-4 px-1 text-right">
+                      <Button variant="outline" size="sm">Download</Button>
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-4 px-1 text-sm text-gray-900">12/14/2023</td>
+                    <td className="py-4 px-1 text-sm text-gray-900">$29.00</td>
+                    <td className="py-4 px-1">
+                      <Badge className="bg-green-100 text-green-700 border-green-200">Paid</Badge>
+                    </td>
+                    <td className="py-4 px-1 text-sm font-mono text-gray-600">INV-2023-012</td>
+                    <td className="py-4 px-1 text-right">
+                      <Button variant="outline" size="sm">Download</Button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-4 px-1 text-sm text-gray-900">11/14/2023</td>
+                    <td className="py-4 px-1 text-sm text-gray-900">$29.00</td>
+                    <td className="py-4 px-1">
+                      <Badge className="bg-green-100 text-green-700 border-green-200">Paid</Badge>
+                    </td>
+                    <td className="py-4 px-1 text-sm font-mono text-gray-600">INV-2023-011</td>
+                    <td className="py-4 px-1 text-right">
+                      <Button variant="outline" size="sm">Download</Button>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 };
