@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { X, Upload, Shield, Zap, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 
 interface FileUploadModalProps {
   isOpen: boolean;
