@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
+import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
 
 export const HeroSection = (): JSX.Element => {
   // Background decoration elements data
