@@ -1,0 +1,61 @@
+I need to redesign my PDF conversion tool's file upload page to make it clean, simple, and user-friendly. The current design is too complicated and overwhelming for users.
+
+CURRENT ISSUES TO FIX:
+- Upload page is too cluttered and complicated
+- Too many elements and text causing confusion
+- Design is not user-friendly or intuitive
+- Page feels overwhelming with too much information
+- Need a cleaner, more minimalist approach
+
+REQUIRED SIMPLE DESIGN:
+
+CLEAN LAYOUT STRUCTURE:
+- Remove unnecessary text and elements
+- Use plenty of white space for breathing room
+- Keep only essential information visible
+- Simple, centered layout design
+- Minimal distractions from the main conversion task
+
+SIMPLIFIED UPLOAD AREA:
+- Large, prominent drag-drop zone (center focus)
+- Simple icon (upload arrow or document icon)
+- Clear, short text: "Drop files here or click to browse"
+- Single "Browse Files" button (not multiple options)
+- Remove complex file format lists and technical details
+
+STREAMLINED FILE MANAGEMENT:
+- Show selected files in a clean, simple list
+- File name + size only (remove unnecessary details)
+- Simple "X" remove button for each file
+- Clean "Convert" button that's easy to find
+- Remove complicated progress bars until needed
+
+MINIMAL INFORMATION DISPLAY:
+- Show only essential file requirements (e.g., "PDF files only")
+- Remove lengthy descriptions and feature lists
+- Hide technical specifications unless needed
+- Use simple, clear language
+- Remove redundant security/privacy statements
+
+CLEAN VISUAL DESIGN:
+- Use consistent spacing and typography
+- Reduce color complexity (stick to 2-3 main colors)
+- Remove unnecessary borders and shadows
+- Clean, modern icons
+- Simple button designs
+
+USER-FRIENDLY IMPROVEMENTS:
+- Clear visual hierarchy (most important elements first)
+- Intuitive user flow (upload → convert → download)
+- Remove confusion by hiding advanced options
+- One clear call-to-action per screen
+- Responsive design that works on all devices
+
+EXAMPLES OF WHAT TO REMOVE:
+- Long feature descriptions
+- Multiple file format explanations
+- Complex technical details
+- Redundant buttons and options
+- Unnecessary footer information on upload page
+
+Please redesign the upload page to be as simple as popular tools like WeTransfer or Dropbox - clean, minimal, and focused only on the core task of file conversion.
