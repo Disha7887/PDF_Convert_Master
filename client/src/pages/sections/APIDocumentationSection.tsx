@@ -19,80 +19,17 @@ export const APIDocumentationSection = (): JSX.Element => {
     {
       icon: <Zap className="w-6 h-6" />,
       title: "Lightning Fast",
-      description: "Process documents in seconds with our optimized infrastructure"
+      description: "Process documents in seconds"
     },
     {
       icon: <Shield className="w-6 h-6" />,
       title: "Enterprise Security",
-      description: "Bank-level encryption and SOC 2 compliant infrastructure"
+      description: "Bank-level encryption"
     },
     {
       icon: <Globe className="w-6 h-6" />,
-      title: "Global CDN",
-      description: "99.9% uptime with servers worldwide for optimal performance"
-    },
-    {
-      icon: <Smartphone className="w-6 h-6" />,
-      title: "Multi-Platform",
-      description: "SDKs available for Python, Node.js, PHP, Java, and more"
-    }
-  ];
-
-  const codeExamples = {
-    curl: `curl -X POST "https://api.pdfconvertmaster.com/v1/convert" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: multipart/form-data" \\
-  -F "file=@document.docx" \\
-  -F "format=pdf"`,
-    
-    javascript: `const response = await fetch('https://api.pdfconvertmaster.com/v1/convert', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
-  },
-  body: formData
-});
-
-const result = await response.json();
-console.log('Conversion completed:', result.download_url);`,
-    
-    python: `import requests
-
-url = "https://api.pdfconvertmaster.com/v1/convert"
-headers = {"Authorization": "Bearer YOUR_API_KEY"}
-files = {"file": open("document.docx", "rb")}
-data = {"format": "pdf"}
-
-response = requests.post(url, headers=headers, files=files, data=data)
-result = response.json()
-
-print(f"Download URL: {result['download_url']}")`
-  };
-
-  const endpoints = [
-    {
-      method: "POST",
-      path: "/v1/convert",
-      description: "Convert documents between formats",
-      example: "Convert Word to PDF, Excel to PDF, images to PDF"
-    },
-    {
-      method: "POST", 
-      path: "/v1/merge",
-      description: "Merge multiple PDF files into one",
-      example: "Combine multiple PDFs into a single document"
-    },
-    {
-      method: "POST",
-      path: "/v1/split",
-      description: "Split PDF into separate pages or ranges", 
-      example: "Extract specific pages from a PDF document"
-    },
-    {
-      method: "POST",
-      path: "/v1/compress",
-      description: "Reduce PDF file size while maintaining quality",
-      example: "Optimize PDFs for web or email sharing"
+      title: "99.9% Uptime",
+      description: "Reliable global infrastructure"
     }
   ];
 
