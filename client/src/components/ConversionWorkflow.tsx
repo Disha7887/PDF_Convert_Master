@@ -224,71 +224,44 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         await processIndividualFile(fileUpload, i, validFiles.length);
       }
 
-      // Wait for all polling to complete and state updates to settle
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for all individual polling to complete
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Check completion status with polling to ensure state is updated
-      let completionCheckAttempts = 0;
-      const maxCompletionChecks = 10;
-      
-      const checkCompletion = () => {
-        setSelectedFiles(currentFiles => {
-          const completedFiles = currentFiles.filter(f => f.status === 'completed');
-          const failedFiles = currentFiles.filter(f => f.status === 'failed');
-          const processingFiles = currentFiles.filter(f => f.status === 'converting' || f.status === 'pending');
-          
-          console.log('Batch completion check attempt', completionCheckAttempts + 1, ':', {
-            total: currentFiles.length,
-            completed: completedFiles.length,
-            failed: failedFiles.length,
-            processing: processingFiles.length,
-            validFiles: validFiles.length
-          });
-          
-          // If all files are done processing (completed or failed)
-          if (completedFiles.length + failedFiles.length === validFiles.length || processingFiles.length === 0) {
-            setStage('completed');
-            setBatchProgress(100);
-            
-            // Show completion toast
-            setTimeout(() => {
-              if (completedFiles.length === validFiles.length) {
-                toast({
-                  title: "All Conversions Complete!",
-                  description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully. Click download buttons to get your files.`,
-                });
-              } else {
-                toast({
-                  title: "Batch Conversion Finished",
-                  description: `${completedFiles.length} completed, ${failedFiles.length} failed. Download buttons available for completed files.`,
-                  variant: failedFiles.length > 0 ? "destructive" : "default"
-                });
-              }
-            }, 100);
-          } else if (completionCheckAttempts < maxCompletionChecks) {
-            // Still processing, check again
-            completionCheckAttempts++;
-            setTimeout(checkCompletion, 1000);
-          } else {
-            // Timeout, complete anyway
-            setStage('completed');
-            setBatchProgress(100);
-            
-            setTimeout(() => {
-              toast({
-                title: "Batch Processing Complete",
-                description: `${completedFiles.length} completed, ${failedFiles.length} failed. Some files may still be processing.`,
-                variant: "default"
-              });
-            }, 100);
-          }
-          
-          return currentFiles;
+      // Final completion check (only once, no polling to avoid state conflicts)
+      setSelectedFiles(currentFiles => {
+        const completedFiles = currentFiles.filter(f => f.status === 'completed');
+        const failedFiles = currentFiles.filter(f => f.status === 'failed');
+        
+        console.log('Final completion check:', {
+          total: currentFiles.length,
+          completed: completedFiles.length,
+          failed: failedFiles.length,
+          validFiles: validFiles.length
         });
-      };
-      
-      // Start completion checking
-      checkCompletion();
+        
+        // Set stage to completed
+        setStage('completed');
+        setBatchProgress(100);
+        setIsConverting(false);
+        
+        // Show completion toast
+        setTimeout(() => {
+          if (completedFiles.length === validFiles.length) {
+            toast({
+              title: "All Conversions Complete!",
+              description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully. Click download buttons to get your files.`,
+            });
+          } else {
+            toast({
+              title: "Batch Conversion Finished",
+              description: `${completedFiles.length} completed, ${failedFiles.length} failed. Download buttons available for completed files.`,
+              variant: failedFiles.length > 0 ? "destructive" : "default"
+            });
+          }
+        }, 100);
+        
+        return currentFiles;
+      });
 
     } catch (error) {
       console.error('Batch conversion error:', error);
@@ -301,7 +274,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         variant: "destructive",
       });
     } finally {
-      setIsConverting(false);
+      // Cleanup handled in the completion check above
     }
   };
 
@@ -347,7 +320,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         f.id === fileUpload.id 
           ? { 
               ...f, 
-              status: 'failed', 
+              status: 'failed' as const, 
               errorMessage: error instanceof Error ? error.message : 'Conversion failed'
             }
           : f
@@ -357,7 +330,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
   const pollIndividualJobStatus = async (fileId: string, jobId: number, fileIndex: number, totalFiles: number) => {
     let attempts = 0;
-    const maxAttempts = 60; // 2 minutes max
+    const maxAttempts = 30; // 1 minute max (optimized for speed)
     
     const poll = async () => {
       try {
@@ -381,7 +354,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                 console.log(`File ${fileId} completed, setting download URL: /api/download/${jobId}`);
                 return { 
                   ...f, 
-                  status: 'completed', 
+                  status: 'completed' as const, 
                   progress: 100, 
                   job,
                   downloadUrl: `/api/download/${jobId}`
@@ -389,7 +362,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               } else if (job.status === 'failed') {
                 return { 
                   ...f, 
-                  status: 'failed', 
+                  status: 'failed' as const, 
                   errorMessage: job.errorMessage || 'Conversion failed',
                   job 
                 };
@@ -416,14 +389,14 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         // Continue polling
         attempts++;
         if (attempts < maxAttempts) {
-          setTimeout(poll, 2000); // Poll every 2 seconds
+          setTimeout(poll, 1500); // Poll every 1.5 seconds (faster)
         } else {
           // Mark as failed due to timeout
           setSelectedFiles(prev => prev.map(f => 
             f.id === fileId 
               ? { 
                   ...f, 
-                  status: 'failed', 
+                  status: 'failed' as const, 
                   errorMessage: 'Conversion timed out. Please try again.' 
                 }
               : f
@@ -435,7 +408,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           f.id === fileId 
             ? { 
                 ...f, 
-                status: 'failed', 
+                status: 'failed' as const, 
                 errorMessage: 'Failed to check conversion status' 
               }
             : f
@@ -443,8 +416,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       }
     };
 
-    // Initial delay before polling
-    setTimeout(poll, 1000);
+    // Initial delay before polling (reduced for faster response)
+    setTimeout(poll, 500);
   };
 
   const downloadIndividualFile = (index: number) => {
