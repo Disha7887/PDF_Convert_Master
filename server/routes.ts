@@ -53,11 +53,8 @@ async function performActualConversion(
   outputFilename: string
 ): Promise<{ success: boolean; convertedBuffer?: Buffer; mimeType?: string; error?: string }> {
   try {
-    console.log(`DEBUG: performActualConversion called with outputFilename:`, outputFilename);
-    
     // Safety check for outputFilename
     if (!outputFilename || outputFilename === 'null' || outputFilename === 'undefined') {
-      console.error(`ERROR: outputFilename is invalid:`, outputFilename);
       return { success: false, error: 'Invalid output filename' };
     }
     
@@ -108,6 +105,24 @@ async function performActualConversion(
         
       case 'split_pdf':
         return await splitPdf(fileBuffer, outputFilename);
+        
+      case 'pdf_to_excel':
+        return await convertPdfToExcel(fileBuffer, outputFilename);
+        
+      case 'pdf_to_powerpoint':
+        return await convertPdfToPowerPoint(fileBuffer, outputFilename);
+        
+      case 'powerpoint_to_pdf':
+        return await convertPowerPointToPdf(fileBuffer, outputFilename);
+        
+      case 'html_to_pdf':
+        return await convertHtmlToPdf(fileBuffer, outputFilename);
+        
+      case 'upscale_image':
+        return await upscaleImage(fileBuffer, inputExtension, outputFilename);
+        
+      case 'remove_background':
+        return await removeBackground(fileBuffer, inputExtension, outputFilename);
         
       default:
         console.log(`Conversion type ${toolType} not implemented yet, creating enhanced demo file`);
@@ -486,6 +501,32 @@ async function mergePdfs(pdfBuffers: Buffer[], outputFilename: string) {
 
 async function splitPdf(pdfBuffer: Buffer, outputFilename: string) {
   return createEnhancedDemoFile(pdfBuffer, 'input.pdf', 'split_pdf', outputFilename);
+}
+
+async function convertPdfToExcel(pdfBuffer: Buffer, outputFilename: string) {
+  return createEnhancedDemoFile(pdfBuffer, 'input.pdf', 'pdf_to_excel', outputFilename);
+}
+
+async function convertPdfToPowerPoint(pdfBuffer: Buffer, outputFilename: string) {
+  return createEnhancedDemoFile(pdfBuffer, 'input.pdf', 'pdf_to_powerpoint', outputFilename);
+}
+
+async function convertPowerPointToPdf(pptBuffer: Buffer, outputFilename: string) {
+  return createEnhancedDemoFile(pptBuffer, 'input.pptx', 'powerpoint_to_pdf', outputFilename);
+}
+
+async function convertHtmlToPdf(htmlBuffer: Buffer, outputFilename: string) {
+  return createEnhancedDemoFile(htmlBuffer, 'input.html', 'html_to_pdf', outputFilename);
+}
+
+async function upscaleImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+  // For now, return enhanced demo - real AI upscaling would need additional libraries
+  return createEnhancedDemoFile(imageBuffer, `input.${inputExt}`, 'upscale_image', outputFilename);
+}
+
+async function removeBackground(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+  // For now, return enhanced demo - real background removal would need AI libraries
+  return createEnhancedDemoFile(imageBuffer, `input.${inputExt}`, 'remove_background', outputFilename);
 }
 
 // Configure multer for multiple files (PDF generator)
@@ -917,7 +958,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get the output filename from job or generate it
       let outputFilename = job.outputFilename;
-      console.log(`DEBUG: Initial outputFilename from job:`, outputFilename);
       
       if (!outputFilename) {
         // Generate output filename if not set
@@ -926,22 +966,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const tool = await storage.getToolByType(job.toolType as any);
         const outputExtension = tool?.outputFormat === "same" ? fileExtension : tool?.outputFormat || "txt";
         outputFilename = `${inputName}_converted.${outputExtension}`;
-        console.log(`DEBUG: Generated outputFilename:`, outputFilename);
       }
       
       // Ensure outputFilename is never undefined
       if (!outputFilename || outputFilename === 'null' || outputFilename === 'undefined') {
         outputFilename = `converted_file_${jobId}.txt`;
-        console.log(`DEBUG: Fallback outputFilename:`, outputFilename);
       }
       
       // Perform actual file conversion based on tool type
-      console.log(`DEBUG: About to call performActualConversion with:`, {
-        inputFilename: job.inputFilename,
-        toolType: job.toolType,
-        outputFilename: outputFilename
-      });
-      
       const conversionResult = await performActualConversion(
         fileBuffer, 
         job.inputFilename, 
