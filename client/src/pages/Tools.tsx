@@ -27,7 +27,12 @@ import {
   Globe,
   Settings,
   BookOpen,
-  Presentation
+  Presentation,
+  Maximize,
+  ZoomIn,
+  Eraser,
+  RefreshCw,
+  Monitor
 } from "lucide-react";
 
 interface ToolCardProps {
@@ -42,24 +47,24 @@ interface ToolCardProps {
 
 const ToolCard: React.FC<ToolCardProps> = ({ title, description, icon, iconBgColor, iconBorderColor, onSelectFiles }) => {
   return (
-    <div className="w-[290px] h-[344.5px] p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+    <div className="w-full max-w-[290px] h-[344.5px] p-6 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
       <div className="flex flex-col h-full">
         {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div className={`w-20 h-20 p-1 flex items-center justify-center rounded-2xl border ${iconBorderColor} ${iconBgColor}`}>
-            <div className="w-9 h-10 flex items-center justify-center">
+        <div className="flex justify-center mb-4">
+          <div className={`w-16 h-16 p-1 flex items-center justify-center rounded-2xl border ${iconBorderColor} ${iconBgColor}`}>
+            <div className="w-8 h-8 flex items-center justify-center">
               {icon}
             </div>
           </div>
         </div>
         
         {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 text-center mb-3">
+        <h3 className="text-lg font-bold text-gray-900 text-center mb-3">
           {title}
         </h3>
-        
+
         {/* Description */}
-        <p className="text-sm text-gray-600 text-center mb-8 flex-grow flex items-center justify-center">
+        <p className="text-sm text-gray-600 text-center mb-6 flex-grow flex items-center justify-center px-2">
           {description}
         </p>
         
@@ -376,10 +381,76 @@ export const Tools: React.FC = () => {
       iconBgColor: "bg-purple-50",
       iconBorderColor: "border-purple-200",
       category: "Edit"
+    },
+
+    // Image Tools Category
+    {
+      title: "Resize Images",
+      description: "Change image dimensions, scale by percentage, or use preset sizes",
+      icon: <Maximize className="w-9 h-9 text-blue-600" />,
+      iconBgColor: "bg-blue-50",
+      iconBorderColor: "border-blue-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Crop Images",
+      description: "Cut specific parts of images with freeform or preset ratios",
+      icon: <Crop className="w-9 h-9 text-green-600" />,
+      iconBgColor: "bg-green-50",
+      iconBorderColor: "border-green-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Rotate Images",
+      description: "Rotate images by any angle with automatic background fill",
+      icon: <RefreshCw className="w-9 h-9 text-purple-600" />,
+      iconBgColor: "bg-purple-50",
+      iconBorderColor: "border-purple-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Convert Image Format",
+      description: "Convert between JPG, PNG, WebP, GIF, BMP with quality settings",
+      icon: <Monitor className="w-9 h-9 text-orange-600" />,
+      iconBgColor: "bg-orange-50",
+      iconBorderColor: "border-orange-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Compress Images",
+      description: "Reduce image file size without losing quality for web optimization",
+      icon: <Archive className="w-9 h-9 text-red-500" />,
+      iconBgColor: "bg-red-50",
+      iconBorderColor: "border-red-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Upscale Images",
+      description: "Enhance image resolution using AI technology up to 4x",
+      icon: <ZoomIn className="w-9 h-9 text-indigo-600" />,
+      iconBgColor: "bg-indigo-50",
+      iconBorderColor: "border-indigo-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Remove Background",
+      description: "Remove image backgrounds automatically using AI technology",
+      icon: <Eraser className="w-9 h-9 text-pink-600" />,
+      iconBgColor: "bg-pink-50",
+      iconBorderColor: "border-pink-200",
+      category: "Image Tools"
+    },
+    {
+      title: "Add Image Watermarks",
+      description: "Add text or image watermarks to protect your photos",
+      icon: <Palette className="w-9 h-9 text-cyan-600" />,
+      iconBgColor: "bg-cyan-50",
+      iconBorderColor: "border-cyan-200",
+      category: "Image Tools"
     }
   ];
 
-  const filterButtons = ["All Tools", "Convert", "Edit", "Organize", "Security"];
+  const filterButtons = ["All Tools", "Convert", "Edit", "Organize", "Security", "Image Tools"];
 
   const filteredTools = activeFilter === "All Tools"
     ? toolsData
@@ -388,14 +459,14 @@ export const Tools: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Filter Buttons */}
-      <div className="w-full py-8 px-20">
-        <div className="max-w-screen-xl mx-auto px-6">
-          <div className="flex justify-center gap-3 flex-wrap pb-8">
+      <div className="w-full py-8 px-4 sm:px-8 lg:px-20">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pb-8">
             {filterButtons.map((buttonName, index) => (
               <Button
                 key={index}
                 variant={activeFilter === buttonName ? "default" : "outline"}
-                className={`px-6 py-3 rounded-full font-medium ${
+                className={`px-3 sm:px-6 py-2 sm:py-3 rounded-full font-medium text-sm sm:text-base ${
                   activeFilter === buttonName
                     ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -410,9 +481,9 @@ export const Tools: React.FC = () => {
       </div>
 
       {/* Tools Grid */}
-      <div className="w-full px-20 pb-16">
-        <div className="max-w-screen-xl mx-auto px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+      <div className="w-full px-4 sm:px-8 lg:px-20 pb-16">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 place-items-center">
             {filteredTools.map((tool, index) => (
               <ToolCard
                 key={index}

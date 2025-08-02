@@ -86,50 +86,50 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-2xl">
+      <div className="relative w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-2xl">
           {/* Close Button */}
-          <div className="absolute top-6 right-6 z-10">
+          <div className="absolute top-4 right-4 z-10">
             <Button
               onClick={onClose}
               variant="outline"
               size="icon"
-              className="w-12 h-12 rounded-full bg-red-50 border-red-200 hover:bg-red-100"
+              className="w-8 h-8 rounded-full bg-red-50 border-red-200 hover:bg-red-100"
             >
-              <X className="w-6 h-6 text-red-500" />
+              <X className="w-4 h-4 text-red-500" />
             </Button>
           </div>
 
           {/* Content */}
-          <div className="px-6 py-12 sm:px-8">
-            <div className="max-w-2xl mx-auto">
+          <div className="px-4 py-8 sm:px-6">
+            <div className="w-full">
               
               {/* Header */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-6">
                 {/* Tool Icon */}
-                <div className="flex justify-center mb-6">
-                  <div className={`w-16 h-16 p-2 flex items-center justify-center rounded-2xl border-2 ${toolIconBorderColor} ${toolIconBgColor} shadow-lg`}>
-                    <div className="w-8 h-10 flex items-center justify-center">
+                <div className="flex justify-center mb-4">
+                  <div className={`w-12 h-12 p-2 flex items-center justify-center rounded-xl border-2 ${toolIconBorderColor} ${toolIconBgColor} shadow-lg`}>
+                    <div className="w-6 h-6 flex items-center justify-center">
                       {toolIcon}
                     </div>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                <h1 className="text-xl font-bold text-gray-900 mb-3">
                   {toolTitle}
                 </h1>
 
                 {/* Description */}
-                <p className="text-base text-gray-600 max-w-xl mx-auto">
+                <p className="text-sm text-gray-600 px-2">
                   {toolDescription}
                 </p>
               </div>
 
               {/* Upload Area */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <div
-                  className={`relative w-full h-64 p-8 border-2 border-dashed rounded-2xl transition-all duration-200 ${
+                  className={`relative w-full h-48 p-4 border-2 border-dashed rounded-xl transition-all duration-200 ${
                     isDragOver
                       ? 'border-red-400 bg-red-50'
                       : 'border-gray-300 bg-white'
@@ -140,25 +140,25 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   onDrop={handleDrop}
                 >
                   {/* Upload Icon */}
-                  <div className="flex justify-center mb-4">
+                  <div className="flex justify-center mb-3">
                     <BouncingUploadIcon
-                      size="lg"
+                      size="md"
                       animationSpeed="fast"
                       bgColor="bg-red-50"
                     />
                   </div>
 
                   {/* Upload Text */}
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  <div className="text-center mb-3">
+                    <h3 className="text-base font-bold text-gray-900 mb-1">
                       {getFileTypeText()}
                     </h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-xs text-gray-500 mb-3">
                       or click to browse files
                     </p>
                   </div>
 
-                  {/* File Input */}
+                  {/* File Input Button - Centered and properly positioned */}
                   <div className="flex justify-center">
                     <label className="cursor-pointer">
                       <input
@@ -168,7 +168,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                         onChange={handleFileSelect}
                         className="hidden"
                       />
-                      <div className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all">
+                      <div className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium text-sm rounded-lg shadow-lg hover:shadow-xl transition-all">
                         {getButtonText()}
                       </div>
                     </label>
@@ -176,8 +176,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
                   {/* Selected Files */}
                   {selectedFiles.length > 0 && (
-                    <div className="mt-6 text-center">
-                      <p className="text-sm text-gray-600">
+                    <div className="mt-3 text-center">
+                      <p className="text-xs text-gray-600">
                         {selectedFiles.length} file(s) selected
                       </p>
                     </div>
@@ -186,48 +186,48 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Secure Processing */}
-                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50">
-                      <Shield className="w-4 h-4 text-blue-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50">
+                      <Shield className="w-3 h-3 text-blue-600" />
                     </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
+                  <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">
                     Secure Processing
                   </h3>
-                  <p className="text-xs text-gray-600 text-center leading-relaxed">
+                  <p className="text-[10px] text-gray-600 text-center leading-relaxed">
                     Your files are processed securely and deleted after conversion
                   </p>
                 </div>
 
                 {/* Fast Conversion */}
-                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-green-50">
-                      <Zap className="w-4 h-4 text-green-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-50">
+                      <Zap className="w-3 h-3 text-green-600" />
                     </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
+                  <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">
                     Fast Conversion
                   </h3>
-                  <p className="text-xs text-gray-600 text-center leading-relaxed">
+                  <p className="text-[10px] text-gray-600 text-center leading-relaxed">
                     Lightning-fast processing with high-quality results
                   </p>
                 </div>
 
                 {/* Easy Download */}
-                <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-full bg-purple-50">
-                      <Download className="w-4 h-4 text-purple-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-50">
+                      <Download className="w-3 h-3 text-purple-600" />
                     </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900 text-center mb-1">
+                  <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">
                     Easy Download
                   </h3>
-                  <p className="text-xs text-gray-600 text-center leading-relaxed">
+                  <p className="text-[10px] text-gray-600 text-center leading-relaxed">
                     Download your converted files instantly after processing
                   </p>
                 </div>

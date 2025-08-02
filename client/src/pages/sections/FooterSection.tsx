@@ -1,4 +1,4 @@
-import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon } from "lucide-react";
+import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon, MapPin, Mail, Facebook, Instagram, Linkedin } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,139 +68,164 @@ export const FooterSection = (): JSX.Element => {
   ];
 
   return (
-    <footer className="flex flex-col w-full items-start bg-[#111726] border-t border-[#374050]">
-      <div className="max-w-screen-xl mx-auto px-8 py-12 w-full">
-          <div className="flex flex-wrap w-full items-start gap-8">
-            {/* Brand Column */}
-            <div className="flex flex-col w-[280px] items-start">
-              <div className="flex w-full h-7 items-center">
-                <div className="w-fit [font-family:'Pacifico',Helvetica] font-normal text-white text-xl leading-7 whitespace-nowrap">
-                  PDF Convert Master
-                </div>
-              </div>
+    <footer className="bg-[#111726] border-t border-[#374050] w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
 
-              <div className="pt-4">
-                <div className="w-[280px] [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-[22.8px] overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:3] [-webkit-box-orient:vertical]">
-                  Your trusted partner for professional PDF conversion and
-                  document management solutions.
-                </div>
-              </div>
+          {/* Company Info Column */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-4 font-['Pacifico',Helvetica]">
+                PDF Convert Master
+              </h3>
+              <p className="text-[#9ca2af] text-sm leading-relaxed">
+                Your trusted partner for professional PDF conversion and document management solutions.
+              </p>
             </div>
 
-            {/* Quick Links Column */}
-            <div className="flex flex-col w-[280px] items-start">
-              <div className="pb-4">
-                <div className="w-full h-6 items-center">
-                  <div className="w-fit [font-family:'Roboto',Helvetica] font-semibold text-white text-base leading-6 whitespace-nowrap">
-                    Quick Links
-                  </div>
+            {/* Company Details */}
+            <div className="space-y-3">
+              <h4 className="text-white font-semibold text-sm">Mizan Store Ltd</h4>
+
+              <div className="flex items-start space-x-3">
+                <MapPin className="w-4 h-4 text-[#9ca2af] mt-0.5 flex-shrink-0" />
+                <div className="text-[#9ca2af] text-sm">
+                  <p>123 Business Street</p>
+                  <p>London, SW1A 1AA</p>
+                  <p>United Kingdom</p>
                 </div>
               </div>
 
-              <div className="flex flex-col space-y-2">
-                {quickLinks.map((link, index) => (
-                  <div
-                    key={`quick-link-${index}`}
-                    className="flex items-center"
-                  >
-                    <button
-                      className="w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap cursor-pointer hover:text-white transition-colors duration-200 border-0 bg-transparent p-0 text-left"
-                      onClick={() => handleNavigation(link.path, link.text)}
-                      type="button"
-                    >
-                      {link.text}
-                    </button>
-                  </div>
-                ))}
+              <div className="flex items-center space-x-3">
+                <PhoneIcon className="w-4 h-4 text-[#9ca2af] flex-shrink-0" />
+                <span className="text-[#9ca2af] text-sm">+447429919748</span>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Mail className="w-4 h-4 text-[#9ca2af] flex-shrink-0" />
+                <span className="text-[#9ca2af] text-sm">info@pdfconvertmaster.com</span>
               </div>
             </div>
+          </div>
 
-            {/* Company Column */}
-            <div className="flex flex-col w-[280px] items-start">
-              <div className="pb-4">
-                <div className="w-full h-7 items-center">
-                  <div className="w-fit [font-family:'Roboto',Helvetica] font-semibold text-white text-lg leading-7 whitespace-nowrap">
-                    Company
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col space-y-2">
-                {companyLinks.map((link, index) => (
-                  <div
-                    key={`company-link-${index}`}
-                    className="flex items-center"
-                  >
-                    <button
-                      className={`w-fit [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap transition-colors duration-200 border-0 bg-transparent p-0 text-left ${
-                        link.path ? 'cursor-pointer hover:text-white' : 'cursor-default opacity-50'
-                      }`}
-                      onClick={() => handleNavigation(link.path, link.text)}
-                      disabled={!link.path}
-                      type="button"
-                    >
-                      {link.text}
-                    </button>
-                  </div>
-                ))}
-              </div>
+          {/* Quick Links Column */}
+          <div>
+            <h4 className="text-white font-semibold text-base mb-6">Quick Links</h4>
+            <div className="space-y-3">
+              {quickLinks.map((link, index) => (
+                <button
+                  key={`quick-link-${index}`}
+                  className="block text-[#9ca2af] text-sm hover:text-white transition-colors duration-200 text-left"
+                  onClick={() => handleNavigation(link.path, link.text)}
+                  type="button"
+                >
+                  {link.text}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Newsletter Column */}
-            <div className="flex flex-col w-[280px] items-start">
-              <div className="pb-4">
-                <div className="w-full h-7 items-center">
-                  <div className="w-fit [font-family:'Roboto',Helvetica] font-semibold text-white text-lg leading-7 whitespace-nowrap">
-                    Newsletter
-                  </div>
-                </div>
-              </div>
+          {/* Legal Column */}
+          <div>
+            <h4 className="text-white font-semibold text-base mb-6">Legal & Support</h4>
+            <div className="space-y-3">
+              {companyLinks.map((link, index) => (
+                <button
+                  key={`company-link-${index}`}
+                  className={`block text-[#9ca2af] text-sm transition-colors duration-200 text-left ${
+                    link.path ? 'hover:text-white cursor-pointer' : 'opacity-50 cursor-default'
+                  }`}
+                  onClick={() => handleNavigation(link.path, link.text)}
+                  disabled={!link.path}
+                  type="button"
+                >
+                  {link.text}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <div className="pb-4">
-                <div className="w-[280px] [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-[22.8px] overflow-hidden text-ellipsis [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
-                  Stay updated with our latest features and news.
-                </div>
-              </div>
+          {/* Newsletter & Social Column */}
+          <div>
+            <h4 className="text-white font-semibold text-base mb-6">Stay Connected</h4>
 
-              <div className="flex flex-col w-[280px] space-y-3">
+            <div className="mb-6">
+              <p className="text-[#9ca2af] text-sm mb-4">
+                Subscribe to our newsletter for updates and news.
+              </p>
+              <div className="space-y-3">
                 <Input
-                  className="h-[38px] bg-gray-800 text-white border-[#4a5462] placeholder:text-[#9ca2af] [font-family:'Inter',Helvetica] font-medium text-sm"
+                  className="bg-gray-800 text-white border-[#4a5462] placeholder:text-[#9ca2af] text-sm"
                   placeholder="Enter your email"
                 />
-                <Button className="w-full h-9 [font-family:'Roboto',Helvetica] font-medium text-sm text-center">
+                <Button className="w-full text-sm">
                   Subscribe
                 </Button>
               </div>
             </div>
-          </div>
 
-          {/* Footer Bottom */}
-          <div className="pt-8 w-full">
-            <div className="flex flex-col w-full pt-[33px] border-t border-[#374050]">
-              <div className="flex w-full items-center justify-between">
-                <div className="flex items-center">
-                  <div className="[font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap">
-                    2024 PDF Convert Master by Mizan Store Ltd. All rights
-                    reserved.
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-6">
-                  {footerInfoItems.map((item, index) => (
-                    <div
-                      key={`info-item-${index}`}
-                      className="flex items-center"
-                    >
-                      {item.icon}
-                      <span className="ml-1 [font-family:'Roboto',Helvetica] font-normal text-[#9ca2af] text-sm leading-5 whitespace-nowrap">
-                        {item.text}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            {/* Social Media Links */}
+            <div>
+              <h5 className="text-white font-medium text-sm mb-3">Follow Us</h5>
+              <div className="flex space-x-4">
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[#9ca2af] hover:bg-blue-600 hover:text-white transition-all duration-200"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[#9ca2af] hover:bg-pink-600 hover:text-white transition-all duration-200"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a
+                  href="https://linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[#9ca2af] hover:bg-blue-700 hover:text-white transition-all duration-200"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="w-4 h-4" />
+                </a>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Footer Bottom */}
+        <div className="mt-12 pt-8 border-t border-[#374050]">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+
+            {/* Copyright */}
+            <div className="text-[#9ca2af] text-sm">
+              © {new Date().getFullYear()} PDF Convert Master by Mizan Store Ltd. All rights reserved.
+            </div>
+
+            {/* Security Features */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+              {footerInfoItems.map((item, index) => (
+                <div
+                  key={`info-item-${index}`}
+                  className="flex items-center space-x-2"
+                >
+                  {item.icon}
+                  <span className="text-[#9ca2af] text-sm whitespace-nowrap">
+                    {item.text}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );
