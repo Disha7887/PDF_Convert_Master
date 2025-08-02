@@ -38,9 +38,10 @@ export const useDocumentSearch = (options: UseDocumentSearchOptions) => {
   const handleResultClick = useCallback((sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const headerOffset = 100; // Account for sticky header
+      // Account for header (65px) + PageSearch component (80px) + extra padding
+      const headerOffset = 120;
       const elementPosition = element.offsetTop;
-      const offsetPosition = elementPosition - headerOffset;
+      const offsetPosition = Math.max(0, elementPosition - headerOffset);
 
       window.scrollTo({
         top: offsetPosition,
@@ -51,11 +52,16 @@ export const useDocumentSearch = (options: UseDocumentSearchOptions) => {
       setHighlightedSectionId(sectionId);
       onSectionHighlight?.(sectionId);
 
-      // Remove highlight after 3 seconds
+      // Remove highlight after 5 seconds for better user experience
       setTimeout(() => {
         setHighlightedSectionId(null);
         onSectionHighlight?.(null);
-      }, 3000);
+      }, 5000);
+
+      // Log successful navigation for debugging
+      console.log(`Navigated to section: ${sectionId}`);
+    } else {
+      console.warn(`Section with ID "${sectionId}" not found in DOM`);
     }
   }, [onSectionHighlight]);
 
