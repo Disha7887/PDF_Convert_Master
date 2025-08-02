@@ -125,7 +125,8 @@ export const LiveTools: React.FC = () => {
       popularity: 92,
       icon: <FileText className="w-5 h-5 text-red-600" />,
       iconBg: "bg-red-100",
-      category: "convert"
+      category: "convert",
+      uploadUrl: "/upload/word-to-pdf"
     },
     {
       title: "Merge PDFs",
