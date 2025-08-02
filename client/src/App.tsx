@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { GlobalLayout } from "@/components/GlobalLayout";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 
@@ -22,75 +23,109 @@ import { Features } from "@/pages/Features";
 import { LearnMore } from "@/pages/LearnMore";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAuth();
 
   return (
     <Switch>
-      {/* Authentication routes */}
+      {/* Authentication routes - no header/footer for clean auth experience */}
       <Route path="/login">
-        {isAuthenticated ? <Dashboard /> : <Login />}
+        {isAuthenticated ? (
+          <GlobalLayout>
+            <Dashboard />
+          </GlobalLayout>
+        ) : (
+          <Login />
+        )}
       </Route>
       
       <Route path="/register">
-        {isAuthenticated ? <Dashboard /> : <Register />}
+        {isAuthenticated ? (
+          <GlobalLayout>
+            <Dashboard />
+          </GlobalLayout>
+        ) : (
+          <Register />
+        )}
       </Route>
 
       {/* Protected Dashboard route */}
       <Route path="/dashboard">
-        {isAuthenticated ? <Dashboard /> : <Login />}
+        {isAuthenticated ? (
+          <GlobalLayout>
+            <Dashboard />
+          </GlobalLayout>
+        ) : (
+          <Login />
+        )}
       </Route>
 
-      {/* Public pages */}
+      {/* Public pages with full layout including header and footer */}
       <Route path="/">
-        <Body />
+        <GlobalLayout showHero={true}>
+          <Body />
+        </GlobalLayout>
       </Route>
 
       <Route path="/tools">
-        <Tools />
+        <GlobalLayout>
+          <Tools />
+        </GlobalLayout>
       </Route>
 
       <Route path="/contact">
-        <Contact />
+        <GlobalLayout>
+          <Contact />
+        </GlobalLayout>
       </Route>
 
       <Route path="/pricing">
-        <Pricing />
+        <GlobalLayout>
+          <Pricing />
+        </GlobalLayout>
       </Route>
 
       <Route path="/about">
-        <About />
+        <GlobalLayout>
+          <About />
+        </GlobalLayout>
       </Route>
 
       <Route path="/features">
-        <Features />
+        <GlobalLayout>
+          <Features />
+        </GlobalLayout>
       </Route>
 
       <Route path="/learn-more">
-        <LearnMore />
+        <GlobalLayout>
+          <LearnMore />
+        </GlobalLayout>
       </Route>
 
       <Route path="/terms">
-        <TermsOfService />
+        <GlobalLayout>
+          <TermsOfService />
+        </GlobalLayout>
       </Route>
 
       <Route path="/privacy">
-        <PrivacyPolicy />
+        <GlobalLayout>
+          <PrivacyPolicy />
+        </GlobalLayout>
       </Route>
 
       <Route path="/support">
-        <Support />
+        <GlobalLayout>
+          <Support />
+        </GlobalLayout>
       </Route>
 
       {/* 404 Not Found */}
-      <Route component={NotFound} />
+      <Route>
+        <GlobalLayout>
+          <NotFound />
+        </GlobalLayout>
+      </Route>
     </Switch>
   );
 }

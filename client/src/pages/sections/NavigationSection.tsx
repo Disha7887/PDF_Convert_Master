@@ -7,11 +7,10 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
-  const { login } = useAuth();
+  // Navigation only, no auth needed here
 
   // Navigation menu items data
   const navItems = [
@@ -27,24 +26,12 @@ export const NavigationSection = (): JSX.Element => {
     }
   };
 
-  // Simulated login function (replace with real authentication)
   const handleLogin = () => {
-    const mandaUser = {
-      id: 'manda_onzale_001',
-      name: 'Manda Onzale',
-      email: 'manda@example.com',
-      location: 'London, UK',
-      initials: 'MO',
-      plan: 'Pro Plan'
-    };
-
-    login(mandaUser);
-    console.log('User logged in successfully');
+    setLocation('/login');
   };
 
   const handleGetStarted = () => {
-    // Redirect to signup page
-    setLocation('/signup');
+    setLocation('/register');
   };
 
   return (
@@ -79,7 +66,7 @@ export const NavigationSection = (): JSX.Element => {
             <Button
               variant="outline"
               className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium !text-white text-base hover:!text-white hover:bg-[#4a5462] transition-colors bg-transparent"
-              onClick={() => setLocation('/signin')}
+              onClick={handleLogin}
             >
               Log In
             </Button>
