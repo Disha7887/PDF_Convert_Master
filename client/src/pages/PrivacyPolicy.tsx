@@ -285,7 +285,9 @@ export const PrivacyPolicy = (): JSX.Element => {
               <div className="prose prose-gray max-w-none space-y-12">
 
                 {/* 1. Information We Collect */}
-                <section id="information-we-collect" className="scroll-mt-24">
+                <section id="information-we-collect" className={`scroll-mt-24 transition-all duration-300 ${
+                  highlightedSection === "information-we-collect" ? "bg-blue-50 p-6 rounded-lg ring-4 ring-blue-500 ring-opacity-50" : ""
+                }`}>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Database className="w-6 h-6 text-blue-600" />
                     1. Information We Collect
@@ -331,7 +333,9 @@ export const PrivacyPolicy = (): JSX.Element => {
                 </section>
 
                 {/* 4. Data Security Measures */}
-                <section id="data-security-measures" className="scroll-mt-24">
+                <section id="data-security-measures" className={`scroll-mt-24 transition-all duration-300 ${
+                  highlightedSection === "data-security-measures" ? "bg-blue-50 p-6 rounded-lg ring-4 ring-blue-500 ring-opacity-50" : ""
+                }`}>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Shield className="w-6 h-6 text-blue-600" />
                     4. Data Security Measures
@@ -347,7 +351,9 @@ export const PrivacyPolicy = (): JSX.Element => {
                 </section>
 
                 {/* 5. Cookies and Tracking */}
-                <section id="cookies-and-tracking" className="scroll-mt-24">
+                <section id="cookies-and-tracking" className={`scroll-mt-24 transition-all duration-300 ${
+                  highlightedSection === "cookies-and-tracking" ? "bg-blue-50 p-6 rounded-lg ring-4 ring-blue-500 ring-opacity-50" : ""
+                }`}>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Cookie className="w-6 h-6 text-blue-600" />
                     5. Cookies and Tracking
@@ -379,7 +385,9 @@ export const PrivacyPolicy = (): JSX.Element => {
                 </section>
 
                 {/* 7. Data Retention */}
-                <section id="data-retention" className="scroll-mt-24">
+                <section id="data-retention" className={`scroll-mt-24 transition-all duration-300 ${
+                  highlightedSection === "data-retention" ? "bg-blue-50 p-6 rounded-lg ring-4 ring-blue-500 ring-opacity-50" : ""
+                }`}>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <Timer className="w-6 h-6 text-blue-600" />
                     7. Data Retention
@@ -411,7 +419,9 @@ export const PrivacyPolicy = (): JSX.Element => {
                 </section>
 
                 {/* 9. GDPR Compliance */}
-                <section id="gdpr-compliance" className="scroll-mt-24">
+                <section id="gdpr-compliance" className={`scroll-mt-24 transition-all duration-300 ${
+                  highlightedSection === "gdpr-compliance" ? "bg-blue-50 p-6 rounded-lg ring-4 ring-blue-500 ring-opacity-50" : ""
+                }`}>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <FileCheck className="w-6 h-6 text-blue-600" />
                     9. GDPR Compliance
