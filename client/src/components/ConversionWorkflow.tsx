@@ -95,6 +95,30 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   };
 
+  const triggerAutomaticDownload = (downloadUrl: string, filename: string) => {
+    try {
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download Started",
+        description: `${filename} is downloading automatically`,
+      });
+    } catch (error) {
+      console.error('Auto-download failed:', error);
+      toast({
+        title: "Auto-download Failed",
+        description: "Please click the download button manually",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -332,12 +356,20 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               const progress = Math.min(30 + (attempts * 2), 90);
               return { ...f, progress, job };
             } else if (job.status === 'completed') {
+              const downloadUrl = `/api/download/${jobId}`;
+              const filename = job.outputFilename || f.file.name;
+              
+              // Trigger automatic download
+              setTimeout(() => {
+                triggerAutomaticDownload(downloadUrl, filename);
+              }, 500); // Small delay to ensure UI updates first
+              
               return { 
                 ...f, 
                 status: 'completed', 
                 progress: 100, 
                 job,
-                downloadUrl: `/api/download/${jobId}`
+                downloadUrl
               };
             } else if (job.status === 'failed') {
               return { 
