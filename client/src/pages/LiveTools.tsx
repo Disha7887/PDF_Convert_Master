@@ -21,7 +21,7 @@ interface ToolCardProps {
   onUseToolClick?: (toolId: string) => void;
 }
 
-const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, icon, iconBg, isFavorite = false, uploadUrl }) => {
+const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, icon, iconBg, isFavorite = false, uploadUrl, toolId, onUseToolClick }) => {
   const [location, setLocation] = useLocation();
   return (
     <Card className="relative">
