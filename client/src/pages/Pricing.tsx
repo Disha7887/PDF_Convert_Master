@@ -14,8 +14,15 @@ export const Pricing: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-8">
         <div className="max-w-7xl mx-auto px-20">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Available Plans</h1>
-            <p className="text-lg text-gray-600">Manage your subscription and billing</p>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {isAuthenticated ? "Manage Plans" : "Available Plans"}
+            </h1>
+            <p className="text-lg text-gray-600">
+              {isAuthenticated
+                ? "Manage your subscription and billing"
+                : "Choose a plan that fits your needs"
+              }
+            </p>
           </div>
         </div>
       </div>
