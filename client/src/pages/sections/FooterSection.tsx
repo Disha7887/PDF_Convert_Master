@@ -1,4 +1,4 @@
-import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon } from "lucide-react";
+import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon, MapPin, Mail, Facebook, Instagram, Linkedin } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
