@@ -8,7 +8,7 @@ interface BouncingUploadIconProps {
   alt?: string;
   src?: string;
   iconType?: "lucide" | "image";
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
   animationSpeed?: "slow" | "normal" | "fast";
   bgColor?: string;
 }
@@ -27,15 +27,17 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
   const sizeClasses = {
     sm: "w-12 h-12",
     md: "w-16 h-16",
-    lg: "w-28 h-28",
-    xl: "w-32 h-32"
+    lg: "w-24 h-24",
+    xl: "w-32 h-32",
+    "2xl": "w-40 h-40"
   };
 
   const iconSizeClasses = {
     sm: "w-5 h-5",
     md: "w-6 h-6",
-    lg: "w-12 h-12",
-    xl: "w-14 h-14"
+    lg: "w-10 h-10",
+    xl: "w-14 h-14",
+    "2xl": "w-18 h-18"
   };
 
   // Animation speed configurations
@@ -51,17 +53,10 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
   const bouncingVariants = {
     animate: {
       y: [0, -20, 0, -15, 0, -10, 0, -5, 0],
-      scale: [1, 0.95, 1.1, 0.98, 1.05, 0.99, 1.02, 1],
       transition: {
         y: {
           duration: config.duration,
           ease: [0.25, 0.46, 0.45, 0.94], // Custom cubic-bezier for realistic bounce
-          repeat: Infinity,
-          repeatDelay: 0.8,
-        },
-        scale: {
-          duration: config.duration,
-          ease: "easeOut",
           repeat: Infinity,
           repeatDelay: 0.8,
         }
