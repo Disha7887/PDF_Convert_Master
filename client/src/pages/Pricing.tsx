@@ -5,11 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Code2, Archive, FileImage } from "lucide-react";
 
 export const Pricing: React.FC = () => {
-  const [location, setLocation] = useLocation();
-
-  const handleNavigation = (path: string) => {
-    setLocation(path);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
