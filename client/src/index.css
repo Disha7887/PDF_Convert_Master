@@ -76,6 +76,26 @@
     transform: translateY(-1px);
   }
 
+  /* Common active and disabled states for all gradient buttons */
+  .btn-blue-gradient:active,
+  .btn-green-gradient:active {
+    transform: translateY(0px) scale(0.98);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-blue-gradient:focus-visible,
+  .btn-green-gradient:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 2px;
+  }
+
+  .btn-blue-gradient:disabled,
+  .btn-green-gradient:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    transform: none;
+  }
+
   /* Search highlight improvements */
   .search-highlight {
     background-color: rgb(219 234 254) !important;
