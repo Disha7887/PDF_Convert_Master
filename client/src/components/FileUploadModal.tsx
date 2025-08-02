@@ -86,23 +86,23 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-2xl">
+      <div className="relative w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-2xl">
           {/* Close Button */}
-          <div className="absolute top-6 right-6 z-10">
+          <div className="absolute top-4 right-4 z-10">
             <Button
               onClick={onClose}
               variant="outline"
               size="icon"
-              className="w-12 h-12 rounded-full bg-red-50 border-red-200 hover:bg-red-100"
+              className="w-8 h-8 rounded-full bg-red-50 border-red-200 hover:bg-red-100"
             >
-              <X className="w-6 h-6 text-red-500" />
+              <X className="w-4 h-4 text-red-500" />
             </Button>
           </div>
 
           {/* Content */}
-          <div className="px-6 py-12 sm:px-8">
-            <div className="max-w-2xl mx-auto">
+          <div className="px-4 py-8 sm:px-6">
+            <div className="w-full">
               
               {/* Header */}
               <div className="text-center mb-8">
