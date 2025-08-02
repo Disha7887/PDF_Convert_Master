@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 
 export const HeroSection = (): JSX.Element => {
   // Background decoration elements data
