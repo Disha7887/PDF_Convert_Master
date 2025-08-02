@@ -113,7 +113,7 @@ export const TestimonialsSection = (): JSX.Element => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {features.map((feature) => (
                   <Card key={feature.id} className="bg-transparent border-0">
-                    <CardContent className="flex flex-col items-center p-0">
+                    <div className="flex flex-col items-center p-0">
                       <div className="flex justify-center mb-4">
                         <div className="w-16 h-16 rounded-2xl overflow-hidden">
                           <img
@@ -131,7 +131,7 @@ export const TestimonialsSection = (): JSX.Element => {
                           <p key={index}>{line}</p>
                         ))}
                       </div>
-                    </CardContent>
+                    </div>
                   </Card>
                 ))}
               </div>
