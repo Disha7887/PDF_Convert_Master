@@ -120,7 +120,7 @@ export const HeroSection = (): JSX.Element => {
   ];
 
   return (
-    <div className="flex flex-col w-full items-start relative">
+    <section className="flex flex-col w-full items-start relative bg-[#111726] min-h-screen">
       <div className="flex flex-col w-full items-start relative">
         {/* Background decorative elements */}
         <div className="absolute w-full h-full top-0 left-0">
@@ -295,6 +295,6 @@ export const HeroSection = (): JSX.Element => {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
