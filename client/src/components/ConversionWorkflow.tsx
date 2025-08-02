@@ -225,8 +225,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       }
 
       // Check if all files completed successfully
-      const finalFiles = selectedFiles.filter(f => f.status === 'valid' || f.status === 'converting');
-      const completedFiles = finalFiles.filter(f => f.status === 'completed');
+      const finalFiles = validFiles; // Use the original valid files that were processed
+      const completedFiles = selectedFiles.filter(f => f.status === 'completed');
       
       if (completedFiles.length === finalFiles.length) {
         setStage('completed');
