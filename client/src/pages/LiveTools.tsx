@@ -99,7 +99,8 @@ export const LiveTools: React.FC = () => {
       icon: <FileText className="w-5 h-5 text-blue-600" />,
       iconBg: "bg-blue-100",
       category: "convert",
-      isFavorite: true
+      isFavorite: true,
+      uploadUrl: "/upload/pdf-to-word"
     },
     {
       title: "PDF to Excel",
