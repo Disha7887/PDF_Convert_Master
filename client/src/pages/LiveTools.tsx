@@ -96,6 +96,8 @@ export const LiveTools: React.FC = () => {
   const [location, setLocation] = useLocation();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
 
   const handleNavigation = (path: string) => {
     setLocation(path);
