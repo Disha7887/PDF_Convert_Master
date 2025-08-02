@@ -242,8 +242,8 @@ export const About = (): JSX.Element => {
           </div>
           
           <div className="text-center">
-            <Button 
-              className="bg-white text-red-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
+            <Button
+              className="bg-white text-white hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
               onClick={() => setLocation('/contact')}
             >
               Contact Us Today
