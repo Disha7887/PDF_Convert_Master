@@ -32,7 +32,7 @@ export const DashboardHeader = (): JSX.Element => {
 
   // Navigation menu items data (only Home, Tools, About)
   const navItems = [
-    { name: "Home", href: "/" },
+    { name: "Home", href: "/dashboard" },
     { name: "Tools", href: "/tools" },
     { name: "About", href: "/about" },
   ];
@@ -44,7 +44,7 @@ export const DashboardHeader = (): JSX.Element => {
   };
 
   const handleLogoClick = () => {
-    setLocation("/");
+    setLocation("/dashboard");
   };
 
   const handleManagePlan = () => {
