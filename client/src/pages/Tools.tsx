@@ -459,9 +459,9 @@ export const Tools: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Filter Buttons */}
-      <div className="w-full py-8 px-20">
-        <div className="max-w-screen-xl mx-auto px-6">
-          <div className="flex justify-center gap-3 flex-wrap pb-8">
+      <div className="w-full py-8 px-4 sm:px-8 lg:px-20">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pb-8">
             {filterButtons.map((buttonName, index) => (
               <Button
                 key={index}
