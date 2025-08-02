@@ -120,7 +120,16 @@ export const Contact = (): JSX.Element => {
                 <div className="mb-4 flex-grow">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Contact Info:</span>
-                    <Button variant="ghost" size="sm" className="text-blue-600 text-xs">Copy</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText('support@pdfconvertmaster.com');
+                      }}
+                    >
+                      Copy
+                    </Button>
                   </div>
                   <p className="text-sm font-medium">support@pdfconvertmaster.com</p>
                 </div>
