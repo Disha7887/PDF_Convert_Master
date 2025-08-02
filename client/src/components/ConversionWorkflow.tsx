@@ -224,33 +224,30 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         await processIndividualFile(fileUpload, i, validFiles.length);
       }
 
-      // Wait a moment for state updates to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait for all state updates to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Check completion status after state updates
-      setSelectedFiles(currentFiles => {
-        const completedFiles = currentFiles.filter(f => f.status === 'completed');
-        const processedFiles = validFiles.length;
+      // Check completion status - get current state snapshot
+      const currentFiles = selectedFiles;
+      const completedFiles = currentFiles.filter(f => f.status === 'completed');
+      const processedFiles = validFiles.length;
+      
+      if (completedFiles.length === processedFiles) {
+        setStage('completed');
+        setBatchProgress(100);
         
-        if (completedFiles.length === processedFiles) {
-          setStage('completed');
-          setBatchProgress(100);
-          
-          toast({
-            title: "All Conversions Complete!",
-            description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully`,
-          });
-        } else {
-          const failedCount = processedFiles - completedFiles.length;
-          toast({
-            title: "Batch Conversion Finished",
-            description: `${completedFiles.length} completed, ${failedCount} failed`,
-            variant: failedCount > 0 ? "destructive" : "default"
-          });
-        }
-        
-        return currentFiles;
-      });
+        toast({
+          title: "All Conversions Complete!",
+          description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully`,
+        });
+      } else {
+        const failedCount = processedFiles - completedFiles.length;
+        toast({
+          title: "Batch Conversion Finished",
+          description: `${completedFiles.length} completed, ${failedCount} failed`,
+          variant: failedCount > 0 ? "destructive" : "default"
+        });
+      }
 
     } catch (error) {
       console.error('Batch conversion error:', error);
