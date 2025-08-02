@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
 import { useLocation } from "wouter";
+import { ArrowRightLeft, FolderOrganize, Shield } from "lucide-react";
 
 export const FeaturesSection = (): JSX.Element => {
   // Add CSS keyframes for the rotating border animation
@@ -38,25 +39,27 @@ export const FeaturesSection = (): JSX.Element => {
   const featureCards = [
     {
       title: "Convert",
-      icon: "/figmaAssets/margin-wrap-12.svg",
+      IconComponent: ArrowRightLeft,
       description:
         "Transform your documents between different formats with perfect quality preservation.",
       features: ["PDF to Word", "Word to PDF", "Excel to PDF", "Image to PDF"],
       borderColor: "border-red-500/30",
       iconColor: "#ef4444",
+      bgColor: "bg-red-500/10",
     },
     {
       title: "Organize",
-      icon: "/figmaAssets/margin-wrap-31.svg",
+      IconComponent: FolderOrganize,
       description:
         "Merge, split, and reorganize your PDF documents with powerful editing tools.",
       features: ["Merge PDFs", "Split PDFs", "Compress Files", "Rotate Pages"],
       borderColor: "border-blue-500/30",
       iconColor: "#3b82f6",
+      bgColor: "bg-blue-500/10",
     },
     {
       title: "Secure",
-      icon: "/figmaAssets/margin-wrap-32.svg",
+      IconComponent: Shield,
       description:
         "Protect your documents with advanced security features and encryption.",
       features: [
@@ -67,6 +70,7 @@ export const FeaturesSection = (): JSX.Element => {
       ],
       borderColor: "border-emerald-500/30",
       iconColor: "#10b981",
+      bgColor: "bg-emerald-500/10",
     },
   ];
 
@@ -284,69 +288,80 @@ export const FeaturesSection = (): JSX.Element => {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featureCards.map((card, index) => (
-            <div key={index} className="relative group">
-              {/* Animated border container */}
-              <div className="absolute inset-0 rounded-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-300">
-                <div
-                  className="absolute inset-0 rounded-2xl"
-                  style={{
-                    background: `conic-gradient(from 0deg, transparent 340deg, ${card.iconColor}80 360deg)`,
-                    animation: 'rotateBorder 3.5s linear infinite',
-                    padding: '2px'
-                  }}
-                >
-                  <div className="w-full h-full bg-[#111726] rounded-2xl" />
-                </div>
-                <div
-                  className="absolute inset-0 rounded-2xl"
-                  style={{
-                    background: `conic-gradient(from 120deg, transparent 340deg, ${card.iconColor}60 360deg)`,
-                    animation: 'rotateBorder 3.5s linear infinite reverse',
-                    padding: '2px'
-                  }}
-                >
-                  <div className="w-full h-full bg-transparent rounded-2xl" />
-                </div>
-              </div>
-
-              <Card
-                className={`relative bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px] border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300 z-10`}
-              >
-                <div className="p-[33px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          {featureCards.map((card, index) => {
+            const { IconComponent } = card;
+            return (
+              <div key={index} className="relative group h-full">
+                {/* Animated border container */}
+                <div className="absolute inset-0 rounded-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-300">
                   <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                    style={{ backgroundColor: `${card.iconColor}20` }}
+                    className="absolute inset-0 rounded-2xl"
+                    style={{
+                      background: `conic-gradient(from 0deg, transparent 340deg, ${card.iconColor}80 360deg)`,
+                      animation: 'rotateBorder 3.5s linear infinite',
+                      padding: '2px'
+                    }}
                   >
-                    <img
-                      src={card.icon}
-                      alt=""
-                      className="w-8 h-8"
-                      style={{ filter: `drop-shadow(0 0 4px ${card.iconColor}40)` }}
-                    />
+                    <div className="w-full h-full bg-[#111726] rounded-2xl" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-4 font-['Roboto',Helvetica]">
-                    {card.title}
-                  </h3>
-                  <p className="text-base text-[#d0d5da] mb-6 font-['Roboto',Helvetica]">
-                    {card.description}
-                  </p>
-                  <ul>
-                    {card.features.map((feature, featureIndex) => (
-                      <li
-                        key={featureIndex}
-                        className="flex items-center text-sm text-[#9ca2af] mb-2 font-['Roboto',Helvetica]"
-                      >
-                        <span className="mr-1">• </span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                  <div
+                    className="absolute inset-0 rounded-2xl"
+                    style={{
+                      background: `conic-gradient(from 120deg, transparent 340deg, ${card.iconColor}60 360deg)`,
+                      animation: 'rotateBorder 3.5s linear infinite reverse',
+                      padding: '2px'
+                    }}
+                  >
+                    <div className="w-full h-full bg-transparent rounded-2xl" />
+                  </div>
                 </div>
-              </Card>
-            </div>
-          ))}
+
+                <Card
+                  className={`relative bg-[#ffffff0d] rounded-2xl backdrop-blur-[2px] border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300 z-10 h-full flex flex-col`}
+                >
+                  <div className="p-6 lg:p-8 flex flex-col h-full">
+                    {/* Icon Container */}
+                    <div className="flex justify-center mb-6">
+                      <div className={`w-20 h-20 ${card.bgColor} rounded-2xl flex items-center justify-center`}>
+                        <IconComponent
+                          size={40}
+                          style={{ color: card.iconColor }}
+                          strokeWidth={1.5}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex flex-col flex-grow">
+                      <h3 className="text-2xl font-bold text-white mb-4 text-center font-['Roboto',Helvetica]">
+                        {card.title}
+                      </h3>
+                      <p className="text-base text-[#d0d5da] mb-6 text-center leading-relaxed font-['Roboto',Helvetica] flex-grow">
+                        {card.description}
+                      </p>
+
+                      {/* Features List */}
+                      <ul className="space-y-3">
+                        {card.features.map((feature, featureIndex) => (
+                          <li
+                            key={featureIndex}
+                            className="flex items-center text-sm text-[#9ca2af] font-['Roboto',Helvetica]"
+                          >
+                            <div
+                              className="w-1.5 h-1.5 rounded-full mr-3 flex-shrink-0"
+                              style={{ backgroundColor: card.iconColor }}
+                            />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
