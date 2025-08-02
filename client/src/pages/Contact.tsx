@@ -13,7 +13,7 @@ export const Contact = (): JSX.Element => {
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0); // First FAQ expanded by default
   const { toast } = useToast();
 
-  // Enhanced utility function to copy text with beautiful notifications
+  // Enhanced utility function to copy text with beautiful, contact-specific notifications
   const copyToClipboard = async (text: string, label: string) => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -30,25 +30,46 @@ export const Contact = (): JSX.Element => {
         document.body.removeChild(textArea);
       }
 
-      // Show beautiful success toast
+      // Get contact-specific icon and styling
+      const getContactIcon = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-green-600" />;
+        if (label.includes('Email')) return <Mail className="w-4 h-4 text-blue-600" />;
+        return <Copy className="w-4 h-4 text-purple-600" />;
+      };
+
+      const getContactStyling = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50";
+        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50";
+        return "border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50";
+      };
+
+      // Show beautiful success toast with contact-specific styling
       toast({
         title: (
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-600" />
-            <span>Copied Successfully!</span>
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm">
+              {getContactIcon()}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">{label} Copied!</div>
+              <div className="text-xs text-gray-600">Ready to paste anywhere</div>
+            </div>
           </div>
         ),
         description: (
-          <div className="flex items-center gap-2 mt-1">
-            <Copy className="w-3 h-3 text-gray-500" />
-            <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{text}</code>
+          <div className="flex items-center gap-2 mt-2 p-2 bg-white/60 rounded-lg border">
+            <CheckCircle className="w-3 h-3 text-green-500" />
+            <code className="text-xs bg-gray-900 text-green-400 px-2 py-1 rounded font-mono tracking-wider">
+              {text}
+            </code>
           </div>
         ),
-        className: "border-green-200 bg-green-50",
+        className: `${getContactStyling()} shadow-lg border-2`,
+        duration: 4000,
       });
 
     } catch (error) {
-      // Final fallback with error toast
+      // Final fallback with the same beautiful styling
       const textArea = document.createElement('textarea');
       textArea.value = text;
       textArea.style.position = 'fixed';
@@ -58,21 +79,41 @@ export const Contact = (): JSX.Element => {
       document.execCommand('copy');
       document.body.removeChild(textArea);
 
-      // Show beautiful success toast even for fallback
+      // Show the same beautiful toast for fallback
+      const getContactIcon = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-green-600" />;
+        if (label.includes('Email')) return <Mail className="w-4 h-4 text-blue-600" />;
+        return <Copy className="w-4 h-4 text-purple-600" />;
+      };
+
+      const getContactStyling = () => {
+        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50";
+        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50";
+        return "border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50";
+      };
+
       toast({
         title: (
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-600" />
-            <span>Copied Successfully!</span>
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm">
+              {getContactIcon()}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">{label} Copied!</div>
+              <div className="text-xs text-gray-600">Ready to paste anywhere</div>
+            </div>
           </div>
         ),
         description: (
-          <div className="flex items-center gap-2 mt-1">
-            <Copy className="w-3 h-3 text-gray-500" />
-            <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{text}</code>
+          <div className="flex items-center gap-2 mt-2 p-2 bg-white/60 rounded-lg border">
+            <CheckCircle className="w-3 h-3 text-green-500" />
+            <code className="text-xs bg-gray-900 text-green-400 px-2 py-1 rounded font-mono tracking-wider">
+              {text}
+            </code>
           </div>
         ),
-        className: "border-green-200 bg-green-50",
+        className: `${getContactStyling()} shadow-lg border-2`,
+        duration: 4000,
       });
     }
   };
