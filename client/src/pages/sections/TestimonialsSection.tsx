@@ -79,7 +79,7 @@ export const TestimonialsSection = (): JSX.Element => {
         src="/figmaAssets/div-382.svg"
       />
 
-      <div className="container mx-auto px-6 max-w-6xl relative z-10">
+      <div className="max-w-screen-xl mx-auto px-8 relative z-10">
         <div className="flex flex-col items-center mb-16">
           <h2 className="text-4xl font-bold text-white text-center leading-10 mb-4">
             Everything You Need for PDF Success
