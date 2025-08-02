@@ -43,7 +43,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
       'up', 'down', 'left', 'right', 'diagonal-up', 'diagonal-down'
     ];
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < effectiveCount; i++) {
       particleArray.push({
         id: i,
         x: Math.random() * 100, // Percentage
