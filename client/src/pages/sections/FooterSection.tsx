@@ -168,7 +168,7 @@ export const FooterSection = (): JSX.Element => {
                   className="h-[38px] bg-gray-800 text-white border-[#4a5462] placeholder:text-[#9ca2af] [font-family:'Inter',Helvetica] font-medium text-sm"
                   placeholder="Enter your email"
                 />
-                <Button className="w-full h-9 bg-red-600 hover:bg-red-700 [font-family:'Roboto',Helvetica] font-medium text-white text-sm text-center">
+                <Button className="w-full h-9 [font-family:'Roboto',Helvetica] font-medium text-sm text-center">
                   Subscribe
                 </Button>
               </div>
