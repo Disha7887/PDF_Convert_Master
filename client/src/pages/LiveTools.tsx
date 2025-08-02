@@ -14,6 +14,7 @@ interface ToolCardProps {
   icon: React.ReactNode;
   iconBg: string;
   isFavorite?: boolean;
+  uploadUrl?: string;
 }
 
 const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, icon, iconBg, isFavorite = false }) => {
