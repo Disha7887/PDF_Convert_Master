@@ -29,6 +29,8 @@ import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
 import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
 import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
 import { UploadDemo } from "@/pages/UploadDemo";
+import { Features } from "@/pages/Features";
+import { LearnMore } from "@/pages/LearnMore";
 
 function Router() {
   return (
