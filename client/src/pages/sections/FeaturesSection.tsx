@@ -167,8 +167,8 @@ export const FeaturesSection = (): JSX.Element => {
               <Button
                 className="font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]"
                 onClick={() => {
-                  console.log('Try Tools Now button clicked');
-                  setLocation('/tools');
+                  console.log('Learn More button clicked');
+                  setLocation('/learn-more');
                 }}
               >
                 <img
