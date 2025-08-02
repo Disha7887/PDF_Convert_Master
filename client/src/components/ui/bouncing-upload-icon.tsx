@@ -8,7 +8,7 @@ interface BouncingUploadIconProps {
   alt?: string;
   src?: string;
   iconType?: "lucide" | "image";
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   animationSpeed?: "slow" | "normal" | "fast";
   bgColor?: string;
 }
@@ -29,7 +29,8 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
     md: "w-16 h-16",
     lg: "w-24 h-24",
     xl: "w-32 h-32",
-    "2xl": "w-40 h-40"
+    "2xl": "w-40 h-40",
+    "3xl": "w-48 h-48"
   };
 
   const iconSizeClasses = {
@@ -37,7 +38,8 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
     md: "w-6 h-6",
     lg: "w-10 h-10",
     xl: "w-14 h-14",
-    "2xl": "w-16 h-16"
+    "2xl": "w-16 h-16",
+    "3xl": "w-20 h-20"
   };
 
   // Animation speed configurations
