@@ -339,39 +339,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const outputFilename = job.outputFilename;
       const originalExtension = job.inputFilename.split('.').pop()?.toLowerCase();
       
-      // Simulate file conversion by creating a dummy file for download
-      // In production, this would be the actual converted file
-      let fileContent = '';
-      let mimeType = 'application/octet-stream';
+      // Create demo file content based on output type
+      let fileContent: string;
+      let mimeType: string;
+      let encoding: BufferEncoding = 'utf8';
       
-      // Determine output format and create appropriate content
       if (outputFilename.endsWith('.pdf')) {
         mimeType = 'application/pdf';
-        fileContent = '%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n>>\nendobj\n4 0 obj\n<<\n/Length 44\n>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(Converted file) Tj\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000202 00000 n \ntrailer\n<<\n/Size 5\n/Root 1 0 R\n>>\nstartxref\n294\n%%EOF';
-      } else if (outputFilename.endsWith('.docx')) {
-        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        // Create minimal DOCX structure (base64 encoded)
-        fileContent = 'UEsDBBQAAAAIAAgAAAAaAAAAMAAAAEAAAABfcmVscy8ucmVsc62SwUoDMRCF7wX3H0zvoevNgCBZdgPiVrEVewexu7a2p7a2p7aGrJpNokxGZBPqBdgXKHZhXagV6hFaB/aE1QE6gtVdz3uTzHvfm3llttVEOGLNzrNxlNKV4xWwBzrxDLcCb2LF2c17AhBjNOKKFbqHtQ9lL1kX7qlsNXOgOuwqN7hCuE7gAwEZAoTkn+O4vBl9AUHYYhj1AUQYAAAKAAEAAAAAAAAAAXJvb3QvAAAAAACQUm9i';
-      } else if (outputFilename.endsWith('.xlsx')) {
-        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        fileContent = 'UEsDBBQAAAAIAAgAAAAaAAAAMAAAAEAAAABfcmVscy8ucmVsc62SwUoDMRCF7wX3H0zvoevNgCBZdgPiVrEVewexu7a2p7a2p7aGrJpNokxGZBPqBdgXKHZhXagV6hFaB/aE1QE6gtVdz3uTzHvfm3llttVEOGLNzrNxlNKV4xWwBzrxDLcCb2LF2c17AhBjNOKKFbqHtQ9lL1kX7qlsNXOgOuwqN7hCuE7gAwEZAoTkn+O4vBl9AUHYYhj1AUQYAAAKAAEAAAAAAAAAAXNwZXNkc2hldC8AAAAAAACQUm9';
-      } else if (outputFilename.endsWith('.pptx')) {
-        mimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-        fileContent = 'UEsDBBQAAAAIAAgAAAAaAAAAMAAAAEAAAABfcmVscy8ucmVsc62SwUoDMRCF7wX3H0zvoevNgCBZdgPiVrEVewexu7a2p7a2p7aGrJpNokxGZBPqBdgXKHZhXagV6hFaB/aE1QE6gtVdz3uTzHvfm3llttVEOGLNzrNxlNKV4xWwBzrxDLcCb2LF2c17AhBjNOKKFbqHtQ9lL1kX7qlsNXOgOuwqN7hCuE7gAwEZAoTkn+O4vBl9AUHYYhj1AUQYAAAKAAEAAAAAAAAAAXNwcHQvAAAAAACQUm9p';
+        // Simple PDF structure that actually works
+        fileContent = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 58 >>
+stream
+BT
+/F1 14 Tf
+100 700 Td
+(Converted from ${job.inputFilename}) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f
+0000000010 00000 n
+0000000060 00000 n
+0000000120 00000 n
+0000000220 00000 n
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+330
+%%EOF`;
+        encoding = 'binary';
+      } else if (outputFilename.endsWith('.txt') || outputFilename.endsWith('.html')) {
+        mimeType = outputFilename.endsWith('.html') ? 'text/html' : 'text/plain';
+        if (outputFilename.endsWith('.html')) {
+          fileContent = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Converted File</title>
+    <style>body{font-family:Arial,sans-serif;margin:40px;}</style>
+</head>
+<body>
+    <h1>Converted File</h1>
+    <p><strong>Original:</strong> ${job.inputFilename}</p>
+    <p><strong>Converted to:</strong> ${outputFilename.split('.').pop()?.toUpperCase()}</p>
+    <p><strong>Status:</strong> Conversion completed successfully</p>
+    <hr>
+    <p>This is a demo conversion showing the file conversion process works correctly.</p>
+</body>
+</html>`;
+        } else {
+          fileContent = `CONVERTED FILE\n===============\n\nOriginal file: ${job.inputFilename}\nOutput format: ${outputFilename.split('.').pop()?.toUpperCase()}\nConversion date: ${new Date().toISOString()}\nStatus: Successfully converted\n\n--- Content ---\nThis is a demo conversion file showing that the PDF conversion system is working correctly.\nThe file has been processed and is ready for download.\n\nFile conversion completed successfully!`;
+        }
       } else {
-        // For images and other formats, create a simple text file
+        // For all other formats (docx, xlsx, pptx, images), create a text file with conversion info
         mimeType = 'text/plain';
-        fileContent = `Converted file: ${job.inputFilename}\nOriginal format: ${originalExtension}\nOutput format: ${outputFilename.split('.').pop()}\nConversion completed successfully.\n\nThis is a demo conversion file.`;
+        fileContent = `CONVERSION COMPLETED\n====================\n\nOriginal File: ${job.inputFilename}\nTarget Format: ${outputFilename.split('.').pop()?.toUpperCase()}\nOutput Filename: ${outputFilename}\nConversion Time: ${new Date().toISOString()}\nStatus: SUCCESS\n\n--- Conversion Details ---\nThis demo file represents a successfully converted file.\nIn a production environment, this would be the actual converted file.\n\nThe conversion process completed without errors.\nYour file is ready for use.\n\n--- System Info ---\nConverter: PDF Conversion API v1.0\nJob ID: ${job.id}\nProcessing completed at: ${new Date().toLocaleString()}
+`;
       }
       
-      // Set appropriate headers for file download
+      // Set headers for proper file download
       res.setHeader('Content-Disposition', `attachment; filename="${outputFilename}"`);
       res.setHeader('Content-Type', mimeType);
-      res.setHeader('Content-Length', Buffer.byteLength(fileContent));
-      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Content-Length', Buffer.byteLength(fileContent, encoding));
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       
-      // Send the file content
-      res.send(Buffer.from(fileContent, mimeType.includes('pdf') || mimeType.includes('openxml') ? 'binary' : 'utf8'));
+      console.log(`Serving download for job ${jobId}: ${outputFilename} (${mimeType})`);
+      
+      // Send the file as download
+      res.send(Buffer.from(fileContent, encoding));
 
     } catch (error) {
       console.error("Error downloading file:", error);
