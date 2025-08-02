@@ -7,7 +7,7 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
-import { LayoutDashboard } from "lucide-react";
+
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
