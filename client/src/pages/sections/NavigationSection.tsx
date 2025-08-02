@@ -38,26 +38,6 @@ export const NavigationSection = (): JSX.Element => {
     }
   };
 
-  // Simulated login function (replace with real authentication)
-  const handleLogin = () => {
-    const mandaUser = {
-      id: 'manda_onzale_001',
-      name: 'Manda Onzale',
-      email: 'manda@example.com',
-      location: 'London, UK',
-      initials: 'MO',
-      plan: 'Pro Plan'
-    };
-
-    login(mandaUser);
-    console.log('User logged in successfully');
-  };
-
-  const handleGetStarted = () => {
-    // Redirect to signup page
-    setLocation('/signup');
-  };
-
   return (
     <header className="w-full h-[65px] bg-[#111726] border-b border-[#374050] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
       <div className="max-w-screen-xl mx-auto px-8 h-[65px]">
