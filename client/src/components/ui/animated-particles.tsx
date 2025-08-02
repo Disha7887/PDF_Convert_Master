@@ -58,7 +58,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
     }
     
     return particleArray;
-  }, [count]);
+  }, [effectiveCount]);
 
   const getAnimationVariants = (particle: Particle) => {
     const moveDistance = 100; // pixels
