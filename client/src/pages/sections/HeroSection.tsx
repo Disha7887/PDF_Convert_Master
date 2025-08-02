@@ -2,7 +2,7 @@ import { ShieldIcon, SparklesIcon, UploadIcon, ZapIcon } from "lucide-react";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 export const HeroSection = (): JSX.Element => {
   // Background decoration elements data
