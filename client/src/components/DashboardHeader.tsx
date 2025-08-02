@@ -23,7 +23,8 @@ import {
   LogOut,
   Home,
   Wrench,
-  BookOpen
+  BookOpen,
+  LayoutDashboard
 } from "lucide-react";
 
 export const DashboardHeader = (): JSX.Element => {
