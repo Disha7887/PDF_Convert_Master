@@ -21,7 +21,7 @@ export const AnimatedSelectButton = React.forwardRef<
         "relative overflow-hidden",
         "bg-gradient-to-r from-red-600 via-red-600 to-red-700",
         "hover:from-red-700 hover:via-red-700 hover:to-red-800",
-        "transition-all duration-300 ease-out",
+        "transition-all duration-300 ease-out animate-pulse-glow",
         "shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98]",
         "border-0 outline-none",
         "before:absolute before:inset-0",
