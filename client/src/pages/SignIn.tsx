@@ -19,21 +19,44 @@ export const SignIn: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simulate login with Manda Onzale user
-    const mandaUser = {
-      id: 'manda_onzale_001',
-      name: 'Manda Onzale',
-      email: 'manda@example.com',
-      location: 'London, UK',
-      initials: 'MO',
-      plan: 'Pro Plan'
-    };
+    // Basic form validation
+    if (!formData.email || !formData.password) {
+      alert('Please fill in all fields');
+      return;
+    }
 
-    login(mandaUser);
-    setLocation('/dashboard');
+    if (!formData.email.includes('@')) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      // For demo purposes, we'll simulate login with any valid email/password
+      // In a real app, you'd make an API call to your backend
+      console.log('Signing in with:', formData.email);
+      
+      // Create user object based on form data
+      const userData = {
+        id: `user_${Date.now()}`,
+        name: formData.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        email: formData.email,
+        location: 'User Location',
+        initials: formData.email.substring(0, 2).toUpperCase(),
+        plan: 'Pro Plan'
+      };
+
+      // Log the user in
+      login(userData);
+      
+      // Redirect to dashboard
+      setLocation('/dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed. Please try again.');
+    }
   };
 
   const handleGoogleSignIn = () => {

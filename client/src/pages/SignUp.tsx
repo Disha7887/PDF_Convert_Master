@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 export const SignUp: React.FC = () => {
   const [location, setLocation] = useLocation();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,10 +22,54 @@ export const SignUp: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
+    
+    // Basic form validation
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    try {
+      // For demo purposes, we'll create a new user account
+      // In a real app, you'd make an API call to your backend
+      console.log('Signing up with:', formData.email);
+      
+      // Create user object based on form data
+      const userData = {
+        id: `user_${Date.now()}`,
+        name: formData.fullName || formData.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        email: formData.email,
+        location: 'New User',
+        initials: (formData.fullName ? formData.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : formData.email.substring(0, 2).toUpperCase()),
+        plan: 'Free Plan'
+      };
+
+      // Log the user in
+      login(userData);
+      
+      // Redirect to dashboard
+      setLocation('/dashboard');
+    } catch (error) {
+      console.error('Sign up error:', error);
+      alert('Sign up failed. Please try again.');
+    }
   };
 
   const handleGoogleSignUp = () => {

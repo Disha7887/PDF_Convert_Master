@@ -27,20 +27,7 @@ export const NavigationSection = (): JSX.Element => {
     }
   };
 
-  // Simulated login function (replace with real authentication)
-  const handleLogin = () => {
-    const mandaUser = {
-      id: 'manda_onzale_001',
-      name: 'Manda Onzale',
-      email: 'manda@example.com',
-      location: 'London, UK',
-      initials: 'MO',
-      plan: 'Pro Plan'
-    };
-
-    login(mandaUser);
-    console.log('User logged in successfully');
-  };
+  // Remove direct login functionality from navigation, redirect to sign-in page instead
 
   const handleGetStarted = () => {
     // Redirect to signup page

@@ -17,9 +17,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   useEffect(() => {
     if (!isLoading && requireAuth && !isAuthenticated) {
-      // Redirect to home page with login prompt for unauthorized access
-      console.log('Access denied: User not authenticated, redirecting to home');
-      setLocation('/');
+      // Redirect to sign-in page for unauthorized access
+      console.log('Access denied: User not authenticated, redirecting to sign-in');
+      setLocation('/signin');
     }
   }, [isAuthenticated, isLoading, requireAuth, setLocation]);
 
@@ -48,10 +48,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600 mb-6">You need to be logged in to access this page.</p>
           <Button
-            onClick={() => setLocation('/')}
+            onClick={() => setLocation('/signin')}
             className="px-6 py-2 rounded-lg"
           >
-            Go to Home
+            Sign In
           </Button>
         </div>
       </div>

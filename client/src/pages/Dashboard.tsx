@@ -1,4 +1,5 @@
 import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +97,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ title, description, time, s
 };
 
 export const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [location, setLocation] = useLocation();
 
   const handleNavigation = (path: string) => {
@@ -259,8 +261,8 @@ export const Dashboard: React.FC = () => {
               <div className="relative">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-3xl font-bold mb-2">Welcome back, Sarah Johnson!</h1>
-                    <p className="text-blue-100 text-lg mb-1">Ready to convert your PDFs? You're on the Pro Plan.</p>
+                    <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name || 'User'}!</h1>
+                    <p className="text-blue-100 text-lg mb-1">Ready to convert your PDFs? You're on the {user?.plan || 'Pro Plan'}.</p>
                     <p className="text-blue-200 text-sm">Thursday, July 31, 2025 • 08:33 AM</p>
                   </div>
                   <div className="flex space-x-4">
@@ -280,6 +282,7 @@ export const Dashboard: React.FC = () => {
               <StatCard
                 title="Files Converted"
                 value="2,847"
+                subtitle="This month"
                 trend="+12%"
                 trendPositive={true}
                 icon={<FileText className="w-5 h-5 text-blue-600" />}
@@ -302,6 +305,7 @@ export const Dashboard: React.FC = () => {
               <StatCard
                 title="Active Integrations"
                 value="8"
+                subtitle="Connected"
                 trend="+2 this month"
                 trendPositive={true}
                 icon={<Link className="w-5 h-5 text-green-600" />}
