@@ -1,0 +1,63 @@
+I need to create comprehensive API endpoints for all 20 conversion tools in my Replit PDF converter and generate complete API documentation. Based on my current working Replit project, please:
+
+CURRENT PROJECT STATUS:
+- Backend running on Replit with Node.js/Express
+- File upload working with Multer
+- Conversion process functional but needs real implementation
+- Download system operational
+- Need to replace dummy file generation with actual conversions
+
+REQUIRED API ENDPOINTS TO CREATE:
+
+PDF CONVERSION TOOLS (7):
+1. POST /api/convert/pdf-to-word
+2. POST /api/convert/pdf-to-excel
+3. POST /api/convert/pdf-to-powerpoint
+4. POST /api/convert/word-to-pdf
+5. POST /api/convert/excel-to-pdf
+6. POST /api/convert/powerpoint-to-pdf
+7. POST /api/convert/html-to-pdf
+
+IMAGE PROCESSING TOOLS (9):
+8. POST /api/convert/images-to-pdf
+9. POST /api/convert/pdf-to-images
+10. POST /api/image/compress
+11. POST /api/image/convert-format
+12. POST /api/image/crop
+13. POST /api/image/resize
+14. POST /api/image/rotate
+15. POST /api/image/upscale
+16. POST /api/image/remove-background
+
+PDF MANAGEMENT TOOLS (4):
+17. POST /api/pdf/merge
+18. POST /api/pdf/split
+19. POST /api/pdf/compress
+20. POST /api/pdf/rotate
+
+ENDPOINT REQUIREMENTS:
+
+EACH ENDPOINT MUST:
+- Accept multipart/form-data file uploads
+- Validate file types (PDF for PDF tools, images for image tools, etc.)
+- Process files using real conversion libraries (not dummy files)
+- Return proper JSON responses with download URLs
+- Handle errors gracefully with meaningful error messages
+- Support multiple file uploads where appropriate
+- Include proper authentication/API key validation
+
+API DOCUMENTATION CREATION:
+Create comprehensive API documentation file (API_DOCUMENTATION.md) including:
+
+FOR EACH ENDPOINT:
+- Method and URL
+- Description and purpose
+- Required parameters
+- File type restrictions
+- Request format examples
+- Success response format
+- Error response examples
+- Rate limiting information
+- Authentication requirements
+
+EXAMPLE DOCUMENTATION FORMAT:
