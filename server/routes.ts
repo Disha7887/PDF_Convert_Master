@@ -691,7 +691,7 @@ async function rotatePdf(pdfBuffer: Buffer, outputFilename: string) {
       const [existingPage] = await rotatedDoc.copyPages(pdfDoc, [i]);
       
       // Rotate page 90 degrees clockwise
-      existingPage.setRotation({ type: 'degrees', angle: 90 });
+      existingPage.setRotation({ angle: 90 });
       
       rotatedDoc.addPage(existingPage);
     }
@@ -856,7 +856,7 @@ async function convertExcelToPdf(excelBuffer: Buffer, outputFilename: string) {
       yPosition -= 25;
       
       // Add table data
-      jsonData.slice(0, 20).forEach((row: any[], rowIndex) => {
+      jsonData.slice(0, 20).forEach((row: any) => {
         if (yPosition < 50) {
           page = pdfDoc.addPage([612, 792]);
           yPosition = 750;
@@ -1392,6 +1392,7 @@ const uploadMultiple = multer({
 
 // File storage for conversion processing
 const fileStorage = new Map<number, Buffer>();
+const convertedFileStorage = new Map<number, { buffer: Buffer; mimeType: string; filename: string }>();
 
 // Extend Request interface for authentication
 interface AuthenticatedRequest extends Request {
@@ -1648,23 +1649,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store the file buffer for actual conversion
       fileStorage.set(jobId, file.buffer);
       
-      // Simulate realistic conversion with progress updates
-      await simulateConversionWithProgress(jobId, processingTime, fileSizeMB);
+      // Simulate realistic conversion with progress updates (shortened)
+      await simulateConversionWithProgress(jobId, Math.min(processingTime, 3000), fileSizeMB);
       
       const inputName = fileName.substring(0, fileName.lastIndexOf('.'));
       const fileExtension = fileName.split('.').pop()?.toLowerCase();
       const outputExtension = tool.outputFormat === "same" ? fileExtension : tool.outputFormat;
       const outputFilename = `${inputName}_converted.${outputExtension}`;
       
-      const fileSize = file.size;
-      let outputFileSize = fileSize;
-      if (toolType.includes("compress")) {
-        outputFileSize = Math.floor(fileSize * (0.6 + Math.random() * 0.2)); // Better compression
-      } else {
-        outputFileSize = Math.floor(fileSize * (1.05 + Math.random() * 0.1)); // Slight size increase
+      // PERFORM ACTUAL CONVERSION
+      const conversionResult = await performActualConversion(
+        file.buffer,
+        fileName,
+        toolType,
+        outputFilename
+      );
+      
+      if (!conversionResult.success) {
+        throw new Error(conversionResult.error || 'Conversion failed');
+      }
+      
+      // Store the converted file
+      if (conversionResult.convertedBuffer && conversionResult.mimeType) {
+        convertedFileStorage.set(jobId, {
+          buffer: conversionResult.convertedBuffer,
+          mimeType: conversionResult.mimeType,
+          filename: outputFilename
+        });
       }
       
       const actualProcessingTime = Date.now() - startTime;
+      const outputFileSize = conversionResult.convertedBuffer?.length || file.size;
 
       // Update job status to completed with output filename
       await storage.updateConversionJobStatus(
@@ -1785,55 +1800,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get the original file buffer
-      const fileBuffer = fileStorage.get(jobId);
-      if (!fileBuffer) {
+      // Get the converted file from storage
+      const convertedFile = convertedFileStorage.get(jobId);
+      if (!convertedFile) {
         return res.status(404).json({
           success: false,
-          error: "Original file not found"
+          error: "Converted file not found"
         });
       }
 
-      // Get the output filename from job or generate it
-      let outputFilename = job.outputFilename;
-      
-      if (!outputFilename) {
-        // Generate output filename if not set
-        const inputName = job.inputFilename.substring(0, job.inputFilename.lastIndexOf('.')) || 'converted_file';
-        const fileExtension = job.inputFilename.split('.').pop()?.toLowerCase() || 'txt';
-        const tool = await storage.getToolByType(job.toolType as any);
-        const outputExtension = tool?.outputFormat === "same" ? fileExtension : tool?.outputFormat || "txt";
-        outputFilename = `${inputName}_converted.${outputExtension}`;
-      }
-      
-      // Ensure outputFilename is never undefined
-      if (!outputFilename || outputFilename === 'null' || outputFilename === 'undefined') {
-        outputFilename = `converted_file_${jobId}.txt`;
-      }
-      
-      // Perform actual file conversion based on tool type
-      const conversionResult = await performActualConversion(
-        fileBuffer, 
-        job.inputFilename, 
-        job.toolType, 
-        outputFilename
-      );
-      
-      if (!conversionResult.success) {
-        return res.status(500).json({
-          success: false,
-          error: conversionResult.error || "Conversion failed"
-        });
-      }
-      
-      const { convertedBuffer, mimeType } = conversionResult;
-      
-      if (!convertedBuffer) {
-        return res.status(500).json({
-          success: false,
-          error: "Failed to generate converted file"
-        });
-      }
+      const { buffer: convertedBuffer, mimeType, filename: outputFilename } = convertedFile;
       
       // Set headers for proper file download
       const safeFilename = outputFilename || `converted_file_${jobId}.${job.toolType.includes('pdf') ? 'pdf' : 'txt'}`;
@@ -1853,8 +1829,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send the actual converted file
       res.send(convertedBuffer);
       
-      // Clean up stored file after download
+      // Clean up stored files after download
       fileStorage.delete(jobId);
+      convertedFileStorage.delete(jobId);
 
     } catch (error) {
       console.error("Error downloading file:", error);
