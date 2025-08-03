@@ -35,11 +35,16 @@ npm run preview
 
 This frontend is structured as a standalone React/Vite project for Builder.io compatibility:
 
-- All frontend code is in this `frontend/` directory
-- Has its own `package.json` with only frontend dependencies
-- Uses Vite with proper configuration for Builder.io
-- Proxies API calls to the backend server
-- No backend/server files that could conflict with Builder.io
+- **Completely Independent**: No database or server dependencies
+- **Clean Dependencies**: Only frontend packages in package.json
+- **Builder.io Ready**: Vite configuration optimized for Builder.io
+- **API Proxy**: Backend communication through HTTP proxy
+- **Zero Conflicts**: No server files that could cause Builder.io errors
+
+### For Builder.io:
+- Point to this `/frontend` folder only
+- Uses standard Vite + React setup
+- All components available for visual editing
 
 ## Project Structure
 
