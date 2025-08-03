@@ -111,6 +111,9 @@ Full-stack JavaScript application migrated from Figma to Replit environment. Bui
 - Wants to use Builder.io for frontend editing without conflicts
 - Requires clean separation between frontend and backend code
 - Frontend must be standalone React/Vite project
+- Prefers visual editing workflow: Builder.io → GitHub → Replit pipeline
+- Wants automated sync between Builder.io changes and Replit development environment
+- Does not want backend functionality affected by visual editing changes
 
 ## Recent Changes
 - 2025-01-08: Initial migration from Figma to Replit completed
@@ -162,3 +165,9 @@ Full-stack JavaScript application migrated from Figma to Replit environment. Bui
 - 2025-08-03: Image processing tools implemented with Sharp library for real image manipulation (resize, compress, format conversion)
 - 2025-08-03: Background removal and upscaling tools provide enhanced image processing with transparency support
 - 2025-08-03: All tools replaced placeholder generation with actual file processing and conversion algorithms
+- 2025-08-03: **BUILDER.IO INTEGRATION COMPLETED**: Full visual editing pipeline established
+- 2025-08-03: GitHub repository connected to Builder.io for automatic visual editing sync
+- 2025-08-03: Created comprehensive Builder.io configuration files (.builderio, builder.config.js)
+- 2025-08-03: Implemented GitHub Actions workflow for automated build validation and notifications
+- 2025-08-03: Created sync-from-github.sh script for one-command updates from Builder.io changes
+- 2025-08-03: **COMPLETE PIPELINE READY**: Builder.io (edit) → GitHub (sync) → Replit (develop) → Deploy

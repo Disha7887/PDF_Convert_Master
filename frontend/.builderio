@@ -1,9 +1,39 @@
 {
-  "dev": "npm run dev",
-  "build": "npm run build", 
-  "start": "npm start",
-  "installCommand": "npm install",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "buildDirectory": "dist"
+  "name": "PDF Convert Master Frontend",
+  "repositoryUrl": "https://github.com/Disha7887/PDF_Convert_Master",
+  "branch": "main",
+  "contentPath": "/frontend/src",
+  "componentsPath": "/frontend/src/components",
+  "pagesPath": "/frontend/src/pages",
+  "buildCommand": "npm run build",
+  "outputPath": "/dist",
+  "framework": "react-vite",
+  "typescript": true,
+  "tailwindcss": true,
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "tailwindcss": "^3.0.0"
+  },
+  "builderConfig": {
+    "publicApiKey": "BUILDER_PUBLIC_API_KEY",
+    "contentTypes": [
+      {
+        "name": "page",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          }
+        ]
+      }
+    ]
+  }
 }
