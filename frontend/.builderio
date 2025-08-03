@@ -4,5 +4,6 @@
   "start": "npm start",
   "installCommand": "npm install",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "buildDirectory": "dist"
 }
