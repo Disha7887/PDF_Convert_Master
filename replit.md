@@ -23,20 +23,25 @@ Full-stack JavaScript application migrated from Figma to Replit environment. Bui
 
 ## Application Structure
 ```
-├── client/                 # Frontend React application
+├── frontend/              # Standalone React frontend for Builder.io
 │   ├── src/
-│   │   ├── components/ui/  # shadcn/ui components
-│   │   ├── pages/         # Page components
-│   │   │   └── sections/  # Section components (Hero, Features, etc.)
-│   │   ├── hooks/         # Custom React hooks
-│   │   └── lib/           # Utilities and query client
-├── server/                # Backend Express server
-│   ├── index.ts          # Server entry point
-│   ├── routes.ts         # API routes
-│   ├── storage.ts        # Data storage interface
-│   └── vite.ts           # Vite development setup
-├── shared/               # Shared types and schemas
-│   └── schema.ts        # Database schema and types
+│   │   ├── components/ui/ # shadcn/ui components
+│   │   ├── pages/        # Page components
+│   │   ├── hooks/        # Custom React hooks
+│   │   ├── lib/          # Utilities and query client
+│   │   └── contexts/     # React contexts
+│   ├── package.json      # Frontend-only dependencies
+│   ├── vite.config.ts    # Vite config with API proxy
+│   └── README.md         # Frontend setup instructions
+├── server/               # Backend Express server
+│   ├── index.ts         # Server entry point
+│   ├── routes.ts        # API routes
+│   ├── storage.ts       # Data storage interface
+│   └── vite.ts          # Vite development setup
+├── shared/              # Shared types and schemas
+│   └── schema.ts       # Database schema and types
+├── client/             # Legacy frontend (can be removed)
+└── .gitignore          # Comprehensive ignore rules
 ```
 
 ## Current Features
@@ -103,7 +108,9 @@ Full-stack JavaScript application migrated from Figma to Replit environment. Bui
 ✅ Replit-specific configurations in place
 
 ## User Preferences
-- None specified yet
+- Wants to use Builder.io for frontend editing without conflicts
+- Requires clean separation between frontend and backend code
+- Frontend must be standalone React/Vite project
 
 ## Recent Changes
 - 2025-01-08: Initial migration from Figma to Replit completed
@@ -121,3 +128,8 @@ Full-stack JavaScript application migrated from Figma to Replit environment. Bui
 - 2025-08-02: Added actual PDF processing with pdf-lib for document analysis and generation
 - 2025-08-02: Created comprehensive API endpoints for all 20 conversion tools
 - 2025-08-02: Generated complete API documentation (API_DOCUMENTATION.md) with examples and error handling
+- 2025-08-03: **MAJOR RESTRUCTURE**: Separated frontend into standalone `frontend/` directory for Builder.io compatibility
+- 2025-08-03: Created standalone React/Vite project with own package.json and dependencies
+- 2025-08-03: Removed backend dependencies from frontend package.json
+- 2025-08-03: Configured frontend to proxy API calls to backend on port 5000
+- 2025-08-03: Added comprehensive .gitignore for both frontend and backend
