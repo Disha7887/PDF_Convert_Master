@@ -15,6 +15,12 @@ npm run dev
 ```
 This will start the development server on port 3000. The frontend will proxy API requests to the backend running on port 5000.
 
+### Production Start
+```bash
+npm start
+```
+This will serve the built application from the `dist` folder on port 3000.
+
 ### Build for Production
 ```bash
 npm run build

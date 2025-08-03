@@ -56,7 +56,9 @@ Your PDF conversion tool has been successfully restructured for Builder.io compa
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev      # Development mode
+npm run build    # Build for production
+npm start        # Production mode
 ```
 **Expected**: Frontend starts on http://localhost:3000
 
