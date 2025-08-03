@@ -3,7 +3,7 @@
 # Simple script to pull Builder.io changes from GitHub to Replit
 
 # Configuration - UPDATE THESE WITH YOUR DETAILS
-GITHUB_REPO_URL="https://github.com/YOUR_USERNAME/pdf-converter-frontend.git"
+GITHUB_REPO_URL="https://github.com/Disha7887/PDF_CONVERT_MASTER_FRONTEND.git"
 TEMP_DIR="/tmp/builderio-pull"
 FRONTEND_DIR="./frontend"
 
