@@ -1,35 +1,49 @@
 #!/bin/bash
 
-# Simple script to pull Builder.io changes from GitHub to Replit
+echo "🔄 Pulling Builder.io changes from GitHub..."
 
-# Configuration - UPDATE THESE WITH YOUR DETAILS
-GITHUB_REPO_URL="https://github.com/Disha7887/PDF_CONVERT_MASTER_FRONTEND.git"
-TEMP_DIR="/tmp/builderio-pull"
-FRONTEND_DIR="./frontend"
+# Navigate to frontend directory
+cd ~/pdf-convert-frontend
 
-echo "Pulling Builder.io changes from GitHub..."
+# Show current status
+echo "Current directory: $(pwd)"
+echo "Current branch: $(git branch --show-current)"
 
-# Step 1: Create backup
-echo "Creating backup..."
-cp -r "$FRONTEND_DIR" "./frontend-backup-$(date +%Y%m%d-%H%M%S)"
+# Fetch latest changes
+echo "Fetching latest changes..."
+git fetch origin main
 
-# Step 2: Clone your Builder.io repository
-echo "Downloading latest changes..."
-rm -rf "$TEMP_DIR"
-git clone "$GITHUB_REPO_URL" "$TEMP_DIR"
+# Show what's available
+echo "Latest commits on GitHub:"
+git log origin/main --oneline -3
 
-# Step 3: Copy files (preserve node_modules and other local files)
-echo "Updating files..."
-rsync -av --exclude='node_modules' --exclude='dist' --exclude='.env.local' "$TEMP_DIR/" "$FRONTEND_DIR/"
+# Check if we need to pull
+LOCAL=$(git rev-parse HEAD)
+REMOTE=$(git rev-parse origin/main)
 
-# Step 4: Install any new dependencies
-echo "Installing dependencies..."
-cd "$FRONTEND_DIR"
-npm install
+if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "✅ You already have the latest changes!"
+else
+    echo "📥 Pulling new changes..."
+    
+    # Try regular pull first
+    if git pull origin main; then
+        echo "✅ Successfully pulled Builder.io changes!"
+    else
+        echo "🔧 Handling merge conflicts..."
+        
+        # Reset and force pull
+        git reset --hard origin/main
+        echo "✅ Force-pulled Builder.io changes!"
+    fi
+fi
 
-# Step 5: Clean up
-echo "Cleaning up..."
-rm -rf "$TEMP_DIR"
+# Show final status
+echo ""
+echo "📋 Current status:"
+echo "Latest commit: $(git log --oneline -1)"
+echo "Files in src/pages/:"
+ls -la src/pages/ | head -5
 
-echo "✅ Builder.io changes synced successfully!"
-echo "Your Replit application will automatically restart with the new changes."
+echo ""
+echo "🎉 Builder.io sync complete!"
