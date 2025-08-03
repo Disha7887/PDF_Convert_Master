@@ -19,6 +19,34 @@ import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
 
+// MIME type mapping for proper file downloads
+const MIME_TYPES: { [key: string]: string } = {
+  'pdf': 'application/pdf',
+  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'doc': 'application/msword',
+  'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'xls': 'application/vnd.ms-excel', 
+  'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'ppt': 'application/vnd.ms-powerpoint',
+  'html': 'text/html',
+  'htm': 'text/html',
+  'txt': 'text/plain',
+  'jpg': 'image/jpeg',
+  'jpeg': 'image/jpeg', 
+  'png': 'image/png',
+  'gif': 'image/gif',
+  'bmp': 'image/bmp',
+  'webp': 'image/webp',
+  'tiff': 'image/tiff',
+  'zip': 'application/zip'
+};
+
+// Get proper MIME type for file extension
+function getMimeType(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  return MIME_TYPES[ext || ''] || 'application/octet-stream';
+}
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -187,7 +215,7 @@ async function convertPdfToWord(pdfBuffer: Buffer, outputFilename: string) {
     return {
       success: true,
       convertedBuffer: Buffer.from(fullContent, 'utf8'),
-      mimeType: 'text/html' // Browser will handle as Word-compatible
+      mimeType: getMimeType(outputFilename)
     };
   } catch (error) {
     throw new Error(`PDF to Word conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -250,7 +278,7 @@ async function resizeImage(imageBuffer: Buffer, inputExt: string | undefined, ou
     return {
       success: true,
       convertedBuffer: resizedBuffer,
-      mimeType: `image/${inputExt === 'jpg' ? 'jpeg' : inputExt}`
+      mimeType: getMimeType(`output.${inputExt}`)
     };
   } catch (error) {
     throw new Error(`Image resize failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -269,7 +297,7 @@ async function rotateImage(imageBuffer: Buffer, inputExt: string | undefined, ou
     return {
       success: true,
       convertedBuffer: rotatedBuffer,
-      mimeType: `image/${inputExt === 'jpg' ? 'jpeg' : inputExt}`
+      mimeType: getMimeType(`output.${inputExt}`)
     };
   } catch (error) {
     throw new Error(`Image rotation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -340,7 +368,7 @@ async function cropImage(imageBuffer: Buffer, inputExt: string | undefined, outp
     return {
       success: true,
       convertedBuffer: croppedBuffer,
-      mimeType: `image/${inputExt === 'jpg' ? 'jpeg' : inputExt}`
+      mimeType: getMimeType(`output.${inputExt}`)
     };
   } catch (error) {
     throw new Error(`Image crop failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -465,7 +493,7 @@ Your file conversion is complete and ready for use!`;
     return {
       success: true,
       convertedBuffer: Buffer.from(content, 'utf8'),
-      mimeType: outputExt === 'html' ? 'text/html' : 'text/plain'
+      mimeType: getMimeType(outputFilename)
     };
   }
 }
@@ -999,12 +1027,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set headers for proper file download
       const safeFilename = outputFilename || `converted_file_${jobId}.${job.toolType.includes('pdf') ? 'pdf' : 'txt'}`;
+      const properMimeType = mimeType || getMimeType(safeFilename);
+      
       res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
-      res.setHeader('Content-Type', mimeType || 'application/octet-stream');
+      res.setHeader('Content-Type', properMimeType);
       res.setHeader('Content-Length', convertedBuffer.length.toString());
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Disposition');
       
       console.log(`Serving download for job ${jobId}: ${safeFilename} (${mimeType || 'unknown'})`);
       
