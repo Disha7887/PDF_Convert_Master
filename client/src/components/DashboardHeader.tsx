@@ -28,7 +28,7 @@ import {
 
 export const DashboardHeader = (): JSX.Element => {
   const [location, setLocation] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, signout } = useAuth();
 
   // Navigation menu items data (only Home, Tools, About)
   const navItems = [
@@ -52,7 +52,7 @@ export const DashboardHeader = (): JSX.Element => {
   };
 
   const handleLogout = () => {
-    logout();
+    signout();
     setLocation("/");
   };
 
@@ -114,11 +114,11 @@ export const DashboardHeader = (): JSX.Element => {
             <DropdownMenuTrigger asChild>
               <Button className="px-4 py-2 rounded-lg flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <span className="text-sm font-semibold">{user?.initials || 'U'}</span>
+                  <span className="text-sm font-semibold">{user?.email?.charAt(0).toUpperCase() || 'U'}</span>
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
-                  <p className="text-xs text-red-100">{user?.location || 'Location'}</p>
+                  <p className="text-sm font-medium">{user?.email || 'User'}</p>
+                  <p className="text-xs text-red-100">{user?.plan || 'Free Plan'}</p>
                 </div>
                 <ChevronDown className="w-4 h-4" />
               </Button>
