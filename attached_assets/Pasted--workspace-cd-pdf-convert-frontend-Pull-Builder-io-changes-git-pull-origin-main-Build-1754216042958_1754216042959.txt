@@ -1,0 +1,60 @@
+~/workspace$ cd ~/pdf-convert-frontend
+
+# Pull Builder.io changes
+git pull origin main
+
+# Build and run
+npm run build
+npm run dev
+remote: Enumerating objects: 269, done.
+remote: Counting objects: 100% (269/269), done.
+remote: Compressing objects: 100% (189/189), done.
+remote: Total 269 (delta 78), reused 268 (delta 78), pack-reused 0 (from 0)
+Receiving objects: 100% (269/269), 1.34 MiB | 9.54 MiB/s, done.
+Resolving deltas: 100% (78/78), done.
+From https://github.com/Disha7887/pdf-convert-frontend
+ * branch            main       -> FETCH_HEAD
+ * [new branch]      main       -> origin/main
+hint: You have divergent branches and need to specify how to reconcile them.
+hint: You can do so by running one of the following commands sometime before
+hint: your next pull:
+hint:
+hint:   git config pull.rebase false  # merge
+hint:   git config pull.rebase true   # rebase
+hint:   git config pull.ff only       # fast-forward only
+hint:
+hint: You can replace "git config" with "git config --global" to set a default
+hint: preference for all repositories. You can also pass --rebase, --no-rebase,
+hint: or --ff-only on the command line to override the configured default per
+hint: invocation.
+fatal: Need to specify how to reconcile divergent branches.
+
+> pdf-converter-frontend@1.0.0 build
+> vite build
+
+failed to load config from /home/runner/pdf-convert-frontend/vite.config.ts
+error during build:
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /home/runner/pdf-convert-frontend/vite.config.ts.timestamp-1754216067960-b133ada4e774c.mjs
+    at packageResolve (node:internal/modules/esm/resolve:873:9)
+    at moduleResolve (node:internal/modules/esm/resolve:946:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+    at ModuleJob._link (node:internal/modules/esm/module_job:130:49)
+
+> pdf-converter-frontend@1.0.0 dev
+> vite --host 0.0.0.0 --port 3000
+
+failed to load config from /home/runner/pdf-convert-frontend/vite.config.ts
+error when starting dev server:
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /home/runner/pdf-convert-frontend/vite.config.ts.timestamp-1754216068284-3d9a52626d322.mjs
+    at packageResolve (node:internal/modules/esm/resolve:873:9)
+    at moduleResolve (node:internal/modules/esm/resolve:946:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+    at ModuleJob._link (node:internal/modules/esm/module_job:130:49)
