@@ -13,9 +13,7 @@ import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
-import { authRoutes } from "./routes/authRoutes";
-import { authenticateJWT } from "./middlewares/authMiddleware";
-import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
+import { register, signin, getCurrentUser, authenticateUser } from "./auth";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
 
@@ -691,7 +689,7 @@ async function rotatePdf(pdfBuffer: Buffer, outputFilename: string) {
       const [existingPage] = await rotatedDoc.copyPages(pdfDoc, [i]);
       
       // Rotate page 90 degrees clockwise
-      existingPage.setRotation({ angle: 90 });
+      existingPage.setRotation({ type: 'degrees', angle: 90 });
       
       rotatedDoc.addPage(existingPage);
     }
@@ -1400,14 +1398,9 @@ interface AuthenticatedRequest extends Request {
     id: string;
     email: string;
   };
-  apiKey?: {
-    id: string;
-    apiKey: string;
-    userId: string;
-  };
 }
 
-// Middleware to support both JWT and API key authentication
+// Middleware to support optional authentication
 const optionalAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
   const authHeader = req.headers.authorization;
   
@@ -1418,18 +1411,28 @@ const optionalAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
 
   const token = authHeader.split(" ")[1];
   
-  if (token && token.startsWith("sk-")) {
-    // API key authentication
-    return authenticateApiKey(req, res, next);
-  } else {
-    // JWT token authentication
-    return authenticateJWT(req, res, next);
+  if (token) {
+    // JWT token authentication - simplified version
+    try {
+      const { verifyToken } = await import("./auth");
+      const payload = verifyToken(token);
+      if (payload) {
+        const user = await storage.getUserById(payload.userId);
+        if (user) {
+          req.user = { id: user.id, email: user.email };
+        }
+      }
+    } catch (error) {
+      console.error("Optional auth error:", error);
+    }
   }
+  
+  next();
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
-  app.use("/api/auth", authRoutes);
+  // Authentication routes are defined above
 
   // Get all available tools
   app.get("/api/tools", async (req, res) => {
@@ -2105,6 +2108,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // ============== AUTHENTICATION ROUTES ==============
+  
+  // User registration
+  app.post("/api/signup", register);
+  
+  // User sign in
+  app.post("/api/signin", signin);
+  
+  // Protected route: Get current user (dashboard)
+  app.get("/api/dashboard", authenticateUser, getCurrentUser);
+  
+  // Protected route: Get user profile
+  app.get("/api/user", authenticateUser, getCurrentUser);
 
   // API health check
   app.get("/api/health", (req, res) => {

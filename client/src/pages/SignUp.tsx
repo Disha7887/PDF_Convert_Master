@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,9 +8,12 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 export const SignUp: React.FC = () => {
   const [location, setLocation] = useLocation();
-  const { login } = useAuth();
+  const { signup, isAuthenticated, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -18,57 +21,64 @@ export const SignUp: React.FC = () => {
     confirmPassword: ""
   });
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !loading) {
+      setLocation('/dashboard');
+    }
+  }, [isAuthenticated, loading, setLocation]);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
     
     // Basic form validation
     if (!formData.email || !formData.password || !formData.confirmPassword) {
-      alert('Please fill in all fields');
+      setError('Please fill in all fields');
+      setIsSubmitting(false);
       return;
     }
 
     if (!formData.email.includes('@')) {
-      alert('Please enter a valid email address');
+      setError('Please enter a valid email address');
+      setIsSubmitting(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      alert('Password must be at least 6 characters long');
+      setError('Password must be at least 6 characters long');
+      setIsSubmitting(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      // For demo purposes, we'll create a new user account
-      // In a real app, you'd make an API call to your backend
-      console.log('Signing up with:', formData.email);
+      const result = await signup(formData.email, formData.password);
       
-      // Create user object based on form data
-      const userData = {
-        id: `user_${Date.now()}`,
-        name: formData.fullName || formData.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        email: formData.email,
-        location: 'New User',
-        initials: (formData.fullName ? formData.fullName.split(' ').map(n => n[0]).join('').toUpperCase() : formData.email.substring(0, 2).toUpperCase()),
-        plan: 'Free Plan'
-      };
-
-      // Log the user in
-      login(userData);
-      
-      // Redirect to dashboard
-      setLocation('/dashboard');
+      if (result.success) {
+        setSuccess(true);
+        // After successful signup, redirect to signin page
+        setTimeout(() => {
+          setLocation('/signin');
+        }, 2000);
+      } else {
+        setError(result.error || 'Sign up failed');
+      }
     } catch (error) {
       console.error('Sign up error:', error);
-      alert('Sign up failed. Please try again.');
+      setError('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -195,12 +205,27 @@ export const SignUp: React.FC = () => {
               </div>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {success && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-600">Account created successfully! Redirecting to sign in...</p>
+              </div>
+            )}
+
             {/* Create Account Button */}
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg"
+              disabled={isSubmitting}
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg disabled:opacity-50"
             >
-              Create Account
+              {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
 
             {/* Divider */}

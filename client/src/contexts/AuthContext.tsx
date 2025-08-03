@@ -1,98 +1,145 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  location: string;
-  initials: string;
-  plan: string;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { User } from "@shared/schema";
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
+  loading: boolean;
+  signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signout: () => void;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (userData: User) => void;
-  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Simulated user data for Manda Onzale (you can replace this with real API calls)
-  const mandaUser: User = {
-    id: 'manda_onzale_001',
-    name: 'Manda Onzale',
-    email: 'manda@example.com',
-    location: 'London, UK',
-    initials: 'MO',
-    plan: 'Pro Plan'
-  };
-
+  // Check for existing token on mount
   useEffect(() => {
-    // Simulate checking for existing session
-    const checkAuthStatus = async () => {
-      try {
-        // In a real app, you'd check localStorage, cookies, or make an API call
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-        // For demo purposes, start logged out so we can test the authentication flow
-        // Remove the auto-login to see the header switching in action
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuthStatus();
+    const storedToken = localStorage.getItem("auth_token");
+    if (storedToken) {
+      setToken(storedToken);
+      // Verify token with backend
+      checkAuthStatus(storedToken);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+  const checkAuthStatus = async (authToken: string) => {
+    try {
+      const response = await fetch("/api/user", {
+        headers: {
+          "Authorization": `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUser(data.data.user);
+          setToken(authToken);
+        } else {
+          // Token is invalid
+          localStorage.removeItem("auth_token");
+          setToken(null);
+          setUser(null);
+        }
+      } else {
+        // Token is invalid or expired
+        localStorage.removeItem("auth_token");
+        setToken(null);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      localStorage.removeItem("auth_token");
+      setToken(null);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
+  const signin = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch("/api/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const { user: userData, token: authToken } = data.data;
+        setUser(userData);
+        setToken(authToken);
+        localStorage.setItem("auth_token", authToken);
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || "Sign in failed" };
+      }
+    } catch (error) {
+      console.error("Sign in error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  };
+
+  const signup = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // After successful signup, don't auto-login, redirect to signin
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || "Sign up failed" };
+      }
+    } catch (error) {
+      console.error("Sign up error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  };
+
+  const signout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    setToken(null);
+    localStorage.removeItem("auth_token");
   };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
-    isLoading,
-    login,
-    logout
+    token,
+    loading,
+    signin,
+    signup,
+    signout,
+    isAuthenticated: !!user && !!token,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
-export const useAuth = (): AuthContextType => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
-
-// Helper hook for authentication status
-export const useAuthStatus = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  return { isAuthenticated, isLoading };
-};
+}

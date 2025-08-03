@@ -53,7 +53,7 @@ function Router() {
     <Switch>
       {/* Protected Dashboard routes */}
       <Route path="/dashboard">
-        <ProtectedRoute requireAuth={true}>
+        <ProtectedRoute>
           <DynamicLayout isDashboardPage={true}>
             <Dashboard />
           </DynamicLayout>
@@ -61,7 +61,7 @@ function Router() {
       </Route>
 
       <Route path="/dashboard/usage">
-        <ProtectedRoute requireAuth={true}>
+        <ProtectedRoute>
           <DynamicLayout isDashboardPage={true}>
             <UsageStatistics />
           </DynamicLayout>
@@ -69,7 +69,7 @@ function Router() {
       </Route>
 
       <Route path="/dashboard/api-setup">
-        <ProtectedRoute requireAuth={true}>
+        <ProtectedRoute>
           <DynamicLayout isDashboardPage={true}>
             <APISetup />
           </DynamicLayout>
@@ -77,7 +77,7 @@ function Router() {
       </Route>
 
       <Route path="/dashboard/api-reference">
-        <ProtectedRoute requireAuth={true}>
+        <ProtectedRoute>
           <DynamicLayout isDashboardPage={true}>
             <APIReference />
           </DynamicLayout>
@@ -85,7 +85,7 @@ function Router() {
       </Route>
 
       <Route path="/dashboard/manage-plans">
-        <ProtectedRoute requireAuth={true}>
+        <ProtectedRoute>
           <DynamicLayout isDashboardPage={true}>
             <ManagePlans />
           </DynamicLayout>
@@ -93,7 +93,7 @@ function Router() {
       </Route>
 
       <Route path="/dashboard/live-tools">
-        <ProtectedRoute requireAuth={true}>
+        <ProtectedRoute>
           <DynamicLayout isDashboardPage={true}>
             <LiveTools />
           </DynamicLayout>
