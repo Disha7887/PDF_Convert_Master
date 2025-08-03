@@ -544,7 +544,109 @@ async function convertPowerPointToPdf(pptBuffer: Buffer, outputFilename: string)
 }
 
 async function convertHtmlToPdf(htmlBuffer: Buffer, outputFilename: string) {
-  return createEnhancedDemoFile(htmlBuffer, 'input.html', 'html_to_pdf', outputFilename);
+  try {
+    // Extract HTML content from buffer
+    const htmlContent = htmlBuffer.toString('utf8');
+    
+    // Create a real PDF with the HTML content converted to readable format
+    const pdfDoc = await PDFDocument.create();
+    let page = pdfDoc.addPage([612, 792]); // Standard US Letter size
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    
+    // Extract basic content from HTML (simple text extraction)
+    const textContent = htmlContent
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
+      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+    
+    // Add header
+    page.drawText('HTML to PDF Conversion', {
+      x: 50,
+      y: 750,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0.8),
+    });
+    
+    page.drawText(`Converted: ${new Date().toLocaleString()}`, {
+      x: 50,
+      y: 725,
+      size: 10,
+      font,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+    
+    // Add content with proper text wrapping
+    const maxWidth = 500;
+    const lineHeight = 14;
+    let yPosition = 690;
+    
+    // Split content into words and wrap lines
+    const words = textContent.split(' ');
+    let currentLine = '';
+    
+    for (const word of words) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const textWidth = font.widthOfTextAtSize(testLine, 12);
+      
+      if (textWidth > maxWidth && currentLine) {
+        // Draw current line and start new one
+        page.drawText(currentLine, {
+          x: 50,
+          y: yPosition,
+          size: 12,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        
+        yPosition -= lineHeight;
+        currentLine = word;
+        
+        // Add new page if needed
+        if (yPosition < 50) {
+          page = pdfDoc.addPage([612, 792]);
+          yPosition = 750;
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    // Draw the last line
+    if (currentLine) {
+      page.drawText(currentLine, {
+        x: 50,
+        y: yPosition,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0),
+      });
+    }
+    
+    // Add footer
+    if (yPosition > 100) {
+      page.drawText('Original HTML content successfully converted to PDF format', {
+        x: 50,
+        y: 80,
+        size: 10,
+        font,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+    }
+    
+    const pdfBytes = await pdfDoc.save();
+    
+    return {
+      success: true,
+      convertedBuffer: Buffer.from(pdfBytes),
+      mimeType: 'application/pdf'
+    };
+  } catch (error) {
+    throw new Error(`HTML to PDF conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 async function upscaleImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
@@ -914,7 +1016,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error(`Error fetching job ${jobId}:`, error);
+      console.error(`Error fetching job:`, error);
       res.status(500).json({
         success: false,
         error: "Failed to fetch job status",
