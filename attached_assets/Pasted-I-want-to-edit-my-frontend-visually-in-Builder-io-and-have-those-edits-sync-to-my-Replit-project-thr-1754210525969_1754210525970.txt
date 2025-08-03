@@ -1,0 +1,64 @@
+I want to edit my frontend visually in Builder.io and have those edits sync to my Replit project through GitHub. Please help me:
+
+1. Connect my Builder.io account to my GitHub repository:
+   - Go to Builder.io → Account Settings → GitHub Integration
+   - Connect my GitHub account
+   - Select the correct repo (pdf-convert-frontend)
+   - Choose the main branch
+   - Set the working folder path (like /src or /src/pages)
+
+2. Make sure Builder.io can commit changes to that repo after editing.
+
+3. In Replit:
+   - Pull the latest GitHub changes using `git pull origin main`
+   - Or configure auto-deployment from GitHub if supported
+
+4. Ensure my existing design and layout are not overwritten — only sync the content/components I update in Builder.io.
+
+5. Verify that all Builder.io edits reflect correctly when I run my frontend in Replit.
+
+Set up the full flow: **Builder.io → GitHub → Replit**
+
+
+
+
+
+
+
+You said:
+I want to separate my backend and frontend and with new front end connect with github new repository and builder io will change this frontend and after edit done I only pull the frontend repository
+
+
+ChatGPT said:
+Here’s your Replit AI prompt to separate your backend and frontend, connect the frontend to a new GitHub repo, and make Builder.io handle frontend edits that you can pull manually later:
+
+markdown
+Copy
+Edit
+I want to separate my backend and frontend into two clean projects.
+
+1. Move my current frontend code into a new folder/project called `frontend/` and initialize it as a standalone Git project.
+
+2. Push the frontend to a **new GitHub repository**, e.g., `https://github.com/myusername/pdf-frontend`.
+
+3. Connect this new frontend repo to Builder.io:
+   - In Builder.io → Account Settings → GitHub Integration
+   - Select the new GitHub repository (`pdf-frontend`)
+   - Link the `main` branch
+   - Set the folder path for components/pages (e.g., `/src/pages`)
+
+4. After making edits in Builder.io, I will **pull** the latest changes into Replit using:
+cd frontend
+git pull origin main
+
+kotlin
+Copy
+Edit
+
+5. My backend will remain as a separate project (in another Replit workspace or folder), and continue working without changes.
+
+6. I do not want to modify my frontend design manually — all edits will be visual through Builder.io and pulled in via GitHub only.
+
+Set up this full workflow:  
+**Backend (separate)**  
+**Frontend → GitHub → Builder.io → GitHub → Replit (manual pull)**
