@@ -25,18 +25,25 @@ export const HeroSection = (): JSX.Element => {
   const activeTool = isHeroTool(toolId) ? toolConfigs[toolId as string] : null;
 
   // Background decoration elements data
+  // Each "bubble" drifts continuously across the page via Framer Motion.
   const gradientBlurs = [
     {
       className:
         "absolute w-96 h-96 top-[102px] left-[72px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.15)_0%,rgba(37,99,235,0.15)_100%)]",
+      animate: { x: [0, 220, 80, 0], y: [0, 120, 280, 0], scale: [1, 1.12, 0.92, 1] },
+      transition: { duration: 24, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-80 h-80 top-[614px] left-[976px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.2)_0%,rgba(37,99,235,0.2)_100%)]",
+      animate: { x: [0, -260, -90, 0], y: [0, -160, -50, 0], scale: [1, 0.9, 1.1, 1] },
+      transition: { duration: 28, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-64 h-64 top-[563px] left-[216px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.25)_0%,rgba(37,99,235,0.25)_100%)]",
+      animate: { x: [0, 180, 320, 0], y: [0, -120, -200, 0], scale: [1, 1.15, 1, 1] },
+      transition: { duration: 20, repeat: Infinity, ease: "easeInOut" },
     },
   ];
 
@@ -44,14 +51,20 @@ export const HeroSection = (): JSX.Element => {
     {
       className:
         "absolute w-40 h-40 top-64 left-72 rounded-full border-2 border-solid border-[#2563eb4c]",
+      animate: { x: [0, 140, 0], y: [0, -90, 0] },
+      transition: { duration: 17, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-32 h-32 top-[717px] left-[880px] rounded-full border-2 border-solid border-[#2563eb66]",
+      animate: { x: [0, -120, 0], y: [0, 80, 0] },
+      transition: { duration: 21, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-48 h-48 top-[525px] left-[864px] rounded-full border-2 border-solid border-[#2563eb40]",
+      animate: { x: [0, 100, 0], y: [0, 130, 0] },
+      transition: { duration: 25, repeat: Infinity, ease: "easeInOut" },
     },
   ];
 
@@ -59,22 +72,32 @@ export const HeroSection = (): JSX.Element => {
     {
       className:
         "absolute w-4 h-4 top-[205px] left-36 bg-blue-300/50 rounded-full",
+      animate: { x: [0, 60, 0], y: [0, 40, 0] },
+      transition: { duration: 12, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-3 h-3 top-[410px] left-[1212px] bg-[#2563eb66] rounded-full",
+      animate: { x: [0, -50, 0], y: [0, 70, 0] },
+      transition: { duration: 15, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-2 h-2 top-[709px] left-72 bg-[#2563eb80] rounded-full",
+      animate: { x: [0, 80, 0], y: [0, -60, 0] },
+      transition: { duration: 14, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-5 h-5 top-[614px] left-[1060px] bg-[#2563eb59] rounded-full",
+      animate: { x: [0, -90, 0], y: [0, -50, 0] },
+      transition: { duration: 18, repeat: Infinity, ease: "easeInOut" },
     },
     {
       className:
         "absolute w-6 h-6 top-[488px] left-[1008px] bg-[#2563eb4c] rounded-full",
+      animate: { x: [0, 70, 0], y: [0, 90, 0] },
+      transition: { duration: 16, repeat: Infinity, ease: "easeInOut" },
     },
   ];
 
@@ -144,15 +167,30 @@ export const HeroSection = (): JSX.Element => {
           <AnimatedParticles count={35} />
 
           {gradientBlurs.map((blur, index) => (
-            <div key={`blur-${index}`} className={blur.className} />
+            <motion.div
+              key={`blur-${index}`}
+              className={blur.className}
+              animate={blur.animate}
+              transition={blur.transition}
+            />
           ))}
 
           {borderCircles.map((circle, index) => (
-            <div key={`circle-${index}`} className={circle.className} />
+            <motion.div
+              key={`circle-${index}`}
+              className={circle.className}
+              animate={circle.animate}
+              transition={circle.transition}
+            />
           ))}
 
           {dotElements.map((dot, index) => (
-            <div key={`dot-${index}`} className={dot.className} />
+            <motion.div
+              key={`dot-${index}`}
+              className={dot.className}
+              animate={dot.animate}
+              transition={dot.transition}
+            />
           ))}
 
           {rotatedElements.map((element, index) => (
