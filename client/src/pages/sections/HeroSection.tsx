@@ -1,4 +1,4 @@
-import { ArrowRight, ShieldIcon, SparklesIcon, UploadIcon, ZapIcon } from "lucide-react";
+import { ArrowRight, CheckCircle, ShieldIcon, SparklesIcon, UploadIcon, ZapIcon } from "lucide-react";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,22 @@ import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
 import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
+import { toolConfigs, isHeroTool } from "@/lib/toolConfig";
+import { HeroToolConverter } from "@/components/HeroToolConverter";
+
+const heroBenefits = [
+  "Work directly in your browser",
+  "Keep original formatting and quality",
+  "Download your converted file in seconds",
+  "100% free, secure & private",
+];
 
 export const HeroSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
+  const search = useSearch();
+  const toolId = new URLSearchParams(search).get("tool");
+  const activeTool = isHeroTool(toolId) ? toolConfigs[toolId as string] : null;
 
   // Background decoration elements data
   const gradientBlurs = [
@@ -171,55 +183,78 @@ export const HeroSection = (): JSX.Element => {
                       </Badge>
 
                       <div className="pt-4">
-                        <h1 className="font-bold text-gray-900 text-5xl leading-[48px] max-w-[584px]">
-                          Professional PDF tools trusted by millions
+                        <h1
+                          className="font-bold text-gray-900 text-5xl leading-[48px] max-w-[584px]"
+                          data-testid="text-hero-title"
+                        >
+                          {activeTool
+                            ? `Convert ${activeTool.title}`
+                            : "Professional PDF tools trusted by millions"}
                         </h1>
                       </div>
 
                       <div className="pt-4">
-                        <p className="font-normal text-gray-600 text-lg leading-7 max-w-2xl">
-                          Every tool you need to use PDFs, at your fingertips.
-                          All are 100% FREE and easy to use! Merge, split,
-                          compress, convert, rotate, unlock and watermark PDFs
-                          with just a few clicks.
+                        <p
+                          className="font-normal text-gray-600 text-lg leading-7 max-w-2xl"
+                          data-testid="text-hero-description"
+                        >
+                          {activeTool
+                            ? activeTool.description
+                            : `Every tool you need to use PDFs, at your fingertips. All are 100% FREE and easy to use! Merge, split, compress, convert, rotate, unlock and watermark PDFs with just a few clicks.`}
                         </p>
                       </div>
                     </div>
 
-                    <div className="pt-8">
-                      <div className="flex gap-4">
-                        <Button
-                          className="h-[61px] px-8 py-4 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
-                          onClick={() => {
-                            console.log('Start Converting Now button clicked');
-                            setLocation('/tools');
-                          }}
-                        >
-                          <img
-                            className="mr-2"
-                            alt="Margin wrap"
-                            src="/figmaAssets/margin-wrap-3.svg"
-                          />
-                          <span className="font-semibold text-base">
-                            Start Converting Now
-                          </span>
-                        </Button>
-
-                        <Button
-                          variant="outline"
-                          className="h-[61px] px-[34px] py-[18px] bg-white text-gray-700 rounded-lg border-2 border-solid border-gray-300 hover:bg-gray-50"
-                          onClick={() => {
-                            console.log('Learn More button clicked from hero');
-                            setLocation('/learn-more');
-                          }}
-                        >
-                          <ArrowRight className="mr-2 w-5 h-5 text-gray-700" />
-                          <span className="font-semibold text-base">
-                            Learn More
-                          </span>
-                        </Button>
+                    {activeTool ? (
+                      <div className="pt-8">
+                        <ul className="flex flex-col gap-3">
+                          {heroBenefits.map((benefit) => (
+                            <li
+                              key={benefit}
+                              className="flex items-center text-gray-700 text-base"
+                            >
+                              <CheckCircle className="mr-3 h-5 w-5 shrink-0 text-blue-600" />
+                              {benefit}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="pt-8">
+                        <div className="flex gap-4">
+                          <Button
+                            className="h-[61px] px-8 py-4 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
+                            onClick={() => {
+                              console.log('Start Converting Now button clicked');
+                              setLocation('/tools');
+                            }}
+                          >
+                            <img
+                              className="mr-2"
+                              alt="Margin wrap"
+                              src="/figmaAssets/margin-wrap-3.svg"
+                            />
+                            <span className="font-semibold text-base">
+                              Start Converting Now
+                            </span>
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            className="h-[61px] px-[34px] py-[18px] bg-white text-gray-700 rounded-lg border-2 border-solid border-gray-300 hover:bg-gray-50"
+                            onClick={() => {
+                              console.log('Learn More button clicked from hero');
+                              setLocation('/learn-more');
+                            }}
+                          >
+                            <ArrowRight className="mr-2 w-5 h-5 text-gray-700" />
+                            <span className="font-semibold text-base">
+                              Learn More
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="pt-8">
                       <div className="flex items-center">
@@ -259,6 +294,9 @@ export const HeroSection = (): JSX.Element => {
                 </div>
 
                 {/* Right column - File upload card */}
+                {activeTool ? (
+                  <HeroToolConverter key={activeTool.id} tool={activeTool} />
+                ) : (
                 <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-white rounded-3xl border-2 border-dashed border-blue-300 shadow-sm">
                   <div className="flex flex-col items-center justify-center w-full p-0">
                     <BouncingUploadIcon
@@ -279,7 +317,10 @@ export const HeroSection = (): JSX.Element => {
                       or click to browse files
                     </p>
 
-                    <AnimatedSelectButton className="h-[57px] px-12 py-4 mb-8 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+                    <AnimatedSelectButton
+                      onClick={() => setLocation('/?tool=pdf-to-word')}
+                      className="h-[57px] px-12 py-4 mb-8 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
+                    >
                       <UploadIcon className="mr-2 h-5 w-5" />
                       <span className="text-base">
                         Select PDF File
@@ -305,6 +346,7 @@ export const HeroSection = (): JSX.Element => {
                     </div>
                   </div>
                 </Card>
+                )}
               </div>
           </div>
         </div>

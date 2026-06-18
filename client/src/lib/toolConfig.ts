@@ -381,6 +381,55 @@ export const toolConfigs: Record<string, ToolConfig> = {
   }
 };
 
+// PDF-converter tools that are handled IN PLACE on the homepage hero
+// (clicking them swaps the hero text + upload card instead of navigating).
+export const PDF_CONVERTER_IDS = [
+  "pdf-to-word",
+  "pdf-to-excel",
+  "pdf-to-powerpoint",
+  "pdf-to-images",
+  "word-to-pdf",
+  "excel-to-pdf",
+  "powerpoint-to-pdf",
+  "images-to-pdf",
+  "html-to-pdf",
+];
+
+export const isHeroTool = (id?: string | null): boolean =>
+  !!id && PDF_CONVERTER_IDS.includes(id);
+
+// Dynamic action-button label per tool (matches the labels used on the Tools page).
+export const getToolActionLabel = (cfg: ToolConfig): string => {
+  const labels: Record<string, string> = {
+    "pdf-to-word": "Convert to Word",
+    "pdf-to-excel": "Convert to Excel",
+    "pdf-to-powerpoint": "Convert to PowerPoint",
+    "pdf-to-images": "Convert to Images",
+    "word-to-pdf": "Convert to PDF",
+    "excel-to-pdf": "Convert to PDF",
+    "powerpoint-to-pdf": "Convert to PDF",
+    "html-to-pdf": "Convert to PDF",
+    "images-to-pdf": "Convert to PDF",
+  };
+  return labels[cfg.id] ?? cfg.title;
+};
+
+// Server-side toolType identifier (snake_case) for the /api/convert endpoint.
+export const getServerToolType = (cfg: ToolConfig): string => {
+  const map: Record<string, string> = {
+    "pdf-to-word": "pdf_to_word",
+    "pdf-to-excel": "pdf_to_excel",
+    "pdf-to-powerpoint": "pdf_to_powerpoint",
+    "pdf-to-images": "pdf_to_images",
+    "word-to-pdf": "word_to_pdf",
+    "excel-to-pdf": "excel_to_pdf",
+    "powerpoint-to-pdf": "powerpoint_to_pdf",
+    "html-to-pdf": "html_to_pdf",
+    "images-to-pdf": "images_to_pdf",
+  };
+  return map[cfg.id] ?? cfg.id.replace(/-/g, "_");
+};
+
 // Helper function to get tool config by title
 export const getToolConfigByTitle = (title: string): ToolConfig | null => {
   const toolKey = Object.keys(toolConfigs).find(key => 

@@ -4,7 +4,7 @@ import {
   NavigationMenuLink,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { toolConfigs } from "@/lib/toolConfig";
+import { toolConfigs, isHeroTool } from "@/lib/toolConfig";
 import { useLocation } from "wouter";
 
 // Tools grouped for the navbar dropdowns
@@ -28,11 +28,12 @@ const ToolLink = ({ id }: { id: string }): JSX.Element | null => {
   const tool = toolConfigs[id];
   if (!tool) return null;
   const Icon = tool.icon;
+  const target = isHeroTool(id) ? `/?tool=${id}` : tool.route;
   return (
     <NavigationMenuLink asChild>
       <button
         type="button"
-        onClick={() => tool.route && setLocation(tool.route)}
+        onClick={() => target && setLocation(target)}
         className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-blue-50"
         data-testid={`nav-tool-${tool.id}`}
       >
