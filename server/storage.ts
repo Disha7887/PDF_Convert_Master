@@ -222,7 +222,7 @@ export class MemStorage implements IStorage {
         type: ToolType.UPSCALE_IMAGE,
         category: ToolCategory.IMAGE_TOOLS,
         description: "Enhance image resolution using AI upscaling",
-        inputFormats: ["jpg", "jpeg", "png"],
+        inputFormats: ["jpg", "jpeg", "png", "webp"],
         outputFormat: "same",
         maxFileSize: 25,
         processingTimeEstimate: 120
@@ -577,7 +577,7 @@ export class DatabaseStorage implements IStorage {
         type: ToolType.UPSCALE_IMAGE,
         category: ToolCategory.IMAGE_TOOLS,
         description: "Enhance image resolution using AI upscaling",
-        inputFormats: ["jpg", "jpeg", "png"],
+        inputFormats: ["jpg", "jpeg", "png", "webp"],
         outputFormat: "same",
         maxFileSize: 25,
         processingTimeEstimate: 120

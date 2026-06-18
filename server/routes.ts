@@ -1,6 +1,7 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+import { randomUUID } from "crypto";
 import { storage } from "./storage";
 import { 
   fileConversionRequestSchema,
@@ -165,6 +166,54 @@ const upload = multer({
   },
 });
 
+// Dedicated, hardened upload config for the in-browser image editors. Much
+// smaller size cap and image-only mimetypes to limit memory/DoS exposure.
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB
+  fileFilter: (req, file, cb) => {
+    // Reject non-images by skipping the file (cb(null, false)) rather than
+    // throwing, so the route handler returns a clean 400 instead of a 500.
+    cb(null, file.mimetype.startsWith("image/"));
+  },
+});
+
+// Raster formats we accept for the upload target. SVG is deliberately excluded
+// (it can carry scripts) so the saved files can never host active content.
+const SAFE_IMAGE_FORMATS: Record<string, string> = {
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  bmp: "image/bmp",
+  tiff: "image/tiff",
+};
+
+// Aggregate caps so the in-memory upload store can't grow unbounded.
+const UPLOAD_MAX_ENTRIES = 200;
+const UPLOAD_MAX_TOTAL_BYTES = 500 * 1024 * 1024; // 500MB across all uploads
+
+// Minimal fixed-window per-IP rate limit for the public upload endpoint.
+const uploadRateWindow = new Map<string, { count: number; resetAt: number }>();
+function uploadRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const limit = 30;
+  const entry = uploadRateWindow.get(ip);
+  if (!entry || entry.resetAt < now) {
+    uploadRateWindow.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > limit;
+}
+
+function sanitizeUploadName(name: string, ext: string): string {
+  const base = name.replace(/^.*[\\/]/, "").replace(/\.[^.]+$/, "");
+  const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80) || "image";
+  return `${safeBase}.${ext}`;
+}
+
 // Optimized conversion simulation with realistic progress updates
 async function simulateConversionWithProgress(jobId: number, totalTime: number, fileSizeMB: number) {
   const steps = 8; // Break into 8 progress steps
@@ -185,7 +234,8 @@ async function performActualConversion(
   fileBuffer: Buffer, 
   inputFilename: string, 
   toolType: string, 
-  outputFilename: string
+  outputFilename: string,
+  options: Record<string, any> = {}
 ): Promise<{ success: boolean; convertedBuffer?: Buffer; mimeType?: string; error?: string }> {
   try {
     // Safety check for outputFilename
@@ -224,16 +274,16 @@ async function performActualConversion(
         return await compressImage(fileBuffer, inputExtension, outputFilename);
         
       case 'resize_image':
-        return await resizeImage(fileBuffer, inputExtension, outputFilename);
+        return await resizeImage(fileBuffer, inputExtension, outputFilename, options);
         
       case 'rotate_image':
-        return await rotateImage(fileBuffer, inputExtension, outputFilename);
+        return await rotateImage(fileBuffer, inputExtension, outputFilename, options);
         
       case 'convert_image_format':
         return await convertImageFormat(fileBuffer, inputExtension, outputExtension, outputFilename);
         
       case 'crop_image':
-        return await cropImage(fileBuffer, inputExtension, outputFilename);
+        return await cropImage(fileBuffer, inputExtension, outputFilename, options);
         
       case 'merge_pdfs':
         return await mergePdfs([fileBuffer], outputFilename);
@@ -254,7 +304,7 @@ async function performActualConversion(
         return await convertHtmlToPdf(fileBuffer, outputFilename);
         
       case 'upscale_image':
-        return await upscaleImage(fileBuffer, inputExtension, outputFilename);
+        return await upscaleImage(fileBuffer, inputExtension, outputFilename, options);
         
       case 'remove_background':
         return await removeBackground(fileBuffer, inputExtension, outputFilename);
@@ -339,25 +389,57 @@ async function compressImage(imageBuffer: Buffer, inputExt: string | undefined, 
 }
 
 // Resize image using Sharp
-async function resizeImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+async function resizeImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string, options: Record<string, any> = {}) {
   try {
     const metadata = await sharp(imageBuffer).metadata();
     const originalWidth = metadata.width || 800;
     const originalHeight = metadata.height || 600;
-    
-    // Resize to 50% of original size as default
-    const newWidth = Math.round(originalWidth * 0.75);
-    const newHeight = Math.round(originalHeight * 0.75);
-    
-    const resizedBuffer = await sharp(imageBuffer)
-      .resize(newWidth, newHeight, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .toBuffer();
-    
-    console.log(`Image resized from ${originalWidth}x${originalHeight} to ${newWidth}x${newHeight}`);
-    
+
+    const maintainAspect = options.maintainAspectRatio !== false;
+    let targetWidth = options.width ? Math.round(Number(options.width)) : undefined;
+    let targetHeight = options.height ? Math.round(Number(options.height)) : undefined;
+
+    // Percentage scaling, when provided, overrides explicit dimensions.
+    if (options.percentage && Number(options.percentage) > 0) {
+      const pct = Number(options.percentage) / 100;
+      targetWidth = Math.max(1, Math.round(originalWidth * pct));
+      targetHeight = Math.max(1, Math.round(originalHeight * pct));
+    }
+
+    // Fall back to the original behaviour (75%) when nothing was requested.
+    if (!targetWidth && !targetHeight) {
+      targetWidth = Math.round(originalWidth * 0.75);
+      targetHeight = Math.round(originalHeight * 0.75);
+    }
+
+    // Clamp requested dimensions to a sane range so a malicious/huge request
+    // can't force Sharp to allocate enormous buffers.
+    const MAX_DIMENSION = 10000;
+    if (targetWidth !== undefined) {
+      if (!Number.isFinite(targetWidth) || targetWidth < 1) targetWidth = 1;
+      targetWidth = Math.min(targetWidth, MAX_DIMENSION);
+    }
+    if (targetHeight !== undefined) {
+      if (!Number.isFinite(targetHeight) || targetHeight < 1) targetHeight = 1;
+      targetHeight = Math.min(targetHeight, MAX_DIMENSION);
+    }
+
+    const pipeline = sharp(imageBuffer);
+    if (targetWidth && targetHeight) {
+      pipeline.resize(targetWidth, targetHeight, {
+        fit: maintainAspect ? 'inside' : 'fill',
+        withoutEnlargement: false,
+      });
+    } else {
+      pipeline.resize(targetWidth || null, targetHeight || null, {
+        withoutEnlargement: false,
+      });
+    }
+
+    const resizedBuffer = await pipeline.toBuffer();
+    const finalMeta = await sharp(resizedBuffer).metadata();
+    console.log(`Image resized from ${originalWidth}x${originalHeight} to ${finalMeta.width}x${finalMeta.height}`);
+
     return {
       success: true,
       convertedBuffer: resizedBuffer,
@@ -369,14 +451,30 @@ async function resizeImage(imageBuffer: Buffer, inputExt: string | undefined, ou
 }
 
 // Rotate image using Sharp
-async function rotateImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+async function rotateImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string, options: Record<string, any> = {}) {
   try {
-    const rotatedBuffer = await sharp(imageBuffer)
-      .rotate(90) // Rotate 90 degrees clockwise
-      .toBuffer();
-    
-    console.log('Image rotated 90 degrees clockwise');
-    
+    const angle = options.angle !== undefined ? Number(options.angle) : 90;
+    const flipHorizontal = options.flipHorizontal === true;
+    const flipVertical = options.flipVertical === true;
+    const ext = (inputExt || 'png').toLowerCase();
+
+    // JPEG/BMP have no alpha channel, so non-orthogonal rotations need a solid
+    // background; PNG/WebP/GIF can keep the exposed corners transparent.
+    const supportsAlpha = ext === 'png' || ext === 'webp' || ext === 'gif';
+    const background = supportsAlpha
+      ? { r: 0, g: 0, b: 0, alpha: 0 }
+      : { r: 255, g: 255, b: 255, alpha: 1 };
+
+    let pipeline = sharp(imageBuffer);
+    if (angle % 360 !== 0) {
+      pipeline = pipeline.rotate(angle, { background });
+    }
+    if (flipVertical) pipeline = pipeline.flip();
+    if (flipHorizontal) pipeline = pipeline.flop();
+
+    const rotatedBuffer = await pipeline.toBuffer();
+    console.log(`Image rotated ${angle}° (flipH=${flipHorizontal}, flipV=${flipVertical})`);
+
     return {
       success: true,
       convertedBuffer: rotatedBuffer,
@@ -425,29 +523,47 @@ async function convertImageFormat(imageBuffer: Buffer, inputExt: string | undefi
 }
 
 // Crop image using Sharp  
-async function cropImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+async function cropImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string, options: Record<string, any> = {}) {
   try {
     const metadata = await sharp(imageBuffer).metadata();
     const width = metadata.width || 800;
     const height = metadata.height || 600;
-    
-    // Crop to center 75% of image
-    const cropWidth = Math.round(width * 0.75);
-    const cropHeight = Math.round(height * 0.75);
-    const left = Math.round((width - cropWidth) / 2);
-    const top = Math.round((height - cropHeight) / 2);
-    
+
+    let cropWidth: number;
+    let cropHeight: number;
+    let left: number;
+    let top: number;
+
+    const hasExplicitCrop =
+      options.width !== undefined && options.height !== undefined &&
+      options.x !== undefined && options.y !== undefined;
+
+    if (hasExplicitCrop) {
+      left = Math.max(0, Math.round(Number(options.x)));
+      top = Math.max(0, Math.round(Number(options.y)));
+      cropWidth = Math.round(Number(options.width));
+      cropHeight = Math.round(Number(options.height));
+      // Clamp the crop rectangle so it never extends past the image bounds.
+      cropWidth = Math.min(cropWidth, width - left);
+      cropHeight = Math.min(cropHeight, height - top);
+    } else {
+      // Default: center 75% of the image.
+      cropWidth = Math.round(width * 0.75);
+      cropHeight = Math.round(height * 0.75);
+      left = Math.round((width - cropWidth) / 2);
+      top = Math.round((height - cropHeight) / 2);
+    }
+
+    if (cropWidth <= 0 || cropHeight <= 0) {
+      throw new Error('Invalid crop dimensions');
+    }
+
     const croppedBuffer = await sharp(imageBuffer)
-      .extract({ 
-        left, 
-        top, 
-        width: cropWidth, 
-        height: cropHeight 
-      })
+      .extract({ left, top, width: cropWidth, height: cropHeight })
       .toBuffer();
-    
-    console.log(`Image cropped to ${cropWidth}x${cropHeight} from center`);
-    
+
+    console.log(`Image cropped to ${cropWidth}x${cropHeight} at (${left},${top})`);
+
     return {
       success: true,
       convertedBuffer: croppedBuffer,
@@ -905,28 +1021,144 @@ async function convertHtmlToPdf(htmlBuffer: Buffer, outputFilename: string) {
   }
 }
 
-async function upscaleImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+// Resolve the Replicate API token from the Replit connector (preferred) or a
+// REPLICATE_API_TOKEN env var fallback. Never cache it — tokens can rotate.
+async function getReplicateToken(): Promise<string | undefined> {
+  if (process.env.REPLICATE_API_TOKEN) return process.env.REPLICATE_API_TOKEN;
+
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const xReplitToken = process.env.REPL_IDENTITY
+    ? 'repl ' + process.env.REPL_IDENTITY
+    : process.env.WEB_REPL_RENEWAL
+    ? 'depl ' + process.env.WEB_REPL_RENEWAL
+    : null;
+
+  if (!hostname || !xReplitToken) return undefined;
+
   try {
-    // Get original image metadata
-    const metadata = await sharp(imageBuffer).metadata();
-    const { width = 800, height = 600 } = metadata;
-    
-    // Upscale image by 2x using Sharp's resize with high-quality interpolation
-    const upscaledBuffer = await sharp(imageBuffer)
-      .resize(width * 2, height * 2, {
-        kernel: sharp.kernel.lanczos3,
-        withoutEnlargement: false
-      })
-      .sharpen()
-      .toBuffer();
-    
-    console.log(`Image upscaled from ${width}x${height} to ${width * 2}x${height * 2}`);
-    
-    return {
-      success: true,
-      convertedBuffer: upscaledBuffer,
-      mimeType: getMimeType(`output.${inputExt}`)
-    };
+    const resp = await fetch(
+      `https://${hostname}/api/v2/connection?include_secrets=true&connector_names=replicate`,
+      { headers: { Accept: 'application/json', X_REPLIT_TOKEN: xReplitToken } }
+    );
+    if (!resp.ok) return undefined;
+    const data = await resp.json();
+    const settings = data.items?.[0]?.settings ?? {};
+    return (
+      settings.api_token ||
+      settings.api_key ||
+      settings.access_token ||
+      settings.oauth?.credentials?.access_token
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+// Defence-in-depth: only fetch model output from Replicate's own delivery hosts.
+function isAllowedReplicateOutputHost(rawUrl: string): boolean {
+  try {
+    const u = new URL(rawUrl);
+    if (u.protocol !== 'https:') return false;
+    const host = u.hostname.toLowerCase();
+    return (
+      host === 'replicate.delivery' ||
+      host.endsWith('.replicate.delivery') ||
+      host === 'replicate.com' ||
+      host.endsWith('.replicate.com')
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Real AI super-resolution via Replicate (Real-ESRGAN). We do NOT fake this with
+// a plain resampling filter — if the integration isn't connected we fail loudly
+// so the output is always a genuine AI-enhanced image.
+async function upscaleImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string, options: Record<string, any> = {}) {
+  const token = await getReplicateToken();
+  if (!token) {
+    throw new Error(
+      'AI upscaling requires the Replicate integration. Connect your Replicate account to enable this tool.'
+    );
+  }
+
+  let scale = parseInt(String(options.scale), 10);
+  if (![2, 4].includes(scale)) scale = 4;
+
+  try {
+    // Normalize to PNG so any input format is accepted, then send as a data URI.
+    const pngInput = await sharp(imageBuffer).png().toBuffer();
+    const dataUri = `data:image/png;base64,${pngInput.toString('base64')}`;
+
+    const createResp = await fetch(
+      'https://api.replicate.com/v1/models/nightmareai/real-esrgan/predictions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'wait',
+        },
+        body: JSON.stringify({ input: { image: dataUri, scale, face_enhance: false } }),
+      }
+    );
+
+    if (!createResp.ok) {
+      const errText = await createResp.text();
+      throw new Error(`Replicate API error (${createResp.status}): ${errText}`);
+    }
+
+    let prediction: any = await createResp.json();
+    const startedAt = Date.now();
+    while (
+      ['starting', 'processing'].includes(prediction.status) &&
+      Date.now() - startedAt < 120000
+    ) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const pollResp = await fetch(prediction.urls.get, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      prediction = await pollResp.json();
+    }
+
+    if (prediction.status !== 'succeeded') {
+      throw new Error(`Upscaling failed: ${prediction.error || prediction.status}`);
+    }
+
+    const outputUrl = Array.isArray(prediction.output)
+      ? prediction.output[0]
+      : prediction.output;
+    if (!outputUrl || typeof outputUrl !== 'string') {
+      throw new Error('Upscaling returned no output image');
+    }
+    if (!isAllowedReplicateOutputHost(outputUrl)) {
+      throw new Error('Upscaling returned an unexpected output location');
+    }
+
+    const imgResp = await fetch(outputUrl);
+    if (!imgResp.ok) {
+      throw new Error(`Failed to fetch upscaled image (${imgResp.status})`);
+    }
+    const upscaledPng = Buffer.from(await imgResp.arrayBuffer());
+
+    // Re-encode to the original format so the filename/MIME stay consistent.
+    const ext = (inputExt || 'png').toLowerCase();
+    let convertedBuffer: Buffer;
+    let mimeType: string;
+    if (ext === 'jpg' || ext === 'jpeg') {
+      convertedBuffer = await sharp(upscaledPng).jpeg({ quality: 95 }).toBuffer();
+      mimeType = 'image/jpeg';
+    } else if (ext === 'webp') {
+      convertedBuffer = await sharp(upscaledPng).webp({ quality: 95 }).toBuffer();
+      mimeType = 'image/webp';
+    } else {
+      convertedBuffer = await sharp(upscaledPng).png().toBuffer();
+      mimeType = 'image/png';
+    }
+
+    console.log(`Image upscaled ${scale}x via Replicate (${convertedBuffer.length} bytes)`);
+
+    return { success: true, convertedBuffer, mimeType };
   } catch (error) {
     throw new Error(`Image upscaling failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -1001,6 +1233,9 @@ const uploadMultiple = multer({
 // File storage for conversion processing
 const fileStorage = new Map<number, Buffer>();
 const convertedFileStorage = new Map<number, { buffer: Buffer; mimeType: string; filename: string }>();
+// Stores images "uploaded to the server" from the in-browser Crop/Resize/Rotate
+// editors. Kept in memory with a short TTL — a lightweight upload target.
+const uploadedFileStorage = new Map<string, { buffer: Buffer; mimeType: string; filename: string; expiresAt: number }>();
 
 // Extend Request interface for authentication
 interface AuthenticatedRequest extends Request {
@@ -1212,6 +1447,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save an already-edited image (from the in-browser Crop/Resize/Rotate tools)
+  // to the server and return a shareable URL. Hardened: image-only via a
+  // dedicated multer config, re-encoded through Sharp to strip any active
+  // content, safe server-derived mime/filename, per-IP rate limit, and
+  // aggregate caps so the in-memory store can't grow unbounded.
+  app.post("/api/uploads", imageUpload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "No valid image file uploaded" });
+      }
+
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (uploadRateLimited(ip)) {
+        return res.status(429).json({ success: false, error: "Too many uploads, please slow down" });
+      }
+
+      // Validate that the bytes are a real raster image and normalize them.
+      let metadata;
+      try {
+        metadata = await sharp(req.file.buffer).metadata();
+      } catch {
+        return res.status(400).json({ success: false, error: "Invalid image file" });
+      }
+      const format = metadata.format || "";
+      if (!SAFE_IMAGE_FORMATS[format]) {
+        return res.status(400).json({ success: false, error: "Unsupported image format" });
+      }
+
+      // Re-encode through Sharp so only a clean raster image is ever stored.
+      const safeBuffer = await sharp(req.file.buffer).toFormat(format as any).toBuffer();
+      const mimeType = SAFE_IMAGE_FORMATS[format];
+
+      // Enforce aggregate caps (drop expired entries first).
+      const now = Date.now();
+      let totalBytes = 0;
+      for (const [key, val] of uploadedFileStorage) {
+        if (val.expiresAt < now) uploadedFileStorage.delete(key);
+        else totalBytes += val.buffer.length;
+      }
+      if (
+        uploadedFileStorage.size >= UPLOAD_MAX_ENTRIES ||
+        totalBytes + safeBuffer.length > UPLOAD_MAX_TOTAL_BYTES
+      ) {
+        return res.status(507).json({ success: false, error: "Upload storage is full, try again later" });
+      }
+
+      const id = randomUUID();
+      const rawName = (req.body.fileName || req.file.originalname || `upload_${id}`).toString();
+      const filename = sanitizeUploadName(rawName, format === "jpeg" ? "jpg" : format);
+      const ttlMs = 60 * 60 * 1000; // 1 hour
+      uploadedFileStorage.set(id, {
+        buffer: safeBuffer,
+        mimeType,
+        filename,
+        expiresAt: now + ttlMs,
+      });
+      const timer = setTimeout(() => uploadedFileStorage.delete(id), ttlMs);
+      timer.unref?.();
+
+      res.json({
+        success: true,
+        data: { id, url: `/api/uploads/${id}`, filename, size: safeBuffer.length },
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ success: false, error: "Failed to save upload" });
+    }
+  });
+
+  // Retrieve a previously uploaded image. Served with a safe, server-derived
+  // mime type plus nosniff/CSP so a stored file can never execute as active
+  // content in the browser.
+  app.get("/api/uploads/:id", (req, res) => {
+    const stored = uploadedFileStorage.get(req.params.id);
+    if (!stored || stored.expiresAt < Date.now()) {
+      if (stored) uploadedFileStorage.delete(req.params.id);
+      return res.status(404).json({ success: false, error: "Upload not found or expired" });
+    }
+    res.setHeader('Content-Type', stored.mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${stored.filename}"`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(stored.buffer);
+  });
+
   // Process file function
   async function processFile(jobId: number, file: Express.Multer.File, tool: any, fileName: string, toolType: ToolType, options: Record<string, any> = {}) {
     const startTime = Date.now();
@@ -1286,7 +1607,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         file.buffer,
         fileName,
         toolType,
-        outputFilename
+        outputFilename,
+        options
       );
       
       if (!conversionResult.success) {
