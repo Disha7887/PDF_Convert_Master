@@ -45,6 +45,7 @@ import { UpscaleImageUpload } from "@/pages/upload/UpscaleImage";
 import { RemoveBackgroundUpload } from "@/pages/upload/RemoveBackground";
 import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
 import { UploadDemo } from "@/pages/UploadDemo";
+import { ImageEditor } from "@/pages/ImageEditor";
 import { Features } from "@/pages/Features";
 import { LearnMore } from "@/pages/LearnMore";
 
@@ -294,6 +295,12 @@ function Router() {
       <Route path="/upload/remove-background">
         <DynamicLayout>
           <RemoveBackgroundUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/image-editor">
+        <DynamicLayout>
+          <ImageEditor />
         </DynamicLayout>
       </Route>
 

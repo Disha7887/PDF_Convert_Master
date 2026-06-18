@@ -22,6 +22,18 @@ export function loadImageFromFile(
   });
 }
 
+// Load an image element from an existing object URL (e.g. a previously edited
+// blob), so chained operations can read back the current working image.
+export function loadImageFromUrl(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () =>
+      reject(new Error("Failed to load image. The file may be corrupted or in an unsupported format."));
+    img.src = url;
+  });
+}
+
 export function canvasToBlob(
   canvas: HTMLCanvasElement,
   type = "image/png",

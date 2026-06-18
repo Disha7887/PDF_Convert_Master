@@ -1,7 +1,13 @@
 ---
 name: PDF Convert image editor tools (crop/resize/rotate/upscale)
-description: Durable design + security rules for the four bespoke image-tool pages and the /api/uploads endpoint
+description: Durable design + security rules for the four bespoke image-tool pages, the unified /image-editor, and the /api/uploads endpoint
 ---
+
+# Unified /image-editor chains ops via one in-browser working blob
+- Besides the per-op `/upload/*` pages, there is a single-screen editor at `/image-editor` (`client/src/pages/ImageEditor.tsx`, reached from the nav). It holds ONE working image `{blob,url,width,height,name}`; each modal (resize/crop/rotate) reads the current image, renders to `<canvas>`, returns a blob, and on Apply that blob becomes the new working image — so edits compose (resize→rotate→crop).
+- It is 100% client-side (same canvas helpers in `client/src/lib/imageTools.ts`); it does NOT call the server. Output format is constrained by `exportExtension` (jpg/jpeg/png/webp) and JPEG output gets a white background fill.
+- **Why:** keeps chained editing instant/offline; matches the existing crop/resize/rotate client-side approach.
+- **How to apply:** when adding an op, follow the read-current→canvas→blob→commit pattern and revoke the previous object URL (unless it equals the original) to avoid leaks; revoke on the catch path too.
 
 # Crop/Resize/Rotate edit client-side; only Upscale hits the server
 - The Crop, Resize, and Rotate pages do all editing in the browser via `<canvas>` (shared helpers in `client/src/lib/imageTools.ts`), then offer Download + "Save to server". They never call `/api/convert`.

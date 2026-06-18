@@ -34,6 +34,7 @@ export const DashboardHeader = (): JSX.Element => {
   const navItems = [
     { name: "Home", href: "/dashboard" },
     { name: "Tools", href: "/tools" },
+    { name: "Image Editor", href: "/image-editor" },
     { name: "About", href: "/about" },
   ];
 
