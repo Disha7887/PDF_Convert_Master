@@ -31,21 +31,9 @@ export const DashboardHeader = (): JSX.Element => {
   const { user, signout } = useAuth();
 
   // Navigation menu items data (only Home, Tools, About)
-  const navItems: {
-    name: string;
-    href?: string;
-    children?: { name: string; href: string }[];
-  }[] = [
+  const navItems = [
     { name: "Home", href: "/dashboard" },
     { name: "Tools", href: "/tools" },
-    {
-      name: "Image Editor",
-      children: [
-        { name: "Resize Image", href: "/image-editor/resize" },
-        { name: "Crop Image", href: "/image-editor/crop" },
-        { name: "Rotate Image", href: "/image-editor/rotate" },
-      ],
-    },
     { name: "About", href: "/about" },
   ];
 
@@ -88,38 +76,12 @@ export const DashboardHeader = (): JSX.Element => {
           <NavigationMenuList className="flex space-x-6">
             {navItems.map((item, index) => (
               <NavigationMenuItem key={index}>
-                {item.children ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-1 outline-none"
-                        data-testid="nav-image-editor"
-                      >
-                        {item.name}
-                        <ChevronDown className="w-4 h-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-44">
-                      {item.children.map((child) => (
-                        <DropdownMenuItem
-                          key={child.href}
-                          className="cursor-pointer"
-                          onClick={() => handleNavClick(child.href)}
-                          data-testid={`nav-${child.href.split("/").pop()}`}
-                        >
-                          {child.name}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <NavigationMenuLink
-                    className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
-                    onClick={() => item.href && handleNavClick(item.href)}
-                  >
-                    {item.name}
-                  </NavigationMenuLink>
-                )}
+                <NavigationMenuLink
+                  className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
+                  onClick={() => handleNavClick(item.href)}
+                >
+                  {item.name}
+                </NavigationMenuLink>
               </NavigationMenuItem>
             ))}
           </NavigationMenuList>

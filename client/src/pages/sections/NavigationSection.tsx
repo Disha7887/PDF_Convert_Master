@@ -6,13 +6,6 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -21,23 +14,9 @@ export const NavigationSection = (): JSX.Element => {
   const { login } = useAuth();
 
   // Navigation menu items data
-  const navItems: {
-    name: string;
-    width: string;
-    href?: string;
-    children?: { name: string; href: string }[];
-  }[] = [
+  const navItems = [
     { name: "Home", width: "w-[42.98px]", href: "/" },
     { name: "Tools", width: "w-[38.66px]", href: "/tools" },
-    {
-      name: "Image Editor",
-      width: "w-auto",
-      children: [
-        { name: "Resize Image", href: "/image-editor/resize" },
-        { name: "Crop Image", href: "/image-editor/crop" },
-        { name: "Rotate Image", href: "/image-editor/rotate" },
-      ],
-    },
     { name: "Pricing", width: "w-[50.38px]", href: "/pricing" },
     { name: "About", width: "w-[42.98px]", href: "/about" },
   ];
@@ -71,38 +50,12 @@ export const NavigationSection = (): JSX.Element => {
             <NavigationMenuList className="flex space-x-8">
               {navItems.map((item, index) => (
                 <NavigationMenuItem key={index} className={item.width}>
-                  {item.children ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors flex items-center gap-1 outline-none"
-                          data-testid="nav-image-editor"
-                        >
-                          {item.name}
-                          <ChevronDown className="w-4 h-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-44">
-                        {item.children.map((child) => (
-                          <DropdownMenuItem
-                            key={child.href}
-                            className="cursor-pointer"
-                            onClick={() => handleNavClick(child.href)}
-                            data-testid={`nav-${child.href.split("/").pop()}`}
-                          >
-                            {child.name}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <NavigationMenuLink
-                      className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors"
-                      onClick={() => item.href && handleNavClick(item.href)}
-                    >
-                      {item.name}
-                    </NavigationMenuLink>
-                  )}
+                  <NavigationMenuLink
+                    className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors"
+                    onClick={() => handleNavClick(item.href)}
+                  >
+                    {item.name}
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
             </NavigationMenuList>
