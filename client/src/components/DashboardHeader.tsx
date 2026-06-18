@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { ToolsNavDropdowns } from "@/components/ToolsNavMenu";
 import {
   Bell,
   ChevronDown,
@@ -30,12 +31,9 @@ export const DashboardHeader = (): JSX.Element => {
   const [location, setLocation] = useLocation();
   const { user, signout } = useAuth();
 
-  // Navigation menu items data (only Home, Tools, About)
-  const navItems = [
-    { name: "Home", href: "/dashboard" },
-    { name: "Tools", href: "/tools" },
-    { name: "About", href: "/about" },
-  ];
+  // Simple (non-dropdown) navigation links; the tool categories render as dropdowns
+  const leadingItem = { name: "Home", href: "/dashboard" };
+  const trailingItems = [{ name: "About", href: "/about" }];
 
   const handleNavClick = (href: string) => {
     if (href.startsWith("/")) {
@@ -73,12 +71,25 @@ export const DashboardHeader = (): JSX.Element => {
 
         {/* Center - Navigation Menu */}
         <NavigationMenu className="flex justify-center">
-          <NavigationMenuList className="flex space-x-6">
-            {navItems.map((item, index) => (
+          <NavigationMenuList className="flex items-center space-x-6">
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
+                onClick={() => handleNavClick(leadingItem.href)}
+                data-testid="nav-home"
+              >
+                {leadingItem.name}
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+            <ToolsNavDropdowns />
+
+            {trailingItems.map((item, index) => (
               <NavigationMenuItem key={index}>
                 <NavigationMenuLink
                   className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
                   onClick={() => handleNavClick(item.href)}
+                  data-testid={`nav-${item.name.toLowerCase()}`}
                 >
                   {item.name}
                 </NavigationMenuLink>

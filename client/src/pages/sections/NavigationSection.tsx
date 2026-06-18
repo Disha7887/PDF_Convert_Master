@@ -8,17 +8,17 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { ToolsNavDropdowns } from "@/components/ToolsNavMenu";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
   const { login } = useAuth();
 
-  // Navigation menu items data
-  const navItems = [
-    { name: "Home", width: "w-[42.98px]", href: "/" },
-    { name: "Tools", width: "w-[38.66px]", href: "/tools" },
-    { name: "Pricing", width: "w-[50.38px]", href: "/pricing" },
-    { name: "About", width: "w-[42.98px]", href: "/about" },
+  // Simple (non-dropdown) navigation links; the tool categories render as dropdowns
+  const leadingItem = { name: "Home", href: "/" };
+  const trailingItems = [
+    { name: "Pricing", href: "/pricing" },
+    { name: "About", href: "/about" },
   ];
 
   const handleNavClick = (href: string) => {
@@ -47,12 +47,25 @@ export const NavigationSection = (): JSX.Element => {
 
           {/* Navigation Menu */}
           <NavigationMenu className="flex justify-center">
-            <NavigationMenuList className="flex space-x-8">
-              {navItems.map((item, index) => (
-                <NavigationMenuItem key={index} className={item.width}>
+            <NavigationMenuList className="flex items-center space-x-8">
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors"
+                  onClick={() => handleNavClick(leadingItem.href)}
+                  data-testid="nav-home"
+                >
+                  {leadingItem.name}
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <ToolsNavDropdowns />
+
+              {trailingItems.map((item, index) => (
+                <NavigationMenuItem key={index}>
                   <NavigationMenuLink
                     className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors"
                     onClick={() => handleNavClick(item.href)}
+                    data-testid={`nav-${item.name.toLowerCase()}`}
                   >
                     {item.name}
                   </NavigationMenuLink>
