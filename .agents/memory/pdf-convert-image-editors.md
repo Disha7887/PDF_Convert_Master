@@ -5,11 +5,11 @@ description: Durable design + security rules for the bespoke image-tool pages, t
 
 # The "Image Editor" is 3 SEPARATE popup tools, not one combined page
 - The user explicitly rejected a single combined editor. The polished design lives in `client/src/pages/ImageEditTools.tsx`, which exports three page components — `ResizeImageTool`/`CropImageTool`/`RotateImageTool` — mounted at `/image-editor/resize`, `/image-editor/crop`, `/image-editor/rotate`. There is intentionally NO bare `/image-editor` index route.
-- Nav: the header "Image Editor" entry is a DropdownMenu (label + ChevronDown) with the 3 tool links, in BOTH `NavigationSection.tsx` (guest) and `DashboardHeader.tsx` (dashboard).
+- Nav: per user request, the standalone tools are NOT in the navbar (there is no "Image Editor" nav item in `NavigationSection.tsx` or `DashboardHeader.tsx`). The pages exist only as direct routes; user-facing image editing is surfaced via the Tools-page cards (`toolConfig.ts` ids `resize-images`/`crop-images`/`rotate-images`), which do inline server-side conversion via `/api/convert` — NOT these client-side pages.
 - A shared `SingleImageTool` shell does: upload dropzone → on upload the tool's own modal auto-opens → Apply renders to `<canvas>`, returns a blob that becomes the single working image (so the same op can be re-applied), records a history entry, and closes the modal → Download. The 3 modals (ResizeModal/CropModal/RotateModal) live in the same file.
 - 100% client-side (`client/src/lib/imageTools.ts`); no server calls. Output format constrained by `exportExtension` (jpg/jpeg/png/webp); JPEG output gets a white background fill.
 - **Why:** user wants 3 distinct, separately-named tools; a combined "editor page" was rejected.
-- **How to apply:** keep the 3 routes + dropdown in sync; follow the read-current→canvas→blob→commit pattern; guard async decodes with a mounted flag + a seq token (`loadSeqRef`) and revoke superseded/erroring object URLs to avoid leaks.
+- **How to apply:** the user wanted these tools out of the navbar but the pages kept — don't re-add a nav link without asking; follow the read-current→canvas→blob→commit pattern; guard async decodes with a mounted flag + a seq token (`loadSeqRef`) and revoke superseded/erroring object URLs to avoid leaks.
 
 # Older /upload/*-image pages still exist and are a duplicate entry point
 - The simpler original tools `ResizeImageUpload`/`CropImageUpload`/`RotateImageUpload` (routes `/upload/resize-image|crop-image|rotate-image`) were left untouched. The Tools page cards (`client/src/lib/toolConfig.ts`) still link resize/crop/rotate to these OLD pages, not the new popup tools — a known duplication left in place per scope.
