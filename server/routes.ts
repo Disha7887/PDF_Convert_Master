@@ -16,6 +16,17 @@ import sharp from "sharp";
 import { register, signin, getCurrentUser, authenticateUser } from "./auth";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
+import { execSync } from "child_process";
+import puppeteer from "puppeteer";
+import { PDFParse } from "pdf-parse";
+import { Document, Packer, Paragraph, TextRun, PageBreak } from "docx";
+import pptxgen from "pptxgenjs";
+import JSZip from "jszip";
+
+// pptxgenjs is published as CommonJS; depending on the bundler/runtime the
+// default import can resolve to either the class or a namespace wrapper.
+// Normalize to the actual constructor so `new` always works.
+const PptxGenCtor: any = (pptxgen as any)?.default ?? pptxgen;
 
 // MIME type mapping for proper file downloads
 const MIME_TYPES: { [key: string]: string } = {
@@ -43,6 +54,104 @@ const MIME_TYPES: { [key: string]: string } = {
 function getMimeType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
   return MIME_TYPES[ext || ''] || 'application/octet-stream';
+}
+
+// Resolve the Chromium binary for Puppeteer. The Nix store path changes across
+// rebuilds, so resolve it at runtime via `which` (cached) instead of hardcoding.
+let cachedChromiumPath: string | null | undefined;
+function getChromiumPath(): string | undefined {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (cachedChromiumPath !== undefined) return cachedChromiumPath ?? undefined;
+  try {
+    const resolved = execSync('which chromium || which chromium-browser', { encoding: 'utf8' }).trim();
+    cachedChromiumPath = resolved || null;
+  } catch {
+    cachedChromiumPath = null;
+  }
+  return cachedChromiumPath ?? undefined;
+}
+
+// Limit concurrent Chromium instances so many simultaneous conversions can't
+// exhaust memory/CPU. Callers await a slot before launching a browser.
+const MAX_CHROMIUM = 2;
+let chromiumActive = 0;
+const chromiumWaiters: Array<() => void> = [];
+async function acquireChromiumSlot(): Promise<() => void> {
+  while (chromiumActive >= MAX_CHROMIUM) {
+    await new Promise<void>((resolve) => chromiumWaiters.push(resolve));
+  }
+  chromiumActive++;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    chromiumActive--;
+    const next = chromiumWaiters.shift();
+    if (next) next();
+  };
+}
+
+// Render HTML into a real, faithful PDF using headless Chromium.
+// Security: the HTML can be user-supplied (or derived from user uploads), so we
+// run it locked down — JavaScript disabled and ALL network/file fetches blocked
+// except inline data: URIs. This prevents SSRF (e.g. cloud metadata endpoints)
+// and stops external resources from hanging the render. We also cap render time.
+async function htmlToPdfBuffer(html: string): Promise<Buffer> {
+  const release = await acquireChromiumSlot();
+  let browser: import("puppeteer").Browser | undefined;
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      executablePath: getChromiumPath(),
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+    const page = await browser.newPage();
+    await page.setJavaScriptEnabled(false);
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const url = req.url();
+      if (url.startsWith('data:') || url.startsWith('about:') || url.startsWith('blob:')) {
+        req.continue();
+      } else {
+        // Block http(s)/file/ftp/etc. to prevent SSRF and external fetches.
+        req.abort();
+      }
+    });
+    await page.setContent(html, { waitUntil: 'load', timeout: 20000 });
+    const pdfBytes = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '16mm', bottom: '16mm', left: '14mm', right: '14mm' },
+      timeout: 20000,
+    });
+    return Buffer.from(pdfBytes);
+  } finally {
+    if (browser) {
+      try { await browser.close(); } catch { /* ignore close errors */ }
+    }
+    release();
+  }
+}
+
+// Extract per-page text from a PDF using pdf-parse (pdf.js under the hood).
+async function extractPdfPages(pdfBuffer: Buffer): Promise<string[]> {
+  const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+  try {
+    const result = await parser.getText();
+    return result.pages.map((p) => p.text || '');
+  } finally {
+    // Cleanup must never mask a conversion error.
+    try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
+  }
+}
+
+// Escape text so it can be safely embedded inside generated HTML.
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 // Configure multer for file uploads
@@ -151,8 +260,7 @@ async function performActualConversion(
         return await removeBackground(fileBuffer, inputExtension, outputFilename);
         
       default:
-        console.log(`Conversion type ${toolType} not implemented yet, creating enhanced demo file`);
-        return await createEnhancedDemoFile(fileBuffer, inputFilename, toolType, outputFilename);
+        return { success: false, error: `Unsupported conversion type: ${toolType}` };
     }
   } catch (error) {
     console.error(`Conversion error for ${toolType}:`, error);
@@ -163,56 +271,33 @@ async function performActualConversion(
   }
 }
 
-// PDF to Word conversion using pdf extraction and DOCX generation
+// PDF to Word: extract real text per page and build a genuine .docx file.
 async function convertPdfToWord(pdfBuffer: Buffer, outputFilename: string) {
   try {
-    // Load PDF and extract text content
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
-    const pageCount = pdfDoc.getPageCount();
-    
-    // Create a basic DOCX structure with extracted content
-    const docxContent = `<!DOCTYPE html>
-<html>
-<head>
-    <title>Converted Document</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-        h1 { color: #333; border-bottom: 2px solid #333; }
-        .page { page-break-after: always; margin-bottom: 40px; }
-        .metadata { background: #f5f5f5; padding: 15px; border-left: 4px solid #007acc; }
-    </style>
-</head>
-<body>
-    <div class="metadata">
-        <h1>Converted PDF Document</h1>
-        <p><strong>Pages:</strong> ${pageCount}</p>
-        <p><strong>Conversion Date:</strong> ${new Date().toLocaleString()}</p>
-        <p><strong>Status:</strong> Successfully converted from PDF</p>
-    </div>`;
-    
-    let fullContent = docxContent;
-    
-    // Add page information for each page
-    for (let i = 0; i < pageCount; i++) {
-      const page = pdfDoc.getPage(i);
-      const { width, height } = page.getSize();
-      
-      fullContent += `
-    <div class="page">
-        <h2>Page ${i + 1}</h2>
-        <p><strong>Dimensions:</strong> ${Math.round(width)} x ${Math.round(height)} points</p>
-        <p>This page has been successfully extracted from the original PDF document. 
-        In a production environment, this would contain the actual text content, formatting, 
-        and layout from the original PDF page.</p>
-        <p><em>PDF content extraction requires additional OCR libraries for full text recovery.</em></p>
-    </div>`;
+    const pages = await extractPdfPages(pdfBuffer);
+    const hasText = pages.some((p) => p.trim().length > 0);
+
+    const children: Paragraph[] = [];
+    if (!hasText) {
+      children.push(new Paragraph({ children: [new TextRun('No extractable text was found in this PDF (it may be a scanned image).')] }));
+    } else {
+      pages.forEach((pageText, idx) => {
+        if (idx > 0) {
+          children.push(new Paragraph({ children: [new PageBreak()] }));
+        }
+        const lines = pageText.split(/\r?\n/);
+        for (const line of lines) {
+          children.push(new Paragraph({ children: [new TextRun(line)] }));
+        }
+      });
     }
-    
-    fullContent += '</body></html>';
-    
+
+    const doc = new Document({ sections: [{ children }] });
+    const buffer = await Packer.toBuffer(doc);
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(fullContent, 'utf8'),
+      convertedBuffer: buffer,
       mimeType: getMimeType(outputFilename)
     };
   } catch (error) {
@@ -373,258 +458,74 @@ async function cropImage(imageBuffer: Buffer, inputExt: string | undefined, outp
   }
 }
 
-// Create enhanced demo files for complex conversions not yet fully implemented
-async function createEnhancedDemoFile(fileBuffer: Buffer, inputFilename: string, toolType: string, outputFilename: string) {
-  const outputExt = outputFilename.split('.').pop()?.toLowerCase();
-  const fileSizeKB = Math.round(fileBuffer.length / 1024);
-  
-  if (outputExt === 'pdf') {
-    // Create a real PDF using pdf-lib
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([612, 792]);
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    
-    page.drawText('REAL CONVERSION RESULT', {
-      x: 50,
-      y: 750,
-      size: 20,
-      font,
-      color: rgb(0, 0, 0),
-    });
-    
-    page.drawText(`Original: ${inputFilename} (${fileSizeKB} KB)`, {
-      x: 50,
-      y: 700,
-      size: 12,
-      font,
-    });
-    
-    page.drawText(`Tool: ${toolType.replace(/_/g, ' ').toUpperCase()}`, {
-      x: 50,
-      y: 680,
-      size: 12,
-      font,
-    });
-    
-    page.drawText(`Converted: ${new Date().toLocaleString()}`, {
-      x: 50,
-      y: 660,
-      size: 12,
-      font,
-    });
-    
-    page.drawText('This is a REAL PDF file generated with actual content processing.', {
-      x: 50,
-      y: 620,
-      size: 12,
-      font,
-    });
-    
-    page.drawText('File analysis completed successfully:', {
-      x: 50,
-      y: 580,
-      size: 12,
-      font,
-    });
-    
-    page.drawText(`• Original file size: ${fileSizeKB} KB`, {
-      x: 70,
-      y: 560,
-      size: 10,
-      font,
-    });
-    
-    page.drawText(`• File type detected: ${inputFilename.split('.').pop()?.toUpperCase()}`, {
-      x: 70,
-      y: 540,
-      size: 10,
-      font,
-    });
-    
-    page.drawText('• Conversion process: COMPLETED', {
-      x: 70,
-      y: 520,
-      size: 10,
-      font,
-    });
-    
-    const pdfBytes = await pdfDoc.save();
-    
-    return {
-      success: true,
-      convertedBuffer: Buffer.from(pdfBytes),
-      mimeType: 'application/pdf'
-    };
-  } else {
-    // Create enhanced text content for other formats
-    const content = `REAL FILE CONVERSION COMPLETED
-========================================
-
-Source File Analysis:
-• Filename: ${inputFilename}  
-• Size: ${fileSizeKB} KB
-• Type: ${inputFilename.split('.').pop()?.toUpperCase()}
-• Tool Used: ${toolType.replace(/_/g, ' ').toUpperCase()}
-
-Conversion Process:
-✓ File uploaded successfully
-✓ Content analyzed and processed  
-✓ Format conversion applied
-✓ Output file generated
-✓ Quality validation passed
-
-Output Details:
-• Target Format: ${outputExt?.toUpperCase()}
-• Generated: ${new Date().toISOString()}
-• Status: SUCCESS
-
-This is a REAL converted file with actual processing applied to your original content.
-The conversion system has successfully analyzed and transformed your file.
-
-Technical Details:
-- Buffer processing: ${fileBuffer.length} bytes processed
-- Conversion engine: Production-ready processor
-- Quality assurance: Passed all validation checks
-
-Your file conversion is complete and ready for use!`;
-
-    return {
-      success: true,
-      convertedBuffer: Buffer.from(content, 'utf8'),
-      mimeType: getMimeType(outputFilename)
-    };
-  }
-}
-
-// PDF to Images conversion
+// PDF to Images: rasterize each page to a real PNG and bundle them in a ZIP.
 async function convertPdfToImages(pdfBuffer: Buffer, outputFilename: string) {
+  const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
   try {
-    // Load PDF and extract basic information
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
-    const pageCount = pdfDoc.getPageCount();
-    
-    // Create a ZIP file containing image representations of each page
-    const images = [];
-    
-    for (let i = 0; i < pageCount; i++) {
-      const page = pdfDoc.getPage(i);
-      const { width, height } = page.getSize();
-      
-      // Create a simple image representation using Canvas-like approach
-      // In production, this would use pdf2pic or similar library
-      const imageContent = `Page ${i + 1} Image Data
-Dimensions: ${Math.round(width)}x${Math.round(height)}
-Extracted from PDF page ${i + 1}
-This represents the visual content of the PDF page.`;
-      
-      images.push({
-        filename: `page_${i + 1}.txt`,
-        content: imageContent
-      });
+    const result = await parser.getScreenshot({ scale: 2 });
+
+    const zip = new JSZip();
+    let pageImages = 0;
+    for (const pg of result.pages) {
+      if (pg.data) {
+        zip.file(`page_${pg.pageNumber}.png`, Buffer.from(pg.data));
+        pageImages++;
+      }
     }
-    
-    // Create a simple ZIP-like structure (text representation)
-    let zipContent = `PDF to Images Conversion Result\n`;
-    zipContent += `===============================\n\n`;
-    zipContent += `Original PDF: ${pageCount} pages\n`;
-    zipContent += `Conversion Date: ${new Date().toLocaleString()}\n\n`;
-    
-    images.forEach((img, index) => {
-      zipContent += `--- ${img.filename} ---\n`;
-      zipContent += `${img.content}\n\n`;
-    });
-    
-    zipContent += `\nConversion completed successfully!\n`;
-    zipContent += `Total files extracted: ${images.length}\n`;
-    
+
+    if (pageImages === 0) {
+      throw new Error('No pages could be rendered from this PDF.');
+    }
+
+    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(zipContent, 'utf8'),
+      convertedBuffer: zipBuffer,
       mimeType: 'application/zip'
     };
   } catch (error) {
     throw new Error(`PDF to Images conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    // Cleanup must never mask a conversion error.
+    try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
   }
 }
 
+// Image to PDF: embed the actual image into a PDF page sized to the image.
 async function convertImageToPdf(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
   try {
-    // Get image metadata using Sharp
     const metadata = await sharp(imageBuffer).metadata();
-    const { width = 800, height = 600, format } = metadata;
-    
-    // Create a real PDF with the image embedded
     const pdfDoc = await PDFDocument.create();
-    
-    // Calculate PDF page size based on image dimensions
-    const pdfWidth = Math.min(width * 0.75, 612); // Max US Letter width
-    const pdfHeight = Math.min(height * 0.75, 792); // Max US Letter height
-    
-    const page = pdfDoc.addPage([pdfWidth, pdfHeight]);
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    
-    // Add header
-    page.drawText('Image to PDF Conversion', {
-      x: 20,
-      y: pdfHeight - 30,
-      size: 14,
-      font,
-      color: rgb(0, 0, 0.8),
+
+    let embedded;
+    if (metadata.format === 'jpeg') {
+      embedded = await pdfDoc.embedJpg(imageBuffer);
+    } else if (metadata.format === 'png') {
+      embedded = await pdfDoc.embedPng(imageBuffer);
+    } else {
+      // Convert any other format (webp, gif, bmp, tiff, ...) to PNG first.
+      const pngBuffer = await sharp(imageBuffer).png().toBuffer();
+      embedded = await pdfDoc.embedPng(pngBuffer);
+    }
+
+    // Cap page dimensions so very large images don't produce an oversized PDF
+    // page that some viewers struggle to render. Preserve the aspect ratio.
+    const MAX_DIM = 2000;
+    const scale = Math.min(1, MAX_DIM / Math.max(embedded.width, embedded.height));
+    const pageWidth = embedded.width * scale;
+    const pageHeight = embedded.height * scale;
+
+    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+    page.drawImage(embedded, {
+      x: 0,
+      y: 0,
+      width: pageWidth,
+      height: pageHeight,
     });
-    
-    // Add image information
-    page.drawText(`Original Image: ${width}x${height} ${format?.toUpperCase()}`, {
-      x: 20,
-      y: pdfHeight - 50,
-      size: 10,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    // Add image placeholder (in production, you'd embed the actual image)
-    const boxWidth = Math.min(pdfWidth - 40, width * 0.5);
-    const boxHeight = Math.min(pdfHeight - 100, height * 0.5);
-    const boxX = (pdfWidth - boxWidth) / 2;
-    const boxY = (pdfHeight - boxHeight) / 2;
-    
-    // Draw image placeholder box
-    page.drawRectangle({
-      x: boxX,
-      y: boxY,
-      width: boxWidth,
-      height: boxHeight,
-      borderColor: rgb(0.7, 0.7, 0.7),
-      borderWidth: 2,
-    });
-    
-    // Add image content text
-    page.drawText('Original Image Content', {
-      x: boxX + 20,
-      y: boxY + boxHeight / 2,
-      size: 12,
-      font,
-      color: rgb(0.3, 0.3, 0.3),
-    });
-    
-    page.drawText(`Size: ${(imageBuffer.length / 1024).toFixed(1)} KB`, {
-      x: boxX + 20,
-      y: boxY + boxHeight / 2 - 20,
-      size: 10,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    // Add footer
-    page.drawText(`Converted: ${new Date().toLocaleString()}`, {
-      x: 20,
-      y: 20,
-      size: 8,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
+
     const pdfBytes = await pdfDoc.save();
-    
+
     return {
       success: true,
       convertedBuffer: Buffer.from(pdfBytes),
@@ -714,90 +615,35 @@ async function rotatePdf(pdfBuffer: Buffer, outputFilename: string) {
   }
 }
 
+// Word to PDF: convert the document to HTML (preserving headings, lists, tables,
+// and embedded images) and render it with headless Chromium for a faithful PDF.
 async function convertWordToPdf(wordBuffer: Buffer, outputFilename: string) {
   try {
-    // Extract text content from Word document using mammoth
-    let textContent = '';
-    
-    try {
-      const result = await mammoth.extractRawText({ buffer: wordBuffer });
-      textContent = result.value || 'Word document content extracted';
-    } catch {
-      // Fallback if mammoth fails
-      textContent = 'Word document successfully processed and converted to PDF format.';
-    }
-    
-    // Create a real PDF with the extracted content
-    const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([612, 792]);
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
-    // Add header
-    page.drawText('Word to PDF Conversion', {
-      x: 50,
-      y: 750,
-      size: 16,
-      font: boldFont,
-      color: rgb(0, 0, 0.8),
-    });
-    
-    page.drawText(`Converted: ${new Date().toLocaleString()}`, {
-      x: 50,
-      y: 725,
-      size: 10,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    // Add content with proper text wrapping
-    const maxWidth = 500;
-    const lineHeight = 14;
-    let yPosition = 690;
-    
-    const words = textContent.split(' ');
-    let currentLine = '';
-    
-    for (const word of words) {
-      const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      const textWidth = font.widthOfTextAtSize(testLine, 12);
-      
-      if (textWidth > maxWidth && currentLine) {
-        page.drawText(currentLine, {
-          x: 50,
-          y: yPosition,
-          size: 12,
-          font,
-          color: rgb(0, 0, 0),
-        });
-        
-        yPosition -= lineHeight;
-        currentLine = word;
-        
-        if (yPosition < 50) {
-          page = pdfDoc.addPage([612, 792]);
-          yPosition = 750;
-        }
-      } else {
-        currentLine = testLine;
-      }
-    }
-    
-    if (currentLine) {
-      page.drawText(currentLine, {
-        x: 50,
-        y: yPosition,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-    }
-    
-    const pdfBytes = await pdfDoc.save();
-    
+    const result = await mammoth.convertToHtml({ buffer: wordBuffer });
+    const bodyHtml = result.value || '<p>(This document contained no readable content.)</p>';
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; line-height: 1.5; color: #111; font-size: 12pt; }
+    h1, h2, h3, h4 { color: #111; margin: 0.8em 0 0.3em; }
+    p { margin: 0.4em 0; }
+    img { max-width: 100%; height: auto; }
+    table { border-collapse: collapse; width: 100%; margin: 0.6em 0; }
+    td, th { border: 1px solid #999; padding: 4px 6px; vertical-align: top; }
+    ul, ol { margin: 0.4em 0 0.4em 1.4em; }
+  </style>
+</head>
+<body>${bodyHtml}</body>
+</html>`;
+
+    const pdfBuffer = await htmlToPdfBuffer(html);
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(pdfBytes),
+      convertedBuffer: pdfBuffer,
       mimeType: 'application/pdf'
     };
   } catch (error) {
@@ -805,80 +651,38 @@ async function convertWordToPdf(wordBuffer: Buffer, outputFilename: string) {
   }
 }
 
+// Excel to PDF: render every sheet as a real HTML table (full data, no truncation)
+// and print it to PDF with headless Chromium.
 async function convertExcelToPdf(excelBuffer: Buffer, outputFilename: string) {
   try {
-    // Parse Excel file
     const workbook = xlsx.read(excelBuffer, { type: 'buffer' });
-    const sheetNames = workbook.SheetNames;
-    
-    // Create PDF document
-    const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([612, 792]);
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
-    let yPosition = 750;
-    
-    // Add header
-    page.drawText('Excel to PDF Conversion', {
-      x: 50,
-      y: yPosition,
-      size: 16,
-      font: boldFont,
-      color: rgb(0, 0, 0.8),
-    });
-    yPosition -= 30;
-    
-    page.drawText(`Converted: ${new Date().toLocaleString()}`, {
-      x: 50,
-      y: yPosition,
-      size: 10,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    yPosition -= 40;
-    
-    // Process each worksheet
-    sheetNames.forEach((sheetName, sheetIndex) => {
+
+    let body = '';
+    for (const sheetName of workbook.SheetNames) {
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false });
-      
-      // Add sheet title
-      page.drawText(`Sheet: ${sheetName}`, {
-        x: 50,
-        y: yPosition,
-        size: 14,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      });
-      yPosition -= 25;
-      
-      // Add table data
-      jsonData.slice(0, 20).forEach((row: any) => {
-        if (yPosition < 50) {
-          page = pdfDoc.addPage([612, 792]);
-          yPosition = 750;
-        }
-        
-        const rowText = row.slice(0, 6).join(' | ').substring(0, 80);
-        page.drawText(rowText, {
-          x: 60,
-          y: yPosition,
-          size: 10,
-          font,
-          color: rgb(0, 0, 0),
-        });
-        yPosition -= 12;
-      });
-      
-      yPosition -= 20;
-    });
-    
-    const pdfBytes = await pdfDoc.save();
-    
+      const table = xlsx.utils.sheet_to_html(worksheet);
+      body += `<h2>${escapeHtml(sheetName)}</h2>${table}`;
+    }
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 10pt; }
+    h2 { font-size: 14pt; margin: 16px 0 8px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
+    td, th { border: 1px solid #aaa; padding: 4px 6px; }
+  </style>
+</head>
+<body>${body || '<p>(This workbook contained no sheets.)</p>'}</body>
+</html>`;
+
+    const pdfBuffer = await htmlToPdfBuffer(html);
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(pdfBytes),
+      convertedBuffer: pdfBuffer,
       mimeType: 'application/pdf'
     };
   } catch (error) {
@@ -927,40 +731,26 @@ async function mergePdfs(pdfBuffers: Buffer[], outputFilename: string) {
   }
 }
 
+// Split PDF: extract every page into its own real PDF and bundle them in a ZIP.
 async function splitPdf(pdfBuffer: Buffer, outputFilename: string) {
   try {
-    // Load the PDF
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
-    const pageCount = pdfDoc.getPageCount();
-    
-    // Create ZIP-like content containing split pages information
-    let zipContent = `PDF Split Operation Result\n`;
-    zipContent += `=============================\n\n`;
-    zipContent += `Original PDF: ${pageCount} pages\n`;
-    zipContent += `Split Date: ${new Date().toLocaleString()}\n\n`;
-    zipContent += `Split Pages:\n`;
-    
-    // Generate individual page information
+    const srcDoc = await PDFDocument.load(pdfBuffer);
+    const pageCount = srcDoc.getPageCount();
+
+    const zip = new JSZip();
     for (let i = 0; i < pageCount; i++) {
-      const page = pdfDoc.getPage(i);
-      const { width, height } = page.getSize();
-      
-      zipContent += `\n--- page_${i + 1}.pdf ---\n`;
-      zipContent += `Page Number: ${i + 1}\n`;
-      zipContent += `Dimensions: ${Math.round(width)} x ${Math.round(height)} points\n`;
-      zipContent += `Size: Approximately ${Math.round(Math.random() * 50 + 20)} KB\n`;
-      zipContent += `Status: Successfully extracted\n`;
+      const newDoc = await PDFDocument.create();
+      const [copiedPage] = await newDoc.copyPages(srcDoc, [i]);
+      newDoc.addPage(copiedPage);
+      const bytes = await newDoc.save();
+      zip.file(`page_${i + 1}.pdf`, Buffer.from(bytes));
     }
-    
-    zipContent += `\n\nSplit Operation Summary:\n`;
-    zipContent += `• Total pages processed: ${pageCount}\n`;
-    zipContent += `• Individual PDF files created: ${pageCount}\n`;
-    zipContent += `• Operation status: SUCCESS\n`;
-    zipContent += `• All pages extracted and ready for download\n`;
-    
+
+    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(zipContent, 'utf8'),
+      convertedBuffer: zipBuffer,
       mimeType: 'application/zip'
     };
   } catch (error) {
@@ -968,55 +758,29 @@ async function splitPdf(pdfBuffer: Buffer, outputFilename: string) {
   }
 }
 
+// PDF to Excel: extract real text per page and lay it out into spreadsheet rows,
+// splitting each line into cells on tabs or runs of 2+ spaces (column gaps).
 async function convertPdfToExcel(pdfBuffer: Buffer, outputFilename: string) {
   try {
-    // Load PDF and extract basic information
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
-    const pageCount = pdfDoc.getPageCount();
-    
-    // Create Excel workbook structure (CSV-like for simplicity)
+    const pages = await extractPdfPages(pdfBuffer);
+    const hasText = pages.some((p) => p.trim().length > 0);
     const workbook = xlsx.utils.book_new();
-    
-    // Create a summary sheet
-    const summaryData = [
-      ['PDF to Excel Conversion Report'],
-      ['Conversion Date', new Date().toLocaleString()],
-      ['Original PDF Pages', pageCount],
-      ['Extraction Method', 'Advanced PDF Analysis'],
-      [''],
-      ['Page', 'Width', 'Height', 'Content Status'],
-    ];
-    
-    // Add page information
-    for (let i = 0; i < pageCount; i++) {
-      const page = pdfDoc.getPage(i);
-      const { width, height } = page.getSize();
-      summaryData.push([
-        `Page ${i + 1}`,
-        Math.round(width),
-        Math.round(height),
-        'Text extracted successfully'
-      ]);
+
+    if (!hasText) {
+      const worksheet = xlsx.utils.aoa_to_sheet([['No extractable text was found in this PDF (it may be a scanned image).']]);
+      xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    } else {
+      pages.forEach((pageText, idx) => {
+        const rows = pageText
+          .split(/\r?\n/)
+          .map((line) => line.split(/\t|\s{2,}/).map((cell) => cell.trim()));
+        const worksheet = xlsx.utils.aoa_to_sheet(rows.length ? rows : [['']]);
+        xlsx.utils.book_append_sheet(workbook, worksheet, `Page ${idx + 1}`.slice(0, 31));
+      });
     }
-    
-    // Add sample data sheet
-    summaryData.push([''], ['Sample Extracted Data:']);
-    summaryData.push(['Column A', 'Column B', 'Column C', 'Column D']);
-    for (let i = 1; i <= 10; i++) {
-      summaryData.push([
-        `Data ${i}`,
-        `Value ${i}`,
-        Math.round(Math.random() * 1000),
-        `Item ${i}`
-      ]);
-    }
-    
-    const worksheet = xlsx.utils.aoa_to_sheet(summaryData);
-    xlsx.utils.book_append_sheet(workbook, worksheet, 'Conversion Report');
-    
-    // Generate Excel buffer
+
     const excelBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-    
+
     return {
       success: true,
       convertedBuffer: excelBuffer,
@@ -1027,60 +791,34 @@ async function convertPdfToExcel(pdfBuffer: Buffer, outputFilename: string) {
   }
 }
 
+// PDF to PowerPoint: extract real text per page and build a genuine .pptx with
+// one slide per page.
 async function convertPdfToPowerPoint(pdfBuffer: Buffer, outputFilename: string) {
   try {
-    // Load PDF and extract basic information
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
-    const pageCount = pdfDoc.getPageCount();
-    
-    // Create PowerPoint-like content (text representation)
-    let pptContent = `<?xml version="1.0" encoding="UTF-8"?>
-<presentation xmlns="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <metadata>
-    <title>PDF to PowerPoint Conversion</title>
-    <creator>PDF Converter Tool</creator>
-    <created>${new Date().toISOString()}</created>
-    <pages>${pageCount}</pages>
-  </metadata>
-  <slides>
-`;
-
-    // Create slides from PDF pages
-    for (let i = 0; i < pageCount; i++) {
-      const page = pdfDoc.getPage(i);
-      const { width, height } = page.getSize();
-      
-      pptContent += `
-    <slide number="${i + 1}">
-      <title>Slide ${i + 1} - Converted from PDF Page ${i + 1}</title>
-      <content>
-        <textbox>
-          <p>Original PDF Page ${i + 1}</p>
-          <p>Dimensions: ${Math.round(width)} x ${Math.round(height)} points</p>
-          <p>Successfully converted from PDF format</p>
-          <p>Content extracted and formatted for presentation</p>
-        </textbox>
-        <layout>
-          <width>${Math.round(width)}</width>
-          <height>${Math.round(height)}</height>
-          <background>white</background>
-        </layout>
-      </content>
-    </slide>`;
+    const pages = await extractPdfPages(pdfBuffer);
+    if (pages.length === 0) {
+      pages.push('No extractable text was found in this PDF.');
     }
-    
-    pptContent += `
-  </slides>
-  <notes>
-    <note>This presentation was automatically generated from a PDF document.</note>
-    <note>Each slide represents one page from the original PDF.</note>
-    <note>Total slides created: ${pageCount}</note>
-  </notes>
-</presentation>`;
-    
+
+    const pptx = new PptxGenCtor();
+    pptx.layout = 'LAYOUT_WIDE';
+
+    pages.forEach((pageText, idx) => {
+      const slide = pptx.addSlide();
+      slide.addText(`Page ${idx + 1}`, {
+        x: 0.5, y: 0.3, w: 12, h: 0.6, fontSize: 20, bold: true, color: '1F3864',
+      });
+      const body = (pageText || '').trim() || '(No text on this page.)';
+      slide.addText(body, {
+        x: 0.5, y: 1.1, w: 12, h: 6, fontSize: 12, color: '333333', valign: 'top', wrap: true,
+      });
+    });
+
+    const buffer = (await pptx.write({ outputType: 'nodebuffer' })) as Buffer;
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(pptContent, 'utf8'),
+      convertedBuffer: buffer,
       mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
     };
   } catch (error) {
@@ -1088,118 +826,59 @@ async function convertPdfToPowerPoint(pdfBuffer: Buffer, outputFilename: string)
   }
 }
 
+// PowerPoint to PDF: read the real slide text out of the .pptx archive (one
+// section per slide) and render it to PDF with headless Chromium.
 async function convertPowerPointToPdf(pptBuffer: Buffer, outputFilename: string) {
   try {
-    // Create a PDF representing the PowerPoint content
-    const pdfDoc = await PDFDocument.create();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
-    // Analyze PowerPoint file size to estimate slides
-    const fileSizeKB = Math.round(pptBuffer.length / 1024);
-    const estimatedSlides = Math.max(1, Math.min(20, Math.floor(fileSizeKB / 50)));
-    
-    // Create title slide
-    let page = pdfDoc.addPage([612, 792]);
-    page.drawText('PowerPoint to PDF Conversion', {
-      x: 50,
-      y: 700,
-      size: 20,
-      font: boldFont,
-      color: rgb(0, 0, 0.8),
-    });
-    
-    page.drawText(`Original presentation analyzed`, {
-      x: 50,
-      y: 650,
-      size: 14,
-      font,
-      color: rgb(0, 0, 0),
-    });
-    
-    page.drawText(`File size: ${fileSizeKB} KB`, {
-      x: 50,
-      y: 620,
-      size: 12,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    page.drawText(`Estimated slides: ${estimatedSlides}`, {
-      x: 50,
-      y: 600,
-      size: 12,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    page.drawText(`Converted: ${new Date().toLocaleString()}`, {
-      x: 50,
-      y: 580,
-      size: 12,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    // Create content slides
-    for (let i = 1; i <= estimatedSlides; i++) {
-      page = pdfDoc.addPage([612, 792]);
-      
-      page.drawText(`Slide ${i}`, {
-        x: 50,
-        y: 700,
-        size: 18,
-        font: boldFont,
-        color: rgb(0, 0, 0.8),
+    const zip = await JSZip.loadAsync(pptBuffer);
+
+    const slideEntries = Object.keys(zip.files)
+      .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+      .sort((a, b) => {
+        const na = parseInt(a.match(/slide(\d+)\.xml/)![1], 10);
+        const nb = parseInt(b.match(/slide(\d+)\.xml/)![1], 10);
+        return na - nb;
       });
-      
-      page.drawText(`Content from PowerPoint slide ${i}`, {
-        x: 50,
-        y: 650,
-        size: 14,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      
-      page.drawText('• Bullet point content extracted', {
-        x: 70,
-        y: 600,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      
-      page.drawText('• Layout and formatting preserved', {
-        x: 70,
-        y: 580,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      
-      page.drawText('• Images and charts represented', {
-        x: 70,
-        y: 560,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      
-      // Add slide footer
-      page.drawText(`Slide ${i} of ${estimatedSlides}`, {
-        x: 50,
-        y: 50,
-        size: 10,
-        font,
-        color: rgb(0.5, 0.5, 0.5),
-      });
+
+    const sections: string[] = [];
+    for (let i = 0; i < slideEntries.length; i++) {
+      const xml = await zip.files[slideEntries[i]].async('string');
+      const texts = Array.from(xml.matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)).map((m) =>
+        m[1]
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&apos;/g, "'")
+      );
+      const body = texts.map((t) => `<p>${escapeHtml(t)}</p>`).join('');
+      sections.push(`<section class="slide"><h2>Slide ${i + 1}</h2>${body || '<p>(No text on this slide.)</p>'}</section>`);
     }
-    
-    const pdfBytes = await pdfDoc.save();
-    
+
+    if (sections.length === 0) {
+      sections.push('<section class="slide"><p>No slides were found in this presentation.</p></section>');
+    }
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; }
+    .slide { page-break-after: always; padding: 12px 0; }
+    .slide:last-child { page-break-after: auto; }
+    h2 { color: #1f3864; margin: 0 0 12px; }
+    p { font-size: 13pt; margin: 6px 0; }
+  </style>
+</head>
+<body>${sections.join('')}</body>
+</html>`;
+
+    const pdfBuffer = await htmlToPdfBuffer(html);
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(pdfBytes),
+      convertedBuffer: pdfBuffer,
       mimeType: 'application/pdf'
     };
   } catch (error) {
@@ -1211,101 +890,14 @@ async function convertHtmlToPdf(htmlBuffer: Buffer, outputFilename: string) {
   try {
     // Extract HTML content from buffer
     const htmlContent = htmlBuffer.toString('utf8');
-    
-    // Create a real PDF with the HTML content converted to readable format
-    const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([612, 792]); // Standard US Letter size
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
-    // Extract basic content from HTML (simple text extraction)
-    const textContent = htmlContent
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
-      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .trim();
-    
-    // Add header
-    page.drawText('HTML to PDF Conversion', {
-      x: 50,
-      y: 750,
-      size: 16,
-      font: boldFont,
-      color: rgb(0, 0, 0.8),
-    });
-    
-    page.drawText(`Converted: ${new Date().toLocaleString()}`, {
-      x: 50,
-      y: 725,
-      size: 10,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    
-    // Add content with proper text wrapping
-    const maxWidth = 500;
-    const lineHeight = 14;
-    let yPosition = 690;
-    
-    // Split content into words and wrap lines
-    const words = textContent.split(' ');
-    let currentLine = '';
-    
-    for (const word of words) {
-      const testLine = currentLine + (currentLine ? ' ' : '') + word;
-      const textWidth = font.widthOfTextAtSize(testLine, 12);
-      
-      if (textWidth > maxWidth && currentLine) {
-        // Draw current line and start new one
-        page.drawText(currentLine, {
-          x: 50,
-          y: yPosition,
-          size: 12,
-          font,
-          color: rgb(0, 0, 0),
-        });
-        
-        yPosition -= lineHeight;
-        currentLine = word;
-        
-        // Add new page if needed
-        if (yPosition < 50) {
-          page = pdfDoc.addPage([612, 792]);
-          yPosition = 750;
-        }
-      } else {
-        currentLine = testLine;
-      }
-    }
-    
-    // Draw the last line
-    if (currentLine) {
-      page.drawText(currentLine, {
-        x: 50,
-        y: yPosition,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-    }
-    
-    // Add footer
-    if (yPosition > 100) {
-      page.drawText('Original HTML content successfully converted to PDF format', {
-        x: 50,
-        y: 80,
-        size: 10,
-        font,
-        color: rgb(0.5, 0.5, 0.5),
-      });
-    }
-    
-    const pdfBytes = await pdfDoc.save();
-    
+
+    // Render the actual HTML (styles, layout, images) with headless Chromium so
+    // the PDF looks like the page itself, not a stripped-down text dump.
+    const pdfBuffer = await htmlToPdfBuffer(htmlContent);
+
     return {
       success: true,
-      convertedBuffer: Buffer.from(pdfBytes),
+      convertedBuffer: pdfBuffer,
       mimeType: 'application/pdf'
     };
   } catch (error) {
@@ -1341,24 +933,42 @@ async function upscaleImage(imageBuffer: Buffer, inputExt: string | undefined, o
 }
 
 async function removeBackground(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+  // Genuine subject/background separation requires an AI model or an external
+  // service (e.g. remove.bg). We do NOT fake it by distorting colors. If an API
+  // key is configured we use it; otherwise we fail loudly so the result is never
+  // a misleading "processed" image that still has its background.
+  const apiKey = process.env.REMOVE_BG_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'Background removal requires an external AI service. Set the REMOVE_BG_API_KEY secret (from remove.bg) to enable this tool.'
+    );
+  }
+
   try {
-    // Simulate background removal by creating a transparent version
-    // In production, this would use AI libraries like RemBG or similar
-    const processedBuffer = await sharp(imageBuffer)
-      .ensureAlpha() // Add alpha channel
-      .modulate({
-        brightness: 1.1,
-        saturation: 1.2
-      })
-      .png() // Convert to PNG to support transparency
-      .toBuffer();
-    
-    console.log('Background removal processing completed (simulated)');
-    
+    // Normalize to PNG before sending so any input format is accepted.
+    const pngInput = await sharp(imageBuffer).png().toBuffer();
+
+    const form = new FormData();
+    form.append('image_file', new Blob([pngInput], { type: 'image/png' }), 'image.png');
+    form.append('size', 'auto');
+
+    const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+      method: 'POST',
+      headers: { 'X-Api-Key': apiKey },
+      body: form,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`remove.bg API error (${response.status}): ${errText}`);
+    }
+
+    const resultBuffer = Buffer.from(await response.arrayBuffer());
+
     return {
       success: true,
-      convertedBuffer: processedBuffer,
-      mimeType: 'image/png' // Always PNG for transparency support
+      convertedBuffer: resultBuffer,
+      mimeType: 'image/png'
     };
   } catch (error) {
     throw new Error(`Background removal failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
