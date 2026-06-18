@@ -23,6 +23,11 @@ description: Durable constraints for the real file converters in server/routes.t
 - **Why:** there is no good local background-removal; faking it violated the no-placeholder rule. This was flagged to the user as needing a key.
 - **How to apply:** to enable it, set `REMOVE_BG_API_KEY` via the environment-secrets flow. All other 19 tools work with no keys.
 
+# compress_image quality: PNG must map quality→palette colors, not .png({quality})
+- `compressImage` takes a user `quality` (clamped 10–100, default 80). JPEG/WebP use `.jpeg({quality})`/`.webp({quality})` directly. PNG maps quality to `colors` (`.png({colors, palette:true, compressionLevel:9})`) — `.png({quality})` ALONE does NOT change output size in this libvips build (verified on both noise and gradient: identical bytes).
+- **Why:** PNG is lossless so JPEG-style quality is meaningless; the effective size knob in this Sharp/libvips is palette size. Tested: lower `colors` → smaller file; `quality` alone was a no-op.
+- **How to apply:** for any palette-PNG size control, drive `colors` (e.g. `round(quality/100*256)`), not `quality`. Always set per-branch mimeType (jpeg/png/webp) — compress output uses tool outputFormat "same" so the extension follows the input.
+
 # Compile/test gates for the converters
 - Use `npm run build` as the compile gate (`npm run check` fails on unrelated pre-existing `server/routes_broken.ts`).
 - End-to-end test path: POST `/api/convert` (multipart: file, toolType snake_case, fileName, fileSize, optional options JSON) → poll GET `/api/jobs/:jobId` until completed → GET `/api/download/:jobId`. Verify output by file magic bytes (PDF `%P`, ZIP/OOXML `PK`, PNG, JPEG).

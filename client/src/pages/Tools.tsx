@@ -111,6 +111,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const [outputName, setOutputName] = useState<string>("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [targetFormat, setTargetFormat] = useState<string>("png");
+  const [compressionQuality, setCompressionQuality] = useState<number>(80);
   const [editImage, setEditImage] = useState<WorkingImage | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -130,6 +131,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const editOp = manualEditMap[toolConfig.id];
   const isManualEdit = Boolean(editOp);
   const needsFormatPicker = toolConfig.id === "convert-image-format";
+  const needsCompressionPicker = toolConfig.id === "compress-images";
 
   // Track the single live object URL for the working image so it can be revoked
   // when replaced or on unmount, avoiding leaks across re-edits.
@@ -311,10 +313,10 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       formData.append("toolType", toolTypeMap[toolConfig.id]);
       formData.append("fileName", file.name);
       formData.append("fileSize", file.size.toString());
-      formData.append(
-        "options",
-        JSON.stringify(needsFormatPicker ? { outputFormat: targetFormat } : {}),
-      );
+      const options: Record<string, unknown> = {};
+      if (needsFormatPicker) options.outputFormat = targetFormat;
+      if (needsCompressionPicker) options.quality = compressionQuality;
+      formData.append("options", JSON.stringify(options));
 
       const res = await fetch("/api/convert", {
         method: "POST",
@@ -530,6 +532,40 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
                 <option value="avif">AVIF</option>
                 <option value="tiff">TIFF</option>
               </select>
+            </div>
+          )}
+
+          {needsCompressionPicker && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1">
+                <label
+                  htmlFor={`slider-compression-${toolConfig.id}`}
+                  className="text-xs font-medium text-gray-600"
+                >
+                  Compression level
+                </label>
+                <span
+                  className="text-xs font-semibold text-blue-600"
+                  data-testid={`text-compression-quality-${toolConfig.id}`}
+                >
+                  Quality {compressionQuality}%
+                </span>
+              </div>
+              <input
+                id={`slider-compression-${toolConfig.id}`}
+                type="range"
+                min={10}
+                max={100}
+                step={5}
+                value={compressionQuality}
+                onChange={(e) => setCompressionQuality(Number(e.target.value))}
+                className="w-full accent-blue-600 cursor-pointer"
+                data-testid={`slider-compression-${toolConfig.id}`}
+              />
+              <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                <span>Smaller file</span>
+                <span>Higher quality</span>
+              </div>
             </div>
           )}
 

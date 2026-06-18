@@ -273,7 +273,7 @@ async function performActualConversion(
         return await convertExcelToPdf(fileBuffer, outputFilename);
         
       case 'compress_image':
-        return await compressImage(fileBuffer, inputExtension, outputFilename);
+        return await compressImage(fileBuffer, inputExtension, outputFilename, options);
         
       case 'resize_image':
         return await resizeImage(fileBuffer, inputExtension, outputFilename, options);
@@ -358,32 +358,49 @@ async function convertPdfToWord(pdfBuffer: Buffer, outputFilename: string) {
 }
 
 // Image processing using Sharp
-async function compressImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
+async function compressImage(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string, options: Record<string, any> = {}) {
   try {
+    // User-selectable quality (10-100). Lower quality = smaller file = more
+    // compression. Defaults to 80 when not provided. Clamped so a bad request
+    // can't pass an out-of-range value to Sharp.
+    const quality = Math.min(100, Math.max(10, Math.round(Number(options.quality)) || 80));
+
     let processedBuffer: Buffer;
-    
+    let mimeType: string;
+
     if (inputExt === 'jpg' || inputExt === 'jpeg') {
       processedBuffer = await sharp(imageBuffer)
-        .jpeg({ quality: 80, progressive: true })
+        .jpeg({ quality, progressive: true })
         .toBuffer();
+      mimeType = 'image/jpeg';
     } else if (inputExt === 'png') {
+      // PNG is lossless, so quality maps to the palette size (number of colors).
+      // Fewer colors = smaller file = more compression.
+      const colors = Math.min(256, Math.max(2, Math.round((quality / 100) * 256)));
       processedBuffer = await sharp(imageBuffer)
-        .png({ compressionLevel: 9, palette: true })
+        .png({ quality, colors, compressionLevel: 9, palette: true })
         .toBuffer();
+      mimeType = 'image/png';
+    } else if (inputExt === 'webp') {
+      processedBuffer = await sharp(imageBuffer)
+        .webp({ quality })
+        .toBuffer();
+      mimeType = 'image/webp';
     } else {
-      // Convert to JPEG with compression for other formats
+      // Fallback for any other format: compress as JPEG.
       processedBuffer = await sharp(imageBuffer)
-        .jpeg({ quality: 80 })
+        .jpeg({ quality })
         .toBuffer();
+      mimeType = 'image/jpeg';
     }
-    
+
     const compressionRatio = ((imageBuffer.length - processedBuffer.length) / imageBuffer.length * 100).toFixed(1);
-    console.log(`Image compressed: ${compressionRatio}% size reduction`);
-    
+    console.log(`Image compressed: ${compressionRatio}% size reduction (quality ${quality})`);
+
     return {
       success: true,
       convertedBuffer: processedBuffer,
-      mimeType: inputExt === 'png' ? 'image/png' : 'image/jpeg'
+      mimeType
     };
   } catch (error) {
     throw new Error(`Image compression failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
