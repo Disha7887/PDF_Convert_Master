@@ -72,7 +72,7 @@ export const SignIn: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-rose-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Main Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-8">
@@ -80,7 +80,7 @@ export const SignIn: React.FC = () => {
           <div className="text-center space-y-4">
             {/* Icon */}
             <div className="flex justify-center">
-              <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+              <div className="w-14 h-14 bg-gradient-to-r from-red-600 to-red-700 rounded-full flex items-center justify-center">
                 <User className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -111,7 +111,7 @@ export const SignIn: React.FC = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className="pl-10 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500"
                 />
               </div>
             </div>
@@ -129,7 +129,7 @@ export const SignIn: React.FC = () => {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="pl-10 pr-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className="pl-10 pr-10 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500"
                 />
                 <button
                   type="button"
@@ -152,7 +152,7 @@ export const SignIn: React.FC = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg disabled:opacity-50"
+              className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium shadow-lg disabled:opacity-50"
             >
               {isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
@@ -203,7 +203,7 @@ export const SignIn: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setLocation("/signup")}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-red-600 hover:text-red-700 font-medium"
                 >
                   Sign Up
                 </button>
@@ -216,7 +216,7 @@ export const SignIn: React.FC = () => {
         <div className="mt-6 text-center">
           <button
             onClick={() => setLocation("/")}
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
+            className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Home

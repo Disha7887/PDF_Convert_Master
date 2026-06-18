@@ -69,7 +69,7 @@ export const TestimonialsSection = (): JSX.Element => {
   ];
 
   return (
-    <section className="w-full py-24 bg-[#111726] relative">
+    <section className="w-full py-24 bg-white relative">
       {/* Animated particles background */}
       <AnimatedParticles count={20} />
 
@@ -81,10 +81,10 @@ export const TestimonialsSection = (): JSX.Element => {
 
       <div className="max-w-screen-xl mx-auto px-8 relative z-10">
         <div className="flex flex-col items-center mb-16">
-          <h2 className="text-4xl font-bold text-white text-center leading-10 mb-4">
+          <h2 className="text-4xl font-bold text-gray-900 text-center leading-10 mb-4">
             Everything You Need for PDF Success
           </h2>
-          <p className="text-xl text-[#d0d5da] text-center max-w-screen-md">
+          <p className="text-xl text-gray-600 text-center max-w-screen-md">
             Powerful features, seamless integrations, and enterprise-grade
             security - all in one platform
           </p>
@@ -92,7 +92,7 @@ export const TestimonialsSection = (): JSX.Element => {
 
         <div className="flex justify-center mb-12">
           <Tabs defaultValue="features" className="w-full max-w-[445px]">
-            <TabsList className="w-full h-[67px] p-[9px] bg-[#ffffff1a] rounded-full border border-[#ffffff33] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] backdrop-blur-[2px]">
+            <TabsList className="w-full h-[67px] p-[9px] bg-white rounded-full border border-gray-200 shadow-sm">
               <TabsTrigger
                 value="features"
                 className="w-[135px] h-[49px] rounded-full data-[state=active]:bg-[linear-gradient(90deg,rgba(220,38,38,1)_0%,rgba(185,28,28,1)_100%)] data-[state=active]:text-white data-[state=active]:shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-semibold"
@@ -101,13 +101,13 @@ export const TestimonialsSection = (): JSX.Element => {
               </TabsTrigger>
               <TabsTrigger
                 value="integrations"
-                className="w-[160px] h-[49px] rounded-full font-semibold text-[#d0d5da]"
+                className="w-[160px] h-[49px] rounded-full font-semibold text-gray-600"
               >
                 Integrations
               </TabsTrigger>
               <TabsTrigger
                 value="security"
-                className="w-[132px] h-[49px] rounded-full font-semibold text-[#d0d5da]"
+                className="w-[132px] h-[49px] rounded-full font-semibold text-gray-600"
               >
                 Security
               </TabsTrigger>
@@ -127,10 +127,10 @@ export const TestimonialsSection = (): JSX.Element => {
                           />
                         </div>
                       </div>
-                      <h3 className="text-xl font-semibold text-white text-center mb-2">
+                      <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
                         {feature.title}
                       </h3>
-                      <div className="text-[#d0d5da] text-base text-center leading-[26px]">
+                      <div className="text-gray-600 text-base text-center leading-[26px]">
                         {feature.description.map((line, index) => (
                           <p key={index}>{line}</p>
                         ))}
@@ -152,10 +152,10 @@ export const TestimonialsSection = (): JSX.Element => {
         </div>
 
         <div className="flex flex-col items-center mt-16">
-          <h3 className="text-2xl font-bold text-white text-center mb-4">
+          <h3 className="text-2xl font-bold text-gray-900 text-center mb-4">
             Ready to Transform Your PDF Workflow?
           </h3>
-          <p className="text-base text-[#d0d5da] text-center mb-8">
+          <p className="text-base text-gray-600 text-center mb-8">
             Join millions of users who trust our platform for their document
             needs
           </p>
@@ -165,7 +165,7 @@ export const TestimonialsSection = (): JSX.Element => {
             </Button>
             <Button
               variant="outline"
-              className="bg-[#ffffff1a] text-white border-[#ffffff33] font-semibold px-8 py-4 h-[59px] rounded-lg"
+              className="bg-white text-gray-900 border-gray-200 font-semibold px-8 py-4 h-[59px] rounded-lg"
             >
               Contact Sales
             </Button>

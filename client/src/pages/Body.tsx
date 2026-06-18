@@ -13,7 +13,7 @@ export const Body = (): JSX.Element => {
     },
     {
       className:
-        "w-80 h-80 top-[410px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(59,130,246,0.15)_0%,rgba(168,85,247,0.15)_100%)]",
+        "w-80 h-80 top-[410px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(239,68,68,0.08)_0%,rgba(249,115,22,0.08)_100%)]",
     },
     {
       className:
@@ -22,31 +22,31 @@ export const Body = (): JSX.Element => {
   ];
 
   const backgroundDots = [
-    { className: "w-4 h-4 top-[102px] left-72 bg-[#ffffff33] rounded-full" },
+    { className: "w-4 h-4 top-[102px] left-72 bg-red-300/40 rounded-full" },
     {
-      className: "w-3 h-3 top-[307px] left-[996px] bg-[#f770704c] rounded-full",
+      className: "w-3 h-3 top-[307px] left-[996px] bg-red-400/40 rounded-full",
     },
     {
-      className: "w-2 h-2 top-[760px] left-[216px] bg-[#60a5fa66] rounded-full",
-    },
-    {
-      className:
-        "w-5 h-5 top-[717px] left-[1276px] bg-[#4ade8040] rounded-full",
+      className: "w-2 h-2 top-[760px] left-[216px] bg-orange-300/40 rounded-full",
     },
     {
       className:
-        "w-3 h-3 top-[858px] left-[1140px] bg-[#bf83fb59] rounded-full",
+        "w-5 h-5 top-[717px] left-[1276px] bg-pink-300/30 rounded-full",
     },
     {
       className:
-        "w-4 h-4 top-[512px] left-[1008px] bg-[#fa913c4c] rounded-full",
+        "w-3 h-3 top-[858px] left-[1140px] bg-red-300/30 rounded-full",
+    },
+    {
+      className:
+        "w-4 h-4 top-[512px] left-[1008px] bg-orange-400/40 rounded-full",
     },
   ];
 
   const backgroundLines = [
     {
       className:
-        "w-px h-32 top-[205px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(255,255,255,0.2)_50%,rgba(0,0,0,0)_100%)]",
+        "w-px h-32 top-[205px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(239,68,68,0.2)_50%,rgba(0,0,0,0)_100%)]",
     },
     {
       className:
@@ -54,12 +54,12 @@ export const Body = (): JSX.Element => {
     },
     {
       className:
-        "w-px h-28 top-[605px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(96,165,250,0.25)_50%,rgba(0,0,0,0)_100%)]",
+        "w-px h-28 top-[605px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(249,115,22,0.2)_50%,rgba(0,0,0,0)_100%)]",
     },
   ];
 
   return (
-    <div className="flex flex-col w-full relative overflow-x-hidden bg-[#111726]">
+    <div className="flex flex-col w-full relative overflow-x-hidden bg-gray-50">
       {/* Indicator line at the top */}
       <div className="absolute w-[130px] h-1 top-0 left-0 bg-red-500" />
 

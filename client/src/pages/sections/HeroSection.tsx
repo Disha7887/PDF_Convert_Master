@@ -1,4 +1,4 @@
-import { ShieldIcon, SparklesIcon, UploadIcon, ZapIcon } from "lucide-react";
+import { ArrowRight, ShieldIcon, SparklesIcon, UploadIcon, ZapIcon } from "lucide-react";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export const HeroSection = (): JSX.Element => {
   const dotElements = [
     {
       className:
-        "absolute w-4 h-4 top-[205px] left-36 bg-[#ffffff4c] rounded-full",
+        "absolute w-4 h-4 top-[205px] left-36 bg-red-300/50 rounded-full",
     },
     {
       className:
@@ -107,24 +107,24 @@ export const HeroSection = (): JSX.Element => {
   // Trust indicators
   const trustIndicators = [
     {
-      icon: <ShieldIcon className="h-4 w-4 mr-1.5 text-[#d0d5da]" />,
+      icon: <ShieldIcon className="h-4 w-4 mr-1.5 text-gray-500" />,
       text: "100% Secure",
       className: "w-[102.7px]",
     },
     {
-      icon: <ZapIcon className="h-4 w-4 mr-1.5 text-[#d0d5da]" />,
+      icon: <ZapIcon className="h-4 w-4 mr-1.5 text-gray-500" />,
       text: "Instant Processing",
       className: "w-[138.88px] ml-8",
     },
     {
-      icon: <SparklesIcon className="h-4 w-4 mr-1.5 text-[#d0d5da]" />,
+      icon: <SparklesIcon className="h-4 w-4 mr-1.5 text-gray-500" />,
       text: "Always Free",
       className: "w-[97.47px] ml-8",
     },
   ];
 
   return (
-    <section className="flex flex-col w-full items-start relative bg-[#111726] min-h-screen">
+    <section className="flex flex-col w-full items-start relative bg-white min-h-screen">
       <div className="flex flex-col w-full items-start relative">
         {/* Background decorative elements */}
         <div className="absolute w-full h-full top-0 left-0">
@@ -159,7 +159,7 @@ export const HeroSection = (): JSX.Element => {
                 <div className="flex flex-col w-full md:w-[584px] items-start relative">
                   <div className="flex flex-col w-full items-start relative">
                     <div className="flex flex-col w-full items-start relative">
-                      <Badge className="flex h-[38px] items-center px-[17px] py-[9px] bg-[#ef444433] text-red-300 rounded-full border border-solid border-[#f770704c]">
+                      <Badge className="flex h-[38px] items-center px-[17px] py-[9px] bg-red-50 text-red-700 rounded-full border border-solid border-red-200">
                         <img
                           className="mr-2"
                           alt="Margin wrap"
@@ -171,13 +171,13 @@ export const HeroSection = (): JSX.Element => {
                       </Badge>
 
                       <div className="pt-4">
-                        <h1 className="font-bold text-white text-5xl leading-[48px] max-w-[584px]">
+                        <h1 className="font-bold text-gray-900 text-5xl leading-[48px] max-w-[584px]">
                           Professional PDF tools trusted by millions
                         </h1>
                       </div>
 
                       <div className="pt-4">
-                        <p className="font-normal text-[#d0d5da] text-lg leading-7 max-w-2xl">
+                        <p className="font-normal text-gray-600 text-lg leading-7 max-w-2xl">
                           Every tool you need to use PDFs, at your fingertips.
                           All are 100% FREE and easy to use! Merge, split,
                           compress, convert, rotate, unlock and watermark PDFs
@@ -207,17 +207,13 @@ export const HeroSection = (): JSX.Element => {
 
                         <Button
                           variant="outline"
-                          className="h-[61px] px-[34px] py-[18px] bg-[#ffffff1a] text-white rounded-lg border-2 border-solid border-[#ffffff33] backdrop-blur-[2px]"
+                          className="h-[61px] px-[34px] py-[18px] bg-white text-gray-700 rounded-lg border-2 border-solid border-gray-300 hover:bg-gray-50"
                           onClick={() => {
                             console.log('Learn More button clicked from hero');
                             setLocation('/learn-more');
                           }}
                         >
-                          <img
-                            className="mr-2"
-                            alt="Margin wrap"
-                            src="/figmaAssets/margin-wrap-5.svg"
-                          />
+                          <ArrowRight className="mr-2 w-5 h-5 text-gray-700" />
                           <span className="font-semibold text-base">
                             Learn More
                           </span>
@@ -251,7 +247,7 @@ export const HeroSection = (): JSX.Element => {
                               initial={{ y: 0 }}
                             >
                               {indicator.icon}
-                              <span className="font-normal text-[#d0d5da] text-sm leading-5">
+                              <span className="font-normal text-gray-600 text-sm leading-5">
                                 {indicator.text}
                               </span>
                             </motion.div>
@@ -263,7 +259,7 @@ export const HeroSection = (): JSX.Element => {
                 </div>
 
                 {/* Right column - File upload card */}
-                <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-[#ffffff1a] rounded-3xl border-2 border-dashed border-[#6a7280] backdrop-blur-[2px]">
+                <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-white rounded-3xl border-2 border-dashed border-red-300 shadow-sm">
                   <div className="flex flex-col items-center justify-center w-full p-0">
                     <BouncingUploadIcon
                       className="mb-3"
@@ -275,11 +271,11 @@ export const HeroSection = (): JSX.Element => {
                       bgColor="bg-red-500"
                     />
 
-                    <h2 className="font-bold text-white text-xl text-center mb-3">
+                    <h2 className="font-bold text-gray-900 text-xl text-center mb-3">
                       Drop your PDF here
                     </h2>
 
-                    <p className="font-normal text-[#d0d5da] text-base text-center mb-8">
+                    <p className="font-normal text-gray-600 text-base text-center mb-8">
                       or click to browse files
                     </p>
 
@@ -301,7 +297,7 @@ export const HeroSection = (): JSX.Element => {
                             alt={`${format.format} icon`}
                             src={`/figmaAssets/margin-wrap-${index === 0 ? "26" : index === 1 ? "4" : index === 2 ? "9" : "6"}.svg`}
                           />
-                          <span className="font-normal text-[#9ca2af] text-xs text-center">
+                          <span className="font-normal text-gray-500 text-xs text-center">
                             {format.format}
                           </span>
                         </div>

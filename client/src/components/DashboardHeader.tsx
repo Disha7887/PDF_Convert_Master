@@ -90,9 +90,9 @@ export const DashboardHeader = (): JSX.Element => {
         {/* Right - Plan Status, Notifications and Profile */}
         <div className="flex items-center space-x-4">
           {/* Plan Status */}
-          <div className="flex items-center px-3 py-2 rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="flex items-center px-3 py-2 rounded-lg border border-red-200 bg-red-50">
             <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-sm font-medium text-blue-800">{user?.plan || 'Pro Plan'}</span>
+            <span className="text-sm font-medium text-red-700">{user?.plan || 'Pro Plan'}</span>
           </div>
 
           {/* Manage Plan Button */}

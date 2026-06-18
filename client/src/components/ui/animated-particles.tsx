@@ -31,12 +31,12 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
     const particleArray: Particle[] = [];
     
     const colors = [
-      'rgba(239, 68, 68, 0.3)',   // Red
-      'rgba(249, 115, 22, 0.25)', // Orange
-      'rgba(236, 72, 153, 0.2)',  // Pink
-      'rgba(59, 130, 246, 0.15)', // Blue
-      'rgba(168, 85, 247, 0.1)',  // Purple
-      'rgba(255, 255, 255, 0.1)', // White
+      'rgba(239, 68, 68, 0.4)',   // Red
+      'rgba(249, 115, 22, 0.35)', // Orange
+      'rgba(236, 72, 153, 0.3)',  // Pink
+      'rgba(220, 38, 38, 0.3)',   // Deep red
+      'rgba(251, 146, 60, 0.25)', // Light orange
+      'rgba(244, 63, 94, 0.25)',  // Rose
     ];
 
     const directions: Particle['direction'][] = [
@@ -124,7 +124,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
             width: `${Math.random() * 40 + 20}px`,
             height: '1px',
             background: `linear-gradient(90deg, transparent, ${
-              ['rgba(239, 68, 68, 0.2)', 'rgba(249, 115, 22, 0.15)', 'rgba(255, 255, 255, 0.1)'][Math.floor(Math.random() * 3)]
+              ['rgba(239, 68, 68, 0.2)', 'rgba(249, 115, 22, 0.15)', 'rgba(236, 72, 153, 0.12)'][Math.floor(Math.random() * 3)]
             }, transparent)`,
             transform: `rotate(${Math.random() * 360}deg)`,
           }}
@@ -155,7 +155,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
             backgroundColor: [
               'rgba(239, 68, 68, 0.4)', 
               'rgba(249, 115, 22, 0.3)', 
-              'rgba(255, 255, 255, 0.2)'
+              'rgba(236, 72, 153, 0.25)'
             ][Math.floor(Math.random() * 3)],
           }}
           animate={{

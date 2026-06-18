@@ -68,7 +68,7 @@ export const FooterSection = (): JSX.Element => {
   ];
 
   return (
-    <footer className="bg-[#111726] border-t border-[#374050] w-full">
+    <footer className="bg-white border-t border-gray-200 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -76,21 +76,21 @@ export const FooterSection = (): JSX.Element => {
           {/* Company Info Column */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-bold text-white mb-4 font-['Pacifico',Helvetica]">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 font-['Pacifico',Helvetica]">
                 PDF Convert Master
               </h3>
-              <p className="text-[#9ca2af] text-sm leading-relaxed">
+              <p className="text-gray-600 text-sm leading-relaxed">
                 Your trusted partner for professional PDF conversion and document management solutions.
               </p>
             </div>
 
             {/* Company Details */}
             <div className="space-y-3">
-              <h4 className="text-white font-semibold text-sm">Mizan Store Ltd</h4>
+              <h4 className="text-gray-900 font-semibold text-sm">Mizan Store Ltd</h4>
 
               <div className="flex items-start space-x-3">
-                <MapPin className="w-4 h-4 text-[#9ca2af] mt-0.5 flex-shrink-0" />
-                <div className="text-[#9ca2af] text-sm">
+                <MapPin className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                <div className="text-gray-600 text-sm">
                   <p>123 Business Street</p>
                   <p>London, SW1A 1AA</p>
                   <p>United Kingdom</p>
@@ -98,25 +98,25 @@ export const FooterSection = (): JSX.Element => {
               </div>
 
               <div className="flex items-center space-x-3">
-                <PhoneIcon className="w-4 h-4 text-[#9ca2af] flex-shrink-0" />
-                <span className="text-[#9ca2af] text-sm">+447429919748</span>
+                <PhoneIcon className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                <span className="text-gray-600 text-sm">+447429919748</span>
               </div>
 
               <div className="flex items-center space-x-3">
-                <Mail className="w-4 h-4 text-[#9ca2af] flex-shrink-0" />
-                <span className="text-[#9ca2af] text-sm">info@pdfconvertmaster.com</span>
+                <Mail className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                <span className="text-gray-600 text-sm">info@pdfconvertmaster.com</span>
               </div>
             </div>
           </div>
 
           {/* Quick Links Column */}
           <div>
-            <h4 className="text-white font-semibold text-base mb-6">Quick Links</h4>
+            <h4 className="text-gray-900 font-semibold text-base mb-6">Quick Links</h4>
             <div className="space-y-3">
               {quickLinks.map((link, index) => (
                 <button
                   key={`quick-link-${index}`}
-                  className="block text-[#9ca2af] text-sm hover:text-white transition-colors duration-200 text-left"
+                  className="block text-gray-600 text-sm hover:text-red-600 transition-colors duration-200 text-left"
                   onClick={() => handleNavigation(link.path, link.text)}
                   type="button"
                 >
@@ -128,13 +128,13 @@ export const FooterSection = (): JSX.Element => {
 
           {/* Legal Column */}
           <div>
-            <h4 className="text-white font-semibold text-base mb-6">Legal & Support</h4>
+            <h4 className="text-gray-900 font-semibold text-base mb-6">Legal & Support</h4>
             <div className="space-y-3">
               {companyLinks.map((link, index) => (
                 <button
                   key={`company-link-${index}`}
-                  className={`block text-[#9ca2af] text-sm transition-colors duration-200 text-left ${
-                    link.path ? 'hover:text-white cursor-pointer' : 'opacity-50 cursor-default'
+                  className={`block text-gray-600 text-sm transition-colors duration-200 text-left ${
+                    link.path ? 'hover:text-red-600 cursor-pointer' : 'opacity-50 cursor-default'
                   }`}
                   onClick={() => handleNavigation(link.path, link.text)}
                   disabled={!link.path}
@@ -148,15 +148,15 @@ export const FooterSection = (): JSX.Element => {
 
           {/* Newsletter & Social Column */}
           <div>
-            <h4 className="text-white font-semibold text-base mb-6">Stay Connected</h4>
+            <h4 className="text-gray-900 font-semibold text-base mb-6">Stay Connected</h4>
 
             <div className="mb-6">
-              <p className="text-[#9ca2af] text-sm mb-4">
+              <p className="text-gray-600 text-sm mb-4">
                 Subscribe to our newsletter for updates and news.
               </p>
               <div className="space-y-3">
                 <Input
-                  className="bg-gray-800 text-white border-[#4a5462] placeholder:text-[#9ca2af] text-sm"
+                  className="bg-white text-gray-900 border-gray-300 placeholder:text-gray-400 text-sm"
                   placeholder="Enter your email"
                 />
                 <Button className="w-full text-sm">
@@ -167,13 +167,13 @@ export const FooterSection = (): JSX.Element => {
 
             {/* Social Media Links */}
             <div>
-              <h5 className="text-white font-medium text-sm mb-3">Follow Us</h5>
+              <h5 className="text-gray-900 font-medium text-sm mb-3">Follow Us</h5>
               <div className="flex space-x-4">
                 <a
                   href="https://facebook.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[#9ca2af] hover:bg-blue-600 hover:text-white transition-all duration-200"
+                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
                   aria-label="Facebook"
                 >
                   <Facebook className="w-4 h-4" />
@@ -182,7 +182,7 @@ export const FooterSection = (): JSX.Element => {
                   href="https://instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[#9ca2af] hover:bg-pink-600 hover:text-white transition-all duration-200"
+                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-pink-600 hover:text-white transition-all duration-200"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-4 h-4" />
@@ -191,7 +191,7 @@ export const FooterSection = (): JSX.Element => {
                   href="https://linkedin.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[#9ca2af] hover:bg-blue-700 hover:text-white transition-all duration-200"
+                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-700 hover:text-white transition-all duration-200"
                   aria-label="LinkedIn"
                 >
                   <Linkedin className="w-4 h-4" />
@@ -202,11 +202,11 @@ export const FooterSection = (): JSX.Element => {
         </div>
 
         {/* Footer Bottom */}
-        <div className="mt-12 pt-8 border-t border-[#374050]">
+        <div className="mt-12 pt-8 border-t border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
 
             {/* Copyright */}
-            <div className="text-[#9ca2af] text-sm">
+            <div className="text-gray-600 text-sm">
               © {new Date().getFullYear()} PDF Convert Master by Mizan Store Ltd. All rights reserved.
             </div>
 
@@ -218,7 +218,7 @@ export const FooterSection = (): JSX.Element => {
                   className="flex items-center space-x-2"
                 >
                   {item.icon}
-                  <span className="text-[#9ca2af] text-sm whitespace-nowrap">
+                  <span className="text-gray-600 text-sm whitespace-nowrap">
                     {item.text}
                   </span>
                 </div>

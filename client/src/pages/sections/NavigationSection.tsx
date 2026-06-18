@@ -35,12 +35,12 @@ export const NavigationSection = (): JSX.Element => {
   };
 
   return (
-    <header className="w-full h-[65px] bg-[#111726] border-b border-[#374050] shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+    <header className="w-full h-[65px] bg-white border-b border-gray-200 shadow-[0px_1px_3px_0px_#0000000d,0px_1px_2px_-1px_#0000000d]">
       <div className="max-w-screen-xl mx-auto px-8 h-[65px]">
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <div className="flex items-center h-7">
-            <h1 className="[font-family:'Pacifico',Helvetica] font-normal text-white text-xl leading-7 whitespace-nowrap">
+            <h1 className="[font-family:'Pacifico',Helvetica] font-normal text-gray-900 text-xl leading-7 whitespace-nowrap">
               PDF Convert Master
             </h1>
           </div>
@@ -51,7 +51,7 @@ export const NavigationSection = (): JSX.Element => {
               {navItems.map((item, index) => (
                 <NavigationMenuItem key={index} className={item.width}>
                   <NavigationMenuLink
-                    className="[font-family:'Roboto',Helvetica] font-medium text-[#d0d5da] text-base leading-6 whitespace-nowrap cursor-pointer hover:text-white transition-colors"
+                    className="[font-family:'Roboto',Helvetica] font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors"
                     onClick={() => handleNavClick(item.href)}
                   >
                     {item.name}
@@ -65,7 +65,7 @@ export const NavigationSection = (): JSX.Element => {
           <div className="flex items-center space-x-3">
             <Button
               variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-[#4a5462] [font-family:'Roboto',Helvetica] font-medium !text-white text-base hover:!text-white hover:bg-[#4a5462] transition-colors bg-transparent"
+              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300 [font-family:'Roboto',Helvetica] font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
               onClick={() => setLocation('/signin')}
             >
               Log In
