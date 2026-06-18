@@ -19,6 +19,12 @@ import {
   type WorkingImage,
 } from "./ImageEditTools";
 import { loadImageFromUrl, downloadBlob, withSuffix, exportExtension } from "@/lib/imageTools";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 // Map frontend tool config ids to the exact backend ToolType strings.
 // NOTE: several image tools are singular on the backend (resize_image, not
@@ -115,6 +121,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const [mergeFiles, setMergeFiles] = useState<File[]>([]);
   const [editImage, setEditImage] = useState<WorkingImage | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
   const editUrlRef = useRef<string | null>(null);
@@ -224,6 +231,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const selectFile = (incoming: FileList | File[]) => {
     const arr = Array.from(incoming);
     if (arr.length === 0) return;
+    // A file was chosen — close the upload popup; the card now shows the result.
+    setUploadOpen(false);
 
     // PDF Merge accumulates multiple validated files; everything else is single-file.
     if (isMultiMerge) {
@@ -414,6 +423,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     setOutputName("");
     setIsDragOver(false);
     setModalOpen(false);
+    setUploadOpen(false);
     setWorking(null);
   };
 
@@ -446,9 +456,21 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     </div>
   );
 
-  if (stage === "idle") {
-    return (
-      <div className={`${cardBase} ${cardIdle}`} data-testid={`card-tool-${toolConfig.id}`}>
+  // The dropzone popup (matches the reference upload screen). Opens when the
+  // card is clicked: the user can drag-drop or browse, the button shows this
+  // tool's action label, and the supported formats are listed dynamically.
+  const uploadDialog = (
+    <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogTitle className="sr-only">
+          Upload files for {toolConfig.title}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          {toolConfig.description}
+        </DialogDescription>
+
+        {/* The file input lives inside the dialog (not the background card) so
+            it is never in an inert/aria-hidden subtree while the popup is open. */}
         <input
           ref={inputRef}
           type="file"
@@ -458,8 +480,9 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           className="hidden"
           data-testid={`input-file-${toolConfig.id}`}
         />
+
         <div
-          className={`flex flex-col h-full ${isDragOver ? "opacity-80" : ""}`}
+          onClick={() => inputRef.current?.click()}
           onDragOver={(e) => {
             e.preventDefault();
             setIsDragOver(true);
@@ -469,42 +492,120 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
             setIsDragOver(false);
           }}
           onDrop={handleDrop}
+          className={`flex flex-col items-center justify-center text-center cursor-pointer rounded-2xl border-2 border-dashed px-6 py-10 transition-colors ${
+            isDragOver
+              ? "border-blue-500 bg-blue-50"
+              : "border-blue-200 bg-blue-50/40 hover:bg-blue-50"
+          }`}
+          data-testid={`dropzone-${toolConfig.id}`}
         >
-          <div className="flex justify-center mb-4">
-            <div
-              className={`w-16 h-16 p-1 flex items-center justify-center rounded-2xl border ${toolConfig.iconBorderColor} ${toolConfig.iconBgColor} shadow-md`}
-            >
-              <IconComponent className={`w-9 h-9 ${toolConfig.iconColor}`} />
-            </div>
+          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-600 shadow-lg mb-5">
+            <Upload className="w-7 h-7 text-white" />
           </div>
 
-          <h3 className="text-lg font-bold text-gray-900 text-center mb-3">
-            {toolConfig.title}
+          <h3 className="text-xl font-bold text-gray-900 mb-1">
+            {toolConfig.dropAreaText}
           </h3>
-
-          <p className="text-sm text-gray-600 text-center mb-4 flex-grow flex items-center justify-center px-2">
-            {toolConfig.description}
-          </p>
-
-          <div className="text-center mb-4">
-            <div className="text-xs text-gray-500 bg-gray-100 rounded-lg px-3 py-2 border border-gray-200">
-              <span className="font-medium">Accepts:</span> {formatList}
-            </div>
-            <div className="text-xs text-gray-400 mt-1">
-              Max: {toolConfig.maxFileSize}
-            </div>
-          </div>
+          <p className="text-sm text-gray-500 mb-6">or click to browse files</p>
 
           <Button
-            onClick={() => inputRef.current?.click()}
-            className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl"
+            onClick={(e) => {
+              e.stopPropagation();
+              inputRef.current?.click();
+            }}
+            className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl"
             data-testid={`button-select-${toolConfig.id}`}
           >
             <Upload className="w-4 h-4 mr-2" />
-            {toolConfig.buttonText}
+            {getActionLabel(toolConfig)}
           </Button>
+
+          {/* Supported file types — generated from this tool's accepted formats */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-6">
+            {toolConfig.acceptedFormats.map((fmt) => (
+              <span
+                key={fmt}
+                className="inline-flex items-center gap-1 text-xs font-medium text-gray-500"
+                data-testid={`format-${toolConfig.id}-${fmt.replace(".", "")}`}
+              >
+                <FileText className="w-3.5 h-3.5 text-gray-400" />
+                {fmt.replace(".", "").toUpperCase()}
+              </span>
+            ))}
+          </div>
+          <p className="text-[11px] text-gray-400 mt-3">
+            Max file size: {toolConfig.maxFileSize}
+          </p>
         </div>
-      </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (stage === "idle") {
+    return (
+      <>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setUploadOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setUploadOpen(true);
+            }
+          }}
+          className={`${cardBase} ${cardIdle} cursor-pointer`}
+          data-testid={`card-tool-${toolConfig.id}`}
+        >
+          <div
+            className={`flex flex-col h-full ${isDragOver ? "opacity-80" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setIsDragOver(false);
+            }}
+            onDrop={handleDrop}
+          >
+            <div className="flex justify-center mb-4">
+              <div
+                className={`w-16 h-16 p-1 flex items-center justify-center rounded-2xl border ${toolConfig.iconBorderColor} ${toolConfig.iconBgColor} shadow-md`}
+              >
+                <IconComponent className={`w-9 h-9 ${toolConfig.iconColor}`} />
+              </div>
+            </div>
+
+            <h3 className="text-lg font-bold text-gray-900 text-center mb-3">
+              {toolConfig.title}
+            </h3>
+
+            <p className="text-sm text-gray-600 text-center mb-4 flex-grow flex items-center justify-center px-2">
+              {toolConfig.description}
+            </p>
+
+            <div className="text-center mb-4">
+              <div className="text-xs text-gray-500 bg-gray-100 rounded-lg px-3 py-2 border border-gray-200">
+                <span className="font-medium">Accepts:</span> {formatList}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                Max: {toolConfig.maxFileSize}
+              </div>
+            </div>
+
+            <div
+              className="w-full h-12 flex items-center justify-center gap-2 rounded-full border-2 border-dashed border-gray-300 text-sm font-semibold text-gray-500"
+              data-testid={`hint-upload-${toolConfig.id}`}
+            >
+              <Upload className="w-4 h-4" />
+              Click to upload
+            </div>
+          </div>
+        </div>
+
+        {uploadDialog}
+      </>
     );
   }
 
