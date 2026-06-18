@@ -48,6 +48,8 @@ const MIME_TYPES: { [key: string]: string } = {
   'bmp': 'image/bmp',
   'webp': 'image/webp',
   'tiff': 'image/tiff',
+  'tif': 'image/tiff',
+  'avif': 'image/avif',
   'zip': 'application/zip'
 };
 
@@ -504,6 +506,19 @@ async function convertImageFormat(imageBuffer: Buffer, inputExt: string | undefi
       case 'webp':
         convertedBuffer = await sharp(imageBuffer).webp({ quality: 90 }).toBuffer();
         mimeType = 'image/webp';
+        break;
+      case 'gif':
+        convertedBuffer = await sharp(imageBuffer).gif().toBuffer();
+        mimeType = 'image/gif';
+        break;
+      case 'avif':
+        convertedBuffer = await sharp(imageBuffer).avif({ quality: 80 }).toBuffer();
+        mimeType = 'image/avif';
+        break;
+      case 'tif':
+      case 'tiff':
+        convertedBuffer = await sharp(imageBuffer).tiff({ quality: 90 }).toBuffer();
+        mimeType = 'image/tiff';
         break;
       default:
         convertedBuffer = await sharp(imageBuffer).jpeg({ quality: 90 }).toBuffer();
@@ -1596,6 +1611,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           jpg: "jpg",
           jpeg: "jpg",
           webp: "webp",
+          gif: "gif",
+          avif: "avif",
+          tiff: "tiff",
+          tif: "tiff",
         };
         const requested = (options?.outputFormat || "png").toString().toLowerCase();
         outputExtension = allowedFormats[requested] || "png";

@@ -526,6 +526,9 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
                 <option value="png">PNG</option>
                 <option value="jpg">JPG</option>
                 <option value="webp">WebP</option>
+                <option value="gif">GIF</option>
+                <option value="avif">AVIF</option>
+                <option value="tiff">TIFF</option>
               </select>
             </div>
           )}

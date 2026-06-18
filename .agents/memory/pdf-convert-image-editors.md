@@ -21,6 +21,11 @@ description: Durable design + security rules for the bespoke image-tool pages, t
 - **Why:** architect flagged a real mislabel bug; the standalone pages already pass `exportExtension`.
 - **How to apply:** any new client-side canvas-export download in this app must derive its extension from `exportExtension`, never from the source filename.
 
+# Convert Image Format: supported output formats are Sharp-limited
+- The `convert-image-format` Tools card (server-side `/api/convert`, toolType `convert_image_format`) supports output to PNG, JPG, WebP, GIF, AVIF, TIFF — the full set Sharp/libvips can ENCODE here. BMP and HEIC/HEIF are intentionally excluded: Sharp can't write BMP at all, and this libvips lacks HEVC compression so `.heif()` errors ("Unsupported compression"). AVIF works (it's a HEIF/AV1 container; re-sniffs as `heif`).
+- Two places must stay in lockstep: the frontend `<option>` list in `Tools.tsx` AND the backend `allowedFormats` whitelist + `convertImageFormat()` switch in `routes.ts`. The whitelist maps the user value to a fixed extension token (jpeg→jpg, tif→tiff, invalid→png) so the output filename extension can never be attacker-controlled — keep it that way.
+- **How to apply:** before adding any new output format, confirm Sharp can encode it in THIS environment (test `.toBuffer()`), add it to all three spots, and add its MIME to `MIME_TYPES`. Don't add BMP/HEIC without first adding real encoder support.
+
 # Crop/Resize/Rotate edit client-side; only Upscale hits the server
 - The Crop, Resize, and Rotate pages do all editing in the browser via `<canvas>` (shared helpers in `client/src/lib/imageTools.ts`), then offer Download + "Save to server". They never call `/api/convert`.
 - Upscale is the only one that uses the server pipeline: POST `/api/convert` (toolType `upscale_image`) → poll `/api/jobs/:id` → GET `/api/download/:id` (download deletes the file after the first fetch — fetch once into a blob).

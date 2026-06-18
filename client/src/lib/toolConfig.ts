@@ -244,7 +244,7 @@ export const toolConfigs: Record<string, ToolConfig> = {
   "convert-image-format": {
     id: "convert-image-format",
     title: "Convert Image Format",
-    description: "Convert between JPG, PNG, WebP, GIF, BMP with quality settings",
+    description: "Convert images to JPG, PNG, WebP, GIF, AVIF or TIFF with quality settings",
     acceptedFormats: [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"],
     maxFileSize: "25MB",
     buttonText: "Select Images",
