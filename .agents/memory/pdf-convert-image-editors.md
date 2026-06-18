@@ -5,15 +5,21 @@ description: Durable design + security rules for the bespoke image-tool pages, t
 
 # The "Image Editor" is 3 SEPARATE popup tools, not one combined page
 - The user explicitly rejected a single combined editor. The polished design lives in `client/src/pages/ImageEditTools.tsx`, which exports three page components — `ResizeImageTool`/`CropImageTool`/`RotateImageTool` — mounted at `/image-editor/resize`, `/image-editor/crop`, `/image-editor/rotate`. There is intentionally NO bare `/image-editor` index route.
-- Nav: per user request, the standalone tools are NOT in the navbar (there is no "Image Editor" nav item in `NavigationSection.tsx` or `DashboardHeader.tsx`). The pages exist only as direct routes; user-facing image editing is surfaced via the Tools-page cards (`toolConfig.ts` ids `resize-images`/`crop-images`/`rotate-images`), which do inline server-side conversion via `/api/convert` — NOT these client-side pages.
+- Nav: per user request, the standalone tools are NOT in the navbar (there is no "Image Editor" nav item in `NavigationSection.tsx` or `DashboardHeader.tsx`). The pages exist only as direct routes; user-facing image editing is surfaced via the Tools-page cards (`toolConfig.ts` ids `resize-images`/`crop-images`/`rotate-images`).
+- The Tools-page resize/crop/rotate cards now open MANUAL popups client-side (they import `ResizeModal`/`CropModal`/`RotateModal` + `WorkingImage`, which `ImageEditTools.tsx` exports for this reason) — selecting a file auto-opens the matching modal, Apply edits in-canvas, then Download. They no longer call `/api/convert`. The other ~17 Tools cards keep the server `/api/convert` flow.
 - A shared `SingleImageTool` shell does: upload dropzone → on upload the tool's own modal auto-opens → Apply renders to `<canvas>`, returns a blob that becomes the single working image (so the same op can be re-applied), records a history entry, and closes the modal → Download. The 3 modals (ResizeModal/CropModal/RotateModal) live in the same file.
 - 100% client-side (`client/src/lib/imageTools.ts`); no server calls. Output format constrained by `exportExtension` (jpg/jpeg/png/webp); JPEG output gets a white background fill.
 - **Why:** user wants 3 distinct, separately-named tools; a combined "editor page" was rejected.
 - **How to apply:** the user wanted these tools out of the navbar but the pages kept — don't re-add a nav link without asking; follow the read-current→canvas→blob→commit pattern; guard async decodes with a mounted flag + a seq token (`loadSeqRef`) and revoke superseded/erroring object URLs to avoid leaks.
 
 # Older /upload/*-image pages still exist and are a duplicate entry point
-- The simpler original tools `ResizeImageUpload`/`CropImageUpload`/`RotateImageUpload` (routes `/upload/resize-image|crop-image|rotate-image`) were left untouched. The Tools page cards (`client/src/lib/toolConfig.ts`) still link resize/crop/rotate to these OLD pages, not the new popup tools — a known duplication left in place per scope.
-- **How to apply:** if the user wants the polished popup tools everywhere, retarget those three `toolConfig.ts` routes to `/image-editor/{resize,crop,rotate}` (and consider removing/redirecting the old pages).
+- The simpler original tools `ResizeImageUpload`/`CropImageUpload`/`RotateImageUpload` (routes `/upload/resize-image|crop-image|rotate-image`) were left untouched and are still routed in `App.tsx` — a known duplication. They are NOT what the Tools-page cards use anymore (those open the popup modals; see the section above).
+- **How to apply:** if you ever consolidate, the Tools cards already give the polished popup UX; the `/upload/*-image` pages can be removed/redirected if the user wants to drop the duplicate entry point.
+
+# Tools-card manual edit: download extension must follow exportExtension, not the input name
+- When downloading a popup-edited image from a Tools card, name it `withSuffix(name, suffix, exportExtension(name))` — NOT `withSuffix(name, suffix)`. Canvas re-encodes gif/bmp (anything outside jpg/jpeg/png/webp) as PNG, so keeping the original `.gif`/`.bmp` extension would label PNG bytes wrong.
+- **Why:** architect flagged a real mislabel bug; the standalone pages already pass `exportExtension`.
+- **How to apply:** any new client-side canvas-export download in this app must derive its extension from `exportExtension`, never from the source filename.
 
 # Crop/Resize/Rotate edit client-side; only Upscale hits the server
 - The Crop, Resize, and Rotate pages do all editing in the browser via `<canvas>` (shared helpers in `client/src/lib/imageTools.ts`), then offer Download + "Save to server". They never call `/api/convert`.

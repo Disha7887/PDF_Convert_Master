@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
 import {
@@ -10,7 +10,15 @@ import {
   X,
   RefreshCw,
   FileText,
+  SlidersHorizontal,
 } from "lucide-react";
+import {
+  ResizeModal,
+  CropModal,
+  RotateModal,
+  type WorkingImage,
+} from "./ImageEditTools";
+import { loadImageFromUrl, downloadBlob, withSuffix, exportExtension } from "@/lib/imageTools";
 
 // Map frontend tool config ids to the exact backend ToolType strings.
 // NOTE: several image tools are singular on the backend (resize_image, not
@@ -36,6 +44,21 @@ const toolTypeMap: Record<string, string> = {
   "split-pdf": "split_pdf",
   "compress-pdf": "compress_pdf",
   "rotate-pdf": "rotate_pdf",
+};
+
+// These three tools are handled entirely in the browser with a manual-options
+// popup (set width/height, crop region, or rotation) instead of a server-side
+// /api/convert call with no options.
+type EditOp = "resize" | "crop" | "rotate";
+const manualEditMap: Record<string, EditOp> = {
+  "resize-images": "resize",
+  "crop-images": "crop",
+  "rotate-images": "rotate",
+};
+const editSuffixMap: Record<EditOp, string> = {
+  resize: "resized",
+  crop: "cropped",
+  rotate: "rotated",
 };
 
 type CardStage = "idle" | "ready" | "converting" | "done" | "error";
@@ -88,16 +111,104 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const [outputName, setOutputName] = useState<string>("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [targetFormat, setTargetFormat] = useState<string>("png");
+  const [editImage, setEditImage] = useState<WorkingImage | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
+  const editUrlRef = useRef<string | null>(null);
+  // Bumped on every new edit action (open/apply) and on reset; an async decode
+  // whose token no longer matches is stale and must not touch state.
+  const loadSeqRef = useRef(0);
 
   useEffect(() => {
     return () => {
       mountedRef.current = false;
+      if (editUrlRef.current) URL.revokeObjectURL(editUrlRef.current);
     };
   }, []);
 
+  const editOp = manualEditMap[toolConfig.id];
+  const isManualEdit = Boolean(editOp);
   const needsFormatPicker = toolConfig.id === "convert-image-format";
+
+  // Track the single live object URL for the working image so it can be revoked
+  // when replaced or on unmount, avoiding leaks across re-edits.
+  const setWorking = (wi: WorkingImage | null) => {
+    if (editUrlRef.current && (!wi || wi.url !== editUrlRef.current)) {
+      URL.revokeObjectURL(editUrlRef.current);
+    }
+    editUrlRef.current = wi ? wi.url : null;
+    setEditImage(wi);
+  };
+
+  // Load the picked file into a working image and open its manual-options popup.
+  const openEditor = async (picked: File) => {
+    const url = URL.createObjectURL(picked);
+    const seq = ++loadSeqRef.current;
+    try {
+      const img = await loadImageFromUrl(url);
+      if (!mountedRef.current || seq !== loadSeqRef.current) {
+        URL.revokeObjectURL(url);
+        return;
+      }
+      setWorking({
+        blob: picked,
+        url,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        name: picked.name,
+      });
+      setFile(picked);
+      setError(null);
+      setStage("ready");
+      setModalOpen(true);
+    } catch {
+      URL.revokeObjectURL(url);
+      if (!mountedRef.current || seq !== loadSeqRef.current) return;
+      setError("Could not load this image. It may be corrupted or unsupported.");
+      setStage("error");
+    }
+  };
+
+  // Modal "Apply" callback: the edited blob becomes the new working image so the
+  // result can be downloaded (and re-edited), then show the done state.
+  const handleEditApply = async (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const seq = ++loadSeqRef.current;
+    try {
+      const img = await loadImageFromUrl(url);
+      if (!mountedRef.current || seq !== loadSeqRef.current) {
+        URL.revokeObjectURL(url);
+        return;
+      }
+      const baseName = file?.name ?? editImage?.name ?? "image.png";
+      setWorking({
+        blob,
+        url,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        name: baseName,
+      });
+      setModalOpen(false);
+      setStage("done");
+    } catch {
+      URL.revokeObjectURL(url);
+      if (!mountedRef.current || seq !== loadSeqRef.current) return;
+      setModalOpen(false);
+      setError("Could not process the edited image.");
+      setStage("error");
+    }
+  };
+
+  const handleEditDownload = () => {
+    if (!editImage || !editOp) return;
+    // Canvas re-encodes non-jpeg/png/webp inputs (e.g. gif/bmp) as PNG, so the
+    // download extension must match the actual exported bytes.
+    downloadBlob(
+      editImage.blob,
+      withSuffix(editImage.name, editSuffixMap[editOp], exportExtension(editImage.name)),
+    );
+  };
 
   const acceptAttr = toolConfig.acceptedFormats.join(",");
   const formatList = toolConfig.acceptedFormats
@@ -105,28 +216,30 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     .join(", ");
   const maxSizeBytes = (parseFloat(toolConfig.maxFileSize) || 50) * 1024 * 1024;
 
-  const selectFile = useCallback(
-    (incoming: FileList | File[]) => {
-      const picked = Array.from(incoming)[0];
-      if (!picked) return;
+  const selectFile = (incoming: FileList | File[]) => {
+    const picked = Array.from(incoming)[0];
+    if (!picked) return;
 
-      const ext = "." + (picked.name.split(".").pop()?.toLowerCase() || "");
-      if (!toolConfig.acceptedFormats.includes(ext)) {
-        setError(`Unsupported file type. Accepts: ${formatList}`);
-        setStage("error");
-        return;
-      }
-      if (picked.size > maxSizeBytes) {
-        setError(`File is too large. Max ${toolConfig.maxFileSize}.`);
-        setStage("error");
-        return;
-      }
-      setFile(picked);
-      setError(null);
-      setStage("ready");
-    },
-    [toolConfig.acceptedFormats, toolConfig.maxFileSize, formatList, maxSizeBytes],
-  );
+    const ext = "." + (picked.name.split(".").pop()?.toLowerCase() || "");
+    if (!toolConfig.acceptedFormats.includes(ext)) {
+      setError(`Unsupported file type. Accepts: ${formatList}`);
+      setStage("error");
+      return;
+    }
+    if (picked.size > maxSizeBytes) {
+      setError(`File is too large. Max ${toolConfig.maxFileSize}.`);
+      setStage("error");
+      return;
+    }
+    // Manual image tools open a popup to set options instead of converting.
+    if (isManualEdit) {
+      void openEditor(picked);
+      return;
+    }
+    setFile(picked);
+    setError(null);
+    setStage("ready");
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -229,6 +342,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   };
 
   const reset = () => {
+    loadSeqRef.current += 1; // invalidate any in-flight edit decode
     setStage("idle");
     setFile(null);
     setProgress(0);
@@ -236,6 +350,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     setDownloadUrl(null);
     setOutputName("");
     setIsDragOver(false);
+    setModalOpen(false);
+    setWorking(null);
   };
 
   const cardBase =
@@ -340,8 +456,31 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       />
       {CompactHeader}
 
-      {/* READY */}
-      {stage === "ready" && file && (
+      {/* Manual-edit option popups (resize / crop / rotate) */}
+      {isManualEdit && modalOpen && editImage && editOp === "resize" && (
+        <ResizeModal
+          image={editImage}
+          onApply={handleEditApply}
+          onCancel={() => setModalOpen(false)}
+        />
+      )}
+      {isManualEdit && modalOpen && editImage && editOp === "crop" && (
+        <CropModal
+          image={editImage}
+          onApply={handleEditApply}
+          onCancel={() => setModalOpen(false)}
+        />
+      )}
+      {isManualEdit && modalOpen && editImage && editOp === "rotate" && (
+        <RotateModal
+          image={editImage}
+          onApply={handleEditApply}
+          onCancel={() => setModalOpen(false)}
+        />
+      )}
+
+      {/* READY (server-conversion tools) */}
+      {stage === "ready" && file && !isManualEdit && (
         <div
           className="flex flex-col"
           onDragOver={(e) => {
@@ -412,6 +551,47 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         </div>
       )}
 
+      {/* READY (manual image-edit tools) */}
+      {stage === "ready" && file && isManualEdit && (
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3 p-3 mb-4 rounded-xl border border-gray-200 bg-white">
+            <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 shrink-0">
+              <FileText className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p
+                className="text-sm font-medium text-gray-900 truncate"
+                data-testid={`text-filename-${toolConfig.id}`}
+              >
+                {file.name}
+              </p>
+              <p className="text-xs text-gray-500">
+                {editImage
+                  ? `${editImage.width} × ${editImage.height}px`
+                  : formatBytes(file.size)}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setModalOpen(true)}
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl mb-2"
+            data-testid={`button-edit-${toolConfig.id}`}
+          >
+            <SlidersHorizontal className="w-4 h-4 mr-2" />
+            {getActionLabel(toolConfig)}
+          </Button>
+
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
+            data-testid={`button-change-${toolConfig.id}`}
+          >
+            Choose a different file
+          </button>
+        </div>
+      )}
+
       {/* CONVERTING */}
       {stage === "converting" && (
         <div className="flex flex-col items-center justify-center py-6">
@@ -435,8 +615,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         </div>
       )}
 
-      {/* DONE */}
-      {stage === "done" && (
+      {/* DONE (server-conversion tools) */}
+      {stage === "done" && !isManualEdit && (
         <div className="flex flex-col items-center justify-center py-4">
           <div className="w-14 h-14 flex items-center justify-center rounded-full bg-green-50 mb-3">
             <CheckCircle2 className="w-8 h-8 text-green-600" />
@@ -464,6 +644,47 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
             data-testid={`button-again-${toolConfig.id}`}
           >
             Convert another file
+          </button>
+        </div>
+      )}
+
+      {/* DONE (manual image-edit tools) */}
+      {stage === "done" && isManualEdit && (
+        <div className="flex flex-col items-center justify-center py-4">
+          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-green-50 mb-3">
+            <CheckCircle2 className="w-8 h-8 text-green-600" />
+          </div>
+          <p className="text-base font-bold text-gray-900 mb-1">Ready!</p>
+          <p
+            className="text-xs text-gray-500 text-center truncate max-w-full px-2 mb-5"
+            data-testid={`text-output-${toolConfig.id}`}
+          >
+            {editImage ? `${editImage.width} × ${editImage.height}px` : ""}
+          </p>
+
+          <Button
+            onClick={handleEditDownload}
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl mb-2"
+            data-testid={`button-download-${toolConfig.id}`}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download
+          </Button>
+
+          <button
+            onClick={() => setModalOpen(true)}
+            className="text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
+            data-testid={`button-editagain-${toolConfig.id}`}
+          >
+            Edit again
+          </button>
+
+          <button
+            onClick={reset}
+            className="text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
+            data-testid={`button-again-${toolConfig.id}`}
+          >
+            Use another file
           </button>
         </div>
       )}

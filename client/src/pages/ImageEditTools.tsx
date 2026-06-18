@@ -49,7 +49,7 @@ const MAX_DIM = 10000;
 
 type Operation = "resize" | "crop" | "rotate";
 
-interface WorkingImage {
+export interface WorkingImage {
   blob: Blob;
   url: string;
   width: number;
@@ -66,7 +66,7 @@ function needsWhiteBackground(name: string): boolean {
 
 /* ----------------------------- Resize modal ----------------------------- */
 
-function ResizeModal({
+export function ResizeModal({
   image,
   onApply,
   onCancel,
@@ -217,7 +217,7 @@ function toPixelCrop(c: Crop, mediaWidth: number, mediaHeight: number): PixelCro
   };
 }
 
-function CropModal({
+export function CropModal({
   image,
   onApply,
   onCancel,
@@ -418,7 +418,7 @@ function CropModal({
 
 /* ----------------------------- Rotate modal ----------------------------- */
 
-function RotateModal({
+export function RotateModal({
   image,
   onApply,
   onCancel,
