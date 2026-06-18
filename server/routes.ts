@@ -1577,7 +1577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Process file asynchronously
-      processFile(job.id, req.file, tool, fileName, toolType)
+      processFile(job.id, req.file, tool, fileName, toolType, options)
         .catch(error => {
           console.error(`Processing failed for job ${job.id}:`, error);
         });
@@ -1603,7 +1603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Process file function
-  async function processFile(jobId: number, file: Express.Multer.File, tool: any, fileName: string, toolType: ToolType) {
+  async function processFile(jobId: number, file: Express.Multer.File, tool: any, fileName: string, toolType: ToolType, options: Record<string, any> = {}) {
     const startTime = Date.now();
     
     try {
@@ -1657,7 +1657,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const inputName = fileName.substring(0, fileName.lastIndexOf('.'));
       const fileExtension = fileName.split('.').pop()?.toLowerCase();
-      const outputExtension = tool.outputFormat === "same" ? fileExtension : tool.outputFormat;
+      let outputExtension = tool.outputFormat === "same" ? fileExtension : tool.outputFormat;
+      // "Convert Image Format" lets the user pick the target format.
+      if (toolType === ToolType.CONVERT_IMAGE_FORMAT) {
+        const allowedFormats: Record<string, string> = {
+          png: "png",
+          jpg: "jpg",
+          jpeg: "jpg",
+          webp: "webp",
+        };
+        const requested = (options?.outputFormat || "png").toString().toLowerCase();
+        outputExtension = allowedFormats[requested] || "png";
+      }
       const outputFilename = `${inputName}_converted.${outputExtension}`;
       
       // PERFORM ACTUAL CONVERSION

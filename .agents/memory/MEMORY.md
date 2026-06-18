@@ -1,1 +1,1 @@
-- [PDF Convert frontend gotchas](pdf-convert-frontend-gotchas.md) — live app is `client/` not `frontend/`; Figma hardcoded classes (no dark-mode); white figma SVG icons vanish on light buttons; `npm run check` has pre-existing routes_broken.ts failure.
+- [PDF Convert frontend gotchas](pdf-convert-frontend-gotchas.md) — live app is `client/` not `frontend/`; Figma hardcoded classes (no dark-mode); white figma SVG icons vanish on light buttons; `npm run check` has pre-existing routes_broken.ts failure; server/* edits need a workflow restart (tsx, not tsx watch).

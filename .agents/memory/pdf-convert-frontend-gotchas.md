@@ -19,3 +19,8 @@ description: Non-obvious traps when editing/theming this Figma-exported React ap
 # `npm run check` has a pre-existing unrelated failure
 - `npm run check` (tsc) fails due to syntax errors in `server/routes_broken.ts`, unrelated to frontend work. `npm run build` succeeds.
 - **How to apply:** don't treat `npm run check` failures from `routes_broken.ts` as caused by your change; use `npm run build` as the compile gate.
+
+# Backend edits need a manual workflow restart (no hot-reload)
+- The `Start application` workflow runs `tsx server/index.ts` (NOT `tsx watch`). Vite hot-reloads the `client/` frontend, but server/* changes do NOT take effect until you restart the workflow.
+- **Why:** after editing server logic, live API tests kept showing the OLD behavior until a restart — easy to misread as "my fix didn't work."
+- **How to apply:** after any edit under `server/`, restart the `Start application` workflow before testing the API.
