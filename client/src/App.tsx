@@ -45,7 +45,7 @@ import { UpscaleImageUpload } from "@/pages/upload/UpscaleImage";
 import { RemoveBackgroundUpload } from "@/pages/upload/RemoveBackground";
 import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
 import { UploadDemo } from "@/pages/UploadDemo";
-import { ImageEditor } from "@/pages/ImageEditor";
+import { ResizeImageTool, CropImageTool, RotateImageTool } from "@/pages/ImageEditTools";
 import { Features } from "@/pages/Features";
 import { LearnMore } from "@/pages/LearnMore";
 
@@ -298,9 +298,21 @@ function Router() {
         </DynamicLayout>
       </Route>
 
-      <Route path="/image-editor">
+      <Route path="/image-editor/resize">
         <DynamicLayout>
-          <ImageEditor />
+          <ResizeImageTool />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/image-editor/crop">
+        <DynamicLayout>
+          <CropImageTool />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/image-editor/rotate">
+        <DynamicLayout>
+          <RotateImageTool />
         </DynamicLayout>
       </Route>
 

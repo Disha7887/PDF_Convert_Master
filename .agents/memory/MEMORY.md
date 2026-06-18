@@ -1,4 +1,4 @@
 - [Frontend gotchas](pdf-convert-frontend-gotchas.md) — non-obvious traps when editing/theming this Figma-exported React app (which frontend is actually live, etc.).
 - [Conversion engine](pdf-convert-conversion-engine.md) — durable constraints for the real file converters in server/routes.ts (no placeholders, HTML→PDF security, the tool needing an API key).
-- [Image editor tools](pdf-convert-image-editors.md) — crop/resize/rotate/upscale pages, the unified client-side /image-editor (chains ops via one working blob), and /api/uploads security.
+- [Image editor tools](pdf-convert-image-editors.md) — crop/resize/rotate/upscale pages, the 3 separate client-side popup tools at /image-editor/{resize,crop,rotate}, and /api/uploads security.
 - [Brand color class names](brand-color-classes.md) — several "red"-named gradient utilities are redefined in index.css to render blue; renaming them to "-blue-" breaks the build.

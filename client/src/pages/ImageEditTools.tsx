@@ -7,7 +7,6 @@ import ReactCrop, {
 } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import {
-  Wand2,
   Maximize2,
   Crop as CropIcon,
   RotateCw,
@@ -580,14 +579,33 @@ function RotateModal({
   );
 }
 
-/* ------------------------------- Main page ------------------------------ */
+/* --------------------- Shared single-tool page shell -------------------- */
 
-export const ImageEditor = () => {
+interface ToolConfig {
+  tool: Operation;
+  title: string;
+  description: string;
+  actionLabel: string;
+  icon: JSX.Element;
+}
+
+function SingleImageTool({ tool, title, description, actionLabel, icon }: ToolConfig) {
   const { toast } = useToast();
   const [original, setOriginal] = useState<WorkingImage | null>(null);
   const [current, setCurrent] = useState<WorkingImage | null>(null);
-  const [activeOp, setActiveOp] = useState<Operation | null>(null);
+  const [open, setOpen] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
+
+  // Guards for async object-URL lifecycle: ignore (and revoke) any decode that
+  // resolves after the component unmounts or after a newer action supersedes it.
+  const mountedRef = useRef(true);
+  const loadSeqRef = useRef(0);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Revoke any object URLs we still own on unmount.
   const originalUrlRef = useRef<string | null>(null);
@@ -610,8 +628,13 @@ export const ImageEditor = () => {
   const handleFile = useCallback(
     async (f: File) => {
       const url = URL.createObjectURL(f);
+      const seq = ++loadSeqRef.current;
       try {
         const img = await loadImageFromUrl(url);
+        if (!mountedRef.current || seq !== loadSeqRef.current) {
+          URL.revokeObjectURL(url);
+          return;
+        }
         const ei: WorkingImage = {
           blob: f,
           url,
@@ -622,8 +645,10 @@ export const ImageEditor = () => {
         setOriginal(ei);
         setCurrent(ei);
         setHistory([]);
+        setOpen(true); // jump straight into the tool once an image is ready
       } catch (e) {
         URL.revokeObjectURL(url);
+        if (!mountedRef.current) return;
         toast({
           title: "Could not load image",
           description: e instanceof Error ? e.message : "Error",
@@ -634,12 +659,16 @@ export const ImageEditor = () => {
     [toast],
   );
 
-  // Commit an edited blob as the new working image (chaining-friendly).
   const commit = useCallback(
     async (blob: Blob, label: string) => {
       const url = URL.createObjectURL(blob);
+      const seq = ++loadSeqRef.current;
       try {
         const img = await loadImageFromUrl(url);
+        if (!mountedRef.current || seq !== loadSeqRef.current) {
+          URL.revokeObjectURL(url);
+          return;
+        }
         setCurrent((prev) => {
           if (prev && prev.url !== original?.url) URL.revokeObjectURL(prev.url);
           return {
@@ -651,10 +680,11 @@ export const ImageEditor = () => {
           };
         });
         setHistory((h) => [...h, label]);
-        setActiveOp(null);
+        setOpen(false);
         toast({ title: "Applied", description: label });
       } catch (e) {
         URL.revokeObjectURL(url);
+        if (!mountedRef.current) return;
         toast({
           title: "Could not apply edit",
           description: e instanceof Error ? e.message : "Error",
@@ -666,16 +696,18 @@ export const ImageEditor = () => {
   );
 
   const reset = useCallback(() => {
+    loadSeqRef.current += 1; // invalidate any in-flight decode
     if (current && original && current.url !== original.url) URL.revokeObjectURL(current.url);
     if (original) URL.revokeObjectURL(original.url);
     setOriginal(null);
     setCurrent(null);
     setHistory([]);
-    setActiveOp(null);
+    setOpen(false);
   }, [current, original]);
 
   const revertToOriginal = useCallback(() => {
     if (!original) return;
+    loadSeqRef.current += 1; // invalidate any in-flight decode
     setCurrent((prev) => {
       if (prev && prev.url !== original.url) URL.revokeObjectURL(prev.url);
       return original;
@@ -691,17 +723,11 @@ export const ImageEditor = () => {
     toast({ title: "Download started", description: name });
   }, [current, toast]);
 
-  const operations: { id: Operation; label: string; icon: JSX.Element; desc: string }[] = [
-    { id: "resize", label: "Resize Image", icon: <Maximize2 className="w-6 h-6" />, desc: "Change width & height" },
-    { id: "crop", label: "Crop Image", icon: <CropIcon className="w-6 h-6" />, desc: "Trim to a selection" },
-    { id: "rotate", label: "Rotate Image", icon: <RotateCw className="w-6 h-6" />, desc: "Spin to any angle" },
-  ];
-
   return (
     <ImageToolShell
-      title="Image Editor"
-      description="Upload an image, then resize, crop, and rotate it. Chain multiple edits and download the final result — all in your browser."
-      icon={<Wand2 className="w-8 h-8 text-blue-500" />}
+      title={title}
+      description={description}
+      icon={icon}
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!current ? (
@@ -721,27 +747,15 @@ export const ImageEditor = () => {
             </p>
           </div>
 
-          {/* Operation selection */}
+          {/* Open the tool */}
           <div>
-            <Label className="mb-3 block text-gray-700 dark:text-gray-200">Choose an operation</Label>
-            <div className="grid sm:grid-cols-3 gap-3">
-              {operations.map((op) => (
-                <button
-                  key={op.id}
-                  onClick={() => setActiveOp(op.id)}
-                  className="group flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-left transition-colors hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                  data-testid={`button-op-${op.id}`}
-                >
-                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 dark:bg-blue-900/40">
-                    {op.icon}
-                  </span>
-                  <span>
-                    <span className="block font-semibold text-gray-900 dark:text-white">{op.label}</span>
-                    <span className="block text-xs text-gray-500 dark:text-gray-400">{op.desc}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
+            <Button
+              onClick={() => setOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              data-testid="button-open-tool"
+            >
+              {actionLabel}
+            </Button>
           </div>
 
           {/* Applied operations */}
@@ -761,7 +775,7 @@ export const ImageEditor = () => {
           {/* Output actions */}
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
             <Button onClick={download} className="bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-download">
-              <Download className="w-4 h-4 mr-2" /> Download Edited Image
+              <Download className="w-4 h-4 mr-2" /> Download Image
             </Button>
             {history.length > 0 && (
               <Button variant="outline" onClick={revertToOriginal} data-testid="button-revert">
@@ -775,15 +789,47 @@ export const ImageEditor = () => {
         </div>
       )}
 
-      {activeOp === "resize" && current && (
-        <ResizeModal image={current} onApply={commit} onCancel={() => setActiveOp(null)} />
+      {open && current && tool === "resize" && (
+        <ResizeModal image={current} onApply={commit} onCancel={() => setOpen(false)} />
       )}
-      {activeOp === "crop" && current && (
-        <CropModal image={current} onApply={commit} onCancel={() => setActiveOp(null)} />
+      {open && current && tool === "crop" && (
+        <CropModal image={current} onApply={commit} onCancel={() => setOpen(false)} />
       )}
-      {activeOp === "rotate" && current && (
-        <RotateModal image={current} onApply={commit} onCancel={() => setActiveOp(null)} />
+      {open && current && tool === "rotate" && (
+        <RotateModal image={current} onApply={commit} onCancel={() => setOpen(false)} />
       )}
     </ImageToolShell>
   );
-};
+}
+
+/* ------------------------- Exported tool pages -------------------------- */
+
+export const ResizeImageTool = () => (
+  <SingleImageTool
+    tool="resize"
+    title="Resize Image"
+    description="Upload an image and set a new width and height. Lock the aspect ratio to keep proportions — all in your browser."
+    actionLabel="Resize Image"
+    icon={<Maximize2 className="w-8 h-8 text-blue-500" />}
+  />
+);
+
+export const CropImageTool = () => (
+  <SingleImageTool
+    tool="crop"
+    title="Crop Image"
+    description="Upload an image and trim it to a selection — drag the box or set exact pixel values, with optional aspect presets."
+    actionLabel="Crop Image"
+    icon={<CropIcon className="w-8 h-8 text-blue-500" />}
+  />
+);
+
+export const RotateImageTool = () => (
+  <SingleImageTool
+    tool="rotate"
+    title="Rotate Image"
+    description="Upload an image and rotate it to any angle with a live preview, or snap to 90° / 180° — all in your browser."
+    actionLabel="Rotate Image"
+    icon={<RotateCw className="w-8 h-8 text-blue-500" />}
+  />
+);
