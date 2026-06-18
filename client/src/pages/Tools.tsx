@@ -112,6 +112,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [targetFormat, setTargetFormat] = useState<string>("png");
   const [compressionQuality, setCompressionQuality] = useState<number>(80);
+  const [mergeFiles, setMergeFiles] = useState<File[]>([]);
   const [editImage, setEditImage] = useState<WorkingImage | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -132,6 +133,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const isManualEdit = Boolean(editOp);
   const needsFormatPicker = toolConfig.id === "convert-image-format";
   const needsCompressionPicker = toolConfig.id === "compress-images";
+  // PDF Merge accepts and accumulates MULTIPLE files into one document.
+  const isMultiMerge = toolConfig.id === "merge-pdfs";
 
   // Track the single live object URL for the working image so it can be revoked
   // when replaced or on unmount, avoiding leaks across re-edits.
@@ -219,8 +222,33 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const maxSizeBytes = (parseFloat(toolConfig.maxFileSize) || 50) * 1024 * 1024;
 
   const selectFile = (incoming: FileList | File[]) => {
-    const picked = Array.from(incoming)[0];
-    if (!picked) return;
+    const arr = Array.from(incoming);
+    if (arr.length === 0) return;
+
+    // PDF Merge accumulates multiple validated files; everything else is single-file.
+    if (isMultiMerge) {
+      const valid: File[] = [];
+      for (const f of arr) {
+        const fext = "." + (f.name.split(".").pop()?.toLowerCase() || "");
+        if (!toolConfig.acceptedFormats.includes(fext)) {
+          setError(`Unsupported file type. Accepts: ${formatList}`);
+          setStage("error");
+          return;
+        }
+        if (f.size > maxSizeBytes) {
+          setError(`"${f.name}" is too large. Max ${toolConfig.maxFileSize}.`);
+          setStage("error");
+          return;
+        }
+        valid.push(f);
+      }
+      setMergeFiles((prev) => [...prev, ...valid]);
+      setError(null);
+      setStage("ready");
+      return;
+    }
+
+    const picked = arr[0];
 
     const ext = "." + (picked.name.split(".").pop()?.toLowerCase() || "");
     if (!toolConfig.acceptedFormats.includes(ext)) {
@@ -333,6 +361,38 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     }
   };
 
+  const removeMergeFile = (index: number) => {
+    setMergeFiles((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      if (next.length === 0) setStage("idle");
+      return next;
+    });
+  };
+
+  const startMerge = async () => {
+    if (mergeFiles.length < 2) return;
+    setStage("converting");
+    setProgress(8);
+    setError(null);
+    try {
+      const formData = new FormData();
+      for (const f of mergeFiles) formData.append("files", f);
+
+      const res = await fetch("/api/merge-pdfs", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || "Could not start merge");
+      }
+      await pollJob(data.data.jobId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Merge failed");
+      setStage("error");
+    }
+  };
+
   const handleDownload = () => {
     if (!downloadUrl) return;
     const a = document.createElement("a");
@@ -347,6 +407,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     loadSeqRef.current += 1; // invalidate any in-flight edit decode
     setStage("idle");
     setFile(null);
+    setMergeFiles([]);
     setProgress(0);
     setError(null);
     setDownloadUrl(null);
@@ -392,6 +453,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           ref={inputRef}
           type="file"
           accept={acceptAttr}
+          multiple={isMultiMerge}
           onChange={handleInputChange}
           className="hidden"
           data-testid={`input-file-${toolConfig.id}`}
@@ -452,6 +514,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         ref={inputRef}
         type="file"
         accept={acceptAttr}
+        multiple={isMultiMerge}
         onChange={handleInputChange}
         className="hidden"
         data-testid={`input-file-${toolConfig.id}`}
@@ -482,7 +545,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       )}
 
       {/* READY (server-conversion tools) */}
-      {stage === "ready" && file && !isManualEdit && (
+      {stage === "ready" && file && !isManualEdit && !isMultiMerge && (
         <div
           className="flex flex-col"
           onDragOver={(e) => {
@@ -586,6 +649,83 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
             data-testid={`button-change-${toolConfig.id}`}
           >
             Choose a different file
+          </button>
+        </div>
+      )}
+
+      {/* READY (PDF merge — multiple files) */}
+      {stage === "ready" && isMultiMerge && (
+        <div
+          className="flex flex-col"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+          }}
+          onDrop={handleDrop}
+        >
+          <div
+            className={`space-y-2 mb-3 max-h-[180px] overflow-y-auto pr-1 rounded-xl ${
+              isDragOver ? "ring-2 ring-blue-400" : ""
+            }`}
+          >
+            {mergeFiles.map((f, i) => (
+              <div
+                key={`${f.name}-${f.size}-${i}`}
+                className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 bg-white"
+                data-testid={`row-mergefile-${i}`}
+              >
+                <div className="w-7 h-7 flex items-center justify-center rounded-md bg-blue-50 shrink-0">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-xs font-medium text-gray-900 truncate"
+                    data-testid={`text-mergefile-${i}`}
+                  >
+                    {f.name}
+                  </p>
+                  <p className="text-[10px] text-gray-500">{formatBytes(f.size)}</p>
+                </div>
+                <button
+                  onClick={() => removeMergeFile(i)}
+                  className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                  aria-label="Remove file"
+                  data-testid={`button-remove-mergefile-${i}`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <p
+            className="text-[11px] text-gray-500 text-center mb-3"
+            data-testid={`text-mergecount-${toolConfig.id}`}
+          >
+            {mergeFiles.length} file{mergeFiles.length === 1 ? "" : "s"} selected
+            {mergeFiles.length < 2 ? " — add at least 2 to merge" : ""}
+          </p>
+
+          <Button
+            onClick={startMerge}
+            disabled={mergeFiles.length < 2}
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl mb-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid={`button-merge-${toolConfig.id}`}
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Merge PDFs
+          </Button>
+
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
+            data-testid={`button-addmore-${toolConfig.id}`}
+          >
+            + Add more files
           </button>
         </div>
       )}

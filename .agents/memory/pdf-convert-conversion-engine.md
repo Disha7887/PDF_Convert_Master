@@ -28,6 +28,13 @@ description: Durable constraints for the real file converters in server/routes.t
 - **Why:** PNG is lossless so JPEG-style quality is meaningless; the effective size knob in this Sharp/libvips is palette size. Tested: lower `colors` → smaller file; `quality` alone was a no-op.
 - **How to apply:** for any palette-PNG size control, drive `colors` (e.g. `round(quality/100*256)`), not `quality`. Always set per-branch mimeType (jpeg/png/webp) — compress output uses tool outputFormat "same" so the extension follows the input.
 
+# PDF merge needs a DEDICATED multi-file endpoint (the convert pipeline is single-file)
+- The whole `/api/convert` pipeline is single-file (`upload.single`, `processFile` stores one buffer). Multi-input tools like PDF merge get their OWN endpoint (`POST /api/merge-pdfs`, `mergeUpload.array`) that still reuses the shared job + `convertedFileStorage` + `GET /api/download/:jobId` infra so the frontend polls/downloads identically.
+- The frontend `ToolCard` is single-`file` by default; the merge card is gated on `toolConfig.id === "merge-pdfs"` (its own `mergeFiles: File[]` state + ready-stage UI) instead of forcing multi-file into the single-file flow.
+- `mergePdfs` must FAIL LOUDLY on any unreadable input (encrypted/corrupt) and on zero output pages — it used to silently skip bad PDFs, producing a misleading "merged" file missing documents. Note: pdf-lib `PDFDocument.load` does NOT always throw on a magic-valid-but-corrupt file; the failure can surface later at `copyPages`, so wrap the whole per-file block, not just `load`.
+- **Why:** silent skipping violated the no-misleading-output rule; bolting multi-file onto `/api/convert` would have meant rewriting the single-file job pipeline.
+- **How to apply:** for any future multi-input tool add a dedicated endpoint + `multer.array` with its OWN pre-buffer per-file/count caps (don't rely on a post-buffer size check), reuse the job/download infra, and gate a separate frontend branch — don't generalize `/api/convert`.
+
 # Compile/test gates for the converters
 - Use `npm run build` as the compile gate (`npm run check` fails on unrelated pre-existing `server/routes_broken.ts`).
 - End-to-end test path: POST `/api/convert` (multipart: file, toolType snake_case, fileName, fileSize, optional options JSON) → poll GET `/api/jobs/:jobId` until completed → GET `/api/download/:jobId`. Verify output by file magic bytes (PDF `%P`, ZIP/OOXML `PK`, PNG, JPEG).

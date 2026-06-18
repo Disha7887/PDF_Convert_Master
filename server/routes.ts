@@ -168,6 +168,25 @@ const upload = multer({
   },
 });
 
+// Dedicated upload config for PDF merge. Caps each file at 100MB (matching the
+// tool's advertised limit) so oversized uploads are rejected during streaming
+// instead of being buffered first, caps the batch at 20 files, and rejects any
+// non-PDF extension up front.
+const mergeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB per file
+    files: 20,
+  },
+  fileFilter: (req, file, cb) => {
+    if (path.extname(file.originalname).toLowerCase() === '.pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error(`"${file.originalname}" is not a PDF file.`));
+    }
+  },
+});
+
 // Dedicated, hardened upload config for the in-browser image editors. Much
 // smaller size cap and image-only mimetypes to limit memory/DoS exposure.
 const imageUpload = multer({
@@ -843,20 +862,22 @@ async function mergePdfs(pdfBuffers: Buffer[], outputFilename: string) {
     // Create a new PDF to merge into
     const mergedDoc = await PDFDocument.create();
     
-    // Process each PDF buffer
+    // Process each PDF buffer. Fail loudly on any unreadable input rather than
+    // silently dropping it — a "merged" file missing documents is misleading.
     for (let i = 0; i < pdfBuffers.length; i++) {
       try {
         const pdfDoc = await PDFDocument.load(pdfBuffers[i]);
         const pageCount = pdfDoc.getPageCount();
-        
-        // Copy all pages from this PDF
         const pageIndices = Array.from({ length: pageCount }, (_, index) => index);
         const copiedPages = await mergedDoc.copyPages(pdfDoc, pageIndices);
-        
         copiedPages.forEach((page) => mergedDoc.addPage(page));
-      } catch (error) {
-        console.log(`Skipping invalid PDF ${i + 1}: ${error}`);
+      } catch {
+        throw new Error(`File #${i + 1} could not be read — it may be password-protected or corrupted.`);
       }
+    }
+
+    if (mergedDoc.getPageCount() === 0) {
+      throw new Error('No pages could be merged from the provided PDFs.');
     }
     
     // Add metadata
@@ -1474,6 +1495,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: "Failed to start conversion",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Merge multiple PDFs into a single PDF. The generic /api/convert route is
+  // single-file (upload.single), so PDF merging gets a dedicated multi-file
+  // endpoint. It reuses the job + /api/download infrastructure so the frontend
+  // polls and downloads exactly like every other tool.
+  app.post("/api/merge-pdfs", (req, res, next) => {
+    // mergeUpload enforces the 100MB/file and 20-file caps during streaming and
+    // rejects non-PDF extensions. Translate its errors into clean 400 JSON
+    // instead of letting them fall through to the generic error handler.
+    mergeUpload.array('files', 20)(req, res, (err: any) => {
+      if (err) {
+        let msg = err instanceof Error ? err.message : 'Upload failed';
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') msg = 'Each PDF must be 100MB or smaller.';
+          else if (err.code === 'LIMIT_FILE_COUNT') msg = 'You can merge at most 20 PDFs at once.';
+        }
+        return res.status(400).json({ success: false, error: msg });
+      }
+      next();
+    });
+  }, async (req, res) => {
+    try {
+      const files = (req.files as Express.Multer.File[]) || [];
+      if (files.length < 2) {
+        return res.status(400).json({
+          success: false,
+          error: "Please select at least 2 PDF files to merge."
+        });
+      }
+
+      const pdfBuffers: Buffer[] = [];
+      for (const f of files) {
+        // Defense in depth: confirm real PDF bytes, not just a .pdf extension.
+        const isPdfMagic = f.buffer.subarray(0, 5).toString('latin1').startsWith('%PDF');
+        if (!isPdfMagic) {
+          return res.status(400).json({
+            success: false,
+            error: `"${f.originalname}" is not a valid PDF file.`
+          });
+        }
+        pdfBuffers.push(f.buffer);
+      }
+
+      const totalInputSize = files.reduce((sum, f) => sum + f.size, 0);
+      const outputFilename = "merged.pdf";
+
+      const job = await storage.createConversionJob({
+        userId: (req as AuthenticatedRequest).user?.id || null,
+        toolType: ToolType.MERGE_PDFS,
+        status: "processing",
+        inputFilename: files.map(f => f.originalname).join(", ").slice(0, 255),
+        inputFileSize: totalInputSize,
+        outputFilename: null,
+        outputFileSize: null,
+        processingTime: null,
+        errorMessage: null
+      });
+
+      try {
+        const startTime = Date.now();
+        const result = await mergePdfs(pdfBuffers, outputFilename);
+        if (!result.success || !result.convertedBuffer || result.convertedBuffer.length === 0) {
+          throw new Error("Merge produced no output");
+        }
+        convertedFileStorage.set(job.id, {
+          buffer: result.convertedBuffer,
+          mimeType: result.mimeType || "application/pdf",
+          filename: outputFilename
+        });
+        await storage.updateConversionJobStatus(
+          job.id,
+          "completed",
+          outputFilename,
+          undefined,
+          Date.now() - startTime
+        );
+      } catch (err) {
+        await storage.updateConversionJobStatus(
+          job.id,
+          "failed",
+          undefined,
+          err instanceof Error ? err.message : "Merge failed"
+        );
+      }
+
+      res.json({
+        success: true,
+        data: {
+          jobId: job.id,
+          status: "processing",
+          message: "Files uploaded successfully. Merging started."
+        }
+      });
+    } catch (error) {
+      console.error("Merge error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to merge PDFs",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
