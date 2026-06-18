@@ -83,7 +83,7 @@ export const UsageStatistics: React.FC = () => {
                   </div>
                   <div className="text-left flex-1">
                     <p className="text-sm font-medium">Total Usage</p>
-                    <p className="text-xs text-red-100">Usage statistics</p>
+                    <p className="text-xs text-blue-100">Usage statistics</p>
                   </div>
                   <div className="w-2 h-2 rounded-full bg-white"></div>
                 </Button>
@@ -174,12 +174,12 @@ export const UsageStatistics: React.FC = () => {
               </div>
 
               {/* Upgrade Plan */}
-              <div className="mt-8 p-4 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-red-50">
+              <div className="mt-8 p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50">
                 <div className="flex items-center mb-2">
-                  <ArrowUp className="w-4 h-4 text-red-600 mr-2" />
-                  <h3 className="text-sm font-semibold text-red-900">Upgrade Plan</h3>
+                  <ArrowUp className="w-4 h-4 text-blue-600 mr-2" />
+                  <h3 className="text-sm font-semibold text-blue-900">Upgrade Plan</h3>
                 </div>
-                <p className="text-xs text-red-700 mb-3">
+                <p className="text-xs text-blue-700 mb-3">
                   Get unlimited conversions and advanced features
                 </p>
                 <Button
@@ -219,15 +219,15 @@ export const UsageStatistics: React.FC = () => {
                   value="8,654"
                   trend="+8% from last month"
                   trendPositive={true}
-                  icon={<Activity className="w-5 h-5 text-purple-600" />}
-                  iconBg="bg-purple-100"
+                  icon={<Activity className="w-5 h-5 text-blue-600" />}
+                  iconBg="bg-blue-100"
                 />
                 <StatCard
                   title="Storage Used"
                   value="45.2 GB"
                   subtitle="of 100 GB limit"
-                  icon={<ArrowDown className="w-5 h-5 text-orange-600" />}
-                  iconBg="bg-orange-100"
+                  icon={<ArrowDown className="w-5 h-5 text-blue-600" />}
+                  iconBg="bg-blue-100"
                 />
                 <StatCard
                   title="Success Rate"

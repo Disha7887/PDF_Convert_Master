@@ -1,3 +1,4 @@
-- [PDF Convert frontend gotchas](pdf-convert-frontend-gotchas.md) — live app is `client/` not `frontend/`; Figma hardcoded classes (no dark-mode); white figma SVG icons vanish on light buttons; `npm run check` has pre-existing routes_broken.ts failure; server/* edits need a workflow restart (tsx, not tsx watch).
-- [PDF Convert conversion engine](pdf-convert-conversion-engine.md) — all 20 converters emit REAL files (no placeholders); htmlToPdfBuffer must stay SSRF-locked (no JS, block non-data: fetches); Chromium concurrency-capped; remove_background needs REMOVE_BG_API_KEY; gate on `npm run build`.
-- [PDF Convert image editors](pdf-convert-image-editors.md) — crop/resize/rotate edit client-side via canvas; upscale=Replicate Real-ESRGAN (needs connector/REPLICATE_API_TOKEN, fails loud); `/api/uploads` must stay hardened (image-only, Sharp re-encode, nosniff/CSP, caps).
+- [Frontend gotchas](pdf-convert-frontend-gotchas.md) — non-obvious traps when editing/theming this Figma-exported React app (which frontend is actually live, etc.).
+- [Conversion engine](pdf-convert-conversion-engine.md) — durable constraints for the real file converters in server/routes.ts (no placeholders, HTML→PDF security, the tool needing an API key).
+- [Image editor tools](pdf-convert-image-editors.md) — design + security rules for crop/resize/rotate/upscale pages and the /api/uploads endpoint.
+- [Brand color class names](brand-color-classes.md) — several "red"-named gradient utilities are redefined in index.css to render blue; renaming them to "-blue-" breaks the build.

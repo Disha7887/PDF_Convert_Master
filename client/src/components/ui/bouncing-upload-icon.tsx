@@ -21,7 +21,7 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
   iconType = "lucide",
   size = "md",
   animationSpeed = "fast",
-  bgColor = "bg-red-100"
+  bgColor = "bg-blue-100"
 }) => {
   // Size configurations
   const sizeClasses = {
@@ -96,7 +96,7 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
             src={src}
           />
         ) : (
-          <Upload className={`${iconSizeClasses[size]} ${iconClassName || 'text-red-500'}`} />
+          <Upload className={`${iconSizeClasses[size]} ${iconClassName || 'text-blue-500'}`} />
         )}
       </motion.div>
     </div>

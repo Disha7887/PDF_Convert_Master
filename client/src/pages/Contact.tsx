@@ -33,15 +33,15 @@ export const Contact = (): JSX.Element => {
 
       // Get contact-specific icon and styling
       const getContactIcon = () => {
-        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-green-600" />;
+        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-blue-600" />;
         if (label.includes('Email')) return <Mail className="w-4 h-4 text-blue-600" />;
-        return <Copy className="w-4 h-4 text-purple-600" />;
+        return <Copy className="w-4 h-4 text-blue-600" />;
       };
 
       const getContactStyling = () => {
-        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50";
-        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50";
-        return "border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50";
+        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50";
+        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50";
+        return "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50";
       };
 
       // Show beautiful success toast with contact-specific styling
@@ -60,7 +60,7 @@ export const Contact = (): JSX.Element => {
         description: (
           <div className="flex items-center gap-2 mt-2 p-2 bg-white/60 rounded-lg border">
             <CheckCircle className="w-3 h-3 text-green-500" />
-            <code className="text-xs bg-gray-900 text-green-400 px-2 py-1 rounded font-mono tracking-wider">
+            <code className="text-xs bg-gray-900 text-blue-400 px-2 py-1 rounded font-mono tracking-wider">
               {text}
             </code>
           </div>
@@ -82,15 +82,15 @@ export const Contact = (): JSX.Element => {
 
       // Show the same beautiful toast for fallback
       const getContactIcon = () => {
-        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-green-600" />;
+        if (label.includes('Phone') || label.includes('WhatsApp')) return <Phone className="w-4 h-4 text-blue-600" />;
         if (label.includes('Email')) return <Mail className="w-4 h-4 text-blue-600" />;
-        return <Copy className="w-4 h-4 text-purple-600" />;
+        return <Copy className="w-4 h-4 text-blue-600" />;
       };
 
       const getContactStyling = () => {
-        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50";
-        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50";
-        return "border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50";
+        if (label.includes('Phone') || label.includes('WhatsApp')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50";
+        if (label.includes('Email')) return "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50";
+        return "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50";
       };
 
       toast({
@@ -108,7 +108,7 @@ export const Contact = (): JSX.Element => {
         description: (
           <div className="flex items-center gap-2 mt-2 p-2 bg-white/60 rounded-lg border">
             <CheckCircle className="w-3 h-3 text-green-500" />
-            <code className="text-xs bg-gray-900 text-green-400 px-2 py-1 rounded font-mono tracking-wider">
+            <code className="text-xs bg-gray-900 text-blue-400 px-2 py-1 rounded font-mono tracking-wider">
               {text}
             </code>
           </div>
@@ -120,11 +120,11 @@ export const Contact = (): JSX.Element => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#FEF2F2] via-[#FFF7ED] to-[#FEFCE8]">
+    <div className="bg-gradient-to-br from-[#EFF6FF] via-[#EFF6FF] to-[#EFF6FF]">
 
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#1E40AF] via-[#7C3AED] to-[#1E3A8A] py-24">
+      <section className="relative bg-gradient-to-br from-[#1E40AF] via-[#2563EB] to-[#1E3A8A] py-24">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-6xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -252,12 +252,12 @@ export const Contact = (): JSX.Element => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {/* Phone Support */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Phone className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">Phone Support</h3>
-                <p className="text-green-100 text-sm">Call us directly for immediate assistance</p>
+                <p className="text-blue-100 text-sm">Call us directly for immediate assistance</p>
               </div>
               <div className="p-6 flex-grow flex flex-col">
                 <div className="mb-4 flex-grow">
@@ -278,7 +278,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   24/7 Available
                 </div>
-                <Button variant="green" className="w-full mt-auto">
+                <Button variant="blue" className="w-full mt-auto">
                   Call Now
                 </Button>
               </div>
@@ -286,7 +286,7 @@ export const Contact = (): JSX.Element => {
 
             {/* Email Support */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-white">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Mail className="w-6 h-6" />
                 </div>
@@ -321,15 +321,15 @@ export const Contact = (): JSX.Element => {
             {/* Live Chat */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full relative">
               {/* Coming Soon Badge */}
-              <div className="absolute top-4 right-4 z-10 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+              <div className="absolute top-4 right-4 z-10 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                 Coming Soon
               </div>
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-white opacity-75">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white opacity-75">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">Live Chat</h3>
-                <p className="text-purple-100 text-sm">Chat with our support team in real-time</p>
+                <p className="text-blue-100 text-sm">Chat with our support team in real-time</p>
               </div>
               <div className="p-6 flex-grow flex flex-col opacity-75">
                 <div className="mb-4 flex-grow">
@@ -351,12 +351,12 @@ export const Contact = (): JSX.Element => {
 
             {/* WhatsApp */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-white">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">WhatsApp</h3>
-                <p className="text-green-100 text-sm">Quick support via WhatsApp messaging</p>
+                <p className="text-blue-100 text-sm">Quick support via WhatsApp messaging</p>
               </div>
               <div className="p-6 flex-grow flex flex-col">
                 <div className="mb-4 flex-grow">
@@ -377,7 +377,7 @@ export const Contact = (): JSX.Element => {
                   <Clock className="w-4 h-4 mr-2" />
                   Quick response
                 </div>
-                <Button variant="green" className="w-full mt-auto">
+                <Button variant="blue" className="w-full mt-auto">
                   Message Us
                 </Button>
               </div>
@@ -516,7 +516,7 @@ export const Contact = (): JSX.Element => {
 
               <div className="flex justify-between items-center pt-6">
                 <div className="flex items-center text-sm text-gray-600">
-                  <Shield className="w-4 h-4 mr-2 text-green-600" />
+                  <Shield className="w-4 h-4 mr-2 text-blue-600" />
                   Your information is secure and confidential
                 </div>
                 <Button type="submit" className="px-8">
@@ -546,7 +546,7 @@ export const Contact = (): JSX.Element => {
               >
                 <span className="text-lg font-semibold text-gray-900">What file formats do you support for conversion?</span>
                 <svg
-                  className={`w-5 h-5 text-red-600 transition-transform duration-200 ${
+                  className={`w-5 h-5 text-blue-600 transition-transform duration-200 ${
                     expandedFAQ === 0 ? 'rotate-180' : ''
                   }`}
                   fill="none"
@@ -558,7 +558,7 @@ export const Contact = (): JSX.Element => {
               </button>
               {expandedFAQ === 0 && (
                 <div className="px-6 pb-4">
-                  <div className="border-l-4 border-red-600 pl-4">
+                  <div className="border-l-4 border-blue-600 pl-4">
                     <p className="text-gray-700">
                       We support a wide range of file formats including PDF, Word (DOC/DOCX), Excel (XLS/XLSX), PowerPoint (PPT/PPTX), JPG, PNG, HTML, and many more. Our tools can handle most common document and image formats.
                     </p>
@@ -614,7 +614,7 @@ export const Contact = (): JSX.Element => {
                   >
                     <span className="text-lg font-semibold text-gray-900">{faq.question}</span>
                     <svg
-                      className={`w-5 h-5 text-red-600 transition-transform duration-200 ${
+                      className={`w-5 h-5 text-blue-600 transition-transform duration-200 ${
                         expandedFAQ === faqIndex ? 'rotate-180' : ''
                       }`}
                       fill="none"
@@ -626,7 +626,7 @@ export const Contact = (): JSX.Element => {
                   </button>
                   {expandedFAQ === faqIndex && (
                     <div className="px-6 pb-4">
-                      <div className="border-l-4 border-red-600 pl-4">
+                      <div className="border-l-4 border-blue-600 pl-4">
                         <p className="text-gray-700">
                           {faq.answer}
                         </p>
@@ -638,9 +638,9 @@ export const Contact = (): JSX.Element => {
             })}
           </div>
 
-          <div className="mt-12 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <h3 className="text-xl font-bold text-red-800 mb-2">Still Have Questions?</h3>
-            <p className="text-red-700 mb-4">Can't find the answer you're looking for? Our support team is here to help!</p>
+          <div className="mt-12 bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
+            <h3 className="text-xl font-bold text-blue-800 mb-2">Still Have Questions?</h3>
+            <p className="text-blue-700 mb-4">Can't find the answer you're looking for? Our support team is here to help!</p>
             <Button
               className=""
               onClick={() => {
@@ -673,26 +673,26 @@ export const Contact = (): JSX.Element => {
               <div className="space-y-6">
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
                   <div className="flex items-start">
-                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
-                      <MapPin className="w-5 h-5 text-red-600" />
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                      <MapPin className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 mb-2">Headquarters</h4>
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-2 text-red-500" />
+                          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
                           <span>Mizan Store Ltd</span>
                         </div>
                         <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-2 text-red-500" />
+                          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
                           <span>London, United Kingdom</span>
                         </div>
                         <div className="flex items-center">
-                          <Phone className="w-4 h-4 mr-2 text-red-500" />
+                          <Phone className="w-4 h-4 mr-2 text-blue-500" />
                           <span>+447429919748</span>
                         </div>
                         <div className="flex items-center">
-                          <Mail className="w-4 h-4 mr-2 text-red-500" />
+                          <Mail className="w-4 h-4 mr-2 text-blue-500" />
                           <span>info@mizanstore.com</span>
                         </div>
                       </div>
@@ -702,26 +702,26 @@ export const Contact = (): JSX.Element => {
 
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
                   <div className="flex items-start">
-                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
-                      <HeadphonesIcon className="w-5 h-5 text-red-600" />
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                      <HeadphonesIcon className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 mb-2">Technical Support</h4>
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-2 text-red-500" />
+                          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
                           <span>PDF Convert Master</span>
                         </div>
                         <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-2 text-red-500" />
+                          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
                           <span>Technical Operations Center</span>
                         </div>
                         <div className="flex items-center">
-                          <Phone className="w-4 h-4 mr-2 text-red-500" />
+                          <Phone className="w-4 h-4 mr-2 text-blue-500" />
                           <span>+447429919748</span>
                         </div>
                         <div className="flex items-center">
-                          <Mail className="w-4 h-4 mr-2 text-red-500" />
+                          <Mail className="w-4 h-4 mr-2 text-blue-500" />
                           <span>support@pdfconvertmaster.com</span>
                         </div>
                       </div>
@@ -763,12 +763,12 @@ export const Contact = (): JSX.Element => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center mb-2">
-                    <Car className="w-4 h-4 mr-2 text-green-600" />
-                    <span className="font-semibold text-green-800">Parking</span>
+                    <Car className="w-4 h-4 mr-2 text-blue-600" />
+                    <span className="font-semibold text-blue-800">Parking</span>
                   </div>
-                  <p className="text-sm text-green-700">Free parking available for visitors</p>
+                  <p className="text-sm text-blue-700">Free parking available for visitors</p>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center mb-2">

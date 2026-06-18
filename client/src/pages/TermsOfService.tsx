@@ -248,7 +248,7 @@ export const TermsOfService = (): JSX.Element => {
                 {/* Effective Date */}
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-6 h-6">
-                    <Clock className="w-4 h-4 text-green-600" />
+                    <Clock className="w-4 h-4 text-blue-600" />
                   </div>
                   <span className="text-sm text-gray-600">
                     Effective Date: January 15, 2024
@@ -279,7 +279,7 @@ export const TermsOfService = (): JSX.Element => {
                       activeSection === item.id || highlightedSection === item.id
                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 shadow-sm'
                         : 'text-gray-600 hover:bg-gray-50'
-                    } ${highlightedSection === item.id ? 'ring-2 ring-yellow-300 ring-opacity-50' : ''}`}
+                    } ${highlightedSection === item.id ? 'ring-2 ring-blue-300 ring-opacity-50' : ''}`}
                   >
                     <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
                       <item.icon className={`w-[18.75px] h-[18px] ${

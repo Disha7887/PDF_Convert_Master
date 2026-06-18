@@ -12,8 +12,8 @@ export const RemoveBackgroundUpload: React.FC = () => {
         acceptedFormats={[".jpg", ".jpeg", ".png", ".webp"]}
         maxFileSize="15MB"
         outputFormat="PNG with Transparency"
-        toolIcon={<Scissors className="w-8 h-8 text-violet-500" />}
-        iconBg="bg-violet-50 border-violet-200 dark:bg-violet-900 dark:border-violet-800"
+        toolIcon={<Scissors className="w-8 h-8 text-blue-500" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

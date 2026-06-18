@@ -95,7 +95,7 @@ export const TestimonialsSection = (): JSX.Element => {
             <TabsList className="w-full h-[67px] p-[9px] bg-white rounded-full border border-gray-200 shadow-sm">
               <TabsTrigger
                 value="features"
-                className="w-[135px] h-[49px] rounded-full data-[state=active]:bg-[linear-gradient(90deg,rgba(220,38,38,1)_0%,rgba(185,28,28,1)_100%)] data-[state=active]:text-white data-[state=active]:shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-semibold"
+                className="w-[135px] h-[49px] rounded-full data-[state=active]:bg-[linear-gradient(90deg,rgba(37,99,235,1)_0%,rgba(29,78,216,1)_100%)] data-[state=active]:text-white data-[state=active]:shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-semibold"
               >
                 Features
               </TabsTrigger>
@@ -160,7 +160,7 @@ export const TestimonialsSection = (): JSX.Element => {
             needs
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button className="font-semibold px-8 py-4 h-[59px] rounded-lg">
+            <Button className="font-semibold px-8 py-4 h-[59px] rounded-full">
               Get Started Free
             </Button>
             <Button

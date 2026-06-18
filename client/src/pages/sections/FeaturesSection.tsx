@@ -43,9 +43,9 @@ export const FeaturesSection = (): JSX.Element => {
       description:
         "Transform your documents between different formats with perfect quality preservation.",
       features: ["PDF to Word", "Word to PDF", "Excel to PDF", "Image to PDF"],
-      borderColor: "border-red-500/30",
-      iconColor: "#ef4444",
-      bgColor: "bg-red-500/10",
+      borderColor: "border-blue-500/30",
+      iconColor: "#2563eb",
+      bgColor: "bg-blue-500/10",
     },
     {
       title: "Organize",
@@ -53,9 +53,9 @@ export const FeaturesSection = (): JSX.Element => {
       description:
         "Merge, split, and reorganize your PDF documents with powerful editing tools.",
       features: ["Merge PDFs", "Split PDFs", "Compress Files", "Rotate Pages"],
-      borderColor: "border-red-500/30",
-      iconColor: "#ef4444",
-      bgColor: "bg-red-500/10",
+      borderColor: "border-blue-500/30",
+      iconColor: "#2563eb",
+      bgColor: "bg-blue-500/10",
     },
     {
       title: "Secure",
@@ -68,9 +68,9 @@ export const FeaturesSection = (): JSX.Element => {
         "Add Watermark",
         "Digital Signature",
       ],
-      borderColor: "border-emerald-500/30",
-      iconColor: "#10b981",
-      bgColor: "bg-emerald-500/10",
+      borderColor: "border-blue-500/30",
+      iconColor: "#2563eb",
+      bgColor: "bg-blue-500/10",
     },
   ];
 
@@ -116,31 +116,31 @@ export const FeaturesSection = (): JSX.Element => {
         {/* Animated particles background */}
         <AnimatedParticles count={25} />
 
-        <div className="absolute w-96 h-96 top-[84px] left-36 rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(239,68,68,0.1)_0%,rgba(249,115,22,0.1)_100%)]" />
-        <div className="absolute w-80 h-80 top-[675px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(239,68,68,0.1)_0%,rgba(244,114,182,0.1)_100%)]" />
-        <div className="absolute w-56 h-56 top-[789px] left-[856px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(249,115,22,0.1)_0%,rgba(239,68,68,0.1)_100%)]" />
+        <div className="absolute w-96 h-96 top-[84px] left-36 rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
+        <div className="absolute w-80 h-80 top-[675px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
+        <div className="absolute w-56 h-56 top-[789px] left-[856px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
 
         {/* Decorative dots */}
-        <div className="absolute w-4 h-4 top-[169px] left-72 bg-red-200/40 rounded-full" />
-        <div className="absolute w-3 h-3 top-[506px] left-[996px] bg-[#f770704c] rounded-full" />
-        <div className="absolute w-2 h-2 top-[1258px] left-[216px] bg-red-300/40 rounded-full" />
-        <div className="absolute w-5 h-5 top-[1181px] left-[1276px] bg-orange-300/40 rounded-full" />
-        <div className="absolute w-3 h-3 top-[1423px] left-[1140px] bg-pink-300/40 rounded-full" />
-        <div className="absolute w-4 h-4 top-[844px] left-[1008px] bg-[#fa913c4c] rounded-full" />
+        <div className="absolute w-4 h-4 top-[169px] left-72 bg-blue-200/40 rounded-full" />
+        <div className="absolute w-3 h-3 top-[506px] left-[996px] bg-[#2563eb4c] rounded-full" />
+        <div className="absolute w-2 h-2 top-[1258px] left-[216px] bg-blue-300/40 rounded-full" />
+        <div className="absolute w-5 h-5 top-[1181px] left-[1276px] bg-blue-300/40 rounded-full" />
+        <div className="absolute w-3 h-3 top-[1423px] left-[1140px] bg-blue-300/40 rounded-full" />
+        <div className="absolute w-4 h-4 top-[844px] left-[1008px] bg-[#2563eb4c] rounded-full" />
 
         {/* Decorative lines */}
-        <div className="absolute w-px h-32 top-[338px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(239,68,68,0.15)_50%,rgba(0,0,0,0)_100%)]" />
-        <div className="absolute w-px h-24 top-[1013px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(248,113,113,0.3)_50%,rgba(0,0,0,0)_100%)]" />
-        <div className="absolute w-px h-28 top-[1069px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(249,115,22,0.2)_50%,rgba(0,0,0,0)_100%)]" />
+        <div className="absolute w-px h-32 top-[338px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.15)_50%,rgba(0,0,0,0)_100%)]" />
+        <div className="absolute w-px h-24 top-[1013px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.3)_50%,rgba(0,0,0,0)_100%)]" />
+        <div className="absolute w-px h-28 top-[1069px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.2)_50%,rgba(0,0,0,0)_100%)]" />
       </div>
 
       <div className="max-w-screen-xl mx-auto px-8">
         {/* Section Header */}
         <div className="mb-20 text-center">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6 font-['Roboto',Helvetica] leading-[48px]">
+          <h2 className="text-5xl font-bold text-gray-900 mb-6 leading-[48px]">
             Transform Your PDF Workflow
           </h2>
-          <p className="text-xl text-gray-600 max-w-screen-md mx-auto font-['Roboto',Helvetica] leading-[32.5px]">
+          <p className="text-xl text-gray-600 max-w-screen-md mx-auto leading-[32.5px]">
             Discover how millions of users worldwide are revolutionizing their
             document management with our powerful PDF tools
           </p>
@@ -151,17 +151,17 @@ export const FeaturesSection = (): JSX.Element => {
           {/* Left Column - Features */}
           <div className="flex-1 min-w-[300px]">
             {/* Performance Badge */}
-            <Badge className="px-[17px] py-[9px] text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-full mb-6 h-[38px] font-['Roboto',Helvetica]">
+            <Badge className="px-[17px] py-[9px] text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full mb-6 h-[38px]">
               Industry Leading Performance
             </Badge>
 
             {/* Main Heading */}
-            <h3 className="text-4xl font-bold text-gray-900 mb-6 leading-[45px] font-['Roboto',Helvetica]">
+            <h3 className="text-4xl font-bold text-gray-900 mb-6 leading-[45px]">
               Professional PDF Tools Built for Modern Workflows
             </h3>
 
             {/* Description */}
-            <p className="text-lg text-gray-600 mb-8 leading-[29.2px] font-['Roboto',Helvetica]">
+            <p className="text-lg text-gray-600 mb-8 leading-[29.2px]">
               From converting documents to merging files, our comprehensive
               suite of PDF tools handles every aspect of your document workflow
               with precision and speed.
@@ -173,10 +173,10 @@ export const FeaturesSection = (): JSX.Element => {
                 <div key={index} className="flex items-start mb-4">
                   <img src={feature.icon} alt="" className="flex-shrink-0" />
                   <div className="ml-4">
-                    <h4 className="text-base font-semibold text-gray-900 mb-1 font-['Roboto',Helvetica]">
+                    <h4 className="text-base font-semibold text-gray-900 mb-1">
                       {feature.title}
                     </h4>
-                    <p className="text-base text-gray-600 font-['Roboto',Helvetica]">
+                    <p className="text-base text-gray-600">
                       {feature.description}
                     </p>
                   </div>
@@ -187,7 +187,7 @@ export const FeaturesSection = (): JSX.Element => {
             {/* CTA Buttons */}
             <div className="flex gap-4">
               <Button
-                className="font-semibold px-8 py-4 h-[59px] rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] font-['Roboto',Helvetica]"
+                className="font-semibold px-8 py-4 h-[59px] rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
                 onClick={() => {
                   console.log('Learn More button clicked');
                   setLocation('/learn-more');
@@ -202,7 +202,7 @@ export const FeaturesSection = (): JSX.Element => {
               </Button>
               <Button
                 variant="outline"
-                className="font-semibold px-8 py-4 h-[59px] rounded-lg font-['Roboto',Helvetica]"
+                className="font-semibold px-8 py-4 h-[59px] rounded-lg"
               >
                 <Play className="mr-2 w-5 h-5 text-gray-700" />
                 Watch Demo
@@ -216,27 +216,27 @@ export const FeaturesSection = (): JSX.Element => {
               <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                 {/* Browser Controls */}
                 <div className="flex items-center mb-6">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full ml-3"></div>
-                  <div className="w-3 h-3 bg-[#21c45d] rounded-full ml-3"></div>
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-blue-400 rounded-full ml-3"></div>
+                  <div className="w-3 h-3 bg-[#2563eb] rounded-full ml-3"></div>
                   <div className="flex-1 ml-3 bg-[#f2f4f5] rounded-full px-4 py-2">
-                    <span className="text-sm text-gray-600 font-['Roboto',Helvetica]">
+                    <span className="text-sm text-gray-600">
                       PDF Converter Pro
                     </span>
                   </div>
                 </div>
 
                 {/* File Drop Area */}
-                <div className="border-2 border-dashed border-red-200 rounded-xl p-[26px] flex flex-col items-center mb-4">
+                <div className="border-2 border-dashed border-blue-200 rounded-xl p-[26px] flex flex-col items-center mb-4">
                   <img
                     src="/figmaAssets/margin-wrap-30.svg"
                     alt=""
                     className="mb-2"
                   />
-                  <p className="text-sm text-gray-600 text-center mb-2 font-['Roboto',Helvetica]">
+                  <p className="text-sm text-gray-600 text-center mb-2">
                     Drop your files here
                   </p>
-                  <Button className="text-sm px-4 py-2 rounded-lg font-['Roboto',Helvetica]">
+                  <Button className="text-sm px-4 py-2 rounded-lg">
                     Browse Files
                   </Button>
                 </div>
@@ -253,7 +253,7 @@ export const FeaturesSection = (): JSX.Element => {
                         alt={format.name}
                         className="w-full mb-2"
                       />
-                      <span className="text-xs text-gray-500 text-center font-['Roboto',Helvetica]">
+                      <span className="text-xs text-gray-500 text-center">
                         {format.name}
                       </span>
                     </div>
@@ -272,10 +272,10 @@ export const FeaturesSection = (): JSX.Element => {
                 key={index}
                 className="text-center w-full sm:w-1/2 md:w-1/4 mb-4 md:mb-0"
               >
-                <p className="text-4xl font-bold text-red-600 mb-2 font-['Roboto',Helvetica]">
+                <p className="text-4xl font-bold text-blue-600 mb-2">
                   {stat.value}
                 </p>
-                <p className="text-base text-gray-600 font-['Roboto',Helvetica]">
+                <p className="text-base text-gray-600">
                   {stat.label}
                 </p>
               </div>
@@ -330,10 +330,10 @@ export const FeaturesSection = (): JSX.Element => {
 
                     {/* Content */}
                     <div className="flex flex-col flex-grow">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center font-['Roboto',Helvetica]">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
                         {card.title}
                       </h3>
-                      <p className="text-base text-gray-600 mb-6 text-center leading-relaxed font-['Roboto',Helvetica] flex-grow">
+                      <p className="text-base text-gray-600 mb-6 text-center leading-relaxed flex-grow">
                         {card.description}
                       </p>
 
@@ -342,7 +342,7 @@ export const FeaturesSection = (): JSX.Element => {
                         {card.features.map((feature, featureIndex) => (
                           <li
                             key={featureIndex}
-                            className="flex items-center text-sm text-gray-600 font-['Roboto',Helvetica]"
+                            className="flex items-center text-sm text-gray-600"
                           >
                             <div
                               className="w-1.5 h-1.5 rounded-full mr-3 flex-shrink-0"

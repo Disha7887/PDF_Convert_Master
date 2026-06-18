@@ -16,83 +16,83 @@ export const HeroSection = (): JSX.Element => {
   const gradientBlurs = [
     {
       className:
-        "absolute w-96 h-96 top-[102px] left-[72px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(239,68,68,0.15)_0%,rgba(249,115,22,0.15)_100%)]",
+        "absolute w-96 h-96 top-[102px] left-[72px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.15)_0%,rgba(37,99,235,0.15)_100%)]",
     },
     {
       className:
-        "absolute w-80 h-80 top-[614px] left-[976px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(249,115,22,0.2)_0%,rgba(236,72,153,0.2)_100%)]",
+        "absolute w-80 h-80 top-[614px] left-[976px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.2)_0%,rgba(37,99,235,0.2)_100%)]",
     },
     {
       className:
-        "absolute w-64 h-64 top-[563px] left-[216px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(236,72,153,0.25)_0%,rgba(239,68,68,0.25)_100%)]",
+        "absolute w-64 h-64 top-[563px] left-[216px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.25)_0%,rgba(37,99,235,0.25)_100%)]",
     },
   ];
 
   const borderCircles = [
     {
       className:
-        "absolute w-40 h-40 top-64 left-72 rounded-full border-2 border-solid border-[#f770704c]",
+        "absolute w-40 h-40 top-64 left-72 rounded-full border-2 border-solid border-[#2563eb4c]",
     },
     {
       className:
-        "absolute w-32 h-32 top-[717px] left-[880px] rounded-full border-2 border-solid border-[#fa913c66]",
+        "absolute w-32 h-32 top-[717px] left-[880px] rounded-full border-2 border-solid border-[#2563eb66]",
     },
     {
       className:
-        "absolute w-48 h-48 top-[525px] left-[864px] rounded-full border-2 border-solid border-[#f472b540]",
+        "absolute w-48 h-48 top-[525px] left-[864px] rounded-full border-2 border-solid border-[#2563eb40]",
     },
   ];
 
   const dotElements = [
     {
       className:
-        "absolute w-4 h-4 top-[205px] left-36 bg-red-300/50 rounded-full",
+        "absolute w-4 h-4 top-[205px] left-36 bg-blue-300/50 rounded-full",
     },
     {
       className:
-        "absolute w-3 h-3 top-[410px] left-[1212px] bg-[#f7707066] rounded-full",
+        "absolute w-3 h-3 top-[410px] left-[1212px] bg-[#2563eb66] rounded-full",
     },
     {
       className:
-        "absolute w-2 h-2 top-[709px] left-72 bg-[#fa913c80] rounded-full",
+        "absolute w-2 h-2 top-[709px] left-72 bg-[#2563eb80] rounded-full",
     },
     {
       className:
-        "absolute w-5 h-5 top-[614px] left-[1060px] bg-[#f472b559] rounded-full",
+        "absolute w-5 h-5 top-[614px] left-[1060px] bg-[#2563eb59] rounded-full",
     },
     {
       className:
-        "absolute w-6 h-6 top-[488px] left-[1008px] bg-[#fba5a54c] rounded-full",
+        "absolute w-6 h-6 top-[488px] left-[1008px] bg-[#2563eb4c] rounded-full",
     },
   ];
 
   const rotatedElements = [
     {
       className:
-        "absolute w-12 h-12 top-[358px] left-[1080px] rotate-45 bg-[linear-gradient(135deg,rgba(239,68,68,0.2)_0%,rgba(0,0,0,0)_100%)]",
+        "absolute w-12 h-12 top-[358px] left-[1080px] rotate-45 bg-[linear-gradient(135deg,rgba(37,99,235,0.2)_0%,rgba(0,0,0,0)_100%)]",
     },
     {
       className:
-        "absolute w-8 h-8 top-[378px] left-[1264px] rotate-45 bg-[linear-gradient(135deg,rgba(249,115,22,0.25)_0%,rgba(0,0,0,0)_100%)]",
+        "absolute w-8 h-8 top-[378px] left-[1264px] rotate-45 bg-[linear-gradient(135deg,rgba(37,99,235,0.25)_0%,rgba(0,0,0,0)_100%)]",
     },
     {
       className:
-        "absolute w-16 h-16 top-[819px] left-[576px] rotate-45 bg-[linear-gradient(135deg,rgba(236,72,153,0.15)_0%,rgba(0,0,0,0)_100%)]",
+        "absolute w-16 h-16 top-[819px] left-[576px] rotate-45 bg-[linear-gradient(135deg,rgba(37,99,235,0.15)_0%,rgba(0,0,0,0)_100%)]",
     },
   ];
 
   const lineElements = [
     {
       className:
-        "absolute w-px h-32 top-[205px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(248,113,113,0.3)_50%,rgba(0,0,0,0)_100%)]",
+        "absolute w-px h-32 top-[205px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.3)_50%,rgba(0,0,0,0)_100%)]",
     },
     {
       className:
-        "absolute w-px h-24 top-[614px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(251,146,60,0.4)_50%,rgba(0,0,0,0)_100%)]",
+        "absolute w-px h-24 top-[614px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.4)_50%,rgba(0,0,0,0)_100%)]",
     },
     {
       className:
-        "absolute w-px h-28 top-[605px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(244,114,182,0.35)_50%,rgba(0,0,0,0)_100%)]",
+        "absolute w-px h-28 top-[605px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.35)_50%,rgba(0,0,0,0)_100%)]",
     },
   ];
 
@@ -159,7 +159,7 @@ export const HeroSection = (): JSX.Element => {
                 <div className="flex flex-col w-full md:w-[584px] items-start relative">
                   <div className="flex flex-col w-full items-start relative">
                     <div className="flex flex-col w-full items-start relative">
-                      <Badge className="flex h-[38px] items-center px-[17px] py-[9px] bg-red-50 text-red-700 rounded-full border border-solid border-red-200">
+                      <Badge className="flex h-[38px] items-center px-[17px] py-[9px] bg-blue-50 text-blue-700 rounded-full border border-solid border-blue-200">
                         <img
                           className="mr-2"
                           alt="Margin wrap"
@@ -189,7 +189,7 @@ export const HeroSection = (): JSX.Element => {
                     <div className="pt-8">
                       <div className="flex gap-4">
                         <Button
-                          className="h-[61px] px-8 py-4 rounded-lg shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
+                          className="h-[61px] px-8 py-4 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
                           onClick={() => {
                             console.log('Start Converting Now button clicked');
                             setLocation('/tools');
@@ -259,7 +259,7 @@ export const HeroSection = (): JSX.Element => {
                 </div>
 
                 {/* Right column - File upload card */}
-                <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-white rounded-3xl border-2 border-dashed border-red-300 shadow-sm">
+                <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-white rounded-3xl border-2 border-dashed border-blue-300 shadow-sm">
                   <div className="flex flex-col items-center justify-center w-full p-0">
                     <BouncingUploadIcon
                       className="mb-3"
@@ -268,7 +268,7 @@ export const HeroSection = (): JSX.Element => {
                       iconClassName="text-white"
                       size="md"
                       animationSpeed="fast"
-                      bgColor="bg-red-500"
+                      bgColor="bg-blue-500"
                     />
 
                     <h2 className="font-bold text-gray-900 text-xl text-center mb-3">
@@ -279,7 +279,7 @@ export const HeroSection = (): JSX.Element => {
                       or click to browse files
                     </p>
 
-                    <AnimatedSelectButton className="h-[57px] px-12 py-4 mb-8 rounded-xl shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
+                    <AnimatedSelectButton className="h-[57px] px-12 py-4 mb-8 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]">
                       <UploadIcon className="mr-2 h-5 w-5" />
                       <span className="text-base">
                         Select PDF File

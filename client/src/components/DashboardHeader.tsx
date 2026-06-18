@@ -65,7 +65,7 @@ export const DashboardHeader = (): JSX.Element => {
             onClick={handleLogoClick}
             className="cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <h1 className="[font-family:'Pacifico',Helvetica] font-normal text-gray-900 text-xl leading-7 whitespace-nowrap">
+            <h1 className="[font-family:'Poppins',Helvetica] font-bold text-gray-900 text-xl leading-7 whitespace-nowrap">
               PDF Convert Master
             </h1>
           </div>
@@ -77,7 +77,7 @@ export const DashboardHeader = (): JSX.Element => {
             {navItems.map((item, index) => (
               <NavigationMenuItem key={index}>
                 <NavigationMenuLink
-                  className="[font-family:'Roboto',Helvetica] font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
+                  className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
                   onClick={() => handleNavClick(item.href)}
                 >
                   {item.name}
@@ -90,9 +90,9 @@ export const DashboardHeader = (): JSX.Element => {
         {/* Right - Plan Status, Notifications and Profile */}
         <div className="flex items-center space-x-4">
           {/* Plan Status */}
-          <div className="flex items-center px-3 py-2 rounded-lg border border-red-200 bg-red-50">
+          <div className="flex items-center px-3 py-2 rounded-lg border border-blue-200 bg-blue-50">
             <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-sm font-medium text-red-700">{user?.plan || 'Pro Plan'}</span>
+            <span className="text-sm font-medium text-blue-700">{user?.plan || 'Pro Plan'}</span>
           </div>
 
           {/* Manage Plan Button */}
@@ -104,7 +104,7 @@ export const DashboardHeader = (): JSX.Element => {
           {/* Notifications */}
           <Button variant="outline" size="icon" className="relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
               2
             </span>
           </Button>
@@ -118,7 +118,7 @@ export const DashboardHeader = (): JSX.Element => {
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-medium">{user?.email || 'User'}</p>
-                  <p className="text-xs text-red-100">{user?.plan || 'Free Plan'}</p>
+                  <p className="text-xs text-blue-100">{user?.plan || 'Free Plan'}</p>
                 </div>
                 <ChevronDown className="w-4 h-4" />
               </Button>

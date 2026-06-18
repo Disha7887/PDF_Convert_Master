@@ -76,7 +76,7 @@ export const FooterSection = (): JSX.Element => {
           {/* Company Info Column */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 font-['Pacifico',Helvetica]">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 font-['Poppins']">
                 PDF Convert Master
               </h3>
               <p className="text-gray-600 text-sm leading-relaxed">
@@ -116,7 +116,7 @@ export const FooterSection = (): JSX.Element => {
               {quickLinks.map((link, index) => (
                 <button
                   key={`quick-link-${index}`}
-                  className="block text-gray-600 text-sm hover:text-red-600 transition-colors duration-200 text-left"
+                  className="block text-gray-600 text-sm hover:text-blue-600 transition-colors duration-200 text-left"
                   onClick={() => handleNavigation(link.path, link.text)}
                   type="button"
                 >
@@ -134,7 +134,7 @@ export const FooterSection = (): JSX.Element => {
                 <button
                   key={`company-link-${index}`}
                   className={`block text-gray-600 text-sm transition-colors duration-200 text-left ${
-                    link.path ? 'hover:text-red-600 cursor-pointer' : 'opacity-50 cursor-default'
+                    link.path ? 'hover:text-blue-600 cursor-pointer' : 'opacity-50 cursor-default'
                   }`}
                   onClick={() => handleNavigation(link.path, link.text)}
                   disabled={!link.path}
@@ -182,7 +182,7 @@ export const FooterSection = (): JSX.Element => {
                   href="https://instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-pink-600 hover:text-white transition-all duration-200"
+                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-4 h-4" />

@@ -53,7 +53,7 @@ export const BatchProgressTracker: React.FC<BatchProgressTrackerProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'converting':
-        return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
+        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'failed':
@@ -122,7 +122,7 @@ export const BatchProgressTracker: React.FC<BatchProgressTrackerProps> = ({
       {currentJob && (
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
           <div className="flex items-center space-x-3">
-            <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
+            <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Currently converting: {currentJob.fileName}
@@ -193,7 +193,7 @@ export const BatchProgressTracker: React.FC<BatchProgressTrackerProps> = ({
             <div className="text-xs text-gray-500 dark:text-gray-400">Completed</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl font-bold text-blue-600">
               {jobs.filter(j => j.status === 'converting' || j.status === 'pending').length}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">Remaining</div>

@@ -12,8 +12,8 @@ export const SplitPdfUpload: React.FC = () => {
         acceptedFormats={[".pdf"]}
         maxFileSize="100MB"
         outputFormat="PDF Files"
-        toolIcon={<Scissors className="w-8 h-8 text-red-600" />}
-        iconBg="bg-red-50 border-red-200 dark:bg-red-900 dark:border-red-800"
+        toolIcon={<Scissors className="w-8 h-8 text-blue-600" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

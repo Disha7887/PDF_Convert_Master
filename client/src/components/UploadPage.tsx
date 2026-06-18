@@ -26,8 +26,8 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "Word to PDF",
     title: "Word to PDF",
     description: "Convert Word documents to PDF format",
-    icon: <FileText className="w-9 h-9 text-red-500" />,
-    iconBg: "bg-red-50 border-red-200",
+    icon: <FileText className="w-9 h-9 text-blue-500" />,
+    iconBg: "bg-blue-50 border-blue-200",
     acceptedFormats: [".doc", ".docx"],
     maxFileSize: 50
   },
@@ -46,8 +46,8 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "PDF to Excel",
     title: "PDF to Excel",
     description: "Extract tables and data to Excel spreadsheets",
-    icon: <FileSpreadsheet className="w-9 h-9 text-green-500" />,
-    iconBg: "bg-green-50 border-green-200",
+    icon: <FileSpreadsheet className="w-9 h-9 text-blue-500" />,
+    iconBg: "bg-blue-50 border-blue-200",
     acceptedFormats: [".pdf"],
     maxFileSize: 50
   },
@@ -56,8 +56,8 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "PDF to PowerPoint",
     title: "PDF to PowerPoint",
     description: "Convert PDF presentations to PPT format",
-    icon: <Presentation className="w-9 h-9 text-orange-500" />,
-    iconBg: "bg-orange-50 border-orange-200",
+    icon: <Presentation className="w-9 h-9 text-blue-500" />,
+    iconBg: "bg-blue-50 border-blue-200",
     acceptedFormats: [".pdf"],
     maxFileSize: 50
   },
@@ -66,8 +66,8 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "Merge PDFs",
     title: "Merge PDFs",
     description: "Combine multiple PDF files into one document",
-    icon: <FilePlus className="w-9 h-9 text-purple-500" />,
-    iconBg: "bg-purple-50 border-purple-200",
+    icon: <FilePlus className="w-9 h-9 text-blue-500" />,
+    iconBg: "bg-blue-50 border-blue-200",
     acceptedFormats: [".pdf"],
     maxFileSize: 100
   },
@@ -86,8 +86,8 @@ const toolConfigs: Record<string, ToolConfig> = {
     name: "Compress PDF",
     title: "Compress PDF",
     description: "Reduce PDF file size while maintaining quality",
-    icon: <Archive className="w-9 h-9 text-yellow-500" />,
-    iconBg: "bg-yellow-50 border-yellow-200",
+    icon: <Archive className="w-9 h-9 text-blue-500" />,
+    iconBg: "bg-blue-50 border-blue-200",
     acceptedFormats: [".pdf"],
     maxFileSize: 200
   }
@@ -174,7 +174,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
             className={`
               relative border-2 border-dashed rounded-3xl bg-white shadow-xl p-16 text-center transition-all duration-200
               ${isDragOver 
-                ? 'border-red-400 bg-red-50' 
+                ? 'border-blue-400 bg-blue-50' 
                 : 'border-gray-300 hover:border-gray-400'
               }
             `}
@@ -188,7 +188,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
               <BouncingUploadIcon
                 size="xl"
                 animationSpeed="fast"
-                bgColor="bg-red-100"
+                bgColor="bg-blue-100"
               />
             </div>
 
@@ -202,7 +202,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
 
             {/* Select Files Button */}
             <Button
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-10 py-4 text-lg font-semibold shadow-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 text-lg font-semibold shadow-lg"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectFiles();
@@ -239,7 +239,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
                 ))}
               </ul>
               <Button 
-                className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={() => {
                   // Handle conversion start
                   console.log('Starting conversion for:', uploadedFiles);
@@ -271,8 +271,8 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           {/* Fast Conversion */}
           <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <Zap className="w-6 h-6 text-green-600" />
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-blue-600" />
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -286,8 +286,8 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           {/* Easy Download */}
           <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                <Download className="w-6 h-6 text-purple-600" />
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                <Download className="w-6 h-6 text-blue-600" />
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">

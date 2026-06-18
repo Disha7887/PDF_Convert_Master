@@ -9,59 +9,59 @@ export const Body = (): JSX.Element => {
   const backgroundCircles = [
     {
       className:
-        "w-96 h-96 top-[51px] left-36 rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(239,68,68,0.1)_0%,rgba(249,115,22,0.1)_100%)]",
+        "w-96 h-96 top-[51px] left-36 rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]",
     },
     {
       className:
-        "w-80 h-80 top-[410px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(239,68,68,0.08)_0%,rgba(249,115,22,0.08)_100%)]",
+        "w-80 h-80 top-[410px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(37,99,235,0.08)_0%,rgba(37,99,235,0.08)_100%)]",
     },
     {
       className:
-        "w-56 h-56 top-[390px] left-[856px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(249,115,22,0.1)_0%,rgba(239,68,68,0.1)_100%)]",
+        "w-56 h-56 top-[390px] left-[856px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]",
     },
   ];
 
   const backgroundDots = [
-    { className: "w-4 h-4 top-[102px] left-72 bg-red-300/40 rounded-full" },
+    { className: "w-4 h-4 top-[102px] left-72 bg-blue-300/40 rounded-full" },
     {
-      className: "w-3 h-3 top-[307px] left-[996px] bg-red-400/40 rounded-full",
+      className: "w-3 h-3 top-[307px] left-[996px] bg-blue-400/40 rounded-full",
     },
     {
-      className: "w-2 h-2 top-[760px] left-[216px] bg-orange-300/40 rounded-full",
-    },
-    {
-      className:
-        "w-5 h-5 top-[717px] left-[1276px] bg-pink-300/30 rounded-full",
+      className: "w-2 h-2 top-[760px] left-[216px] bg-blue-300/40 rounded-full",
     },
     {
       className:
-        "w-3 h-3 top-[858px] left-[1140px] bg-red-300/30 rounded-full",
+        "w-5 h-5 top-[717px] left-[1276px] bg-blue-300/30 rounded-full",
     },
     {
       className:
-        "w-4 h-4 top-[512px] left-[1008px] bg-orange-400/40 rounded-full",
+        "w-3 h-3 top-[858px] left-[1140px] bg-blue-300/30 rounded-full",
+    },
+    {
+      className:
+        "w-4 h-4 top-[512px] left-[1008px] bg-blue-400/40 rounded-full",
     },
   ];
 
   const backgroundLines = [
     {
       className:
-        "w-px h-32 top-[205px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(239,68,68,0.2)_50%,rgba(0,0,0,0)_100%)]",
+        "w-px h-32 top-[205px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.2)_50%,rgba(0,0,0,0)_100%)]",
     },
     {
       className:
-        "w-px h-24 top-[614px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(248,113,113,0.3)_50%,rgba(0,0,0,0)_100%)]",
+        "w-px h-24 top-[614px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.3)_50%,rgba(0,0,0,0)_100%)]",
     },
     {
       className:
-        "w-px h-28 top-[605px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(249,115,22,0.2)_50%,rgba(0,0,0,0)_100%)]",
+        "w-px h-28 top-[605px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.2)_50%,rgba(0,0,0,0)_100%)]",
     },
   ];
 
   return (
     <div className="flex flex-col w-full relative overflow-x-hidden bg-gray-50">
       {/* Indicator line at the top */}
-      <div className="absolute w-[130px] h-1 top-0 left-0 bg-red-500" />
+      <div className="absolute w-[130px] h-1 top-0 left-0 bg-blue-500" />
 
       {/* Main content sections */}
       <HeroSection />

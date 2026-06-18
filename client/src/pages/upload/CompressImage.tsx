@@ -12,8 +12,8 @@ export const CompressImageUpload: React.FC = () => {
         acceptedFormats={[".jpg", ".jpeg", ".png", ".webp"]}
         maxFileSize="25MB"
         outputFormat="Compressed Images"
-        toolIcon={<Minimize2 className="w-8 h-8 text-cyan-500" />}
-        iconBg="bg-cyan-50 border-cyan-200 dark:bg-cyan-900 dark:border-cyan-800"
+        toolIcon={<Minimize2 className="w-8 h-8 text-blue-500" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

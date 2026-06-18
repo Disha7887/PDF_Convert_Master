@@ -19,7 +19,7 @@ export const Support = (): JSX.Element => {
       title: "Getting Started",
       description: "Basic setup and first steps",
       icon: BookOpen,
-      color: "bg-green-500",
+      color: "bg-blue-500",
       articles: 12,
       id: "getting-started"
     },
@@ -35,7 +35,7 @@ export const Support = (): JSX.Element => {
       title: "Account & Billing",
       description: "Manage your account and payments",
       icon: CreditCard,
-      color: "bg-red-500",
+      color: "bg-blue-500",
       articles: 8,
       id: "billing"
     },
@@ -43,7 +43,7 @@ export const Support = (): JSX.Element => {
       title: "API Documentation",
       description: "Developer resources and guides",
       icon: Code,
-      color: "bg-purple-500",
+      color: "bg-blue-500",
       articles: 15,
       id: "api"
     },
@@ -51,7 +51,7 @@ export const Support = (): JSX.Element => {
       title: "File Conversion",
       description: "Converting between formats",
       icon: FileText,
-      color: "bg-orange-500",
+      color: "bg-blue-500",
       articles: 22,
       id: "conversion"
     },
@@ -59,7 +59,7 @@ export const Support = (): JSX.Element => {
       title: "Advanced Features",
       description: "Pro tips and advanced usage",
       icon: Settings,
-      color: "bg-teal-500",
+      color: "bg-blue-500",
       articles: 9,
       id: "advanced"
     }
@@ -91,7 +91,7 @@ export const Support = (): JSX.Element => {
       title: "Email Support",
       description: "Send us detailed questions via email",
       icon: Mail,
-      color: "bg-green-500",
+      color: "bg-blue-500",
       action: "Send Email",
       availability: "< 2h response"
     },
@@ -99,7 +99,7 @@ export const Support = (): JSX.Element => {
       title: "Phone Support",
       description: "Speak directly with our experts",
       icon: Phone,
-      color: "bg-purple-500",
+      color: "bg-blue-500",
       action: "Call Now",
       availability: "+447429919748"
     },
@@ -107,7 +107,7 @@ export const Support = (): JSX.Element => {
       title: "Video Tutorials",
       description: "Watch step-by-step video guides",
       icon: Play,
-      color: "bg-orange-500",
+      color: "bg-blue-500",
       action: "Watch Videos",
       availability: "15+ tutorials"
     }
@@ -127,21 +127,21 @@ export const Support = (): JSX.Element => {
       value: "98.3%",
       description: "Customer satisfaction",
       icon: Award,
-      color: "text-green-600"
+      color: "text-blue-600"
     },
     {
       title: "Resolution Rate",
       value: "99.2%",
       description: "Issues resolved",
       icon: Target,
-      color: "text-purple-600"
+      color: "text-blue-600"
     },
     {
       title: "Articles Available",
       value: "15+",
       description: "Help articles",
       icon: BookOpen,
-      color: "text-orange-600"
+      color: "text-blue-600"
     }
   ];
 
@@ -257,13 +257,13 @@ export const Support = (): JSX.Element => {
       />
 
       {/* Hero Section with Purple Gradient */}
-      <section className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 py-20 overflow-hidden">
         <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"}></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-bold text-white mb-6">
             How Can We Help You?
           </h1>
-          <p className="text-xl text-purple-100 mb-12 max-w-3xl mx-auto">
+          <p className="text-xl text-blue-100 mb-12 max-w-3xl mx-auto">
             Get help with PDF Convert Master services with comprehensive support for all your PDF conversion needs
           </p>
           
@@ -380,8 +380,8 @@ export const Support = (): JSX.Element => {
               </div>
             </div>
             <div className="bg-white rounded-xl p-8 shadow-lg">
-              <div className="aspect-video bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
-                <Play className="w-16 h-16 text-purple-600" />
+              <div className="aspect-video bg-gradient-to-br from-blue-100 to-blue-100 rounded-lg flex items-center justify-center">
+                <Play className="w-16 h-16 text-blue-600" />
               </div>
               <h3 className="text-xl font-semibold mt-4 mb-2">Quick Start Video</h3>
               <p className="text-gray-600">Watch our 5-minute overview to get started quickly</p>
@@ -573,12 +573,12 @@ export const Support = (): JSX.Element => {
                   <p className="text-gray-600 text-sm mb-2">Process multiple files simultaneously with our new batch conversion tool.</p>
                   <p className="text-xs text-gray-500">Released 2 days ago</p>
                 </div>
-                <div className="border-l-4 border-green-500 pl-4">
+                <div className="border-l-4 border-blue-500 pl-4">
                   <h4 className="font-semibold mb-1">API Rate Limit Improvements</h4>
                   <p className="text-gray-600 text-sm mb-2">We've increased API rate limits for premium users by 50%.</p>
                   <p className="text-xs text-gray-500">Released 1 week ago</p>
                 </div>
-                <div className="border-l-4 border-purple-500 pl-4">
+                <div className="border-l-4 border-blue-500 pl-4">
                   <h4 className="font-semibold mb-1">Enhanced Security Features</h4>
                   <p className="text-gray-600 text-sm mb-2">New encryption standards and improved data protection.</p>
                   <p className="text-xs text-gray-500">Released 2 weeks ago</p>

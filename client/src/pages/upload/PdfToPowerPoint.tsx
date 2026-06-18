@@ -12,8 +12,8 @@ export const PdfToPowerPointUpload: React.FC = () => {
         acceptedFormats={[".pdf"]}
         maxFileSize="50MB"
         outputFormat="PPTX"
-        toolIcon={<Presentation className="w-8 h-8 text-orange-500" />}
-        iconBg="bg-orange-50 border-orange-200"
+        toolIcon={<Presentation className="w-8 h-8 text-blue-500" />}
+        iconBg="bg-blue-50 border-blue-200"
       />
     </div>
   );

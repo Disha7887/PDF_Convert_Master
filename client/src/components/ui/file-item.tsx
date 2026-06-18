@@ -51,22 +51,22 @@ export const FileItem: React.FC<FileItemProps> = ({
     const extension = file.name.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
-        return <FileText className="w-5 h-5 text-red-500" />;
+        return <FileText className="w-5 h-5 text-blue-500" />;
       case 'doc':
       case 'docx':
         return <FileText className="w-5 h-5 text-blue-500" />;
       case 'xls':
       case 'xlsx':
-        return <FileSpreadsheet className="w-5 h-5 text-green-500" />;
+        return <FileSpreadsheet className="w-5 h-5 text-blue-500" />;
       case 'ppt':
       case 'pptx':
-        return <Presentation className="w-5 h-5 text-orange-500" />;
+        return <Presentation className="w-5 h-5 text-blue-500" />;
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
       case 'webp':
-        return <Image className="w-5 h-5 text-purple-500" />;
+        return <Image className="w-5 h-5 text-blue-500" />;
       default:
         return <FileText className="w-5 h-5 text-gray-500" />;
     }
@@ -81,7 +81,7 @@ export const FileItem: React.FC<FileItemProps> = ({
       case 'invalid':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'converting':
-        return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
+        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'failed':
@@ -99,7 +99,7 @@ export const FileItem: React.FC<FileItemProps> = ({
       case 'failed':
         return 'border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800';
       case 'converting':
-        return 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800';
+        return 'border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800';
       case 'completed':
         return 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800';
       default:

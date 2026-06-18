@@ -37,14 +37,14 @@ export const APIDocumentationSection = (): JSX.Element => {
     <section className="relative bg-white py-24 overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-96 h-96 top-20 right-20 rounded-full blur-[40px] bg-[linear-gradient(135deg,rgba(239,68,68,0.08)_0%,rgba(249,115,22,0.08)_100%)]" />
-        <div className="absolute w-64 h-64 bottom-20 left-20 rounded-full blur-[30px] bg-[linear-gradient(135deg,rgba(239,68,68,0.1)_0%,rgba(249,115,22,0.1)_100%)]" />
+        <div className="absolute w-96 h-96 top-20 right-20 rounded-full blur-[40px] bg-[linear-gradient(135deg,rgba(37,99,235,0.08)_0%,rgba(37,99,235,0.08)_100%)]" />
+        <div className="absolute w-64 h-64 bottom-20 left-20 rounded-full blur-[30px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-8 relative">
         {/* Header */}
         <div className="text-center mb-16">
-          <Badge className="mb-4 px-4 py-2 bg-red-50 text-red-700 border border-red-200">
+          <Badge className="mb-4 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200">
             <Code2 className="w-4 h-4 mr-2" />
             Developer API
           </Badge>
@@ -62,7 +62,7 @@ export const APIDocumentationSection = (): JSX.Element => {
           {apiFeatures.map((feature, index) => (
             <Card key={index} className="bg-white border border-gray-200 shadow-sm">
               <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>

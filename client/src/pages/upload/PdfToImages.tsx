@@ -12,8 +12,8 @@ export const PdfToImagesUpload: React.FC = () => {
         acceptedFormats={[".pdf"]}
         maxFileSize="50MB"
         outputFormat="JPG/PNG"
-        toolIcon={<Image className="w-8 h-8 text-red-500" />}
-        iconBg="bg-red-50 border-red-200 dark:bg-red-900 dark:border-red-800"
+        toolIcon={<Image className="w-8 h-8 text-blue-500" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

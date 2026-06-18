@@ -41,7 +41,7 @@ export const Features: React.FC = () => {
           <div className="space-y-8 mb-16">
             {features.map((feature, index) => (
               <div key={index} className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -60,7 +60,7 @@ export const Features: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg"
-              className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
               onClick={() => setLocation('/learn-more')}
             >
               <ArrowRight className="w-5 h-5 mr-2" />

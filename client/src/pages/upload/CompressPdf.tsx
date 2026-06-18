@@ -12,8 +12,8 @@ export const CompressPdfUpload: React.FC = () => {
         acceptedFormats={[".pdf"]}
         maxFileSize="200MB"
         outputFormat="Compressed PDF"
-        toolIcon={<Minimize2 className="w-8 h-8 text-green-600" />}
-        iconBg="bg-green-50 border-green-200 dark:bg-green-900 dark:border-green-800"
+        toolIcon={<Minimize2 className="w-8 h-8 text-blue-600" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

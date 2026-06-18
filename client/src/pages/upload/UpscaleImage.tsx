@@ -156,8 +156,8 @@ export const UpscaleImageUpload = () => {
     <ImageToolShell
       title="AI Image Upscaler"
       description="Enhance image resolution with real AI (Real-ESRGAN). Increase size 2× or 4× while keeping detail sharp, compare before and after, then download."
-      icon={<TrendingUp className="w-8 h-8 text-emerald-500" />}
-      iconBg="bg-emerald-50 border-emerald-200 dark:bg-emerald-900 dark:border-emerald-800"
+      icon={<TrendingUp className="w-8 h-8 text-blue-500" />}
+      iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!file ? (
         <ImageDropzone acceptedFormats={ACCEPTED} maxSizeMB={MAX_MB} onFile={handleFile} />
@@ -187,7 +187,7 @@ export const UpscaleImageUpload = () => {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                   After (AI {scale}×)
                 </span>
                 {afterDims && (
@@ -199,7 +199,7 @@ export const UpscaleImageUpload = () => {
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 flex items-center justify-center min-h-[220px]">
                 {stage === "processing" && (
                   <div className="text-center">
-                    <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+                    <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
                     <p className="text-sm text-gray-600 dark:text-gray-300">Enhancing with AI…</p>
                     <p className="text-xs text-gray-400 mt-1">This can take 20–60 seconds</p>
                   </div>
@@ -251,7 +251,7 @@ export const UpscaleImageUpload = () => {
                 <Button
                   onClick={upscale}
                   disabled={stage === "processing"}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                   data-testid="button-upscale"
                 >
                   {stage === "processing" ? (

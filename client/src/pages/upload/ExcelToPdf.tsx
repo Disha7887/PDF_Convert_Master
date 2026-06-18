@@ -12,8 +12,8 @@ export const ExcelToPdfUpload: React.FC = () => {
         acceptedFormats={[".xls", ".xlsx"]}
         maxFileSize="50MB"
         outputFormat="PDF"
-        toolIcon={<FileSpreadsheet className="w-8 h-8 text-green-500" />}
-        iconBg="bg-green-50 border-green-200 dark:bg-green-900 dark:border-green-800"
+        toolIcon={<FileSpreadsheet className="w-8 h-8 text-blue-500" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

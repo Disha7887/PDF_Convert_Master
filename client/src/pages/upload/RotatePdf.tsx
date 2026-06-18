@@ -12,8 +12,8 @@ export const RotatePdfUpload: React.FC = () => {
         acceptedFormats={[".pdf"]}
         maxFileSize="100MB"
         outputFormat="Rotated PDF"
-        toolIcon={<RotateCw className="w-8 h-8 text-purple-600" />}
-        iconBg="bg-purple-50 border-purple-200 dark:bg-purple-900 dark:border-purple-800"
+        toolIcon={<RotateCw className="w-8 h-8 text-blue-600" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

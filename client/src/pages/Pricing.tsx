@@ -78,7 +78,7 @@ export const Pricing: React.FC = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-gray-900">Storage</h3>
-                <Archive className="w-5 h-5 text-orange-600" />
+                <Archive className="w-5 h-5 text-blue-600" />
               </div>
               <div className="space-y-2">
                 <div className="flex items-end justify-between">
@@ -86,7 +86,7 @@ export const Pricing: React.FC = () => {
                   <span className="text-sm text-gray-600">of 100 GB</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-orange-600 h-2 rounded-full" style={{ width: '45.2%' }}></div>
+                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45.2%' }}></div>
                 </div>
                 <p className="text-sm text-gray-600">45.2% used</p>
               </div>
@@ -98,7 +98,7 @@ export const Pricing: React.FC = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-gray-900">Conversions</h3>
-                <FileImage className="w-5 h-5 text-green-600" />
+                <FileImage className="w-5 h-5 text-blue-600" />
               </div>
               <div className="space-y-2">
                 <div className="flex items-end justify-between">
@@ -106,7 +106,7 @@ export const Pricing: React.FC = () => {
                   <span className="text-sm text-gray-600">of 10,000</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '28.5%' }}></div>
+                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '28.5%' }}></div>
                 </div>
                 <p className="text-sm text-gray-600">28.5% used</p>
               </div>
@@ -161,7 +161,7 @@ export const Pricing: React.FC = () => {
               </div>
 
               {/* Pro Plan - Current */}
-              <div className="border-2 border-red-200 bg-red-50 rounded-lg p-6 relative flex flex-col h-full">
+              <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-6 relative flex flex-col h-full">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
                   <div className="flex items-end justify-center mb-4">

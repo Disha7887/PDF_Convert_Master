@@ -482,7 +482,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         <div className="px-6 py-4 bg-gray-50 border-b">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-4">
-              <div className={`flex items-center space-x-2 ${stage === 'upload' || stage === 'files-selected' ? 'text-blue-600' : stage === 'converting' ? 'text-yellow-600' : stage === 'completed' ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`flex items-center space-x-2 ${stage === 'upload' || stage === 'files-selected' ? 'text-blue-600' : stage === 'converting' ? 'text-blue-600' : stage === 'completed' ? 'text-green-600' : 'text-red-600'}`}>
                 {stage === 'upload' && <Upload className="w-4 h-4" />}
                 {stage === 'files-selected' && <FileCheck className="w-4 h-4" />}
                 {stage === 'converting' && <Settings className="w-4 h-4 animate-spin" />}
@@ -588,7 +588,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                 <div className="flex justify-center space-x-4 pt-4">
                   <Button
                     onClick={startBatchConversion}
-                    className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
                     disabled={isConverting}
                   >
                     <Settings className="w-4 h-4 mr-2" />
@@ -612,7 +612,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           {stage === 'converting' && (
             <div className="text-center space-y-6">
               <div className="flex justify-center">
-                <Settings className="w-16 h-16 text-orange-600 animate-spin" />
+                <Settings className="w-16 h-16 text-blue-600 animate-spin" />
               </div>
               <div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">Converting Files...</h3>
@@ -673,7 +673,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                 <div className="flex justify-center space-x-4 pt-4">
                   <Button
                     onClick={downloadAllFiles}
-                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
                   >
                     Download All Files
                   </Button>

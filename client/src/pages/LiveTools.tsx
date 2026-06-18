@@ -48,8 +48,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
               <div 
                 className={`h-2 rounded-full ${
                   popularity >= 90 ? 'bg-blue-600' : 
-                  popularity >= 80 ? 'bg-green-600' : 
-                  popularity >= 70 ? 'bg-yellow-500' : 
+                  popularity >= 80 ? 'bg-blue-600' : 
+                  popularity >= 70 ? 'bg-blue-500' : 
                   'bg-gray-400'
                 }`}
                 style={{ width: `${popularity}%` }}
@@ -83,7 +83,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ title, description, popularity, ico
         <Button 
           size="icon" 
           variant={isFavorite ? "default" : "outline"}
-          className={`absolute top-4 right-4 ${isFavorite ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg' : ''}`}
+          className={`absolute top-4 right-4 ${isFavorite ? 'bg-blue-600 text-white shadow-lg' : ''}`}
         >
           <Star className={`w-4 h-4 ${isFavorite ? 'fill-white' : ''}`} />
         </Button>
@@ -133,8 +133,8 @@ export const LiveTools: React.FC = () => {
       title: "PDF to Excel",
       description: "Extract tables and data to Excel spreadsheets",
       popularity: 88,
-      icon: <FileSpreadsheet className="w-5 h-5 text-green-600" />,
-      iconBg: "bg-green-100",
+      icon: <FileSpreadsheet className="w-5 h-5 text-blue-600" />,
+      iconBg: "bg-blue-100",
       category: "convert",
       uploadUrl: "/upload/pdf-to-excel",
       toolId: "pdf-to-excel"
@@ -143,16 +143,16 @@ export const LiveTools: React.FC = () => {
       title: "PDF to PowerPoint",
       description: "Convert PDF presentations to PPT format",
       popularity: 75,
-      icon: <Presentation className="w-5 h-5 text-orange-600" />,
-      iconBg: "bg-orange-100",
+      icon: <Presentation className="w-5 h-5 text-blue-600" />,
+      iconBg: "bg-blue-100",
       category: "convert"
     },
     {
       title: "Word to PDF",
       description: "Convert Word documents to PDF format",
       popularity: 92,
-      icon: <FileText className="w-5 h-5 text-red-600" />,
-      iconBg: "bg-red-100",
+      icon: <FileText className="w-5 h-5 text-blue-600" />,
+      iconBg: "bg-blue-100",
       category: "convert",
       uploadUrl: "/upload/word-to-pdf",
       toolId: "word-to-pdf"
@@ -161,8 +161,8 @@ export const LiveTools: React.FC = () => {
       title: "Merge PDFs",
       description: "Combine multiple PDF files into one document",
       popularity: 85,
-      icon: <FilePlus className="w-5 h-5 text-purple-600" />,
-      iconBg: "bg-purple-100",
+      icon: <FilePlus className="w-5 h-5 text-blue-600" />,
+      iconBg: "bg-blue-100",
       category: "manipulate",
       isFavorite: true,
       uploadUrl: "/upload/merge-pdfs",
@@ -180,16 +180,16 @@ export const LiveTools: React.FC = () => {
       title: "Compress PDF",
       description: "Reduce PDF file size while maintaining quality",
       popularity: 82,
-      icon: <Archive className="w-5 h-5 text-yellow-600" />,
-      iconBg: "bg-yellow-100",
+      icon: <Archive className="w-5 h-5 text-blue-600" />,
+      iconBg: "bg-blue-100",
       category: "manipulate"
     },
     {
       title: "PDF Password Protection",
       description: "Add password security to your PDF files",
       popularity: 70,
-      icon: <Lock className="w-5 h-5 text-red-600" />,
-      iconBg: "bg-red-100",
+      icon: <Lock className="w-5 h-5 text-blue-600" />,
+      iconBg: "bg-blue-100",
       category: "secure"
     },
     {
@@ -268,7 +268,7 @@ export const LiveTools: React.FC = () => {
             <div className="flex space-x-2 mb-6">
               <Button 
                 variant={activeFilter === 'all' ? 'default' : 'outline'}
-                className={activeFilter === 'all' ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg' : ''}
+                className={activeFilter === 'all' ? 'bg-blue-600 text-white shadow-lg' : ''}
                 onClick={() => setActiveFilter('all')}
               >
                 All Tools ({getToolCount('all')})
@@ -295,17 +295,17 @@ export const LiveTools: React.FC = () => {
 
             {/* Favorite Tools Section */}
             {favoriteTools.length > 0 && (
-              <Card className="mb-6 border-red-200 bg-gradient-to-r from-red-50 to-red-50">
+              <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50">
                 <CardHeader>
                   <CardTitle className="flex items-center text-lg">
-                    <Star className="w-5 h-5 text-red-500 mr-2" />
+                    <Star className="w-5 h-5 text-blue-500 mr-2" />
                     Your Favorite Tools
                   </CardTitle>
                 </CardHeader>
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {favoriteTools.map((tool, index) => (
-                      <div key={index} className="p-4 bg-white rounded-lg border border-red-200 text-center">
+                      <div key={index} className="p-4 bg-white rounded-lg border border-blue-200 text-center">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-3 ${tool.iconBg}`}>
                           {tool.icon}
                         </div>

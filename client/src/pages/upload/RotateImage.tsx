@@ -123,8 +123,8 @@ export const RotateImageUpload = () => {
     <ImageToolShell
       title="Image Rotator"
       description="Rotate by 90° steps or any custom angle, flip horizontally or vertically, and preview live before you download or save to the server."
-      icon={<RotateCw className="w-8 h-8 text-orange-500" />}
-      iconBg="bg-orange-50 border-orange-200 dark:bg-orange-900 dark:border-orange-800"
+      icon={<RotateCw className="w-8 h-8 text-blue-500" />}
+      iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!file ? (
         <ImageDropzone acceptedFormats={ACCEPTED} maxSizeMB={MAX_MB} onFile={handleFile} />

@@ -125,7 +125,7 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-sm font-medium">Home</p>
-                  <p className="text-xs text-red-100">Dashboard overview</p>
+                  <p className="text-xs text-blue-100">Dashboard overview</p>
                 </div>
                 <div className="w-2 h-2 rounded-full bg-white"></div>
               </Button>
@@ -230,12 +230,12 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Upgrade Plan */}
-            <div className="mt-8 p-4 rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-red-50">
+            <div className="mt-8 p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50">
               <div className="flex items-center mb-2">
-                <ArrowUp className="w-4 h-4 text-red-600 mr-2" />
-                <h3 className="text-sm font-semibold text-red-900">Upgrade Plan</h3>
+                <ArrowUp className="w-4 h-4 text-blue-600 mr-2" />
+                <h3 className="text-sm font-semibold text-blue-900">Upgrade Plan</h3>
               </div>
-              <p className="text-xs text-red-700 mb-3">
+              <p className="text-xs text-blue-700 mb-3">
                 Get unlimited conversions and advanced features
               </p>
               <Button
@@ -253,7 +253,7 @@ export const Dashboard: React.FC = () => {
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">
             {/* Welcome Section */}
-            <div className="mb-6 p-8 rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white relative overflow-hidden">
+            <div className="mb-6 p-8 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-600 to-blue-600 text-white relative overflow-hidden">
               {/* Background decorative elements */}
               <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/5 transform translate-x-32 -translate-y-32"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white/5 transform -translate-x-24 translate-y-24"></div>
@@ -292,15 +292,15 @@ export const Dashboard: React.FC = () => {
                 title="API Calls Remaining"
                 value="47,153"
                 subtitle="3,847 used"
-                icon={<Activity className="w-5 h-5 text-purple-600" />}
-                iconBg="bg-purple-100"
+                icon={<Activity className="w-5 h-5 text-blue-600" />}
+                iconBg="bg-blue-100"
               />
               <StatCard
                 title="Storage Used"
                 value="45.2 GB"
                 subtitle="of 100 GB"
-                icon={<ArrowDown className="w-5 h-5 text-orange-600" />}
-                iconBg="bg-orange-100"
+                icon={<ArrowDown className="w-5 h-5 text-blue-600" />}
+                iconBg="bg-blue-100"
               />
               <StatCard
                 title="Active Integrations"
@@ -336,20 +336,20 @@ export const Dashboard: React.FC = () => {
                   <ToolCard
                     title="Merge PDFs"
                     uses="654 uses"
-                    icon={<Square className="w-5 h-5 text-purple-600" />}
-                    iconBg="bg-purple-100"
+                    icon={<Square className="w-5 h-5 text-blue-600" />}
+                    iconBg="bg-blue-100"
                   />
                   <ToolCard
                     title="Compress PDF"
                     uses="543 uses"
-                    icon={<ArrowDown className="w-5 h-5 text-orange-600" />}
-                    iconBg="bg-orange-100"
+                    icon={<ArrowDown className="w-5 h-5 text-blue-600" />}
+                    iconBg="bg-blue-100"
                   />
                   <ToolCard
                     title="Split PDF"
                     uses="432 uses"
-                    icon={<Activity className="w-5 h-5 text-red-600" />}
-                    iconBg="bg-red-100"
+                    icon={<Activity className="w-5 h-5 text-blue-600" />}
+                    iconBg="bg-blue-100"
                   />
                   <ToolCard
                     title="PDF Signature"

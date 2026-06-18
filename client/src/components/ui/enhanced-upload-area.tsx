@@ -63,22 +63,22 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
     const ext = format.replace('.', '').toLowerCase();
     switch (ext) {
       case 'pdf':
-        return <FileText className="w-6 h-6 text-red-500" />;
+        return <FileText className="w-6 h-6 text-blue-500" />;
       case 'doc':
       case 'docx':
         return <FileText className="w-6 h-6 text-blue-500" />;
       case 'xls':
       case 'xlsx':
-        return <FileSpreadsheet className="w-6 h-6 text-green-500" />;
+        return <FileSpreadsheet className="w-6 h-6 text-blue-500" />;
       case 'ppt':
       case 'pptx':
-        return <Presentation className="w-6 h-6 text-orange-500" />;
+        return <Presentation className="w-6 h-6 text-blue-500" />;
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
       case 'webp':
-        return <Image className="w-6 h-6 text-purple-500" />;
+        return <Image className="w-6 h-6 text-blue-500" />;
       default:
         return <FileText className="w-6 h-6 text-gray-500" />;
     }
@@ -122,7 +122,7 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
       
       {/* Background Animation */}
       {isDragOver && (
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-2xl animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-blue-400/20 rounded-2xl animate-pulse" />
       )}
       
       {/* Upload Icon */}
@@ -130,7 +130,7 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
         {isDragOver ? (
           <div className="relative">
             <CloudUpload className="w-16 h-16 text-blue-500 animate-bounce" />
-            <Sparkles className="w-6 h-6 text-yellow-400 absolute -top-2 -right-2 animate-pulse" />
+            <Sparkles className="w-6 h-6 text-blue-400 absolute -top-2 -right-2 animate-pulse" />
           </div>
         ) : (
           <BouncingUploadIcon
@@ -165,7 +165,7 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
             {currentFileCount > 0 && ` (${currentFileCount}/${maxFiles} selected)`}
           </p>
         ) : (
-          <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
             Maximum files reached ({maxFiles}/{maxFiles})
           </p>
         )}

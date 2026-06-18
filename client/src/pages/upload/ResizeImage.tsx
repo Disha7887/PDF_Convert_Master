@@ -113,8 +113,8 @@ export const ResizeImageUpload = () => {
     <ImageToolShell
       title="Image Resizer"
       description="Resize images to exact dimensions or scale by percentage. Lock the aspect ratio to avoid distortion, then download or save to the server."
-      icon={<Maximize2 className="w-8 h-8 text-teal-500" />}
-      iconBg="bg-teal-50 border-teal-200 dark:bg-teal-900 dark:border-teal-800"
+      icon={<Maximize2 className="w-8 h-8 text-blue-500" />}
+      iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!file ? (
         <ImageDropzone acceptedFormats={ACCEPTED} maxSizeMB={MAX_MB} onFile={handleFile} />
@@ -137,7 +137,7 @@ export const ResizeImageUpload = () => {
                   Original: {natural.w} × {natural.h}px
                 </span>
                 <span
-                  className="font-semibold text-teal-600 dark:text-teal-400"
+                  className="font-semibold text-blue-600 dark:text-blue-400"
                   data-testid="text-new-size"
                 >
                   New: {width} × {height}px

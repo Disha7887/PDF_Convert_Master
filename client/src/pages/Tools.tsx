@@ -46,6 +46,34 @@ const formatBytes = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+// Correct, human-readable action label per tool for the convert button.
+// Avoids generic/incorrect text like "Convert to Same Format".
+const getActionLabel = (cfg: ToolConfig): string => {
+  const labels: Record<string, string> = {
+    "pdf-to-word": "Convert to Word",
+    "pdf-to-excel": "Convert to Excel",
+    "pdf-to-powerpoint": "Convert to PowerPoint",
+    "pdf-to-images": "Convert to Images",
+    "word-to-pdf": "Convert to PDF",
+    "excel-to-pdf": "Convert to PDF",
+    "powerpoint-to-pdf": "Convert to PDF",
+    "html-to-pdf": "Convert to PDF",
+    "images-to-pdf": "Convert to PDF",
+    "resize-images": "Resize Images",
+    "crop-images": "Crop Images",
+    "rotate-images": "Rotate Images",
+    "convert-image-format": "Convert Image",
+    "compress-images": "Compress Images",
+    "upscale-images": "Upscale Images",
+    "remove-background": "Remove Background",
+    "merge-pdfs": "Merge PDFs",
+    "split-pdf": "Split PDF",
+    "compress-pdf": "Compress PDF",
+    "rotate-pdf": "Rotate PDF",
+  };
+  return labels[cfg.id] ?? cfg.title;
+};
+
 interface ToolCardProps {
   toolConfig: ToolConfig;
 }
@@ -289,7 +317,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
 
           <Button
             onClick={() => inputRef.current?.click()}
-            className="w-full h-14 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
+            className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl"
             data-testid={`button-select-${toolConfig.id}`}
           >
             <Upload className="w-4 h-4 mr-2" />
@@ -328,11 +356,11 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         >
           <div
             className={`flex items-center gap-3 p-3 mb-4 rounded-xl border ${
-              isDragOver ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"
+              isDragOver ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-white"
             }`}
           >
-            <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 shrink-0">
-              <FileText className="w-5 h-5 text-red-600" />
+            <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 shrink-0">
+              <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div className="min-w-0 flex-1">
               <p
@@ -353,7 +381,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
               <select
                 value={targetFormat}
                 onChange={(e) => setTargetFormat(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 data-testid={`select-format-${toolConfig.id}`}
               >
                 <option value="png">PNG</option>
@@ -365,18 +393,18 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
 
           <Button
             onClick={startConversion}
-            className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl mb-2"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl mb-2"
             data-testid={`button-convert-${toolConfig.id}`}
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             {needsFormatPicker
               ? `Convert to ${targetFormat.toUpperCase()}`
-              : `Convert to ${toolConfig.outputFormat}`}
+              : getActionLabel(toolConfig)}
           </Button>
 
           <button
             onClick={() => inputRef.current?.click()}
-            className="text-xs text-gray-500 hover:text-red-600 transition-colors py-1"
+            className="text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
             data-testid={`button-change-${toolConfig.id}`}
           >
             Choose a different file
@@ -387,7 +415,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       {/* CONVERTING */}
       {stage === "converting" && (
         <div className="flex flex-col items-center justify-center py-6">
-          <Loader2 className="w-10 h-10 text-red-600 animate-spin mb-4" />
+          <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
           <p className="text-sm font-medium text-gray-900 mb-1">
             Converting your file…
           </p>
@@ -398,7 +426,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           )}
           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
             <div
-              className="h-full bg-gradient-to-r from-red-600 to-red-700 transition-all duration-300"
+              className="h-full bg-blue-600 transition-all duration-300"
               style={{ width: `${progress}%` }}
               data-testid={`progress-${toolConfig.id}`}
             />
@@ -423,7 +451,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
 
           <Button
             onClick={handleDownload}
-            className="w-full h-12 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl mb-2"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl mb-2"
             data-testid={`button-download-${toolConfig.id}`}
           >
             <Download className="w-4 h-4 mr-2" />
@@ -432,7 +460,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
 
           <button
             onClick={reset}
-            className="text-xs text-gray-500 hover:text-red-600 transition-colors py-1"
+            className="text-xs text-gray-500 hover:text-blue-600 transition-colors py-1"
             data-testid={`button-again-${toolConfig.id}`}
           >
             Convert another file
@@ -458,7 +486,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
 
           <Button
             onClick={() => inputRef.current?.click()}
-            className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl"
             data-testid={`button-retry-${toolConfig.id}`}
           >
             <Upload className="w-4 h-4 mr-2" />
@@ -524,7 +552,7 @@ export const Tools: React.FC = () => {
                 variant={activeFilter === buttonName ? "default" : "outline"}
                 className={`px-3 sm:px-6 py-2 sm:py-3 rounded-full font-medium text-sm sm:text-base ${
                   activeFilter === buttonName
-                    ? "bg-red-600 text-white shadow-lg hover:bg-red-700"
+                    ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
                 onClick={() => setActiveFilter(buttonName)}

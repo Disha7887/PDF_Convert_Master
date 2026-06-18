@@ -12,8 +12,8 @@ export const HtmlToPdfUpload: React.FC = () => {
         acceptedFormats={[".html", ".htm"]}
         maxFileSize="10MB"
         outputFormat="PDF"
-        toolIcon={<Code className="w-8 h-8 text-purple-500" />}
-        iconBg="bg-purple-50 border-purple-200 dark:bg-purple-900 dark:border-purple-800"
+        toolIcon={<Code className="w-8 h-8 text-blue-500" />}
+        iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
       />
     </div>
   );

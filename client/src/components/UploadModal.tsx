@@ -121,7 +121,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             className={`
               relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer
               ${isDragOver 
-                ? 'border-red-400 bg-red-50' 
+                ? 'border-blue-400 bg-blue-50' 
                 : 'border-gray-300 hover:border-gray-400 bg-gray-50'
               }
             `}
@@ -135,7 +135,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               <BouncingUploadIcon
                 size="lg"
                 animationSpeed="fast"
-                bgColor="bg-red-100"
+                bgColor="bg-blue-100"
               />
             </div>
 
@@ -149,7 +149,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
             {/* Select Files Button */}
             <Button
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectFiles();
@@ -191,7 +191,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 ))}
               </ul>
               <Button 
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={handleStartConversion}
                 disabled={isProcessing}
               >
@@ -218,16 +218,16 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             </div>
 
             <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
-                <Zap className="w-4 h-4 text-green-600" />
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                <Zap className="w-4 h-4 text-blue-600" />
               </div>
               <h4 className="text-sm font-medium text-gray-900 mb-1">Fast</h4>
               <p className="text-xs text-gray-600">Lightning speed</p>
             </div>
 
             <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-2">
-                <Download className="w-4 h-4 text-purple-600" />
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                <Download className="w-4 h-4 text-blue-600" />
               </div>
               <h4 className="text-sm font-medium text-gray-900 mb-1">Easy</h4>
               <p className="text-xs text-gray-600">Instant download</p>

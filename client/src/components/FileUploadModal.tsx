@@ -94,9 +94,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               onClick={onClose}
               variant="outline"
               size="icon"
-              className="w-8 h-8 rounded-full bg-red-50 border-red-200 hover:bg-red-100"
+              className="w-8 h-8 rounded-full bg-blue-50 border-blue-200 hover:bg-blue-100"
             >
-              <X className="w-4 h-4 text-red-500" />
+              <X className="w-4 h-4 text-blue-500" />
             </Button>
           </div>
 
@@ -131,7 +131,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 <div
                   className={`relative w-full h-48 p-4 border-2 border-dashed rounded-xl transition-all duration-200 ${
                     isDragOver
-                      ? 'border-red-400 bg-red-50'
+                      ? 'border-blue-400 bg-blue-50'
                       : 'border-gray-300 bg-white'
                   } shadow-lg hover:shadow-xl`}
                   onDragEnter={handleDragEnter}
@@ -144,7 +144,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     <BouncingUploadIcon
                       size="md"
                       animationSpeed="fast"
-                      bgColor="bg-red-50"
+                      bgColor="bg-blue-50"
                     />
                   </div>
 
@@ -168,7 +168,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                         onChange={handleFileSelect}
                         className="hidden"
                       />
-                      <div className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium text-sm rounded-lg shadow-lg hover:shadow-xl transition-all">
+                      <div className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-lg hover:shadow-xl transition-all">
                         {getButtonText()}
                       </div>
                     </label>
@@ -205,8 +205,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 {/* Fast Conversion */}
                 <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-50">
-                      <Zap className="w-3 h-3 text-green-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50">
+                      <Zap className="w-3 h-3 text-blue-600" />
                     </div>
                   </div>
                   <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">
@@ -220,8 +220,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 {/* Easy Download */}
                 <div className="bg-white rounded-lg p-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-center mb-2">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-50">
-                      <Download className="w-3 h-3 text-purple-600" />
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50">
+                      <Download className="w-3 h-3 text-blue-600" />
                     </div>
                   </div>
                   <h3 className="text-xs font-semibold text-gray-900 text-center mb-1">

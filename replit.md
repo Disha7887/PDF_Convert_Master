@@ -177,3 +177,5 @@ Full-stack JavaScript application migrated from Figma to Replit environment. Bui
 - 2025-08-03: **FRONTEND REPOSITORY OPTIMIZED**: Switched to dedicated pdf-convert-frontend repository for Builder.io visual editing
 - 2025-08-03: Confirmed working sync process with latest Builder.io changes (active button styles) successfully pulled
 - 2025-08-03: **FINAL WORKFLOW ESTABLISHED**: Builder.io → pdf-convert-frontend repository → simple git sync to Replit
+- 2026-06-18: **SITE-WIDE REBRAND**: Restyled the live `client/` app to a clean white surface with a single vivid-blue accent (remove.bg look) — fonts (Inter body / Poppins headings), colors, and CTA buttons (blue pills + hover) only; all layout, copy, props, and behavior unchanged. Semantic colors preserved (red = errors, green = success/completed, amber = warnings/stars).
+- 2026-06-18: Fixed Tools.tsx inline converter: post-conversion Download button now brand-blue (success checkmark stays green); Convert button now shows the correct per-tool action label instead of "Convert to Same Format".

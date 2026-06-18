@@ -40,7 +40,7 @@ export const NavigationSection = (): JSX.Element => {
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <div className="flex items-center h-7">
-            <h1 className="[font-family:'Pacifico',Helvetica] font-normal text-gray-900 text-xl leading-7 whitespace-nowrap">
+            <h1 className="font-['Poppins'] font-bold text-gray-900 text-xl leading-7 whitespace-nowrap">
               PDF Convert Master
             </h1>
           </div>
@@ -51,7 +51,7 @@ export const NavigationSection = (): JSX.Element => {
               {navItems.map((item, index) => (
                 <NavigationMenuItem key={index} className={item.width}>
                   <NavigationMenuLink
-                    className="[font-family:'Roboto',Helvetica] font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors"
+                    className="font-medium text-gray-600 text-base leading-6 whitespace-nowrap cursor-pointer hover:text-gray-900 transition-colors"
                     onClick={() => handleNavClick(item.href)}
                   >
                     {item.name}
@@ -65,13 +65,13 @@ export const NavigationSection = (): JSX.Element => {
           <div className="flex items-center space-x-3">
             <Button
               variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300 [font-family:'Roboto',Helvetica] font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
+              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
               onClick={() => setLocation('/signin')}
             >
               Log In
             </Button>
             <Button
-              className="h-10 px-6 py-2 rounded-lg [font-family:'Roboto',Helvetica] font-medium text-base [text-shadow:0px_10px_15px_#0000001a]"
+              className="h-10 px-6 py-2 rounded-full font-medium text-base [text-shadow:0px_10px_15px_#0000001a]"
               onClick={handleGetStarted}
             >
               Get Started

@@ -7,89 +7,45 @@
     all: unset;
   }
 
-  /* Enhanced button styles for better hover effects */
-  .btn-red-gradient {
-    background: linear-gradient(90deg, rgba(220, 38, 38, 1) 0%, rgba(185, 28, 28, 1) 100%);
-    color: white;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
-    outline: none;
-  }
-
-  .btn-red-gradient:hover {
-    background: linear-gradient(90deg, rgba(185, 28, 28, 1) 0%, rgba(153, 27, 27, 1) 100%);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transform: translateY(-1px);
-  }
-
-  .btn-red-gradient:active {
-    transform: translateY(0px) scale(0.98);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
-
-  .btn-red-gradient:focus-visible {
-    outline: 2px solid rgba(220, 38, 38, 0.5);
-    outline-offset: 2px;
-  }
-
-  .btn-red-gradient:disabled {
-    opacity: 0.5;
-    pointer-events: none;
-    transform: none;
-  }
-
-  /* Blue gradient variant for special buttons */
-  .btn-blue-gradient {
-    background: linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(29, 78, 216, 1) 100%);
-    color: white;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
-    outline: none;
-  }
-
-  .btn-blue-gradient:hover {
-    background: linear-gradient(90deg, rgba(29, 78, 216, 1) 0%, rgba(30, 64, 175, 1) 100%);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transform: translateY(-1px);
-  }
-
-  /* Green gradient variant */
+  /* Brand CTA button — unified vivid blue pill.
+     All three legacy gradient classes now render the same blue pill so every
+     CTA across the app is consistent (red/green legacy names kept for markup). */
+  .btn-red-gradient,
+  .btn-blue-gradient,
   .btn-green-gradient {
-    background: linear-gradient(90deg, rgba(34, 197, 94, 1) 0%, rgba(22, 163, 74, 1) 100%);
-    color: white;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
     font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 9999px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 18px -6px hsl(var(--primary) / 0.45);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
     outline: none;
   }
 
+  .btn-red-gradient:hover,
+  .btn-blue-gradient:hover,
   .btn-green-gradient:hover {
-    background: linear-gradient(90deg, rgba(22, 163, 74, 1) 0%, rgba(21, 128, 61, 1) 100%);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    background: hsl(217 91% 47%);
+    box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.08), 0 12px 22px -6px hsl(var(--primary) / 0.55);
     transform: translateY(-1px);
   }
 
-  /* Common active and disabled states for all gradient buttons */
+  .btn-red-gradient:active,
   .btn-blue-gradient:active,
   .btn-green-gradient:active {
     transform: translateY(0px) scale(0.98);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 14px -6px hsl(var(--primary) / 0.45);
   }
 
+  .btn-red-gradient:focus-visible,
   .btn-blue-gradient:focus-visible,
   .btn-green-gradient:focus-visible {
-    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline: 2px solid hsl(var(--ring) / 0.5);
     outline-offset: 2px;
   }
 
+  .btn-red-gradient:disabled,
   .btn-blue-gradient:disabled,
   .btn-green-gradient:disabled {
     opacity: 0.5;
@@ -137,35 +93,35 @@
 
   .shimmer-bg {
     background: linear-gradient(90deg,
-      rgba(220, 38, 38, 1) 0%,
-      rgba(185, 28, 28, 1) 25%,
-      rgba(248, 113, 113, 0.8) 50%,
-      rgba(185, 28, 28, 1) 75%,
-      rgba(220, 38, 38, 1) 100%
+      rgba(37, 99, 235, 1) 0%,
+      rgba(29, 78, 216, 1) 25%,
+      rgba(96, 165, 250, 0.85) 50%,
+      rgba(29, 78, 216, 1) 75%,
+      rgba(37, 99, 235, 1) 100%
     );
     background-size: 200% 100%;
     animation: shimmer-bg 1.5s ease-in-out infinite;
   }
 
-  /* Custom red color variants for precise gradient control */
+  /* Custom blue color variants for precise gradient control */
   .from-red-650 {
-    --tw-gradient-from: #dc2626 var(--tw-gradient-from-position);
-    --tw-gradient-to: rgb(220 38 38 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-from: #2563eb var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
   }
 
   .via-red-650 {
-    --tw-gradient-to: rgb(203 32 32 / 0) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-from), #cb2020 var(--tw-gradient-via-position), var(--tw-gradient-to);
+    --tw-gradient-to: rgb(29 78 216 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #1d4ed8 var(--tw-gradient-via-position), var(--tw-gradient-to);
   }
 
   .to-red-750 {
-    --tw-gradient-to: #991b1b var(--tw-gradient-to-position);
+    --tw-gradient-to: #1e40af var(--tw-gradient-to-position);
   }
 
-  .hover\\:via-red-750:hover {
-    --tw-gradient-to: rgb(153 27 27 / 0) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-from), #991b1b var(--tw-gradient-via-position), var(--tw-gradient-to);
+  .hover\:via-red-750:hover {
+    --tw-gradient-to: rgb(30 64 175 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #1e40af var(--tw-gradient-via-position), var(--tw-gradient-to);
   }
 
   /* Performance optimizations for particle animations */
@@ -231,68 +187,68 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 220 16% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 16% 96%;
+    --muted-foreground: 220 9% 46%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 220 16% 18%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 220 14% 91%;
+    --input: 220 14% 91%;
 
-    --card: transparent;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 16% 18%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 217 91% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 16% 96%;
+    --secondary-foreground: 220 16% 25%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 214 100% 97%;
+    --accent-foreground: 217 91% 45%;
 
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --ring: 215 20.2% 65.1%;
+    --ring: 217 91% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 224 71% 4%;
+    --background: 222 47% 7%;
     --foreground: 213 31% 91%;
 
-    --muted: 223 47% 11%;
-    --muted-foreground: 215.4 16.3% 56.9%;
+    --muted: 223 30% 15%;
+    --muted-foreground: 215 16% 60%;
 
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 217 33% 18%;
+    --accent-foreground: 213 31% 91%;
 
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 213 31% 91%;
 
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
 
-    --card: transparent;
+    --card: 222 47% 9%;
     --card-foreground: 213 31% 91%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 213 31% 91%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    --ring: 216 34% 17%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 }
 
@@ -303,6 +259,11 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   }
 }

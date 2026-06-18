@@ -152,8 +152,8 @@ export const CropImageUpload = () => {
     <ImageToolShell
       title="Image Cropper"
       description="Crop images with an interactive selection. Lock to preset aspect ratios or crop freely, then download or save to the server."
-      icon={<CropIcon className="w-8 h-8 text-purple-500" />}
-      iconBg="bg-purple-50 border-purple-200 dark:bg-purple-900 dark:border-purple-800"
+      icon={<CropIcon className="w-8 h-8 text-blue-500" />}
+      iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!file ? (
         <ImageDropzone acceptedFormats={ACCEPTED} maxSizeMB={MAX_MB} onFile={handleFile} />
