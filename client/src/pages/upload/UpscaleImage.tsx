@@ -3,10 +3,10 @@ import {
   TrendingUp,
   Download,
   Loader2,
-  AlertCircle,
   Sparkles,
   RefreshCw,
 } from "lucide-react";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ImageToolShell } from "@/components/image-tools/ImageToolShell";
@@ -199,14 +199,14 @@ export const UpscaleImageUpload = () => {
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 flex items-center justify-center min-h-[220px]">
                 {stage === "processing" && (
                   <div className="text-center">
-                    <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
+                    <ConverterStatusIcon status="processing" size={72} className="mb-3" />
                     <p className="text-sm text-gray-600 dark:text-gray-300">Enhancing with AI…</p>
                     <p className="text-xs text-gray-400 mt-1">This can take 20–60 seconds</p>
                   </div>
                 )}
                 {stage === "error" && (
                   <div className="text-center text-red-600 dark:text-red-400 px-4">
-                    <AlertCircle className="w-10 h-10 mx-auto mb-2" />
+                    <ConverterStatusIcon status="error" size={72} className="mb-2" />
                     <p className="text-sm" data-testid="text-error">
                       {error}
                     </p>

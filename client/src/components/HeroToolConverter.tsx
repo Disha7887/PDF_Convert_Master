@@ -2,15 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
-import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
-import {
-  UploadIcon,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
-  Download,
-  RefreshCw,
-} from "lucide-react";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { UploadIcon, Download, RefreshCw } from "lucide-react";
 import {
   ToolConfig,
   getToolActionLabel,
@@ -161,15 +154,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
             isDragOver ? "opacity-80" : ""
           }`}
         >
-          <BouncingUploadIcon
-            className="mb-3"
-            iconType="lucide"
-            alt="Upload icon"
-            iconClassName="text-white"
-            size="md"
-            animationSpeed="fast"
-            bgColor="bg-blue-500"
-          />
+          <ConverterStatusIcon status="upload" size={112} className="mb-2" />
 
           <h2
             className="font-bold text-gray-900 text-xl text-center mb-3"
@@ -210,7 +195,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
 
       {stage === "converting" && (
         <div className="flex flex-col items-center justify-center w-full text-center">
-          <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+          <ConverterStatusIcon status="processing" size={96} className="mb-3" />
           <h2 className="font-bold text-gray-900 text-xl mb-2">Converting…</h2>
           <p
             className="text-gray-600 text-sm truncate max-w-full"
@@ -223,7 +208,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
 
       {stage === "done" && (
         <div className="flex flex-col items-center justify-center w-full text-center">
-          <CheckCircle className="h-12 w-12 text-green-600 mb-4" />
+          <ConverterStatusIcon status="success" size={96} className="mb-2" />
           <h2 className="font-bold text-gray-900 text-xl mb-2">
             Conversion complete
           </h2>
@@ -252,7 +237,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
 
       {stage === "error" && (
         <div className="flex flex-col items-center justify-center w-full text-center">
-          <AlertCircle className="h-12 w-12 text-red-600 mb-4" />
+          <ConverterStatusIcon status="error" size={96} className="mb-2" />
           <h2 className="font-bold text-gray-900 text-xl mb-2">
             Something went wrong
           </h2>

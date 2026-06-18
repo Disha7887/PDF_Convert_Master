@@ -17,6 +17,11 @@ export interface LottieIconProps {
   playOnHover?: boolean;
   /** Playback speed multiplier. Defaults to 1. */
   speed?: number;
+  /**
+   * Accessible label. When omitted the animation is treated as decorative and
+   * hidden from assistive tech (the surrounding text already conveys state).
+   */
+  ariaLabel?: string;
   className?: string;
 }
 
@@ -34,6 +39,7 @@ export function LottieIcon({
   autoplay = true,
   playOnHover = false,
   speed = 1,
+  ariaLabel,
   className,
 }: LottieIconProps) {
   const lottieRef = useRef<LottieRefCurrentProps>(null);
@@ -60,6 +66,9 @@ export function LottieIcon({
       style={{ width: width ?? size, height: height ?? size }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      role={ariaLabel ? "img" : undefined}
+      aria-label={ariaLabel}
+      aria-hidden={ariaLabel ? undefined : true}
     >
       <Lottie
         lottieRef={lottieRef}

@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { EnhancedUploadArea } from "@/components/ui/enhanced-upload-area";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { FileItem } from "@/components/ui/file-item";
 
 interface ConversionWorkflowProps {
@@ -612,7 +613,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           {stage === 'converting' && (
             <div className="text-center space-y-6">
               <div className="flex justify-center">
-                <Settings className="w-16 h-16 text-blue-600 animate-spin" />
+                <ConverterStatusIcon status="processing" size={88} />
               </div>
               <div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">Converting Files...</h3>
@@ -643,7 +644,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           {stage === 'completed' && (
             <div className="text-center space-y-6">
               <div className="flex justify-center">
-                <CheckCircle className="w-16 h-16 text-green-600" />
+                <ConverterStatusIcon status="success" size={88} />
               </div>
               <div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">Conversion Complete!</h3>
@@ -694,7 +695,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           {stage === 'error' && errorMessage && (
             <div className="text-center space-y-6">
               <div className="flex justify-center">
-                <AlertCircle className="w-16 h-16 text-red-600" />
+                <ConverterStatusIcon status="error" size={88} />
               </div>
               <div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">Conversion Failed</h3>

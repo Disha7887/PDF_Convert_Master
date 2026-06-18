@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { Upload, Shield, Zap, Download, FileText, FileSpreadsheet, Presentation, FilePlus, Scissors, Archive, Lock, PenTool, ScanText, Edit, FileSignature } from "lucide-react";
-import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 
 interface ToolConfig {
   id: string;
@@ -185,11 +185,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           >
             {/* Upload Icon */}
             <div className="flex justify-center mb-8">
-              <BouncingUploadIcon
-                size="xl"
-                animationSpeed="fast"
-                bgColor="bg-blue-100"
-              />
+              <ConverterStatusIcon status="upload" size={96} />
             </div>
 
             {/* Upload Text */}

@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, Shield, Zap, Download, X } from "lucide-react";
-import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 
 interface ToolConfig {
   id: string;
@@ -132,11 +132,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           >
             {/* Upload Icon */}
             <div className="flex justify-center mb-4">
-              <BouncingUploadIcon
-                size="lg"
-                animationSpeed="fast"
-                bgColor="bg-blue-100"
-              />
+              <ConverterStatusIcon status="upload" size={80} />
             </div>
 
             {/* Upload Text */}

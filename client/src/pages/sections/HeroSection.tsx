@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
-import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { useLocation, useSearch } from "wouter";
 import { toolConfigs, isHeroTool } from "@/lib/toolConfig";
 import { HeroToolConverter } from "@/components/HeroToolConverter";
@@ -337,15 +337,7 @@ export const HeroSection = (): JSX.Element => {
                 ) : (
                 <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-white rounded-3xl border-2 border-dashed border-blue-300 shadow-sm">
                   <div className="flex flex-col items-center justify-center w-full p-0">
-                    <BouncingUploadIcon
-                      className="mb-3"
-                      iconType="lucide"
-                      alt="Upload icon"
-                      iconClassName="text-white"
-                      size="md"
-                      animationSpeed="fast"
-                      bgColor="bg-blue-500"
-                    />
+                    <ConverterStatusIcon status="upload" size={80} className="mb-3" />
 
                     <h2 className="font-bold text-gray-900 text-xl text-center mb-3">
                       Drop your PDF here

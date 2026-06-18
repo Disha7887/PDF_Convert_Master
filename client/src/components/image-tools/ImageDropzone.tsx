@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
-import { Upload } from "lucide-react";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImageDropzoneProps {
@@ -79,7 +79,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         }}
         data-testid="input-file"
       />
-      <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+      <ConverterStatusIcon status="upload" size={80} className="mb-4" />
       <p className="text-lg font-medium text-gray-700 dark:text-gray-200">
         Drop an image here, or click to browse
       </p>

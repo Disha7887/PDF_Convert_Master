@@ -4,14 +4,12 @@ import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
 import {
   Upload,
   Download,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
   X,
   RefreshCw,
   FileText,
   SlidersHorizontal,
 } from "lucide-react";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import {
   ResizeModal,
   CropModal,
@@ -499,9 +497,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           }`}
           data-testid={`dropzone-${toolConfig.id}`}
         >
-          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-600 shadow-lg mb-5">
-            <Upload className="w-7 h-7 text-white" />
-          </div>
+          <ConverterStatusIcon status="upload" size={88} className="mb-3" />
 
           <h3 className="text-xl font-bold text-gray-900 mb-1">
             {toolConfig.dropAreaText}
@@ -875,7 +871,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       {/* CONVERTING */}
       {stage === "converting" && (
         <div className="flex flex-col items-center justify-center py-6">
-          <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+          <ConverterStatusIcon status="processing" size={80} className="mb-3" />
           <p className="text-sm font-medium text-gray-900 mb-1">
             Converting your file…
           </p>
@@ -898,9 +894,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       {/* DONE (server-conversion tools) */}
       {stage === "done" && !isManualEdit && (
         <div className="flex flex-col items-center justify-center py-4">
-          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-green-50 mb-3">
-            <CheckCircle2 className="w-8 h-8 text-green-600" />
-          </div>
+          <ConverterStatusIcon status="success" size={80} className="mb-2" />
           <p className="text-base font-bold text-gray-900 mb-1">Ready!</p>
           <p
             className="text-xs text-gray-500 text-center truncate max-w-full px-2 mb-5"
@@ -931,9 +925,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       {/* DONE (manual image-edit tools) */}
       {stage === "done" && isManualEdit && (
         <div className="flex flex-col items-center justify-center py-4">
-          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-green-50 mb-3">
-            <CheckCircle2 className="w-8 h-8 text-green-600" />
-          </div>
+          <ConverterStatusIcon status="success" size={80} className="mb-2" />
           <p className="text-base font-bold text-gray-900 mb-1">Ready!</p>
           <p
             className="text-xs text-gray-500 text-center truncate max-w-full px-2 mb-5"
@@ -972,9 +964,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       {/* ERROR */}
       {stage === "error" && (
         <div className="flex flex-col items-center justify-center py-4">
-          <div className="w-14 h-14 flex items-center justify-center rounded-full bg-red-50 mb-3">
-            <AlertCircle className="w-8 h-8 text-red-600" />
-          </div>
+          <ConverterStatusIcon status="error" size={80} className="mb-2" />
           <p className="text-base font-bold text-gray-900 mb-1">
             Something went wrong
           </p>

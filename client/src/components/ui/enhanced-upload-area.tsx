@@ -10,7 +10,7 @@ import {
   CloudUpload,
   Sparkles
 } from "lucide-react";
-import { BouncingUploadIcon } from "@/components/ui/bouncing-upload-icon";
+import { ConverterStatusIcon } from "@/components/converter-status-icon";
 
 interface EnhancedUploadAreaProps {
   acceptedFormats: string[];
@@ -133,11 +133,7 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
             <Sparkles className="w-6 h-6 text-blue-400 absolute -top-2 -right-2 animate-pulse" />
           </div>
         ) : (
-          <BouncingUploadIcon
-            size="xl"
-            animationSpeed={isHovering ? "fast" : "normal"}
-            bgColor="bg-blue-100 dark:bg-blue-900"
-          />
+          <ConverterStatusIcon status="upload" size={96} />
         )}
       </div>
       
