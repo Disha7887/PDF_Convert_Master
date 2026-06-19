@@ -28,6 +28,7 @@ import ocrPdf from "@/assets/lottie/ocr-pdf.json";
 import pdfToWord from "@/assets/lottie/pdf-to-word.json";
 import convertImage from "@/assets/lottie/convert-image.json";
 import editPdf from "@/assets/lottie/edit-pdf.json";
+import deletePagesPdf from "@/assets/lottie/delete-page.json";
 
 /**
  * Maps each tool id to the Lottie animation the user provided. The filename of
@@ -66,6 +67,7 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "sign-pdf": signPdf,
   "watermark-pdf": watermarkPdf,
   "add-image-pdf": addImagePdf,
+  "delete-pages-pdf": deletePagesPdf,
   "ocr-pdf": ocrPdf,
 };
 
