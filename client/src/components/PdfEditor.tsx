@@ -30,8 +30,7 @@ import {
 } from "@/lib/pdfClient";
 import {
   extractPageTexts,
-  sampleTextColor,
-  findTextAt,
+  sampleTextColors,
   type PageTextItem,
 } from "@/lib/pdfText";
 import {
@@ -76,7 +75,6 @@ import {
 type Tool =
   | "select"
   | "text"
-  | "edittext"
   | "image"
   | "signature"
   | "draw"
@@ -325,6 +323,9 @@ export const PdfEditor: React.FC = () => {
   const polyRef = useRef(poly);
   polyRef.current = poly;
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  // Guards "Edit text" against overlapping runs (double-clicks) which could each
+  // compute their own `fresh` set before the other's setElements lands.
+  const editingWholePageRef = useRef(false);
   const dragRef = useRef<DragState | null>(null);
   const creatingRef = useRef<{
     id: string;
@@ -695,10 +696,6 @@ export const PdfEditor: React.FC = () => {
     pageRefs.current[page.pageIndex]?.setPointerCapture(e.pointerId);
     snapshotRef.current = elementsRef.current;
 
-    if (tool === "edittext") {
-      void handleEditTextAt(page.pageIndex, p.x, p.y);
-      return;
-    }
     if (tool === "polygon") {
       if (!poly || poly.pageIndex !== page.pageIndex) {
         setPoly({ pageIndex: page.pageIndex, points: [{ x: p.x, y: p.y }] });
@@ -1039,54 +1036,118 @@ export const PdfEditor: React.FC = () => {
     return p;
   }, [srcBytes, textByPage, toast]);
 
-  const handleEditTextAt = async (pageIndex: number, x: number, y: number) => {
-    const items = await ensureText();
-    const pageItems = items[pageIndex] ?? [];
-    const hit = findTextAt(pageItems, x, y);
-    if (!hit) {
-      toast({
-        title: "No editable text here",
-        description: "Click directly on a line of existing PDF text.",
-      });
-      return;
+  // Pick the page the user is actually looking at (the one with the most area
+  // in the viewport), falling back to the last active page.
+  const getMostVisiblePageIndex = (): number => {
+    let best = activePage;
+    let bestVisible = -1;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    for (const p of pages) {
+      const node = pageRefs.current[p.pageIndex];
+      if (!node) continue;
+      const r = node.getBoundingClientRect();
+      const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+      if (visible > bestVisible) {
+        bestVisible = visible;
+        best = p.pageIndex;
+      }
     }
-    const page = pageById(pageIndex);
-    const pad = hit.fontSize * 0.25;
-    const box = {
-      x: Math.max(0, hit.x - 1),
-      y: Math.max(0, hit.y - pad),
-      width: hit.width + 2,
-      height: hit.height + pad * 2,
-    };
-    const color = await sampleTextColor(page.dataUrl, page.width, box);
-    pushHistory(elementsRef.current);
-    const cover: ShapeEl = {
-      id: genId(),
-      type: "whiteout",
-      pageIndex,
-      x: box.x,
-      y: box.y,
-      width: box.width,
-      height: box.height,
-      color: "#ffffff",
-      strokeWidth: 1,
-    };
-    const text: TextEl = {
-      id: genId(),
-      type: "text",
-      pageIndex,
-      x: hit.x,
-      y: hit.y,
-      text: hit.str,
-      fontSize: hit.fontSize,
-      color,
-      family: hit.family,
-      bold: hit.bold,
-      italic: hit.italic,
-    };
-    setElements((prev) => [...prev, cover, text]);
-    setSelectedId(text.id);
-    setTool("select");
+    return best;
+  };
+
+  // Make EVERY text run on the current page editable at once: cover each run
+  // with white and drop an editable text box on top, matching its colour, size
+  // and font. Re-running skips runs that already have an editable text box at
+  // that spot, so covers never stack and prior edits are preserved.
+  const handleEditWholePage = async () => {
+    if (editingWholePageRef.current) return;
+    editingWholePageRef.current = true;
+    try {
+      // Lock onto the page the user is looking at NOW, before text extraction
+      // (which may await) lets them scroll to a different page.
+      const pageIndex = getMostVisiblePageIndex();
+      const items = await ensureText();
+      const runs = (items[pageIndex] ?? []).filter(
+        (it) => it.str.trim().length > 0,
+      );
+      if (runs.length === 0) {
+        toast({
+          title: "No editable text on this page",
+          description:
+            "This page looks scanned or image-only — text editing needs real, selectable PDF text.",
+        });
+        return;
+      }
+      const existing = elementsRef.current.filter(
+        (el): el is TextEl => el.type === "text" && el.pageIndex === pageIndex,
+      );
+      const fresh = runs.filter(
+        (run) =>
+          !existing.some(
+            (el) => Math.abs(el.x - run.x) < 3 && Math.abs(el.y - run.y) < 3,
+          ),
+      );
+      if (fresh.length === 0) {
+        toast({ title: "This page's text is already editable" });
+        setTool("select");
+        return;
+      }
+      const page = pageById(pageIndex);
+      const boxes = fresh.map((hit) => {
+        const pad = hit.fontSize * 0.25;
+        return {
+          x: Math.max(0, hit.x - 1),
+          y: Math.max(0, hit.y - pad),
+          width: hit.width + 2,
+          height: hit.height + pad * 2,
+        };
+      });
+      const colors = await sampleTextColors(page.dataUrl, page.width, boxes);
+      pushHistory(elementsRef.current);
+      // All white covers first, then all text, so a later line's cover can
+      // never paint over an earlier line's editable text.
+      const covers: ShapeEl[] = [];
+      const texts: TextEl[] = [];
+      fresh.forEach((hit, i) => {
+        const box = boxes[i];
+        covers.push({
+          id: genId(),
+          type: "whiteout",
+          pageIndex,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          color: "#ffffff",
+          strokeWidth: 1,
+        });
+        texts.push({
+          id: genId(),
+          type: "text",
+          pageIndex,
+          x: hit.x,
+          y: hit.y,
+          text: hit.str,
+          fontSize: hit.fontSize,
+          color: colors[i],
+          family: hit.family,
+          bold: hit.bold,
+          italic: hit.italic,
+        });
+      });
+      setElements((prev) => [...prev, ...covers, ...texts]);
+      setSelectedId(null);
+      setActivePage(pageIndex);
+      setTool("select");
+      toast({
+        title: `Page ${pageIndex + 1} is ready to edit`,
+        description: `${fresh.length} text ${
+          fresh.length === 1 ? "block" : "blocks"
+        } are now editable — click any to change it.`,
+      });
+    } finally {
+      editingWholePageRef.current = false;
+    }
   };
 
   // --- search ----------------------------------------------------------------
@@ -1492,7 +1553,7 @@ export const PdfEditor: React.FC = () => {
     icon: Icon,
     onClick,
   }: {
-    id: Tool | "image-btn" | "signature-btn";
+    id: Tool | "image-btn" | "signature-btn" | "edittext";
     label: string;
     icon: React.ComponentType<any>;
     onClick: () => void;
@@ -1782,7 +1843,7 @@ export const PdfEditor: React.FC = () => {
       <div className="flex flex-wrap items-center gap-1.5 bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow-sm">
         <ToolBtn id="select" label="Select" icon={MousePointer2} onClick={() => setTool("select")} />
         <ToolBtn id="text" label="Add text" icon={Type} onClick={() => setTool("text")} />
-        <ToolBtn id="edittext" label="Edit text" icon={TextCursorInput} onClick={() => setTool("edittext")} />
+        <ToolBtn id="edittext" label="Edit text" icon={TextCursorInput} onClick={() => void handleEditWholePage()} />
         <ToolBtn id="signature-btn" label="Sign" icon={PenTool} onClick={() => setSigOpen(true)} />
         <ToolBtn id="draw" label="Draw" icon={Pencil} onClick={() => setTool("draw")} />
         <LineMenu />
@@ -2061,13 +2122,11 @@ export const PdfEditor: React.FC = () => {
                 ? selected
                   ? "Drag to move · drag a handle to resize"
                   : "Pick a tool, then click or drag on the page."
-                : tool === "edittext"
-                  ? "Click directly on existing PDF text to edit it."
-                  : tool === "whiteout"
-                    ? "Drag a box over content to cover it in white."
-                    : tool === "image"
-                      ? "Choose an image to place."
-                      : "Click or drag on the page to add."}
+                : tool === "whiteout"
+                  ? "Drag a box over content to cover it in white."
+                  : tool === "image"
+                    ? "Choose an image to place."
+                    : "Click or drag on the page to add."}
             </span>
           )}
 

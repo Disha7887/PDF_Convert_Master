@@ -129,14 +129,13 @@ function clampByte(v: number): number {
  * (those noticeably darker / more saturated than the page) and average them.
  * Falls back to near-black when nothing stands out.
  */
-export async function sampleTextColor(
-  pageDataUrl: string,
-  pageWidthPts: number,
+// Sample the dominant ink colour of one box from an already-decoded page image.
+function sampleBoxColor(
+  img: HTMLImageElement,
+  scale: number,
   bbox: { x: number; y: number; width: number; height: number },
-): Promise<string> {
+): string {
   try {
-    const img = await loadImageElement(pageDataUrl);
-    const scale = img.naturalWidth / pageWidthPts; // px per point
     const sx = Math.max(0, Math.floor(bbox.x * scale));
     const sy = Math.max(0, Math.floor(bbox.y * scale));
     const sw = Math.max(1, Math.ceil(bbox.width * scale));
@@ -173,6 +172,37 @@ export async function sampleTextColor(
     return toHex(r / n, g / n, b / n);
   } catch {
     return "#111111";
+  }
+}
+
+export async function sampleTextColor(
+  pageDataUrl: string,
+  pageWidthPts: number,
+  bbox: { x: number; y: number; width: number; height: number },
+): Promise<string> {
+  try {
+    const img = await loadImageElement(pageDataUrl);
+    const scale = img.naturalWidth / pageWidthPts; // px per point
+    return sampleBoxColor(img, scale, bbox);
+  } catch {
+    return "#111111";
+  }
+}
+
+// Batch version: decode the page image ONCE and sample many boxes. Used by the
+// "edit whole page" action so a page with dozens of text runs doesn't re-decode
+// the image once per run.
+export async function sampleTextColors(
+  pageDataUrl: string,
+  pageWidthPts: number,
+  bboxes: { x: number; y: number; width: number; height: number }[],
+): Promise<string[]> {
+  try {
+    const img = await loadImageElement(pageDataUrl);
+    const scale = img.naturalWidth / pageWidthPts; // px per point
+    return bboxes.map((b) => sampleBoxColor(img, scale, b));
+  } catch {
+    return bboxes.map(() => "#111111");
   }
 }
 
