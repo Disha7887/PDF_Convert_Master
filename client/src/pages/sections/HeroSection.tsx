@@ -7,8 +7,6 @@ import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
-import { LottieIcon } from "@/components/ui/lottie-icon";
-import startButtonAnimation from "@/assets/lottie/start-button.json";
 import { useLocation, useSearch } from "wouter";
 import { toolConfigs, isHeroTool } from "@/lib/toolConfig";
 import { HeroToolConverter } from "@/components/HeroToolConverter";
@@ -117,23 +115,18 @@ export const HeroSection = (): JSX.Element => {
                     ) : (
                       <div className="pt-8">
                         <div className="flex gap-4">
-                          <Button
+                          <AnimatedSelectButton
                             className="h-[61px] px-8 py-4 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
                             onClick={() => {
                               console.log('Start Converting Now button clicked');
                               setLocation('/tools');
                             }}
                           >
-                            <LottieIcon
-                              animationData={startButtonAnimation}
-                              size={28}
-                              loop
-                              className="mr-2"
-                            />
+                            <ZapIcon className="mr-2 h-5 w-5" />
                             <span className="font-semibold text-base">
                               Start Converting Now
                             </span>
-                          </Button>
+                          </AnimatedSelectButton>
 
                           <Button
                             variant="outline"
