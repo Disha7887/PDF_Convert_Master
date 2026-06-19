@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { AnimatedParticles } from "@/components/ui/animated-particles";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { toolConfigs, isHeroTool, type ToolConfig } from "@/lib/toolConfig";
 import { useLocation } from "wouter";
 
@@ -22,15 +22,9 @@ export const TestimonialsSection = (): JSX.Element => {
   };
 
   return (
-    <section className="w-full py-24 bg-white relative">
-      {/* Animated particles background */}
-      <AnimatedParticles count={20} />
-
-      <img
-        className="absolute w-full max-w-[1368px] h-auto top-[121px] left-1/2 -translate-x-1/2"
-        alt="Background decoration"
-        src="/figmaAssets/div-382.svg"
-      />
+    <section className="w-full py-24 bg-white relative overflow-hidden">
+      {/* Animated background */}
+      <AnimatedBackground particleCount={25} />
 
       <div className="max-w-screen-xl mx-auto px-8 relative z-10">
         <div className="flex flex-col items-center mb-12">

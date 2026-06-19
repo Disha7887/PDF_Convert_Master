@@ -1,5 +1,5 @@
 import React, { useMemo, memo } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface Particle {
   id: number;
@@ -13,6 +13,27 @@ interface Particle {
   direction: 'up' | 'down' | 'left' | 'right' | 'diagonal-up' | 'diagonal-down';
 }
 
+interface FloatingLine {
+  id: number;
+  left: number;
+  top: number;
+  width: number;
+  background: string;
+  rotate: number;
+  duration: number;
+  delay: number;
+}
+
+interface PulseDot {
+  id: number;
+  left: number;
+  top: number;
+  size: number;
+  color: string;
+  duration: number;
+  delay: number;
+}
+
 interface AnimatedParticlesProps {
   count?: number;
   className?: string;
@@ -24,6 +45,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
   mobileCount,
   className = ""
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const effectiveCount = isMobile ? (mobileCount || Math.floor(count * 0.6)) : count;
 
@@ -60,6 +82,42 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
     return particleArray;
   }, [effectiveCount]);
 
+  // Memoize decorative line/dot positions so they don't jump on re-render.
+  const floatingLines = useMemo<FloatingLine[]>(() => {
+    const lineColors = [
+      'rgba(37, 99, 235, 0.2)',
+      'rgba(59, 130, 246, 0.15)',
+      'rgba(96, 165, 250, 0.12)',
+    ];
+    return Array.from({ length: 8 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 90,
+      top: Math.random() * 90,
+      width: Math.random() * 40 + 20,
+      background: `linear-gradient(90deg, transparent, ${lineColors[Math.floor(Math.random() * lineColors.length)]}, transparent)`,
+      rotate: Math.random() * 360,
+      duration: Math.random() * 15 + 20,
+      delay: Math.random() * 5,
+    }));
+  }, []);
+
+  const pulseDots = useMemo<PulseDot[]>(() => {
+    const dotColors = [
+      'rgba(37, 99, 235, 0.4)',
+      'rgba(59, 130, 246, 0.3)',
+      'rgba(96, 165, 250, 0.25)',
+    ];
+    return Array.from({ length: 12 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 95,
+      top: Math.random() * 95,
+      size: Math.random() * 3 + 2,
+      color: dotColors[Math.floor(Math.random() * dotColors.length)],
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2,
+    }));
+  }, []);
+
   const getAnimationVariants = (particle: Particle) => {
     const moveDistance = 100; // pixels
     
@@ -95,79 +153,88 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
 
   return (
     <div className={`absolute inset-0 overflow-hidden pointer-events-none z-0 ${className}`}>
-      {particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className="absolute rounded-full particle-layer"
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            backgroundColor: particle.color,
-            filter: 'blur(0.5px)',
-          }}
-          variants={getAnimationVariants(particle)}
-          animate="animate"
-          initial={{ opacity: 0 }}
-        />
-      ))}
-      
+      {particles.map((particle) => {
+        const motionProps = prefersReducedMotion
+          ? { initial: { opacity: particle.opacity } }
+          : {
+              variants: getAnimationVariants(particle),
+              animate: "animate" as const,
+              initial: { opacity: 0 },
+            };
+        return (
+          <motion.div
+            key={particle.id}
+            className="absolute rounded-full particle-layer"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              backgroundColor: particle.color,
+              filter: 'blur(0.5px)',
+            }}
+            {...motionProps}
+          />
+        );
+      })}
+
       {/* Floating lines */}
-      {Array.from({ length: 8 }).map((_, i) => (
+      {floatingLines.map((line) => (
         <motion.div
-          key={`line-${i}`}
+          key={`line-${line.id}`}
           className="absolute particle-layer"
           style={{
-            left: `${Math.random() * 90}%`,
-            top: `${Math.random() * 90}%`,
-            width: `${Math.random() * 40 + 20}px`,
+            left: `${line.left}%`,
+            top: `${line.top}%`,
+            width: `${line.width}px`,
             height: '1px',
-            background: `linear-gradient(90deg, transparent, ${
-              ['rgba(37, 99, 235, 0.2)', 'rgba(59, 130, 246, 0.15)', 'rgba(96, 165, 250, 0.12)'][Math.floor(Math.random() * 3)]
-            }, transparent)`,
-            transform: `rotate(${Math.random() * 360}deg)`,
+            background: line.background,
+            transform: `rotate(${line.rotate}deg)`,
           }}
-          animate={{
-            opacity: [0, 0.8, 0],
-            scale: [0.8, 1.2, 0.8],
-            rotate: [0, 360],
-          }}
-          transition={{
-            duration: Math.random() * 15 + 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: Math.random() * 5,
-          }}
+          {...(prefersReducedMotion
+            ? { initial: { opacity: 0.4 } }
+            : {
+                animate: {
+                  opacity: [0, 0.8, 0],
+                  scale: [0.8, 1.2, 0.8],
+                  rotate: [0, 360],
+                },
+                transition: {
+                  duration: line.duration,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: line.delay,
+                },
+              })}
         />
       ))}
 
       {/* Pulsing dots */}
-      {Array.from({ length: 12 }).map((_, i) => (
+      {pulseDots.map((dot) => (
         <motion.div
-          key={`pulse-dot-${i}`}
+          key={`pulse-dot-${dot.id}`}
           className="absolute rounded-full particle-layer"
           style={{
-            left: `${Math.random() * 95}%`,
-            top: `${Math.random() * 95}%`,
-            width: `${Math.random() * 3 + 2}px`,
-            height: `${Math.random() * 3 + 2}px`,
-            backgroundColor: [
-              'rgba(37, 99, 235, 0.4)', 
-              'rgba(59, 130, 246, 0.3)', 
-              'rgba(96, 165, 250, 0.25)'
-            ][Math.floor(Math.random() * 3)],
+            left: `${dot.left}%`,
+            top: `${dot.top}%`,
+            width: `${dot.size}px`,
+            height: `${dot.size}px`,
+            backgroundColor: dot.color,
           }}
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.2, 0.8, 0.2],
-          }}
-          transition={{
-            duration: Math.random() * 3 + 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: Math.random() * 2,
-          }}
+          {...(prefersReducedMotion
+            ? { initial: { opacity: 0.5 } }
+            : {
+                animate: {
+                  scale: [1, 1.5, 1],
+                  opacity: [0.2, 0.8, 0.2],
+                },
+                transition: {
+                  duration: dot.duration,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: dot.delay,
+                },
+              })}
         />
       ))}
     </div>

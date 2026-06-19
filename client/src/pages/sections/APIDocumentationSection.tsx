@@ -11,6 +11,7 @@ import {
   BookOpen
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 
 export const APIDocumentationSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
@@ -35,13 +36,10 @@ export const APIDocumentationSection = (): JSX.Element => {
 
   return (
     <section className="relative bg-white py-24 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-96 h-96 top-20 right-20 rounded-full blur-[40px] bg-[linear-gradient(135deg,rgba(37,99,235,0.08)_0%,rgba(37,99,235,0.08)_100%)]" />
-        <div className="absolute w-64 h-64 bottom-20 left-20 rounded-full blur-[30px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
-      </div>
+      {/* Animated background */}
+      <AnimatedBackground particleCount={22} />
 
-      <div className="max-w-7xl mx-auto px-8 relative">
+      <div className="max-w-7xl mx-auto px-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
           <Badge className="mb-4 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200">

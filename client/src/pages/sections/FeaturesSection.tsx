@@ -2,7 +2,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { AnimatedParticles } from "@/components/ui/animated-particles";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { useLocation } from "wouter";
 import { ArrowRightLeft, Layers, Play, Shield } from "lucide-react";
 
@@ -110,31 +110,11 @@ export const FeaturesSection = (): JSX.Element => {
   ];
 
   return (
-    <section className="relative w-full py-24 bg-white">
-      {/* Background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Animated particles background */}
-        <AnimatedParticles count={25} />
+    <section className="relative w-full py-24 bg-white overflow-hidden">
+      {/* Animated background */}
+      <AnimatedBackground particleCount={25} />
 
-        <div className="absolute w-96 h-96 top-[84px] left-36 rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
-        <div className="absolute w-80 h-80 top-[675px] left-[904px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
-        <div className="absolute w-56 h-56 top-[789px] left-[856px] rounded-full blur-[20px] bg-[linear-gradient(135deg,rgba(37,99,235,0.1)_0%,rgba(37,99,235,0.1)_100%)]" />
-
-        {/* Decorative dots */}
-        <div className="absolute w-4 h-4 top-[169px] left-72 bg-blue-200/40 rounded-full" />
-        <div className="absolute w-3 h-3 top-[506px] left-[996px] bg-[#2563eb4c] rounded-full" />
-        <div className="absolute w-2 h-2 top-[1258px] left-[216px] bg-blue-300/40 rounded-full" />
-        <div className="absolute w-5 h-5 top-[1181px] left-[1276px] bg-blue-300/40 rounded-full" />
-        <div className="absolute w-3 h-3 top-[1423px] left-[1140px] bg-blue-300/40 rounded-full" />
-        <div className="absolute w-4 h-4 top-[844px] left-[1008px] bg-[#2563eb4c] rounded-full" />
-
-        {/* Decorative lines */}
-        <div className="absolute w-px h-32 top-[338px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.15)_50%,rgba(0,0,0,0)_100%)]" />
-        <div className="absolute w-px h-24 top-[1013px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.3)_50%,rgba(0,0,0,0)_100%)]" />
-        <div className="absolute w-px h-28 top-[1069px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.2)_50%,rgba(0,0,0,0)_100%)]" />
-      </div>
-
-      <div className="max-w-screen-xl mx-auto px-8">
+      <div className="max-w-screen-xl mx-auto px-8 relative z-10">
         {/* Section Header */}
         <div className="mb-20 text-center">
           <h2 className="text-5xl font-bold text-gray-900 mb-6 leading-[48px]">

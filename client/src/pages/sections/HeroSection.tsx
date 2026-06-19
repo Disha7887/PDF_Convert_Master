@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
-import { AnimatedParticles } from "@/components/ui/animated-particles";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { useLocation, useSearch } from "wouter";
 import { toolConfigs, isHeroTool } from "@/lib/toolConfig";
@@ -23,113 +23,6 @@ export const HeroSection = (): JSX.Element => {
   const search = useSearch();
   const toolId = new URLSearchParams(search).get("tool");
   const activeTool = isHeroTool(toolId) ? toolConfigs[toolId as string] : null;
-
-  // Background decoration elements data
-  // Each "bubble" drifts continuously across the page via Framer Motion.
-  const gradientBlurs = [
-    {
-      className:
-        "absolute w-96 h-96 top-[102px] left-[72px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.15)_0%,rgba(37,99,235,0.15)_100%)]",
-      animate: { x: [0, 220, 80, 0], y: [0, 120, 280, 0], scale: [1, 1.12, 0.92, 1] },
-      transition: { duration: 24, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-80 h-80 top-[614px] left-[976px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.2)_0%,rgba(37,99,235,0.2)_100%)]",
-      animate: { x: [0, -260, -90, 0], y: [0, -160, -50, 0], scale: [1, 0.9, 1.1, 1] },
-      transition: { duration: 28, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-64 h-64 top-[563px] left-[216px] rounded-full blur-[32px] bg-[linear-gradient(135deg,rgba(37,99,235,0.25)_0%,rgba(37,99,235,0.25)_100%)]",
-      animate: { x: [0, 180, 320, 0], y: [0, -120, -200, 0], scale: [1, 1.15, 1, 1] },
-      transition: { duration: 20, repeat: Infinity, ease: "easeInOut" },
-    },
-  ];
-
-  const borderCircles = [
-    {
-      className:
-        "absolute w-40 h-40 top-64 left-72 rounded-full border-2 border-solid border-[#2563eb4c]",
-      animate: { x: [0, 140, 0], y: [0, -90, 0] },
-      transition: { duration: 17, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-32 h-32 top-[717px] left-[880px] rounded-full border-2 border-solid border-[#2563eb66]",
-      animate: { x: [0, -120, 0], y: [0, 80, 0] },
-      transition: { duration: 21, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-48 h-48 top-[525px] left-[864px] rounded-full border-2 border-solid border-[#2563eb40]",
-      animate: { x: [0, 100, 0], y: [0, 130, 0] },
-      transition: { duration: 25, repeat: Infinity, ease: "easeInOut" },
-    },
-  ];
-
-  const dotElements = [
-    {
-      className:
-        "absolute w-4 h-4 top-[205px] left-36 bg-blue-300/50 rounded-full",
-      animate: { x: [0, 60, 0], y: [0, 40, 0] },
-      transition: { duration: 12, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-3 h-3 top-[410px] left-[1212px] bg-[#2563eb66] rounded-full",
-      animate: { x: [0, -50, 0], y: [0, 70, 0] },
-      transition: { duration: 15, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-2 h-2 top-[709px] left-72 bg-[#2563eb80] rounded-full",
-      animate: { x: [0, 80, 0], y: [0, -60, 0] },
-      transition: { duration: 14, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-5 h-5 top-[614px] left-[1060px] bg-[#2563eb59] rounded-full",
-      animate: { x: [0, -90, 0], y: [0, -50, 0] },
-      transition: { duration: 18, repeat: Infinity, ease: "easeInOut" },
-    },
-    {
-      className:
-        "absolute w-6 h-6 top-[488px] left-[1008px] bg-[#2563eb4c] rounded-full",
-      animate: { x: [0, 70, 0], y: [0, 90, 0] },
-      transition: { duration: 16, repeat: Infinity, ease: "easeInOut" },
-    },
-  ];
-
-  const rotatedElements = [
-    {
-      className:
-        "absolute w-12 h-12 top-[358px] left-[1080px] rotate-45 bg-[linear-gradient(135deg,rgba(37,99,235,0.2)_0%,rgba(0,0,0,0)_100%)]",
-    },
-    {
-      className:
-        "absolute w-8 h-8 top-[378px] left-[1264px] rotate-45 bg-[linear-gradient(135deg,rgba(37,99,235,0.25)_0%,rgba(0,0,0,0)_100%)]",
-    },
-    {
-      className:
-        "absolute w-16 h-16 top-[819px] left-[576px] rotate-45 bg-[linear-gradient(135deg,rgba(37,99,235,0.15)_0%,rgba(0,0,0,0)_100%)]",
-    },
-  ];
-
-  const lineElements = [
-    {
-      className:
-        "absolute w-px h-32 top-[205px] left-[360px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.3)_50%,rgba(0,0,0,0)_100%)]",
-    },
-    {
-      className:
-        "absolute w-px h-24 top-[614px] left-[935px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.4)_50%,rgba(0,0,0,0)_100%)]",
-    },
-    {
-      className:
-        "absolute w-px h-28 top-[605px] left-[864px] bg-[linear-gradient(0deg,rgba(0,0,0,0)_0%,rgba(37,99,235,0.35)_50%,rgba(0,0,0,0)_100%)]",
-    },
-  ];
 
   // File format options
   const fileFormats = [
@@ -159,50 +52,12 @@ export const HeroSection = (): JSX.Element => {
   ];
 
   return (
-    <section className="flex flex-col w-full items-start relative bg-white min-h-screen">
+    <section className="flex flex-col w-full items-start relative bg-white min-h-screen overflow-hidden">
       <div className="flex flex-col w-full items-start relative">
-        {/* Background decorative elements */}
-        <div className="absolute w-full h-full top-0 left-0">
-          {/* Animated particles background */}
-          <AnimatedParticles count={35} />
+        {/* Animated background */}
+        <AnimatedBackground particleCount={35} />
 
-          {gradientBlurs.map((blur, index) => (
-            <motion.div
-              key={`blur-${index}`}
-              className={blur.className}
-              animate={blur.animate}
-              transition={blur.transition}
-            />
-          ))}
-
-          {borderCircles.map((circle, index) => (
-            <motion.div
-              key={`circle-${index}`}
-              className={circle.className}
-              animate={circle.animate}
-              transition={circle.transition}
-            />
-          ))}
-
-          {dotElements.map((dot, index) => (
-            <motion.div
-              key={`dot-${index}`}
-              className={dot.className}
-              animate={dot.animate}
-              transition={dot.transition}
-            />
-          ))}
-
-          {rotatedElements.map((element, index) => (
-            <div key={`rotated-${index}`} className={element.className} />
-          ))}
-
-          {lineElements.map((line, index) => (
-            <div key={`line-${index}`} className={line.className} />
-          ))}
-        </div>
-
-        <div className="flex w-full items-center relative">
+        <div className="flex w-full items-center relative z-10">
           <div className="max-w-screen-xl mx-auto px-8 py-20 w-full relative">
               <div className="flex flex-wrap w-full items-center gap-12 relative">
                 {/* Left column - Text content */}
