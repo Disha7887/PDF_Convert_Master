@@ -1688,7 +1688,7 @@ export const PdfEditor: React.FC = () => {
           title="Manage pages"
           data-testid="button-manage-pages"
         >
-          <Files className="w-4 h-4 mr-1" /> Pages
+          <Files className="w-4 h-4 mr-1" /> Manage page
         </Button>
         <div className="flex-1" />
         <Button
