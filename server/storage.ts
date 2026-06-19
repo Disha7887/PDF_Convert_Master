@@ -15,6 +15,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { hashApiKey } from "./utils/generateApiKey";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -27,8 +28,11 @@ export interface IStorage {
   
   // API Key methods
   createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
-  getApiKeyByKey(key: string): Promise<ApiKey | undefined>;
+  getApiKeyByKey(key: string): Promise<ApiKey | undefined>; // accepts the RAW key; hashes internally
+  getApiKeyById(id: string): Promise<ApiKey | undefined>;
   getUserApiKeys(userId: string): Promise<ApiKey[]>;
+  deleteApiKey(id: string): Promise<boolean>;
+  updateApiKeyLastUsed(id: string): Promise<void>;
   
   // Conversion job methods
   createConversionJob(job: InsertConversionJob): Promise<ConversionJob>;
@@ -313,6 +317,8 @@ export class MemStorage implements IStorage {
   }
 
   // API Key methods
+  // NOTE: insertApiKey.apiKey is expected to already be the sha256 HASH of the
+  // raw key (hashing is done by the caller in routes.ts). The Map is keyed by id.
   async createApiKey(insertApiKey: InsertApiKey): Promise<ApiKey> {
     const id = crypto.randomUUID();
     const now = new Date();
@@ -320,20 +326,40 @@ export class MemStorage implements IStorage {
       id,
       userId: insertApiKey.userId,
       apiKey: insertApiKey.apiKey,
+      name: insertApiKey.name ?? null,
+      keyLast4: insertApiKey.keyLast4 ?? null,
+      lastUsedAt: null,
       createdAt: now
     };
-    this.apiKeys.set(insertApiKey.apiKey, apiKey);
+    this.apiKeys.set(id, apiKey);
     return apiKey;
   }
 
   async getApiKeyByKey(key: string): Promise<ApiKey | undefined> {
-    return this.apiKeys.get(key);
+    const hash = hashApiKey(key);
+    return Array.from(this.apiKeys.values()).find((k) => k.apiKey === hash);
+  }
+
+  async getApiKeyById(id: string): Promise<ApiKey | undefined> {
+    return this.apiKeys.get(id);
   }
 
   async getUserApiKeys(userId: string): Promise<ApiKey[]> {
     return Array.from(this.apiKeys.values()).filter(
       (apiKey) => apiKey.userId === userId,
     );
+  }
+
+  async deleteApiKey(id: string): Promise<boolean> {
+    return this.apiKeys.delete(id);
+  }
+
+  async updateApiKeyLastUsed(id: string): Promise<void> {
+    const existing = this.apiKeys.get(id);
+    if (existing) {
+      existing.lastUsedAt = new Date();
+      this.apiKeys.set(id, existing);
+    }
   }
 
   // Conversion job methods
@@ -345,6 +371,7 @@ export class MemStorage implements IStorage {
       userId: insertJob.userId || null,
       toolType: insertJob.toolType,
       status: insertJob.status || "pending",
+      source: insertJob.source || "web",
       inputFilename: insertJob.inputFilename,
       outputFilename: insertJob.outputFilename || null,
       inputFileSize: insertJob.inputFileSize || null,
@@ -671,12 +698,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getApiKeyByKey(key: string): Promise<ApiKey | undefined> {
-    const [apiKey] = await db.select().from(apiKeys).where(eq(apiKeys.apiKey, key));
+    const [apiKey] = await db.select().from(apiKeys).where(eq(apiKeys.apiKey, hashApiKey(key)));
+    return apiKey || undefined;
+  }
+
+  async getApiKeyById(id: string): Promise<ApiKey | undefined> {
+    const [apiKey] = await db.select().from(apiKeys).where(eq(apiKeys.id, id));
     return apiKey || undefined;
   }
 
   async getUserApiKeys(userId: string): Promise<ApiKey[]> {
     return await db.select().from(apiKeys).where(eq(apiKeys.userId, userId));
+  }
+
+  async deleteApiKey(id: string): Promise<boolean> {
+    const deleted = await db.delete(apiKeys).where(eq(apiKeys.id, id)).returning();
+    return deleted.length > 0;
+  }
+
+  async updateApiKeyLastUsed(id: string): Promise<void> {
+    await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, id));
   }
 
   // Conversion job methods

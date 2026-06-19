@@ -1,35 +1,60 @@
 import React from "react";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import { authedJson } from "@/lib/authedFetch";
 
 import { useLocation } from "wouter";
-import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown } from "lucide-react";
+import { Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight } from "lucide-react";
+
+interface UsageData {
+  totals: {
+    total: number;
+    completed: number;
+    failed: number;
+    apiCalls: number;
+    webCalls: number;
+    successRate: number;
+    dataProcessed: number;
+    activeKeys: number;
+  };
+  mostUsed: { type: string; name: string; count: number }[];
+  recent: {
+    id: number;
+    toolType: string;
+    toolName: string;
+    inputFilename: string;
+    status: string;
+    source: string;
+    createdAt: string | null;
+  }[];
+}
+
+function formatBytes(bytes: number): string {
+  if (!bytes) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
 
 interface StatCardProps {
   title: string;
   value: string;
   subtitle: string;
   icon: React.ReactNode;
-  trend?: string;
-  trendPositive?: boolean;
   iconBg: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, trend, trendPositive, iconBg, icon }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, iconBg, icon }) => {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-          {trend && (
-            <p className={`text-sm mt-2 ${trendPositive ? 'text-green-600' : 'text-gray-500'}`}>
-              {trend}
-            </p>
-          )}
-          {subtitle && !trend && (
+          {subtitle && (
             <p className="text-sm text-gray-500 mt-2">{subtitle}</p>
           )}
         </div>
@@ -47,6 +72,14 @@ export const UsageStatistics: React.FC = () => {
   const handleNavigation = (path: string) => {
     setLocation(path);
   };
+
+  const { data: usage } = useQuery<UsageData>({
+    queryKey: ["/api/usage"],
+    queryFn: () => authedJson<{ data: UsageData }>("/api/usage").then((r) => r.data),
+  });
+
+  const totals = usage?.totals;
+  const maxCount = Math.max(1, ...((usage?.mostUsed ?? []).map((t) => t.count)));
 
   return (
     
@@ -199,44 +232,68 @@ export const UsageStatistics: React.FC = () => {
               {/* Page Header */}
               <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Usage Statistics</h1>
-                <Button variant="outline" className="text-sm">
-                  Export Report
-                </Button>
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <StatCard
                   title="Files Converted"
-                  value="2,847"
-                  trend="+12% from last month"
-                  trendPositive={true}
+                  value={(totals?.total ?? 0).toLocaleString()}
+                  subtitle={`${totals?.completed ?? 0} completed · ${totals?.failed ?? 0} failed`}
                   icon={<FileText className="w-5 h-5 text-blue-600" />}
                   iconBg="bg-blue-100"
                 />
                 <StatCard
                   title="API Calls"
-                  value="8,654"
-                  trend="+8% from last month"
-                  trendPositive={true}
+                  value={(totals?.apiCalls ?? 0).toLocaleString()}
+                  subtitle={`${totals?.webCalls ?? 0} via web app`}
                   icon={<Activity className="w-5 h-5 text-blue-600" />}
                   iconBg="bg-blue-100"
                 />
                 <StatCard
-                  title="Storage Used"
-                  value="45.2 GB"
-                  subtitle="of 100 GB limit"
+                  title="Data Processed"
+                  value={formatBytes(totals?.dataProcessed ?? 0)}
+                  subtitle="Total output size"
                   icon={<ArrowDown className="w-5 h-5 text-blue-600" />}
                   iconBg="bg-blue-100"
                 />
                 <StatCard
                   title="Success Rate"
-                  value="99.8%"
-                  subtitle="Excellent performance"
+                  value={`${totals?.successRate ?? 0}%`}
+                  subtitle={`${totals?.activeKeys ?? 0} active API keys`}
                   icon={<Check className="w-5 h-5 text-green-600" />}
                   iconBg="bg-green-100"
                 />
               </div>
+
+              {/* Most used tools breakdown */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Most Used Tools</CardTitle>
+                </CardHeader>
+                <div className="p-6 pt-0">
+                  {usage && usage.mostUsed.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-8 text-center" data-testid="empty-usage-tools">No conversions recorded yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {(usage?.mostUsed ?? []).map((tool) => (
+                        <div key={tool.type} data-testid={`usage-tool-${tool.type}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-700">{tool.name}</span>
+                            <span className="text-sm text-gray-500">{tool.count} {tool.count === 1 ? "use" : "uses"}</span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{ width: `${Math.round((tool.count / maxCount) * 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Card>
             </div>
           </main>
         </div>

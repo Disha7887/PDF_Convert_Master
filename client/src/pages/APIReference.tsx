@@ -1,17 +1,58 @@
-import React from "react";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 import { useLocation } from "wouter";
-import { Bell, Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, ChevronDown, Eye } from "lucide-react";
+import { Search, FileText, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Copy, Check, Loader2 } from "lucide-react";
+
+interface Tool {
+  type: string;
+  name: string;
+  category: string;
+  inputFormats: string[];
+  maxFileSize: number;
+}
 
 export const APIReference: React.FC = () => {
   const [location, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
 
   const handleNavigation = (path: string) => {
     setLocation(path);
+  };
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const baseUrl = `${origin}/api/v1`;
+
+  const { data: tools = [], isLoading } = useQuery<Tool[]>({
+    queryKey: ["/api/tools"],
+    queryFn: async () => {
+      const res = await fetch("/api/tools");
+      const body = await res.json();
+      return body.data as Tool[];
+    },
+  });
+
+  const sampleTool = tools.find((t) => t.type === "pdf_to_word") || tools[0];
+  const sampleType = sampleTool?.type || "pdf_to_word";
+  const curlExample = `curl -X POST "${baseUrl}/${sampleType}" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -F "file=@document.pdf" \\
+  -o converted_output`;
+
+  const copyCurl = async () => {
+    try {
+      await navigator.clipboard.writeText(curlExample);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Copy failed", description: "Select and copy the command manually.", variant: "destructive" });
+    }
   };
 
   return (
@@ -166,7 +207,7 @@ export const APIReference: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900 mb-6">API Reference</h1>
 
               {/* Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Quick Reference Card */}
                 <Card className="h-fit">
                   <CardHeader>
@@ -178,7 +219,7 @@ export const APIReference: React.FC = () => {
                       <div className="mb-2">
                         <p className="text-base font-medium text-gray-900">Base URL</p>
                       </div>
-                      <p className="text-sm font-mono text-gray-600">https://api.pdfconverter.com/v1</p>
+                      <p className="text-sm font-mono text-gray-600 break-all" data-testid="text-base-url">{baseUrl}</p>
                     </div>
 
                     {/* Authentication */}
@@ -186,15 +227,19 @@ export const APIReference: React.FC = () => {
                       <div className="mb-2">
                         <p className="text-base font-medium text-gray-900">Authentication</p>
                       </div>
-                      <p className="text-sm text-gray-600">Bearer Token in Authorization header</p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-mono">Authorization: Bearer &lt;your-api-key&gt;</span> — create one under API Setup.
+                      </p>
                     </div>
 
-                    {/* Rate Limit */}
+                    {/* Request format */}
                     <div className="p-3 rounded-lg bg-gray-50">
                       <div className="mb-2">
-                        <p className="text-base font-medium text-gray-900">Rate Limit</p>
+                        <p className="text-base font-medium text-gray-900">Request format</p>
                       </div>
-                      <p className="text-sm text-gray-600">1000 requests per minute</p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-mono">multipart/form-data</span> with a <span className="font-mono">file</span> field. Returns the converted file bytes directly.
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -204,41 +249,46 @@ export const APIReference: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold">Available Endpoints</CardTitle>
                   </CardHeader>
-                  <div className="p-6 pt-0 space-y-2">
-                    {/* PDF to Word Endpoint */}
-                    <div className="p-2 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-mono text-gray-900">POST /convert/pdf-to-word</span>
-                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                  <div className="p-6 pt-0 space-y-2 max-h-[420px] overflow-y-auto">
+                    {isLoading ? (
+                      <div className="flex items-center justify-center py-8 text-gray-500" data-testid="status-tools-loading">
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Loading endpoints...
                       </div>
-                    </div>
-
-                    {/* PDF to Excel Endpoint */}
-                    <div className="p-2 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-mono text-gray-900">POST /convert/pdf-to-excel</span>
-                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
-                      </div>
-                    </div>
-
-                    {/* Merge Endpoint */}
-                    <div className="p-2 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-mono text-gray-900">POST /merge</span>
-                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
-                      </div>
-                    </div>
-
-                    {/* Split Endpoint */}
-                    <div className="p-2 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-mono text-gray-900">POST /split</span>
-                        <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
-                      </div>
-                    </div>
+                    ) : (
+                      tools.map((tool) => (
+                        <div key={tool.type} className="p-2 rounded-lg" data-testid={`endpoint-${tool.type}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-mono text-gray-900">POST /api/v1/{tool.type}</span>
+                            <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                          </div>
+                          <p className="text-xs text-gray-500">{tool.name}</p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </Card>
               </div>
+
+              {/* Example request */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">Example Request</CardTitle>
+                  <Button variant="outline" className="text-sm" onClick={copyCurl} data-testid="button-copy-curl">
+                    {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                    {copied ? "Copied" : "Copy"}
+                  </Button>
+                </CardHeader>
+                <div className="p-6 pt-0">
+                  <pre className="p-4 rounded-lg bg-gray-900 text-gray-100 text-sm overflow-x-auto" data-testid="code-curl-example">
+                    <code>{curlExample}</code>
+                  </pre>
+                  <p className="text-xs text-gray-500 mt-3">
+                    For <span className="font-mono">merge_pdfs</span>, send multiple <span className="font-mono">files</span> fields. For
+                    <span className="font-mono"> convert_image_format</span>, add <span className="font-mono">-F 'options=&#123;"outputFormat":"png"&#125;'</span>.
+                  </p>
+                </div>
+              </Card>
             </div>
           </main>
         </div>

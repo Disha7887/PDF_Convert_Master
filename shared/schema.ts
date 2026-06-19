@@ -13,10 +13,15 @@ export const users = pgTable("users", {
 });
 
 // API Keys table
+// NOTE: `apiKey` stores a sha256 HASH of the raw key, never the plaintext.
+// The raw `sk-...` key is shown to the user exactly once at creation time.
 export const apiKeys = pgTable("api_keys", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   apiKey: text("api_key").unique().notNull(),
+  name: text("name"),
+  keyLast4: text("key_last4"),
+  lastUsedAt: timestamp("last_used_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -44,6 +49,8 @@ export const loginUserSchema = z.object({
 export const insertApiKeySchema = createInsertSchema(apiKeys).pick({
   userId: true,
   apiKey: true,
+  name: true,
+  keyLast4: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -94,6 +101,7 @@ export const conversionJobs = pgTable("conversion_jobs", {
   userId: uuid("user_id").references(() => users.id),
   toolType: text("tool_type").notNull(),
   status: text("status").notNull().default("pending"), // pending, processing, completed, failed
+  source: text("source").notNull().default("web"), // web (in-app) or api (public REST API)
   inputFilename: text("input_filename").notNull(),
   outputFilename: text("output_filename"),
   inputFileSize: integer("input_file_size"),

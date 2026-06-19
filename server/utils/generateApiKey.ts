@@ -20,6 +20,17 @@ export const generateApiKey = (): string => {
 };
 
 /**
+ * Hash a raw API key for storage / lookup.
+ * We never persist the plaintext key — only this sha256 hex digest.
+ *
+ * @param rawKey The plaintext `sk-...` key
+ * @returns sha256 hex digest
+ */
+export const hashApiKey = (rawKey: string): string => {
+  return crypto.createHash("sha256").update(rawKey).digest("hex");
+};
+
+/**
  * Validate API key format
  * 
  * @param apiKey The API key to validate

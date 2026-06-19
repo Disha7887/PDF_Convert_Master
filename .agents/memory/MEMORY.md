@@ -1,1 +1,2 @@
-- [PDF Convert Master — repo gotchas](pdf-convert-master.md) — live frontend is `client/` only (`frontend/` is inert), `npm run build` skips type-check, forbidden config files, single-header topology.
+- [Auth & build contract](pdf-convert-master.md) — JWT at `res.data.token` (localStorage `auth_token`); user has email/plan only (no name); `npm run build` does NOT typecheck.
+- [Public API upload memory bound](pdf-convert-master.md) — multer `fileSize` is per-file; resolve the tool first to cap files-count per request, or callers can buffer many oversized files.

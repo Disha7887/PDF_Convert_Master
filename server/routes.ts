@@ -15,6 +15,8 @@ import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
 import { register, signin, getCurrentUser, authenticateUser } from "./auth";
+import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
+import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
 import { execSync } from "child_process";
@@ -2226,6 +2228,360 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user", authenticateUser, getCurrentUser);
 
   // API health check
+  // ===========================================================================
+  // API PLATFORM: key management, usage analytics, and the public REST API.
+  // ===========================================================================
+
+  // --- API key management (dashboard, JWT-authenticated) ---------------------
+
+  // Create a new API key. The raw `sk-...` key is returned exactly ONCE; only a
+  // sha256 hash + last 4 chars are persisted.
+  app.post("/api/keys", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const rawName = (req.body?.name ?? "").toString().trim();
+      const name = rawName ? rawName.slice(0, 60) : null;
+
+      const existing = await storage.getUserApiKeys(userId);
+      if (existing.length >= 10) {
+        return res.status(400).json({
+          success: false,
+          error: "You have reached the maximum of 10 API keys. Revoke one to create another."
+        });
+      }
+
+      const rawKey = generateApiKey();
+      const created = await storage.createApiKey({
+        userId,
+        apiKey: hashApiKey(rawKey),
+        name,
+        keyLast4: rawKey.slice(-4),
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          id: created.id,
+          name: created.name,
+          apiKey: rawKey, // shown once
+          maskedKey: `sk-...${created.keyLast4}`,
+          createdAt: created.createdAt,
+        },
+        message: "Copy your API key now — it won't be shown again."
+      });
+    } catch (error) {
+      console.error("Error creating API key:", error);
+      return res.status(500).json({ success: false, error: "Failed to create API key" });
+    }
+  });
+
+  // List the signed-in user's API keys (masked — the raw key is never returned).
+  app.get("/api/keys", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const keys = await storage.getUserApiKeys(userId);
+      const data = keys
+        .sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime())
+        .map((k) => ({
+          id: k.id,
+          name: k.name,
+          maskedKey: k.keyLast4 ? `sk-...${k.keyLast4}` : "sk-••••",
+          createdAt: k.createdAt,
+          lastUsedAt: k.lastUsedAt,
+        }));
+      return res.json({ success: true, data });
+    } catch (error) {
+      console.error("Error listing API keys:", error);
+      return res.status(500).json({ success: false, error: "Failed to list API keys" });
+    }
+  });
+
+  // Revoke (hard-delete) an API key. Ownership is enforced.
+  app.delete("/api/keys/:id", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const key = await storage.getApiKeyById(req.params.id);
+      if (!key || key.userId !== userId) {
+        return res.status(404).json({ success: false, error: "API key not found" });
+      }
+      await storage.deleteApiKey(key.id);
+      return res.json({ success: true, message: "API key revoked" });
+    } catch (error) {
+      console.error("Error revoking API key:", error);
+      return res.status(500).json({ success: false, error: "Failed to revoke API key" });
+    }
+  });
+
+  // --- Usage analytics (dashboard, JWT-authenticated) ------------------------
+
+  // Real aggregates computed from the signed-in user's conversion jobs.
+  app.get("/api/usage", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const [jobs, keys, tools] = await Promise.all([
+        storage.getUserConversionJobs(userId),
+        storage.getUserApiKeys(userId),
+        storage.getAllTools(),
+      ]);
+
+      const nameByType: Record<string, string> = {};
+      for (const t of tools) nameByType[t.type] = t.name;
+
+      const total = jobs.length;
+      const completed = jobs.filter((j) => j.status === "completed").length;
+      const failed = jobs.filter((j) => j.status === "failed").length;
+      const apiCalls = jobs.filter((j) => j.source === "api").length;
+      const webCalls = total - apiCalls;
+      const successRate = total > 0 ? Math.round((completed / total) * 1000) / 10 : 0;
+      const dataProcessed = jobs.reduce((sum, j) => sum + (j.outputFileSize || 0), 0);
+
+      const counts: Record<string, number> = {};
+      for (const j of jobs) counts[j.toolType] = (counts[j.toolType] || 0) + 1;
+      const mostUsed = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([type, count]) => ({ type, name: nameByType[type] || type, count }));
+
+      const recent = [...jobs]
+        .sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime())
+        .slice(0, 8)
+        .map((j) => ({
+          id: j.id,
+          toolType: j.toolType,
+          toolName: nameByType[j.toolType] || j.toolType,
+          inputFilename: j.inputFilename,
+          status: j.status,
+          source: j.source,
+          createdAt: j.createdAt,
+        }));
+
+      return res.json({
+        success: true,
+        data: {
+          totals: { total, completed, failed, apiCalls, webCalls, successRate, dataProcessed, activeKeys: keys.length },
+          mostUsed,
+          recent,
+        },
+      });
+    } catch (error) {
+      console.error("Error computing usage:", error);
+      return res.status(500).json({ success: false, error: "Failed to compute usage statistics" });
+    }
+  });
+
+  // --- Public REST API (API-key authenticated) ------------------------------
+  //
+  // POST /api/v1/:toolType  (multipart/form-data)
+  //   - field "file"  : the input file (use multiple "files" fields for merge_pdfs)
+  //   - field "options": optional JSON string of conversion options
+  //   - also accepts "outputFormat" / "quality" as convenience fields
+  //
+  // Synchronous: authenticates, converts, and streams the result back directly.
+  // Auth runs BEFORE multipart parsing so unauthenticated requests are cheap.
+  app.post(
+    "/api/v1/:toolType",
+    authenticateApiKey,
+    // Tool-aware upload guard. We resolve the tool BEFORE parsing so multer can
+    // enforce a tight per-request memory bound: non-merge tools accept exactly
+    // one file capped at the tool's own maxFileSize; merge_pdfs accepts up to 20.
+    // This prevents an authenticated caller from buffering many oversized files.
+    async (req, res, next) => {
+      try {
+        const toolTypeParam = req.params.toolType;
+        if (!Object.values(ToolType).includes(toolTypeParam as ToolType)) {
+          return res.status(404).json({
+            success: false,
+            error: `Unknown tool "${toolTypeParam}".`,
+            availableTools: Object.values(ToolType),
+          });
+        }
+        const toolType = toolTypeParam as ToolType;
+        const tool = await storage.getToolByType(toolType);
+        if (!tool) {
+          return res.status(404).json({ success: false, error: "Tool not found" });
+        }
+
+        const isMerge = toolType === ToolType.MERGE_PDFS;
+        const maxFilesAllowed = isMerge ? 20 : 1;
+        const uploader = multer({
+          storage: multer.memoryStorage(),
+          limits: {
+            fileSize: tool.maxFileSize * 1024 * 1024, // per-file, the tool's own cap
+            files: maxFilesAllowed,
+          },
+        });
+
+        // Stash resolved values so the handler doesn't re-look them up.
+        (req as any).resolvedTool = tool;
+        (req as any).resolvedToolType = toolType;
+
+        uploader.any()(req, res, (err: any) => {
+          if (err) {
+            let msg = err instanceof Error ? err.message : "Upload failed";
+            if (err instanceof multer.MulterError) {
+              if (err.code === "LIMIT_FILE_SIZE") msg = `File exceeds the ${tool.maxFileSize}MB limit.`;
+              else if (err.code === "LIMIT_FILE_COUNT") {
+                msg = isMerge ? "Too many files (max 20)." : `${toolType} expects exactly one file (field "file").`;
+              }
+            }
+            return res.status(400).json({ success: false, error: msg });
+          }
+          next();
+        });
+      } catch (e) {
+        return res.status(500).json({ success: false, error: "Failed to prepare upload" });
+      }
+    },
+    async (req, res) => {
+      try {
+        const userId = (req as any).user.id as string;
+        const toolType = (req as any).resolvedToolType as ToolType;
+        const tool = (req as any).resolvedTool;
+
+        const files = (req.files as Express.Multer.File[]) || [];
+        if (files.length === 0) {
+          return res.status(400).json({
+            success: false,
+            error: 'No file uploaded. Send the file in a multipart "file" field.',
+          });
+        }
+
+        // Parse options (JSON string) plus convenience scalar fields.
+        let options: Record<string, any> = {};
+        if (req.body?.options) {
+          try {
+            options = typeof req.body.options === "string" ? JSON.parse(req.body.options) : req.body.options;
+          } catch {
+            return res.status(400).json({ success: false, error: '"options" must be valid JSON.' });
+          }
+        }
+        if (req.body?.outputFormat && options.outputFormat === undefined) options.outputFormat = req.body.outputFormat;
+        if (req.body?.quality !== undefined && options.quality === undefined) options.quality = Number(req.body.quality);
+
+        const maxBytes = tool.maxFileSize * 1024 * 1024;
+        const startTime = Date.now();
+
+        // --- merge_pdfs: combine >=2 PDFs into one ---------------------------
+        if (toolType === ToolType.MERGE_PDFS) {
+          if (files.length < 2) {
+            return res.status(400).json({ success: false, error: "merge_pdfs requires at least 2 PDF files." });
+          }
+          const buffers: Buffer[] = [];
+          for (const f of files) {
+            if (f.size > maxBytes) {
+              return res.status(400).json({ success: false, error: `"${f.originalname}" exceeds the ${tool.maxFileSize}MB limit.` });
+            }
+            const isPdfMagic = f.buffer.subarray(0, 5).toString("latin1").startsWith("%PDF");
+            if (!isPdfMagic) {
+              return res.status(400).json({ success: false, error: `"${f.originalname}" is not a valid PDF file.` });
+            }
+            buffers.push(f.buffer);
+          }
+
+          const outputFilename = "merged.pdf";
+          let result;
+          try {
+            result = await mergePdfs(buffers, outputFilename);
+          } catch (e) {
+            result = { success: false, error: e instanceof Error ? e.message : "Merge failed" } as any;
+          }
+
+          if (!result.success || !result.convertedBuffer || result.convertedBuffer.length === 0) {
+            await storage.createConversionJob({
+              userId, toolType, status: "failed", source: "api",
+              inputFilename: files.map((f) => f.originalname).join(", ").slice(0, 255),
+              inputFileSize: files.reduce((s, f) => s + f.size, 0),
+              outputFilename: null, outputFileSize: null,
+              processingTime: Date.now() - startTime,
+              errorMessage: result.error || "Merge failed",
+            });
+            return res.status(422).json({ success: false, error: result.error || "Merge failed" });
+          }
+
+          await storage.createConversionJob({
+            userId, toolType, status: "completed", source: "api",
+            inputFilename: files.map((f) => f.originalname).join(", ").slice(0, 255),
+            inputFileSize: files.reduce((s, f) => s + f.size, 0),
+            outputFilename, outputFileSize: result.convertedBuffer.length,
+            processingTime: Date.now() - startTime, errorMessage: null,
+          });
+
+          res.setHeader("Content-Disposition", `attachment; filename="${outputFilename}"`);
+          res.setHeader("Content-Type", result.mimeType || "application/pdf");
+          res.setHeader("Content-Length", String(result.convertedBuffer.length));
+          return res.status(200).send(result.convertedBuffer);
+        }
+
+        // --- all other tools: exactly one file ------------------------------
+        if (files.length !== 1) {
+          return res.status(400).json({ success: false, error: `${toolType} expects exactly one file (field "file").` });
+        }
+        const file = files[0];
+
+        if (file.size > maxBytes) {
+          return res.status(400).json({ success: false, error: `File exceeds the ${tool.maxFileSize}MB limit.` });
+        }
+        const fileExtension = file.originalname.split(".").pop()?.toLowerCase();
+        if (!fileExtension || !tool.inputFormats.includes(fileExtension)) {
+          return res.status(400).json({ success: false, error: `Unsupported file format. Supported: ${tool.inputFormats.join(", ")}` });
+        }
+
+        // Derive the output filename exactly like the in-app flow.
+        const inputName = file.originalname.includes(".")
+          ? file.originalname.substring(0, file.originalname.lastIndexOf("."))
+          : file.originalname;
+        let outputExtension = tool.outputFormat === "same" ? fileExtension : tool.outputFormat;
+        if (toolType === ToolType.CONVERT_IMAGE_FORMAT) {
+          const allowedFormats: Record<string, string> = {
+            png: "png", jpg: "jpg", jpeg: "jpg", webp: "webp", gif: "gif", avif: "avif", tiff: "tiff", tif: "tiff",
+          };
+          const requested = (options?.outputFormat || "png").toString().toLowerCase();
+          outputExtension = allowedFormats[requested] || "png";
+        }
+        const outputFilename = `${inputName}_converted.${outputExtension}`;
+
+        let result;
+        try {
+          result = await performActualConversion(file.buffer, file.originalname, toolType, outputFilename, options);
+        } catch (e) {
+          result = { success: false, error: e instanceof Error ? e.message : "Conversion failed" } as any;
+        }
+
+        if (!result.success || !result.convertedBuffer) {
+          await storage.createConversionJob({
+            userId, toolType, status: "failed", source: "api",
+            inputFilename: file.originalname, inputFileSize: file.size,
+            outputFilename: null, outputFileSize: null,
+            processingTime: Date.now() - startTime,
+            errorMessage: result.error || "Conversion failed",
+          });
+          return res.status(422).json({ success: false, error: result.error || "Conversion failed" });
+        }
+
+        await storage.createConversionJob({
+          userId, toolType, status: "completed", source: "api",
+          inputFilename: file.originalname, inputFileSize: file.size,
+          outputFilename, outputFileSize: result.convertedBuffer.length,
+          processingTime: Date.now() - startTime, errorMessage: null,
+        });
+
+        res.setHeader("Content-Disposition", `attachment; filename="${outputFilename}"`);
+        res.setHeader("Content-Type", result.mimeType || getMimeType(outputFilename));
+        res.setHeader("Content-Length", String(result.convertedBuffer.length));
+        return res.status(200).send(result.convertedBuffer);
+      } catch (error) {
+        console.error("Public API conversion error:", error);
+        if (!res.headersSent) {
+          return res.status(500).json({
+            success: false,
+            error: "Conversion failed",
+            details: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
+    }
+  );
+
   app.get("/api/health", (req, res) => {
     res.json({
       success: true,
@@ -2244,13 +2600,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "GET /api/tools": "Get all available tools",
         "GET /api/tools/category/:category": "Get tools by category", 
         "GET /api/tools/:toolType": "Get specific tool details",
-        "POST /api/convert": "Start file conversion job",
+        "POST /api/convert": "Start file conversion job (in-app, async)",
         "POST /api/generate-pdf": "Generate PDF from images/text (real-time)",
         "GET /api/jobs/:jobId": "Get job status",
         "GET /api/jobs": "Get user's job history",
         "GET /api/download/:jobId": "Download converted file",
         "GET /api/health": "API health check",
         "GET /api/docs": "API documentation"
+      },
+      publicApi: {
+        description: "Public REST API authenticated with an API key (Authorization: Bearer sk-...). Synchronous: returns the converted file bytes directly.",
+        "POST /api/v1/:toolType": "Convert a file. multipart/form-data with a 'file' field (use multiple 'files' for merge_pdfs), optional 'options' JSON.",
+        availableTools: Object.values(ToolType),
+        authentication: "Authorization: Bearer <your-api-key>",
+      },
+      keyManagement: {
+        description: "Manage API keys (requires a logged-in session token, Authorization: Bearer <jwt>).",
+        "POST /api/keys": "Create a new API key (raw key returned once)",
+        "GET /api/keys": "List your API keys (masked)",
+        "DELETE /api/keys/:id": "Revoke an API key",
+        "GET /api/usage": "Usage statistics for your account",
       },
       version: "1.0.0"
     });

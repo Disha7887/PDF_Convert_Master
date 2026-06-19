@@ -74,7 +74,14 @@ export const authenticateApiKey = async (req: ApiKeyRequest, res: Response, next
       userId: apiKeyRecord.userId
     };
 
-    console.log(`API request from user ${user.email} using API key ${apiKey.substring(0, 10)}...`);
+    // Record last-used time for the dashboard. Non-blocking — a failure here
+    // must never reject an otherwise-valid API request.
+    storage.updateApiKeyLastUsed(apiKeyRecord.id).catch((e) => {
+      console.error("Failed to update API key lastUsedAt:", e);
+    });
+
+    // Log only non-sensitive internal identifiers (no email, no raw key).
+    console.log(`API request authenticated (key ${apiKeyRecord.id})`);
 
     next();
 
