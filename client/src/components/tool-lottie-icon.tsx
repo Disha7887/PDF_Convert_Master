@@ -25,17 +25,19 @@ import signPdf from "@/assets/lottie/signature-pdf.json";
 import watermarkPdf from "@/assets/lottie/watermark-pdf.json";
 import addImagePdf from "@/assets/lottie/add-image-to-pdf.json";
 import ocrPdf from "@/assets/lottie/ocr-pdf.json";
+import pdfToWord from "@/assets/lottie/pdf-to-word.json";
+import convertImage from "@/assets/lottie/convert-image.json";
+import editPdf from "@/assets/lottie/edit-pdf.json";
 
 /**
  * Maps each tool id to the Lottie animation the user provided. The filename of
- * each uploaded animation identifies its tool. Word is shared between
- * "PDF→Word" and "Word→PDF"; Excel now has a dedicated animation per direction
- * (pdf-to-excel vs excel-file-scanning). The generic picture/image animations
- * cover the image<->pdf + format tools.
+ * each uploaded animation identifies its tool. PDF→Word and PDF↔Excel each have
+ * a dedicated animation per direction; Word→PDF still reuses the shared word
+ * animation. The generic picture/image animations cover the image<->pdf tools.
  */
 export const TOOL_ANIMATIONS: Record<string, unknown> = {
   // PDF conversion
-  "pdf-to-word": wordFile,
+  "pdf-to-word": pdfToWord,
   "word-to-pdf": wordFile,
   "pdf-to-excel": pdfToExcel,
   "excel-to-pdf": excelFileScanning,
@@ -45,7 +47,7 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "pdf-to-images": picture,
   "images-to-pdf": image,
   // Image tools
-  "convert-image-format": image,
+  "convert-image-format": convertImage,
   "resize-images": resize,
   "crop-images": cropTool,
   "rotate-images": rotateImage,
@@ -59,6 +61,7 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "compress-pdf": pdfCompression,
   "rotate-pdf": pdfRotate,
   // PDF editor
+  "edit-pdf": editPdf,
   "crop-pdf": cropPdf,
   "sign-pdf": signPdf,
   "watermark-pdf": watermarkPdf,

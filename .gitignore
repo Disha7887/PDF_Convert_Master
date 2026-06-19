@@ -63,3 +63,5 @@ frontend/.env.test.local
 frontend/.env.production.local
 frontend/dist/
 frontend/node_modules/
+# Architect/code-review tooling artifacts
+graphify-out/
