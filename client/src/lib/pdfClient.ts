@@ -12,6 +12,7 @@ export interface RenderedPage {
   width: number; // PDF user-space points (origin top-left in our UI)
   height: number; // PDF user-space points
   dataUrl: string; // rasterised PNG preview
+  rotation?: number; // page's native /Rotate in degrees (0/90/180/270)
 }
 
 export const PDF_RENDER_SCALE = 1.5; // crispness of on-screen rasters
@@ -44,24 +45,31 @@ export async function renderPdfPages(
   bytes: Uint8Array,
   scale = PDF_RENDER_SCALE,
   onProgress?: (done: number, total: number) => void,
+  opts?: { forceUnrotated?: boolean },
 ): Promise<RenderedPage[]> {
   const doc = await loadPdfDocument(bytes);
   const pages: RenderedPage[] = [];
   try {
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
-      const viewport = page.getViewport({ scale });
+      // pdf.js applies the page's /Rotate by default. Callers that draw back
+      // into the PDF's *unrotated* user space (e.g. the editor) can pass
+      // `forceUnrotated` so the on-screen geometry matches export coordinates.
+      const native = ((((page.rotate ?? 0) % 360) + 360) % 360);
+      const rotation = opts?.forceUnrotated ? 0 : native;
+      const viewport = page.getViewport({ scale, rotation });
       const canvas = document.createElement("canvas");
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
       const ctx = canvas.getContext("2d")!;
       await page.render({ canvasContext: ctx, viewport }).promise;
-      const base = page.getViewport({ scale: 1 });
+      const base = page.getViewport({ scale: 1, rotation });
       pages.push({
         pageIndex: i - 1,
         width: base.width,
         height: base.height,
         dataUrl: canvas.toDataURL("image/png"),
+        rotation: native,
       });
       page.cleanup();
       onProgress?.(i, doc.numPages);

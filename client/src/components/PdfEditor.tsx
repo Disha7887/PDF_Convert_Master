@@ -257,6 +257,7 @@ export const PdfEditor: React.FC = () => {
     type: Tool;
   } | null>(null);
   const snapshotRef = useRef<EditElement[] | null>(null);
+  const editSessionRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const padRef = useRef<HTMLCanvasElement>(null);
@@ -267,6 +268,7 @@ export const PdfEditor: React.FC = () => {
   const pushHistory = (snapshot: EditElement[]) => {
     setPast((p) => [...p.slice(-49), snapshot]);
     setFuture([]);
+    editSessionRef.current = null;
   };
   const undo = () => {
     if (!past.length) return;
@@ -275,6 +277,7 @@ export const PdfEditor: React.FC = () => {
     setPast(past.slice(0, -1));
     setElements(prev);
     setSelectedId(null);
+    editSessionRef.current = null;
   };
   const redo = () => {
     if (!future.length) return;
@@ -283,6 +286,7 @@ export const PdfEditor: React.FC = () => {
     setFuture(future.slice(1));
     setElements(next);
     setSelectedId(null);
+    editSessionRef.current = null;
   };
 
   // --- load ------------------------------------------------------------------
@@ -295,7 +299,12 @@ export const PdfEditor: React.FC = () => {
       setLoading(true);
       try {
         const b = await readFileBytes(f);
-        const rendered = await renderPdfPages(b);
+        // Render in the PDF's UNROTATED user space so on-screen geometry lines
+        // up with pdf-lib export coordinates (which ignore /Rotate). The saved
+        // page keeps its /Rotate, so annotations rotate together with content.
+        const rendered = await renderPdfPages(b, undefined, undefined, {
+          forceUnrotated: true,
+        });
         setSrcBytes(b);
         setPages(rendered);
         setElements([]);
@@ -305,6 +314,18 @@ export const PdfEditor: React.FC = () => {
         setActivePage(0);
         setZoom(1);
         setFile(f);
+        creatingRef.current = null;
+        dragRef.current = null;
+        snapshotRef.current = null;
+        editSessionRef.current = null;
+        setTool("select");
+        if (rendered.some((p) => p.rotation)) {
+          toast({
+            title: "Rotated pages detected",
+            description:
+              "Rotated pages are shown in their native orientation. Your edits are saved aligned to the page content.",
+          });
+        }
       } catch (err) {
         console.error(err);
         toast({
@@ -337,6 +358,24 @@ export const PdfEditor: React.FC = () => {
     setElements((prev) =>
       prev.map((el) => (el.id === id ? ({ ...el, ...patch } as EditElement) : el)),
     );
+
+  // Property/content edits to the SELECTED element. Edits that fire rapidly
+  // (typing, dragging a colour/size control) are coalesced into ONE undo step
+  // per (element, field) "session"; any other history action or undo/redo
+  // (which reset editSessionRef) starts a fresh step. This is the single path
+  // that records history for property edits AND clears the redo stack.
+  const propEdit = (sessionKey: string, id: string, patch: Partial<EditElement>) => {
+    if (editSessionRef.current !== sessionKey) {
+      pushHistory(elementsRef.current);
+      editSessionRef.current = sessionKey;
+    }
+    updateEl(id, patch);
+  };
+  // Discrete one-shot edits (toggles, dropdown picks): each is its own step.
+  const discreteEdit = (id: string, patch: Partial<EditElement>) => {
+    pushHistory(elementsRef.current);
+    updateEl(id, patch);
+  };
 
   const boundsOf = (el: EditElement) => {
     if (el.type === "line")
@@ -1081,7 +1120,8 @@ export const PdfEditor: React.FC = () => {
 
   // value/setter that targets the selected element if present, else the draft
   const setColor = (c: string) => {
-    if (selected && "color" in selected) updateEl(selected.id, { color: c } as any);
+    if (selected && "color" in selected)
+      propEdit(`${selected.id}:strokecolor`, selected.id, { color: c } as any);
     else setDraft((d) => ({ ...d, color: c }));
   };
   const colorValue =
@@ -1214,7 +1254,9 @@ export const PdfEditor: React.FC = () => {
               <input
                 className="px-2 py-1 rounded border bg-white text-sm min-w-[160px] flex-1"
                 value={selected.text}
-                onChange={(e) => updateEl(selected.id, { text: e.target.value })}
+                onChange={(e) =>
+                  propEdit(`${selected.id}:text`, selected.id, { text: e.target.value })
+                }
                 placeholder="Text…"
                 data-testid="input-text-content"
               />
@@ -1224,7 +1266,7 @@ export const PdfEditor: React.FC = () => {
               value={selected?.type === "text" ? selected.family : draft.family}
               onChange={(e) => {
                 const family = e.target.value as FontFamily;
-                if (selected?.type === "text") updateEl(selected.id, { family });
+                if (selected?.type === "text") discreteEdit(selected.id, { family });
                 else setDraft((d) => ({ ...d, family }));
               }}
               data-testid="select-font-family"
@@ -1243,7 +1285,8 @@ export const PdfEditor: React.FC = () => {
                 value={selected?.type === "text" ? selected.fontSize : draft.fontSize}
                 onChange={(e) => {
                   const fontSize = clamp(Number(e.target.value) || 6, 6, 144);
-                  if (selected?.type === "text") updateEl(selected.id, { fontSize });
+                  if (selected?.type === "text")
+                    propEdit(`${selected.id}:fontSize`, selected.id, { fontSize });
                   else setDraft((d) => ({ ...d, fontSize }));
                 }}
                 data-testid="input-font-size"
@@ -1251,7 +1294,8 @@ export const PdfEditor: React.FC = () => {
             </label>
             <button
               onClick={() => {
-                if (selected?.type === "text") updateEl(selected.id, { bold: !selected.bold });
+                if (selected?.type === "text")
+                  discreteEdit(selected.id, { bold: !selected.bold });
                 else setDraft((d) => ({ ...d, bold: !d.bold }));
               }}
               className={`w-8 h-8 rounded border font-bold ${
@@ -1265,7 +1309,8 @@ export const PdfEditor: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                if (selected?.type === "text") updateEl(selected.id, { italic: !selected.italic });
+                if (selected?.type === "text")
+                  discreteEdit(selected.id, { italic: !selected.italic });
                 else setDraft((d) => ({ ...d, italic: !d.italic }));
               }}
               className={`w-8 h-8 rounded border italic ${
@@ -1282,7 +1327,8 @@ export const PdfEditor: React.FC = () => {
               className="h-8 w-10 rounded border"
               value={selected?.type === "text" ? selected.color : draft.color}
               onChange={(e) => {
-                if (selected?.type === "text") updateEl(selected.id, { color: e.target.value });
+                if (selected?.type === "text")
+                  propEdit(`${selected.id}:textcolor`, selected.id, { color: e.target.value });
                 else setDraft((d) => ({ ...d, color: e.target.value }));
               }}
               data-testid="input-text-color"
@@ -1316,7 +1362,9 @@ export const PdfEditor: React.FC = () => {
                 onChange={(e) => {
                   const strokeWidth = Number(e.target.value);
                   if (selected && "strokeWidth" in selected)
-                    updateEl(selected.id, { strokeWidth } as any);
+                    propEdit(`${selected.id}:strokeWidth`, selected.id, {
+                      strokeWidth,
+                    } as any);
                   else setDraft((d) => ({ ...d, strokeWidth }));
                 }}
                 data-testid="range-stroke-width"
@@ -1334,7 +1382,7 @@ export const PdfEditor: React.FC = () => {
               value={selected?.type === "highlight" ? selected.color : draft.highlightColor}
               onChange={(e) => {
                 if (selected?.type === "highlight")
-                  updateEl(selected.id, { color: e.target.value });
+                  propEdit(`${selected.id}:hlcolor`, selected.id, { color: e.target.value });
                 else setDraft((d) => ({ ...d, highlightColor: e.target.value }));
               }}
               data-testid="input-highlight-color"
@@ -1348,7 +1396,9 @@ export const PdfEditor: React.FC = () => {
               <input
                 className="px-2 py-1 rounded border bg-white text-sm"
                 value={selected.label}
-                onChange={(e) => updateEl(selected.id, { label: e.target.value })}
+                onChange={(e) =>
+                  propEdit(`${selected.id}:label`, selected.id, { label: e.target.value })
+                }
                 data-testid="input-stamp-label"
               />
             ) : (
@@ -1378,7 +1428,7 @@ export const PdfEditor: React.FC = () => {
               value={selected?.type === "stamp" ? selected.color : draft.stampColor}
               onChange={(e) => {
                 if (selected?.type === "stamp")
-                  updateEl(selected.id, { color: e.target.value });
+                  propEdit(`${selected.id}:stampcolor`, selected.id, { color: e.target.value });
                 else setDraft((d) => ({ ...d, stampColor: e.target.value }));
               }}
               data-testid="input-stamp-color"
@@ -1391,7 +1441,9 @@ export const PdfEditor: React.FC = () => {
             className="px-2 py-1 rounded border bg-white text-sm flex-1 min-w-[200px] resize-none"
             rows={1}
             value={selected.text}
-            onChange={(e) => updateEl(selected.id, { text: e.target.value })}
+            onChange={(e) =>
+              propEdit(`${selected.id}:notetext`, selected.id, { text: e.target.value })
+            }
             placeholder="Note text…"
             data-testid="input-note-content"
           />

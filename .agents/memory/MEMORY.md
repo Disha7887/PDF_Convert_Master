@@ -1,1 +1,2 @@
 - [Vite build passes on missing imports](build-vs-runtime-imports.md) — green `npm run build` won't catch an unimported JSX component; it only fails at runtime, so always verify in the preview.
+- [PDF editor constraints](pdf-editor.md) — render pages UNROTATED so overlay geometry matches pdf-lib export; route all property edits through history + clear redo stack.
