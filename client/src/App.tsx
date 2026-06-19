@@ -44,6 +44,7 @@ import { CompressImageUpload } from "@/pages/upload/CompressImage";
 import { UpscaleImageUpload } from "@/pages/upload/UpscaleImage";
 import { RemoveBackgroundUpload } from "@/pages/upload/RemoveBackground";
 import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
+import { EditPdfUpload } from "@/pages/upload/EditPdf";
 import { UploadDemo } from "@/pages/UploadDemo";
 import { ResizeImageTool, CropImageTool, RotateImageTool } from "@/pages/ImageEditTools";
 import { Features } from "@/pages/Features";
@@ -237,6 +238,12 @@ function Router() {
       </Route>
 
       {/* PDF document management tools */}
+      <Route path="/upload/edit-pdf">
+        <DynamicLayout>
+          <EditPdfUpload />
+        </DynamicLayout>
+      </Route>
+
       <Route path="/upload/split-pdf">
         <DynamicLayout>
           <SplitPdfUpload />

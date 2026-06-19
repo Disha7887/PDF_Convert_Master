@@ -12,7 +12,8 @@ import {
   RefreshCw,
   Maximize2,
   TrendingUp,
-  Crop
+  Crop,
+  Pencil
 } from "lucide-react";
 
 export interface ToolConfig {
@@ -311,6 +312,23 @@ export const toolConfigs: Record<string, ToolConfig> = {
   },
 
   // PDF MANAGEMENT TOOLS
+  "edit-pdf": {
+    id: "edit-pdf",
+    title: "Edit PDF",
+    description: "Add text and images to your PDF right in the browser — no upload needed",
+    acceptedFormats: [".pdf"],
+    maxFileSize: "100MB",
+    buttonText: "Select PDF File",
+    dropAreaText: "Drop your PDF file here",
+    fileTypeHint: "Supports: PDF files up to 100MB",
+    outputFormat: "Edited PDF",
+    icon: Pencil,
+    iconColor: "text-blue-600",
+    iconBgColor: "bg-blue-50",
+    iconBorderColor: "border-blue-200",
+    category: "Edit",
+    route: "/upload/edit-pdf"
+  },
   "merge-pdfs": {
     id: "merge-pdfs",
     title: "PDF Merger",

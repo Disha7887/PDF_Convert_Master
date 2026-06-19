@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
+import { ToolLottieIcon } from "@/components/tool-lottie-icon";
 import { toolConfigs, isHeroTool, type ToolConfig } from "@/lib/toolConfig";
 import { useLocation } from "wouter";
 
@@ -39,7 +40,6 @@ export const TestimonialsSection = (): JSX.Element => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {tools.map((tool) => {
-            const Icon = tool.icon;
             return (
               <button
                 key={tool.id}
@@ -49,9 +49,9 @@ export const TestimonialsSection = (): JSX.Element => {
                 data-testid={`card-tool-${tool.id}`}
               >
                 <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${tool.iconBgColor} transition-transform group-hover:scale-110`}
+                  className={`flex h-14 w-14 items-center justify-center rounded-xl ${tool.iconBgColor} transition-transform group-hover:scale-110`}
                 >
-                  <Icon className={`h-6 w-6 ${tool.iconColor}`} />
+                  <ToolLottieIcon toolId={tool.id} config={tool} size={44} />
                 </span>
                 <span className="text-sm font-semibold text-gray-900 leading-snug">
                   {tool.title}

@@ -1,5 +1,1 @@
-- [Frontend gotchas](pdf-convert-frontend-gotchas.md) — non-obvious traps when editing/theming this Figma-exported React app (which frontend is actually live, etc.).
-- [Conversion engine](pdf-convert-conversion-engine.md) — durable constraints for the real file converters in server/routes.ts (no placeholders, HTML→PDF security, the tool needing an API key).
-- [Image editor tools](pdf-convert-image-editors.md) — crop/resize/rotate/upscale pages, the 3 separate client-side popup tools at /image-editor/{resize,crop,rotate}, and /api/uploads security.
-- [Brand color class names](brand-color-classes.md) — several "red"-named gradient utilities are redefined in index.css to render blue; renaming them to "-blue-" breaks the build.
-- [Converter surfaces](converter-surfaces.md) — the 9 separate components that render converter upload/status UI; any "global" converter change must hit all of them (no central shell).
+- [Vite build passes on missing imports](build-vs-runtime-imports.md) — green `npm run build` won't catch an unimported JSX component; it only fails at runtime, so always verify in the preview.

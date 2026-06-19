@@ -10,6 +10,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { ToolLottieIcon } from "@/components/tool-lottie-icon";
 import {
   ResizeModal,
   CropModal,
@@ -106,7 +107,6 @@ interface ToolCardProps {
 }
 
 const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
-  const IconComponent = toolConfig.icon;
   const [stage, setStage] = useState<CardStage>("idle");
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
@@ -436,7 +436,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       <div
         className={`w-11 h-11 flex items-center justify-center rounded-xl border ${toolConfig.iconBorderColor} ${toolConfig.iconBgColor} shadow-sm shrink-0`}
       >
-        <IconComponent className={`w-6 h-6 ${toolConfig.iconColor}`} />
+        <ToolLottieIcon toolId={toolConfig.id} config={toolConfig} size={34} />
       </div>
       <h3 className="text-base font-bold text-gray-900 leading-tight">
         {toolConfig.title}
@@ -569,7 +569,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
               <div
                 className={`w-16 h-16 p-1 flex items-center justify-center rounded-2xl border ${toolConfig.iconBorderColor} ${toolConfig.iconBgColor} shadow-md`}
               >
-                <IconComponent className={`w-9 h-9 ${toolConfig.iconColor}`} />
+                <ToolLottieIcon toolId={toolConfig.id} config={toolConfig} size={52} />
               </div>
             </div>
 
@@ -1009,6 +1009,7 @@ export const Tools: React.FC = () => {
     "compress-images",
     "upscale-images",
     "remove-background",
+    "edit-pdf",
     "merge-pdfs",
     "split-pdf",
     "compress-pdf",
