@@ -1602,7 +1602,7 @@ export const PdfEditor: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4">
       {/* Top bar */}
-      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow-sm">
         <Button
           variant="outline"
           size="sm"
