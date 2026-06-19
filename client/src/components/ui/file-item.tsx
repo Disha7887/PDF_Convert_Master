@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { 
   FileText, 
   Image, 
@@ -9,7 +10,6 @@ import {
   X, 
   CheckCircle, 
   AlertCircle, 
-  Loader2,
   Download,
   GripVertical
 } from "lucide-react";
@@ -75,13 +75,13 @@ export const FileItem: React.FC<FileItemProps> = ({
   const getStatusIcon = () => {
     switch (status) {
       case 'validating':
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+        return <ProcessingSpinner size={16} />;
       case 'valid':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'invalid':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'converting':
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+        return <ProcessingSpinner size={16} />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'failed':

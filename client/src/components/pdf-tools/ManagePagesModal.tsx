@@ -12,9 +12,9 @@ import {
   CheckSquare,
   Square,
   X,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { useToast } from "@/hooks/use-toast";
 import {
   readFileBytes,
@@ -367,7 +367,7 @@ export function ManagePagesModal({
             data-testid="button-import-document"
           >
             {importing ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              <ProcessingSpinner size={16} className="mr-1" />
             ) : (
               <Upload className="w-4 h-4 mr-1" />
             )}
@@ -472,7 +472,7 @@ export function ManagePagesModal({
             >
               {busy ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" /> Saving…
+                  <ProcessingSpinner size={16} tone="light" className="mr-1" /> Saving…
                 </>
               ) : (
                 "Save changes"

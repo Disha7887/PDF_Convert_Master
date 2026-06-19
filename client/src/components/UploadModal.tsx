@@ -193,7 +193,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               >
                 {isProcessing ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <ConverterStatusIcon status="processing" size={16} className="brightness-0 invert" />
                     Processing...
                   </div>
                 ) : (

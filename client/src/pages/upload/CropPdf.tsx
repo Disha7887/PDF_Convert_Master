@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { PDFDocument } from "pdf-lib";
-import { Loader2, Download, RotateCcw } from "lucide-react";
+import { Download, RotateCcw } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { PdfToolLayout, PdfDropzone } from "@/components/pdf-tools/PdfToolShell";
@@ -139,7 +140,7 @@ export function CropPdfUpload() {
               data-testid="button-apply-crop"
             >
               {saving ? (
-                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                <ProcessingSpinner size={16} tone="light" className="mr-1" />
               ) : (
                 <Download className="w-4 h-4 mr-1" />
               )}

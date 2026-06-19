@@ -486,7 +486,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               <div className={`flex items-center space-x-2 ${stage === 'upload' || stage === 'files-selected' ? 'text-blue-600' : stage === 'converting' ? 'text-blue-600' : stage === 'completed' ? 'text-green-600' : 'text-red-600'}`}>
                 {stage === 'upload' && <Upload className="w-4 h-4" />}
                 {stage === 'files-selected' && <FileCheck className="w-4 h-4" />}
-                {stage === 'converting' && <Settings className="w-4 h-4 animate-spin" />}
+                {stage === 'converting' && <ConverterStatusIcon status="processing" size={16} />}
                 {stage === 'completed' && <CheckCircle className="w-4 h-4" />}
                 {stage === 'error' && <AlertCircle className="w-4 h-4" />}
                 <span className="text-sm font-medium capitalize">{stage}</span>

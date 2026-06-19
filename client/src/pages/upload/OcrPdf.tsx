@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { Loader2, Download, RotateCcw, FileText, ScanText, X } from "lucide-react";
+import { Download, RotateCcw, FileText, ScanText, X } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { PdfToolLayout, PdfDropzone } from "@/components/pdf-tools/PdfToolShell";
@@ -325,7 +326,7 @@ export function OcrPdfUpload() {
 
           {running && (
             <div className="flex items-center gap-3 text-blue-700 bg-blue-50 border border-blue-100 rounded-lg p-4">
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <ProcessingSpinner size={24} />
               <span data-testid="text-progress">{progress || "Working…"}</span>
             </div>
           )}

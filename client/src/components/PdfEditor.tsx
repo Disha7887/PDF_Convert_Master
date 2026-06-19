@@ -59,7 +59,6 @@ import {
   Printer,
   Trash2,
   Copy,
-  Loader2,
   PanelLeft,
   X,
   ChevronDown,
@@ -1858,7 +1857,7 @@ export const PdfEditor: React.FC = () => {
           data-testid="button-save"
         >
           {exporting ? (
-            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            <ProcessingSpinner size={16} tone="light" className="mr-1" />
           ) : (
             <Download className="w-4 h-4 mr-1" />
           )}

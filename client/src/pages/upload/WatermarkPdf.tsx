@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
-import { Loader2, Download, RotateCcw, Type, Image as ImageIcon } from "lucide-react";
+import { Download, RotateCcw, Type, Image as ImageIcon } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { PdfToolLayout, PdfDropzone } from "@/components/pdf-tools/PdfToolShell";
@@ -402,7 +403,7 @@ export function WatermarkPdfUpload() {
                 data-testid="button-apply-watermark"
               >
                 {saving ? (
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  <ProcessingSpinner size={16} tone="light" className="mr-1" />
                 ) : (
                   <Download className="w-4 h-4 mr-1" />
                 )}

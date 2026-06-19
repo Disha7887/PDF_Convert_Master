@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, CloudUpload, Loader2, CheckCircle } from "lucide-react";
+import { Download, CloudUpload, CheckCircle } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { useToast } from "@/hooks/use-toast";
 import { downloadBlob, uploadImageToServer } from "@/lib/imageTools";
 
@@ -66,7 +67,7 @@ export const OutputActions: React.FC<OutputActionsProps> = ({ getBlob, filename,
           data-testid="button-download"
         >
           {isDownloading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <ProcessingSpinner size={16} tone="light" className="mr-2" />
           ) : (
             <Download className="w-4 h-4 mr-2" />
           )}
@@ -79,7 +80,7 @@ export const OutputActions: React.FC<OutputActionsProps> = ({ getBlob, filename,
           data-testid="button-upload-server"
         >
           {isUploading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <ProcessingSpinner size={16} className="mr-2" />
           ) : (
             <CloudUpload className="w-4 h-4 mr-2" />
           )}

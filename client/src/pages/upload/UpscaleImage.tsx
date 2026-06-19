@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   TrendingUp,
   Download,
-  Loader2,
   Sparkles,
   RefreshCw,
 } from "lucide-react";
@@ -260,7 +259,7 @@ export const UpscaleImageUpload = () => {
                   data-testid="button-upscale"
                 >
                   {stage === "processing" ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <ConverterStatusIcon status="processing" size={16} className="mr-2 brightness-0 invert" />
                   ) : (
                     <Sparkles className="w-4 h-4 mr-2" />
                   )}

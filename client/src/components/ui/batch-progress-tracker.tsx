@@ -1,10 +1,10 @@
 import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { 
   CheckCircle, 
   AlertCircle, 
-  Loader2, 
   Download,
   Archive,
   Pause,
@@ -53,7 +53,7 @@ export const BatchProgressTracker: React.FC<BatchProgressTrackerProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'converting':
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+        return <ProcessingSpinner size={16} />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'failed':
@@ -122,7 +122,7 @@ export const BatchProgressTracker: React.FC<BatchProgressTrackerProps> = ({
       {currentJob && (
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
           <div className="flex items-center space-x-3">
-            <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+            <ProcessingSpinner size={20} />
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Currently converting: {currentJob.fileName}
