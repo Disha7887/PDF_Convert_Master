@@ -1601,6 +1601,8 @@ export const PdfEditor: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4">
+      {/* Pinned controls — stay in place while only the document scrolls */}
+      <div className="sticky top-0 z-30 bg-gray-50 dark:bg-gray-900 pt-2">
       {/* Top bar */}
       <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow-sm">
         <Button
@@ -2090,6 +2092,7 @@ export const PdfEditor: React.FC = () => {
             </Button>
           </>
         )}
+      </div>
       </div>
 
       <div className="flex gap-4">
