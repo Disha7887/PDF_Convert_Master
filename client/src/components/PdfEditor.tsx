@@ -1609,10 +1609,7 @@ export const PdfEditor: React.FC = () => {
         <PdfDropzone
           onFile={loadPdf}
           loading={loading}
-          toolIcon={editCfg.icon}
-          toolIconColor={editCfg.iconColor}
-          toolIconBgColor={editCfg.iconBgColor}
-          toolIconBorderColor={editCfg.iconBorderColor}
+          toolId={editCfg.id}
         />
       </div>
     );

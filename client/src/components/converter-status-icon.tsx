@@ -1,9 +1,9 @@
-import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { LottieIcon } from "@/components/ui/lottie-icon";
-import { cn } from "@/lib/utils";
 import syncingFile from "@/assets/lottie/syncing-file.json";
 import correctFile from "@/assets/lottie/correct-file.json";
 import discardedFile from "@/assets/lottie/discarded-file.json";
+import processingAnim from "@/assets/lottie/processing.json";
+import { TOOL_ANIMATIONS } from "@/components/tool-lottie-icon";
 
 /**
  * Stages every file converter shares:
@@ -12,55 +12,13 @@ import discardedFile from "@/assets/lottie/discarded-file.json";
  * - "success"    → conversion finished
  * - "error"      → wrong file type or conversion failed
  *
- * The three Lottie animations the user provided are mapped here once so the
- * whole app stays consistent: the "syncing file" loop covers both the upload
- * prompt and the in-progress state, "correct file" is success, and
- * "discarded file" is the error/invalid state.
- *
- * For the "upload" prompt, callers can pass the selected tool's own icon
- * (`toolIcon` + colors) so the drop area shows that converter's icon — e.g. a
- * spreadsheet for Excel — instead of the generic syncing animation.
+ * For the "upload" prompt, callers pass the selected tool's id so the drop area
+ * plays that tool's OWN Lottie animation (resolved from TOOL_ANIMATIONS). Tools
+ * without a specific animation fall back to the generic "syncing file" loop. The
+ * "processing" stage plays the dedicated processing animation, "correct file" is
+ * success, and "discarded file" is the error/invalid state.
  */
 export type ConverterStatus = "upload" | "processing" | "success" | "error";
-
-const ANIMATIONS: Record<ConverterStatus, unknown> = {
-  upload: syncingFile,
-  processing: syncingFile,
-  success: correctFile,
-  error: discardedFile,
-};
-
-/**
- * Circular badge that frames a tool's own icon, matching the icon treatment
- * used on the tool cards.
- */
-export function ToolIconBadge({
-  size = 96,
-  bgClassName,
-  borderClassName,
-  className,
-  children,
-}: {
-  size?: number;
-  bgClassName?: string;
-  borderClassName?: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "inline-flex items-center justify-center rounded-full border",
-        bgClassName,
-        borderClassName,
-        className,
-      )}
-      style={{ width: size, height: size }}
-    >
-      {children}
-    </div>
-  );
-}
 
 export interface ConverterStatusIconProps {
   status: ConverterStatus;
@@ -68,49 +26,39 @@ export interface ConverterStatusIconProps {
   size?: number;
   className?: string;
   /**
-   * Optional tool-specific icon. When provided and `status` is "upload", the
-   * generic syncing animation is replaced by this icon inside a colored badge,
-   * so the drop area reflects the converter the user picked.
+   * Tool id used in the "upload" state to play that tool's own Lottie animation
+   * instead of the generic syncing loop. Ignored for the other states.
    */
-  toolIcon?: ComponentType<{ className?: string; style?: CSSProperties }>;
-  toolIconColor?: string;
-  toolIconBgColor?: string;
-  toolIconBorderColor?: string;
+  toolId?: string;
 }
 
 export function ConverterStatusIcon({
   status,
   size = 96,
   className,
-  toolIcon: ToolIcon,
-  toolIconColor,
-  toolIconBgColor,
-  toolIconBorderColor,
+  toolId,
 }: ConverterStatusIconProps) {
-  // Upload prompt with a known tool → show that tool's icon in a badge.
-  if (status === "upload" && ToolIcon) {
-    const iconPx = Math.round(size * 0.46);
-    return (
-      <ToolIconBadge
-        size={size}
-        bgClassName={toolIconBgColor}
-        borderClassName={toolIconBorderColor}
-        className={className}
-      >
-        <ToolIcon
-          className={toolIconColor}
-          style={{ width: iconPx, height: iconPx }}
-        />
-      </ToolIconBadge>
-    );
+  let animation: unknown;
+  let loop: boolean;
+
+  if (status === "success") {
+    animation = correctFile;
+    loop = false;
+  } else if (status === "error") {
+    animation = discardedFile;
+    loop = false;
+  } else if (status === "processing") {
+    animation = processingAnim;
+    loop = true;
+  } else {
+    // upload prompt → prefer the picked tool's own animation, else generic loop
+    animation = (toolId && TOOL_ANIMATIONS[toolId]) || syncingFile;
+    loop = true;
   }
 
-  // Upload + processing read as continuous activity, so they loop. Success and
-  // error play once and settle on their final frame.
-  const loop = status === "upload" || status === "processing";
   return (
     <LottieIcon
-      animationData={ANIMATIONS[status]}
+      animationData={animation}
       size={size}
       loop={loop}
       className={className}

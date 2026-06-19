@@ -22,17 +22,24 @@ Any request to change a converter's upload prompt, status icon, or stage styling
 **Dead / unrouted (skip):** `client/src/components/FileUploadModal.tsx` and
 `client/src/components/ui/bouncing-upload-icon.tsx` (after the Lottie migration).
 
-**Per-tool upload icon (not the generic Lottie):** the upload prompt shows the
-SELECTED tool's own icon via `ToolIconBadge` (exported from
-`converter-status-icon.tsx`). Two prop shapes feed it — keep both in sync when
-adding a surface: `ConverterStatusIcon`/`PdfDropzone` take the COMPONENT form
-(`toolIcon` = lucide ComponentType + `toolIconColor/BgColor/BorderColor` from
-`toolConfigs[id]`); `EnhancedUploadArea`/`ImageDropzone` take the NODE form
-(`toolIcon` = pre-rendered `<Icon/>` ReactNode + `toolIconBg` = bg/border classes).
-Generic syncing Lottie only remains as the fallback when no `toolIcon` is passed,
-and for drag-over / loading states. **Why:** "make the upload icon per-tool"
-fanned out across all these surfaces and review failed twice for missing
-`ImageDropzone`, then `PdfEditor.tsx`/`edit-pdf`.
+**Per-tool upload icon = each tool's OWN Lottie (by id), NOT a lucide badge.**
+`ConverterStatusIcon` (in `converter-status-icon.tsx`) takes a single optional
+`toolId: string`; in the "upload" state it plays `TOOL_ANIMATIONS[toolId]`
+(imported from `tool-lottie-icon.tsx`), falling back to the generic syncing-file
+Lottie when the id is missing/unmapped. The "processing" state plays
+`assets/lottie/processing.json`; success/error = correct-file/discarded-file.
+EVERY upload surface passes `toolId` (e.g. `toolConfig.id` / `tool.id` / `cfg.id`,
+or hardcoded `"resize-images"` etc.) — there are no more `ToolIconBadge` or
+`toolIcon*`/color/bg/border props (those were removed; the old lucide-badge
+approach was reverted). Gotchas: (1) `/upload/compress-image` passes the SINGULAR
+`toolType`, so `TOOL_ANIMATIONS` needs both `"compress-images"` and an alias
+`"compress-image"`; (2) PDF-Editor tool ids (`crop-pdf`,`sign-pdf`,`edit-pdf`,…)
+are NOT in `TOOL_ANIMATIONS` → they intentionally fall back to syncing-file;
+(3) `EnhancedUploadArea` still swaps to a lucide CloudUpload/Sparkles affordance
+during DRAG-OVER only (intentional drop cue), and that is pre-existing, not the
+resting per-tool icon. **Why:** review failed for missing `UploadPage.tsx`
+(`/upload-demo`) + `UploadModal.tsx` (`/dashboard/live-tools`) — both receive a
+toolConfig but were left without `toolId`; check ALL surfaces below.
 
 **Why:** a single "make it global" request fanned out across 9 live surfaces; the
 first pass only hit 2 and failed review. There is no central converter shell.

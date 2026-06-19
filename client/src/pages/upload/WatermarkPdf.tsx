@@ -240,10 +240,7 @@ export function WatermarkPdfUpload() {
         <PdfDropzone
           onFile={onFile}
           loading={loading}
-          toolIcon={cfg.icon}
-          toolIconColor={cfg.iconColor}
-          toolIconBgColor={cfg.iconBgColor}
-          toolIconBorderColor={cfg.iconBorderColor}
+          toolId={cfg.id}
         />
       ) : (
         <div className="grid lg:grid-cols-[340px_1fr] gap-8">

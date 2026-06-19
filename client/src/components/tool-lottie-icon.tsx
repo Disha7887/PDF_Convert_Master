@@ -43,6 +43,7 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "crop-images": cropTool,
   "rotate-images": rotateImage,
   "compress-images": compress,
+  "compress-image": compress,
   "upscale-images": aiUpscaling,
   "remove-background": bgRemover,
   // PDF management

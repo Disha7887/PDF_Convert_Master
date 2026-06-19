@@ -164,8 +164,7 @@ export const UpscaleImageUpload = () => {
           acceptedFormats={ACCEPTED}
           maxSizeMB={MAX_MB}
           onFile={handleFile}
-          toolIcon={<TrendingUp className="w-8 h-8 text-blue-500" />}
-          toolIconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+          toolId="upscale-images"
         />
       ) : (
         <div className="space-y-6">

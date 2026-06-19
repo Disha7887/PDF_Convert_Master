@@ -160,8 +160,7 @@ export const CropImageUpload = () => {
           acceptedFormats={ACCEPTED}
           maxSizeMB={MAX_MB}
           onFile={handleFile}
-          toolIcon={<CropIcon className="w-8 h-8 text-blue-500" />}
-          toolIconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+          toolId="crop-images"
         />
       ) : (
         <div className="grid md:grid-cols-3 gap-8">

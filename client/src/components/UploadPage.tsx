@@ -185,7 +185,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           >
             {/* Upload Icon */}
             <div className="flex justify-center mb-8">
-              <ConverterStatusIcon status="upload" size={96} />
+              <ConverterStatusIcon status="upload" size={96} toolId={toolConfig.id} />
             </div>
 
             {/* Upload Text */}

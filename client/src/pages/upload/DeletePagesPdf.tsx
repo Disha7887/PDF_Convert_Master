@@ -109,10 +109,7 @@ export function DeletePagesPdfUpload() {
         <PdfDropzone
           onFile={onFile}
           loading={loading}
-          toolIcon={cfg.icon}
-          toolIconColor={cfg.iconColor}
-          toolIconBgColor={cfg.iconBgColor}
-          toolIconBorderColor={cfg.iconBorderColor}
+          toolId={cfg.id}
         />
       ) : (
         <div>

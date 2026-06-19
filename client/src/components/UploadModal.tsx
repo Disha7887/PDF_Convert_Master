@@ -132,7 +132,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           >
             {/* Upload Icon */}
             <div className="flex justify-center mb-4">
-              <ConverterStatusIcon status="upload" size={80} />
+              <ConverterStatusIcon status="upload" size={80} toolId={toolConfig.id} />
             </div>
 
             {/* Upload Text */}

@@ -158,10 +158,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
             status="upload"
             size={112}
             className="mb-2"
-            toolIcon={tool.icon}
-            toolIconColor={tool.iconColor}
-            toolIconBgColor={tool.iconBgColor}
-            toolIconBorderColor={tool.iconBorderColor}
+            toolId={tool.id}
           />
 
           <h2

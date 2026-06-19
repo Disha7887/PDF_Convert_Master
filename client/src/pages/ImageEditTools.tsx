@@ -735,8 +735,7 @@ function SingleImageTool({ tool, title, description, actionLabel, icon }: ToolCo
           acceptedFormats={ACCEPTED}
           maxSizeMB={MAX_MB}
           onFile={handleFile}
-          toolIcon={icon}
-          toolIconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+          toolId={tool === "resize" ? "resize-images" : tool === "crop" ? "crop-images" : "rotate-images"}
         />
       ) : (
         <div className="space-y-6">

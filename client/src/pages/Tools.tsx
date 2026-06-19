@@ -520,10 +520,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
             status="upload"
             size={88}
             className="mb-3"
-            toolIcon={toolConfig.icon}
-            toolIconColor={toolConfig.iconColor}
-            toolIconBgColor={toolConfig.iconBgColor}
-            toolIconBorderColor={toolConfig.iconBorderColor}
+            toolId={toolConfig.id}
           />
 
           <h3 className="text-xl font-bold text-gray-900 mb-1">
