@@ -1,25 +1,53 @@
+import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
-import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
+import { fonts } from "@/constants/theme";
 import { useColors } from "@/hooks/useColors";
+
+type FeatherName = keyof typeof Feather.glyphMap;
+
+const TABS: {
+  name: string;
+  title: string;
+  feather: FeatherName;
+  sf: { default: string; selected: string };
+}[] = [
+  { name: "index", title: "Home", feather: "home", sf: { default: "house", selected: "house.fill" } },
+  {
+    name: "tools",
+    title: "Tools",
+    feather: "grid",
+    sf: { default: "square.grid.2x2", selected: "square.grid.2x2.fill" },
+  },
+  {
+    name: "dashboard",
+    title: "Dashboard",
+    feather: "bar-chart-2",
+    sf: { default: "chart.bar", selected: "chart.bar.fill" },
+  },
+  {
+    name: "more",
+    title: "More",
+    feather: "menu",
+    sf: { default: "ellipsis.circle", selected: "ellipsis.circle.fill" },
+  },
+];
 
 function NativeTabLayout() {
   return (
     <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "doc.on.doc", selected: "doc.on.doc.fill" }} />
-        <Label>Tools</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="history">
-        <Icon sf={{ default: "clock", selected: "clock.fill" }} />
-        <Label>History</Label>
-      </NativeTabs.Trigger>
+      {TABS.map((t) => (
+        <NativeTabs.Trigger key={t.name} name={t.name}>
+          <Icon sf={{ default: t.sf.default as never, selected: t.sf.selected as never }} />
+          <Label>{t.title}</Label>
+        </NativeTabs.Trigger>
+      ))}
     </NativeTabs>
   );
 }
@@ -53,43 +81,26 @@ function ClassicTabLayout() {
               style={StyleSheet.absoluteFill}
             />
           ) : isWeb ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.background },
-              ]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
           ) : null,
-        tabBarLabelStyle: {
-          fontFamily: "Inter_500Medium",
-          fontSize: 11,
-        },
+        tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Tools",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="doc.on.doc" tintColor={color} size={24} />
-            ) : (
-              <Feather name="grid" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: "History",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="clock" tintColor={color} size={24} />
-            ) : (
-              <Feather name="clock" size={22} color={color} />
-            ),
-        }}
-      />
+      {TABS.map((t) => (
+        <Tabs.Screen
+          key={t.name}
+          name={t.name}
+          options={{
+            title: t.title,
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name={t.sf.default as never} tintColor={color} size={24} />
+              ) : (
+                <Feather name={t.feather} size={22} color={color} />
+              ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

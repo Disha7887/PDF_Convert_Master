@@ -2,131 +2,111 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { MobileTool } from "@/constants/tools";
-import { useColors } from "@/hooks/useColors";
+import ToolLottieIcon from "@/components/ToolLottieIcon";
+import colors from "@/constants/colors";
+import { ROUTES } from "@/constants/routes";
+import { cardShadow, fonts } from "@/constants/theme";
+import type { Tool } from "@/constants/tools";
+
+const C = colors.light;
 
 interface ToolCardProps {
-  tool: MobileTool;
+  tool: Tool;
+  variant?: "row" | "grid";
 }
 
-type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
-
-const ICON_MAP: Record<string, FeatherIconName> = {
-  "file-text": "file-text",
-  grid: "grid",
-  monitor: "monitor",
-  image: "image",
-  copy: "copy",
-  scissors: "scissors",
-  "minimize-2": "minimize-2",
-  "maximize-2": "maximize-2",
-  "rotate-cw": "rotate-cw",
-  "refresh-cw": "refresh-cw",
-  scan: "eye",
-};
-
-export default function ToolCard({ tool }: ToolCardProps) {
-  const colors = useColors();
+export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
   const router = useRouter();
 
   function handlePress() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push(`/convert/${tool.id}` as any);
+    router.push(ROUTES.convert(tool.id) as never);
   }
 
-  const iconName = ICON_MAP[tool.iconName] ?? "file";
+  if (variant === "grid") {
+    return (
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => [styles.grid, cardShadow, { opacity: pressed ? 0.9 : 1 }]}
+      >
+        <ToolLottieIcon toolId={tool.id} size={48} />
+        <Text style={styles.gridTitle} numberOfLines={2}>
+          {tool.title}
+        </Text>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          opacity: pressed ? 0.85 : 1,
-        },
-      ]}
+      style={({ pressed }) => [styles.row, cardShadow, { opacity: pressed ? 0.9 : 1 }]}
     >
-      <View
-        style={[
-          styles.iconWrap,
-          { backgroundColor: colors.accent },
-        ]}
-      >
-        <Feather name={iconName} size={22} color={colors.primary} />
+      <View style={styles.iconWrap}>
+        <ToolLottieIcon toolId={tool.id} size={40} />
       </View>
       <View style={styles.textWrap}>
-        <Text
-          style={[styles.title, { color: colors.foreground, fontFamily: "Poppins_600SemiBold" }]}
-          numberOfLines={1}
-        >
+        <Text style={styles.title} numberOfLines={1}>
           {tool.title}
         </Text>
-        <Text
-          style={[styles.desc, { color: colors.mutedForeground }]}
-          numberOfLines={2}
-        >
+        <Text style={styles.desc} numberOfLines={2}>
           {tool.description}
         </Text>
-        <View style={styles.badge}>
-          <Text style={[styles.badgeText, { color: colors.primary }]}>
-            → {tool.outputFormat}
-          </Text>
+        <View style={styles.badgeRow}>
+          <Text style={styles.badgeText}>→ {tool.outputFormat}</Text>
         </View>
       </View>
+      <Feather name="chevron-right" size={20} color={C.mutedForeground} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 14,
+    backgroundColor: C.card,
+    borderRadius: 16,
     borderWidth: 1,
+    borderColor: C.border,
     paddingHorizontal: 14,
     paddingVertical: 14,
     gap: 14,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   iconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: C.accent,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  textWrap: {
-    flex: 1,
-    gap: 2,
+  textWrap: { flex: 1, gap: 3 },
+  title: { fontSize: 15, color: C.foreground, fontFamily: fonts.headingSemibold },
+  desc: { fontSize: 12.5, lineHeight: 17, color: C.mutedForeground, fontFamily: fonts.body },
+  badgeRow: { marginTop: 4 },
+  badgeText: { fontSize: 11, color: C.primary, fontFamily: fonts.bodySemibold },
+  grid: {
+    width: "100%",
+    backgroundColor: C.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: C.border,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    gap: 10,
   },
-  title: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  desc: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: "Inter_400Regular",
-  },
-  badge: {
-    marginTop: 4,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+  gridTitle: {
+    fontSize: 13,
+    textAlign: "center",
+    color: C.foreground,
+    fontFamily: fonts.headingSemibold,
   },
 });

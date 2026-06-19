@@ -1,4 +1,1 @@
-- [Auth & build contract](pdf-convert-master.md) — JWT at `res.data.token` (localStorage `auth_token`); user has email/plan only (no name); `npm run build` does NOT typecheck.
-- [Public API upload memory bound](pdf-convert-master.md) — multer `fileSize` is per-file; resolve the tool first to cap files-count per request, or callers can buffer many oversized files.
-- [Monorepo migration: pdfjs-dist in backend](pdf-convert-master.md) — pdfjs-dist must be in esbuild externals or server crashes on startup (DOMMatrix not defined in Node).
-- [Monorepo migration: onlyBuiltDependencies](pdf-convert-master.md) — bcrypt, puppeteer, tesseract.js all need onlyBuiltDependencies entries in pnpm-workspace.yaml or build scripts are silently skipped.
+- [Expo web + Metro on Replit](expo-web-metro-replit.md) — Metro cache survives workflow restarts (rm /tmp/metro-cache*); lazy bundling = stale logs; verify on $REPLIT_EXPO_DEV_DOMAIN; lottie web needs @lottiefiles/dotlottie-react; don't require() .txt.
