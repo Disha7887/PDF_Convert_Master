@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { LottieIcon } from "@/components/ui/lottie-icon";
+import startButtonAnimation from "@/assets/lottie/start-button.json";
 import { useLocation, useSearch } from "wouter";
 import { toolConfigs, isHeroTool } from "@/lib/toolConfig";
 import { HeroToolConverter } from "@/components/HeroToolConverter";
@@ -122,10 +124,11 @@ export const HeroSection = (): JSX.Element => {
                               setLocation('/tools');
                             }}
                           >
-                            <img
+                            <LottieIcon
+                              animationData={startButtonAnimation}
+                              size={28}
+                              loop
                               className="mr-2"
-                              alt="Margin wrap"
-                              src="/figmaAssets/margin-wrap-3.svg"
                             />
                             <span className="font-semibold text-base">
                               Start Converting Now
