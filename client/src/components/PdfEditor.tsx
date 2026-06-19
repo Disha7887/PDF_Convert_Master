@@ -4,10 +4,18 @@ import {
   rgb,
   StandardFonts,
   LineCapStyle,
+  PDFName,
+  PDFString,
 } from "pdf-lib";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { PdfDropzone } from "@/components/pdf-tools/PdfToolShell";
+import { ManagePagesModal } from "@/components/pdf-tools/ManagePagesModal";
 import {
   readFileBytes,
   renderPdfPages,
@@ -21,13 +29,24 @@ import {
   type RenderedPage,
 } from "@/lib/pdfClient";
 import {
+  extractPageTexts,
+  sampleTextColor,
+  findTextAt,
+  type PageTextItem,
+} from "@/lib/pdfText";
+import {
   MousePointer2,
   Type,
+  TextCursorInput,
   Image as ImageIcon,
   PenTool,
   Pencil,
   Minus,
+  ArrowUpRight,
   Square,
+  Circle,
+  Hexagon,
+  Link2,
   Highlighter,
   Eraser,
   Stamp as StampIcon,
@@ -43,6 +62,12 @@ import {
   Loader2,
   PanelLeft,
   X,
+  ChevronDown,
+  Check,
+  Search as SearchIcon,
+  Files,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 // All geometry is stored in PDF user-space points with a TOP-LEFT origin so it
@@ -51,15 +76,20 @@ import {
 type Tool =
   | "select"
   | "text"
+  | "edittext"
   | "image"
   | "signature"
   | "draw"
   | "line"
+  | "arrow"
   | "rect"
+  | "ellipse"
+  | "polygon"
   | "highlight"
   | "whiteout"
   | "stamp"
-  | "note";
+  | "note"
+  | "link";
 
 type FontFamily = "Helvetica" | "Times" | "Courier";
 
@@ -89,7 +119,7 @@ interface ImageEl extends Base {
   format: "png" | "jpg";
 }
 interface ShapeEl extends Base {
-  type: "rect" | "highlight" | "whiteout";
+  type: "rect" | "highlight" | "whiteout" | "ellipse";
   x: number;
   y: number;
   width: number;
@@ -99,12 +129,27 @@ interface ShapeEl extends Base {
 }
 interface LineEl extends Base {
   type: "line";
+  variant: "line" | "arrow";
   x1: number;
   y1: number;
   x2: number;
   y2: number;
   color: string;
   strokeWidth: number;
+}
+interface PolygonEl extends Base {
+  type: "polygon";
+  points: { x: number; y: number }[];
+  color: string;
+  strokeWidth: number;
+}
+interface LinkEl extends Base {
+  type: "link";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  url: string;
 }
 interface DrawEl extends Base {
   type: "draw";
@@ -133,6 +178,8 @@ type EditElement =
   | ImageEl
   | ShapeEl
   | LineEl
+  | PolygonEl
+  | LinkEl
   | DrawEl
   | StampEl
   | NoteEl;
@@ -233,6 +280,33 @@ export const PdfEditor: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [sigOpen, setSigOpen] = useState(false);
 
+  // text engine (shared by Edit-text + Search), lazily populated
+  const [textByPage, setTextByPage] = useState<PageTextItem[][] | null>(null);
+  const [textBusy, setTextBusy] = useState(false);
+
+  // search
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [matches, setMatches] = useState<
+    { pageIndex: number; x: number; y: number; width: number; height: number }[]
+  >([]);
+  const [matchIdx, setMatchIdx] = useState(0);
+  const searchSeqRef = useRef(0);
+  const textPromiseRef = useRef<Promise<PageTextItem[][]> | null>(null);
+
+  // manage pages
+  const [manageOpen, setManageOpen] = useState(false);
+
+  // line/shape dropdown
+  const [lineMenuOpen, setLineMenuOpen] = useState(false);
+
+  // in-progress polygon (multi-click); rubber-band tip tracked separately
+  const [poly, setPoly] = useState<{
+    pageIndex: number;
+    points: { x: number; y: number }[];
+  } | null>(null);
+  const [polyTip, setPolyTip] = useState<{ x: number; y: number } | null>(null);
+
   const [draft, setDraft] = useState({
     color: "#1d4ed8",
     strokeWidth: 3,
@@ -243,10 +317,13 @@ export const PdfEditor: React.FC = () => {
     highlightColor: "#fde047",
     stampLabel: "APPROVED",
     stampColor: "#16a34a",
+    linkUrl: "https://",
   });
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
+  const polyRef = useRef(poly);
+  polyRef.current = poly;
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const dragRef = useRef<DragState | null>(null);
   const creatingRef = useRef<{
@@ -318,6 +395,15 @@ export const PdfEditor: React.FC = () => {
         dragRef.current = null;
         snapshotRef.current = null;
         editSessionRef.current = null;
+        textPromiseRef.current = null;
+        setTextByPage(null);
+        setSearchOpen(false);
+        setQuery("");
+        setMatches([]);
+        setMatchIdx(0);
+        setManageOpen(false);
+        setPoly(null);
+        setPolyTip(null);
         setTool("select");
         if (rendered.some((p) => p.rotation)) {
           toast({
@@ -331,6 +417,52 @@ export const PdfEditor: React.FC = () => {
         toast({
           title: "Could not open PDF",
           description: "The file may be corrupt or password-protected.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
+
+  // Apply a page-plan from the Manage Pages modal: swap in the rebuilt PDF,
+  // re-render, and remap element page indices (dropping elements on pages that
+  // were deleted). `pageMap` maps an OLD page index -> its NEW index.
+  const applyPageChanges = useCallback(
+    async (result: { bytes: Uint8Array; pageMap: Record<number, number> }) => {
+      const { bytes, pageMap } = result;
+      setLoading(true);
+      try {
+        const rendered = await renderPdfPages(bytes, undefined, undefined, {
+          forceUnrotated: true,
+        });
+        setSrcBytes(bytes);
+        setPages(rendered);
+        setElements((prev) =>
+          prev
+            .filter((el) => pageMap[el.pageIndex] !== undefined)
+            .map((el) => ({ ...el, pageIndex: pageMap[el.pageIndex] })),
+        );
+        setPast([]);
+        setFuture([]);
+        setSelectedId(null);
+        textPromiseRef.current = null;
+        setTextByPage(null);
+        setSearchOpen(false);
+        setQuery("");
+        setMatches([]);
+        setMatchIdx(0);
+        setPoly(null);
+        setPolyTip(null);
+        setTool("select");
+        setActivePage(0);
+        setManageOpen(false);
+      } catch (err) {
+        console.error(err);
+        toast({
+          title: "Could not update pages",
+          description: "Something went wrong rebuilding the document.",
           variant: "destructive",
         });
       } finally {
@@ -385,7 +517,7 @@ export const PdfEditor: React.FC = () => {
         width: Math.abs(el.x2 - el.x1),
         height: Math.abs(el.y2 - el.y1),
       };
-    if (el.type === "draw") {
+    if (el.type === "draw" || el.type === "polygon") {
       const xs = el.points.map((p) => p.x);
       const ys = el.points.map((p) => p.y);
       const x = Math.min(...xs),
@@ -563,6 +695,25 @@ export const PdfEditor: React.FC = () => {
     pageRefs.current[page.pageIndex]?.setPointerCapture(e.pointerId);
     snapshotRef.current = elementsRef.current;
 
+    if (tool === "edittext") {
+      void handleEditTextAt(page.pageIndex, p.x, p.y);
+      return;
+    }
+    if (tool === "polygon") {
+      if (!poly || poly.pageIndex !== page.pageIndex) {
+        setPoly({ pageIndex: page.pageIndex, points: [{ x: p.x, y: p.y }] });
+        setPolyTip({ x: p.x, y: p.y });
+      } else {
+        const first = poly.points[0];
+        const closing =
+          poly.points.length >= 3 &&
+          Math.hypot(first.x - p.x, first.y - p.y) < 12;
+        if (closing) finalizePolygon();
+        else setPoly({ ...poly, points: [...poly.points, { x: p.x, y: p.y }] });
+      }
+      return;
+    }
+
     if (tool === "text") {
       pushHistory(elementsRef.current);
       const el: TextEl = {
@@ -610,10 +761,11 @@ export const PdfEditor: React.FC = () => {
       type: tool,
     };
     let el: EditElement;
-    if (tool === "line") {
+    if (tool === "line" || tool === "arrow") {
       el = {
         id,
         type: "line",
+        variant: tool === "arrow" ? "arrow" : "line",
         pageIndex: page.pageIndex,
         x1: p.x,
         y1: p.y,
@@ -642,10 +794,21 @@ export const PdfEditor: React.FC = () => {
         height: 0,
         text: "Note",
       };
+    } else if (tool === "link") {
+      el = {
+        id,
+        type: "link",
+        pageIndex: page.pageIndex,
+        x: p.x,
+        y: p.y,
+        width: 0,
+        height: 0,
+        url: draft.linkUrl,
+      };
     } else {
       el = {
         id,
-        type: tool as "rect" | "highlight" | "whiteout",
+        type: tool as "rect" | "highlight" | "whiteout" | "ellipse",
         pageIndex: page.pageIndex,
         x: p.x,
         y: p.y,
@@ -662,8 +825,12 @@ export const PdfEditor: React.FC = () => {
   const onPageMove = (e: React.PointerEvent, page: RenderedPage) => {
     const p = toPoint(e, page.pageIndex);
     const c = creatingRef.current;
+    if (tool === "polygon" && poly && poly.pageIndex === page.pageIndex) {
+      setPolyTip({ x: p.x, y: p.y });
+      return;
+    }
     if (c) {
-      if (c.type === "line") {
+      if (c.type === "line" || c.type === "arrow") {
         updateEl(c.id, { x2: p.x, y2: p.y } as Partial<LineEl>);
       } else if (c.type === "draw") {
         setElements((prev) =>
@@ -709,7 +876,7 @@ export const PdfEditor: React.FC = () => {
               x2: el.x2 + dx,
               y2: el.y2 + dy,
             };
-          if (el.type === "draw")
+          if (el.type === "draw" || el.type === "polygon")
             return {
               ...el,
               points: el.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })),
@@ -809,11 +976,170 @@ export const PdfEditor: React.FC = () => {
     const copy: EditElement =
       el.type === "line"
         ? { ...el, id, x1: el.x1 + 12, y1: el.y1 + 12, x2: el.x2 + 12, y2: el.y2 + 12 }
-        : el.type === "draw"
+        : el.type === "draw" || el.type === "polygon"
           ? { ...el, id, points: el.points.map((p) => ({ x: p.x + 12, y: p.y + 12 })) }
           : ({ ...el, id, x: (el as any).x + 12, y: (el as any).y + 12 } as EditElement);
     setElements((prev) => [...prev, copy]);
     setSelectedId(id);
+  };
+
+  // --- polygon ---------------------------------------------------------------
+  const finalizePolygon = () => {
+    const cur = polyRef.current;
+    if (cur && cur.points.length >= 2) {
+      pushHistory(elementsRef.current);
+      const el: PolygonEl = {
+        id: genId(),
+        type: "polygon",
+        pageIndex: cur.pageIndex,
+        points: cur.points,
+        color: draft.color,
+        strokeWidth: draft.strokeWidth,
+      };
+      setElements((prev) => [...prev, el]);
+      setSelectedId(el.id);
+      setTool("select");
+    }
+    setPoly(null);
+    setPolyTip(null);
+  };
+  const cancelPolygon = () => {
+    setPoly(null);
+    setPolyTip(null);
+  };
+
+  // --- text engine (Edit-text + Search) --------------------------------------
+  // Extract every text run once, lazily, and cache it. Invalidated on load and
+  // whenever the page set changes (Manage pages).
+  const ensureText = useCallback(async (): Promise<PageTextItem[][]> => {
+    if (textByPage) return textByPage;
+    if (!srcBytes) return [];
+    // Dedupe concurrent extractions (e.g. fast typing in search): all callers
+    // await the same in-flight promise instead of re-parsing the PDF N times.
+    if (textPromiseRef.current) return textPromiseRef.current;
+    setTextBusy(true);
+    const p = (async () => {
+      try {
+        const items = await extractPageTexts(srcBytes);
+        setTextByPage(items);
+        return items;
+      } catch (err) {
+        console.error(err);
+        toast({
+          title: "Could not read the document text",
+          variant: "destructive",
+        });
+        return [] as PageTextItem[][];
+      } finally {
+        setTextBusy(false);
+        textPromiseRef.current = null;
+      }
+    })();
+    textPromiseRef.current = p;
+    return p;
+  }, [srcBytes, textByPage, toast]);
+
+  const handleEditTextAt = async (pageIndex: number, x: number, y: number) => {
+    const items = await ensureText();
+    const pageItems = items[pageIndex] ?? [];
+    const hit = findTextAt(pageItems, x, y);
+    if (!hit) {
+      toast({
+        title: "No editable text here",
+        description: "Click directly on a line of existing PDF text.",
+      });
+      return;
+    }
+    const page = pageById(pageIndex);
+    const pad = hit.fontSize * 0.25;
+    const box = {
+      x: Math.max(0, hit.x - 1),
+      y: Math.max(0, hit.y - pad),
+      width: hit.width + 2,
+      height: hit.height + pad * 2,
+    };
+    const color = await sampleTextColor(page.dataUrl, page.width, box);
+    pushHistory(elementsRef.current);
+    const cover: ShapeEl = {
+      id: genId(),
+      type: "whiteout",
+      pageIndex,
+      x: box.x,
+      y: box.y,
+      width: box.width,
+      height: box.height,
+      color: "#ffffff",
+      strokeWidth: 1,
+    };
+    const text: TextEl = {
+      id: genId(),
+      type: "text",
+      pageIndex,
+      x: hit.x,
+      y: hit.y,
+      text: hit.str,
+      fontSize: hit.fontSize,
+      color,
+      family: hit.family,
+      bold: hit.bold,
+      italic: hit.italic,
+    };
+    setElements((prev) => [...prev, cover, text]);
+    setSelectedId(text.id);
+    setTool("select");
+  };
+
+  // --- search ----------------------------------------------------------------
+  const runSearch = async (q: string) => {
+    setQuery(q);
+    const seq = ++searchSeqRef.current;
+    const term = q.trim().toLowerCase();
+    if (!term) {
+      setMatches([]);
+      setMatchIdx(0);
+      return;
+    }
+    const items = await ensureText();
+    // A slower earlier extraction must not overwrite a newer query's results.
+    if (seq !== searchSeqRef.current) return;
+    const found: typeof matches = [];
+    items.forEach((pageItems, pageIndex) => {
+      for (const it of pageItems) {
+        const hay = it.str.toLowerCase();
+        let from = 0;
+        while (true) {
+          const at = hay.indexOf(term, from);
+          if (at < 0) break;
+          // approximate the match box within the run by character ratio
+          const perChar = it.width / Math.max(it.str.length, 1);
+          found.push({
+            pageIndex,
+            x: it.x + perChar * at,
+            y: it.y,
+            width: perChar * term.length,
+            height: it.height,
+          });
+          from = at + term.length;
+        }
+      }
+    });
+    setMatches(found);
+    setMatchIdx(0);
+    if (found.length) scrollToMatch(found[0]);
+  };
+
+  const scrollToMatch = (m: { pageIndex: number }) => {
+    pageRefs.current[m.pageIndex]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+    setActivePage(m.pageIndex);
+  };
+  const stepMatch = (dir: 1 | -1) => {
+    if (!matches.length) return;
+    const next = (matchIdx + dir + matches.length) % matches.length;
+    setMatchIdx(next);
+    scrollToMatch(matches[next]);
   };
 
   // --- export ----------------------------------------------------------------
@@ -865,13 +1191,85 @@ export const PdfEditor: React.FC = () => {
         });
       } else if (el.type === "line") {
         const { r, g, b } = hexToRgb01(el.color);
+        const sx = el.x1,
+          sy = H - el.y1,
+          ex = el.x2,
+          ey = H - el.y2;
         page.drawLine({
-          start: { x: el.x1, y: H - el.y1 },
-          end: { x: el.x2, y: H - el.y2 },
+          start: { x: sx, y: sy },
+          end: { x: ex, y: ey },
           thickness: el.strokeWidth,
           color: rgb(r, g, b),
           lineCap: LineCapStyle.Round,
         });
+        if (el.variant === "arrow") {
+          const ang = Math.atan2(ey - sy, ex - sx);
+          const len = Math.max(8, el.strokeWidth * 3.5);
+          const spread = Math.PI / 7;
+          for (const s of [ang + Math.PI - spread, ang + Math.PI + spread]) {
+            page.drawLine({
+              start: { x: ex, y: ey },
+              end: { x: ex + len * Math.cos(s), y: ey + len * Math.sin(s) },
+              thickness: el.strokeWidth,
+              color: rgb(r, g, b),
+              lineCap: LineCapStyle.Round,
+            });
+          }
+        }
+      } else if (el.type === "ellipse") {
+        const { r, g, b } = hexToRgb01(el.color);
+        page.drawEllipse({
+          x: el.x + el.width / 2,
+          y: H - el.y - el.height / 2,
+          xScale: Math.max(el.width / 2, 0.1),
+          yScale: Math.max(el.height / 2, 0.1),
+          borderColor: rgb(r, g, b),
+          borderWidth: el.strokeWidth,
+        });
+      } else if (el.type === "polygon") {
+        const { r, g, b } = hexToRgb01(el.color);
+        const pts = el.points;
+        for (let i = 0; i < pts.length; i++) {
+          const a = pts[i];
+          const c = pts[(i + 1) % pts.length];
+          page.drawLine({
+            start: { x: a.x, y: H - a.y },
+            end: { x: c.x, y: H - c.y },
+            thickness: el.strokeWidth,
+            color: rgb(r, g, b),
+            lineCap: LineCapStyle.Round,
+          });
+        }
+      } else if (el.type === "link") {
+        page.drawRectangle({
+          x: el.x,
+          y: H - el.y - el.height,
+          width: el.width,
+          height: el.height,
+          borderColor: rgb(0.15, 0.39, 0.92),
+          borderWidth: 1,
+          color: rgb(0.15, 0.39, 0.92),
+          opacity: 0.06,
+        });
+        const url = /^https?:\/\//i.test(el.url) ? el.url : `https://${el.url}`;
+        const annot = doc.context.obj({
+          Type: "Annot",
+          Subtype: "Link",
+          Rect: [el.x, H - el.y - el.height, el.x + el.width, H - el.y],
+          Border: [0, 0, 0],
+          A: doc.context.obj({
+            Type: "Action",
+            S: "URI",
+            URI: PDFString.of(url),
+          }),
+        });
+        const ref = doc.context.register(annot);
+        let annots = page.node.Annots();
+        if (!annots) {
+          annots = doc.context.obj([]);
+          page.node.set(PDFName.of("Annots"), annots);
+        }
+        annots.push(ref);
       } else if (el.type === "draw") {
         const { r, g, b } = hexToRgb01(el.color);
         for (let i = 1; i < el.points.length; i++) {
@@ -1033,6 +1431,18 @@ export const PdfEditor: React.FC = () => {
           t.tagName === "TEXTAREA" ||
           t.isContentEditable);
       const meta = e.ctrlKey || e.metaKey;
+      if (!typing && tool === "polygon" && poly) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finalizePolygon();
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          cancelPolygon();
+          return;
+        }
+      }
       if (meta && e.key.toLowerCase() === "z") {
         e.preventDefault();
         if (e.shiftKey) redo();
@@ -1056,7 +1466,7 @@ export const PdfEditor: React.FC = () => {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, past, future]);
+  }, [selectedId, past, future, tool, poly]);
 
   const onFilePicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -1106,17 +1516,79 @@ export const PdfEditor: React.FC = () => {
     );
   };
 
+  // --- line / shape dropdown -------------------------------------------------
+  const LINE_TOOLS: { id: Tool; label: string; icon: React.ComponentType<any> }[] =
+    [
+      { id: "line", label: "Line", icon: Minus },
+      { id: "arrow", label: "Arrow", icon: ArrowUpRight },
+      { id: "rect", label: "Box", icon: Square },
+      { id: "ellipse", label: "Circle", icon: Circle },
+      { id: "polygon", label: "Polygon", icon: Hexagon },
+    ];
+  const activeLine =
+    LINE_TOOLS.find((t) => t.id === tool) ?? LINE_TOOLS[0];
+  const lineActive = LINE_TOOLS.some((t) => t.id === tool);
+  const LineMenu = () => (
+    <Popover open={lineMenuOpen} onOpenChange={setLineMenuOpen}>
+      <PopoverTrigger asChild>
+        <button
+          title="Shapes"
+          aria-label="Shapes"
+          className={`relative flex flex-col items-center justify-center w-[58px] h-[52px] rounded-lg text-[11px] gap-0.5 border transition-colors ${
+            lineActive
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700"
+          }`}
+          data-testid="button-tool-shapes"
+        >
+          <activeLine.icon className="w-[18px] h-[18px]" />
+          <span className="flex items-center gap-0.5">
+            {activeLine.label}
+            <ChevronDown className="w-3 h-3" />
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-44 p-1">
+        {LINE_TOOLS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => {
+              setTool(t.id);
+              setLineMenuOpen(false);
+            }}
+            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
+              tool === t.id
+                ? "bg-blue-50 text-blue-700"
+                : "hover:bg-gray-100 text-gray-700"
+            }`}
+            data-testid={`menu-shape-${t.id}`}
+          >
+            <t.icon className="w-4 h-4" />
+            <span className="flex-1 text-left">{t.label}</span>
+            {tool === t.id && <Check className="w-4 h-4" />}
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+
   const showText = tool === "text" || selected?.type === "text";
   const showStroke =
     tool === "draw" ||
     tool === "line" ||
+    tool === "arrow" ||
     tool === "rect" ||
+    tool === "ellipse" ||
+    tool === "polygon" ||
     selected?.type === "draw" ||
     selected?.type === "line" ||
-    selected?.type === "rect";
+    selected?.type === "rect" ||
+    selected?.type === "ellipse" ||
+    selected?.type === "polygon";
   const showHighlight = tool === "highlight" || selected?.type === "highlight";
   const showStamp = tool === "stamp" || selected?.type === "stamp";
   const showNote = selected?.type === "note";
+  const showLink = tool === "link" || selected?.type === "link";
 
   // value/setter that targets the selected element if present, else the draft
   const setColor = (c: string) => {
@@ -1198,6 +1670,26 @@ export const PdfEditor: React.FC = () => {
         >
           <PanelLeft className="w-4 h-4" />
         </Button>
+        <div className="w-px h-6 bg-gray-200" />
+        <Button
+          variant={searchOpen ? "default" : "outline"}
+          size="icon"
+          onClick={() => setSearchOpen((s) => !s)}
+          title="Search text"
+          className={searchOpen ? "bg-blue-600 hover:bg-blue-700" : ""}
+          data-testid="button-toggle-search"
+        >
+          <SearchIcon className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setManageOpen(true)}
+          title="Manage pages"
+          data-testid="button-manage-pages"
+        >
+          <Files className="w-4 h-4 mr-1" /> Pages
+        </Button>
         <div className="flex-1" />
         <Button
           variant="outline"
@@ -1224,19 +1716,80 @@ export const PdfEditor: React.FC = () => {
         </Button>
       </div>
 
+      {/* Search bar */}
+      {searchOpen && (
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow-sm">
+          <SearchIcon className="w-4 h-4 text-gray-400" />
+          <input
+            autoFocus
+            className="flex-1 min-w-[120px] px-2 py-1 text-sm outline-none"
+            placeholder="Search document text…"
+            value={query}
+            onChange={(e) => runSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") stepMatch(e.shiftKey ? -1 : 1);
+              if (e.key === "Escape") setSearchOpen(false);
+            }}
+            data-testid="input-search"
+          />
+          <span
+            className="text-xs text-gray-500 tabular-nums min-w-[64px] text-center"
+            data-testid="text-search-count"
+          >
+            {textBusy
+              ? "Reading…"
+              : matches.length
+                ? `${matchIdx + 1} of ${matches.length}`
+                : query.trim()
+                  ? "No results"
+                  : ""}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => stepMatch(-1)}
+            disabled={!matches.length}
+            title="Previous"
+            data-testid="button-search-prev"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => stepMatch(1)}
+            disabled={!matches.length}
+            title="Next"
+            data-testid="button-search-next"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSearchOpen(false)}
+            title="Close search"
+            data-testid="button-search-close"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Tools */}
       <div className="flex flex-wrap items-center gap-1.5 bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow-sm">
         <ToolBtn id="select" label="Select" icon={MousePointer2} onClick={() => setTool("select")} />
-        <ToolBtn id="text" label="Text" icon={Type} onClick={() => setTool("text")} />
-        <ToolBtn id="image-btn" label="Image" icon={ImageIcon} onClick={() => imageInputRef.current?.click()} />
+        <ToolBtn id="text" label="Add text" icon={Type} onClick={() => setTool("text")} />
+        <ToolBtn id="edittext" label="Edit text" icon={TextCursorInput} onClick={() => setTool("edittext")} />
         <ToolBtn id="signature-btn" label="Sign" icon={PenTool} onClick={() => setSigOpen(true)} />
         <ToolBtn id="draw" label="Draw" icon={Pencil} onClick={() => setTool("draw")} />
-        <ToolBtn id="line" label="Line" icon={Minus} onClick={() => setTool("line")} />
-        <ToolBtn id="rect" label="Box" icon={Square} onClick={() => setTool("rect")} />
+        <LineMenu />
         <ToolBtn id="highlight" label="Highlight" icon={Highlighter} onClick={() => setTool("highlight")} />
-        <ToolBtn id="whiteout" label="Whiteout" icon={Eraser} onClick={() => setTool("whiteout")} />
+        <ToolBtn id="image-btn" label="Image" icon={ImageIcon} onClick={() => imageInputRef.current?.click()} />
         <ToolBtn id="stamp" label="Stamp" icon={StampIcon} onClick={() => setTool("stamp")} />
+        <ToolBtn id="link" label="Link" icon={Link2} onClick={() => setTool("link")} />
         <ToolBtn id="note" label="Note" icon={StickyNote} onClick={() => setTool("note")} />
+        <ToolBtn id="whiteout" label="Whiteout" icon={Eraser} onClick={() => setTool("whiteout")} />
         <input
           ref={imageInputRef}
           type="file"
@@ -1449,19 +2002,72 @@ export const PdfEditor: React.FC = () => {
           />
         )}
 
-        {!showText && !showStroke && !showHighlight && !showStamp && !showNote && (
-          <span className="text-sm text-gray-400" data-testid="text-options-hint">
-            {tool === "select"
-              ? selected
-                ? "Drag to move · drag a handle to resize"
-                : "Pick a tool, then click or drag on the page."
-              : tool === "whiteout"
-                ? "Drag a box over content to cover it in white."
-                : tool === "image"
-                  ? "Choose an image to place."
-                  : "Click or drag on the page to add."}
-          </span>
+        {showLink && (
+          <label className="text-sm flex items-center gap-2 flex-1 min-w-[220px]">
+            URL
+            <input
+              type="url"
+              className="px-2 py-1 rounded border bg-white text-sm flex-1"
+              value={selected?.type === "link" ? selected.url : draft.linkUrl}
+              onChange={(e) => {
+                if (selected?.type === "link")
+                  propEdit(`${selected.id}:url`, selected.id, {
+                    url: e.target.value,
+                  } as any);
+                else setDraft((d) => ({ ...d, linkUrl: e.target.value }));
+              }}
+              placeholder="https://example.com"
+              data-testid="input-link-url"
+            />
+          </label>
         )}
+
+        {tool === "polygon" && poly && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500" data-testid="text-polygon-hint">
+              {poly.points.length} point{poly.points.length === 1 ? "" : "s"} ·
+              click first point or Enter to finish
+            </span>
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={finalizePolygon}
+              disabled={poly.points.length < 2}
+              data-testid="button-finish-polygon"
+            >
+              Finish
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={cancelPolygon}
+              data-testid="button-cancel-polygon"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+
+        {!showText &&
+          !showStroke &&
+          !showHighlight &&
+          !showStamp &&
+          !showNote &&
+          !showLink && (
+            <span className="text-sm text-gray-400" data-testid="text-options-hint">
+              {tool === "select"
+                ? selected
+                  ? "Drag to move · drag a handle to resize"
+                  : "Pick a tool, then click or drag on the page."
+                : tool === "edittext"
+                  ? "Click directly on existing PDF text to edit it."
+                  : tool === "whiteout"
+                    ? "Drag a box over content to cover it in white."
+                    : tool === "image"
+                      ? "Choose an image to place."
+                      : "Click or drag on the page to add."}
+            </span>
+          )}
 
         <div className="flex-1" />
         {selected && (
@@ -1523,7 +2129,10 @@ export const PdfEditor: React.FC = () => {
               const w = page.width * zoom;
               const pageEls = elements.filter((el) => el.pageIndex === page.pageIndex);
               const lineDraws = pageEls.filter(
-                (el) => el.type === "line" || el.type === "draw",
+                (el) =>
+                  el.type === "line" ||
+                  el.type === "draw" ||
+                  el.type === "polygon",
               );
               return (
                 <div key={page.pageIndex} className="flex flex-col items-center">
@@ -1550,7 +2159,12 @@ export const PdfEditor: React.FC = () => {
 
                     {/* HTML overlays: text / image / shape / stamp / note */}
                     {pageEls.map((el) => {
-                      if (el.type === "line" || el.type === "draw") return null;
+                      if (
+                        el.type === "line" ||
+                        el.type === "draw" ||
+                        el.type === "polygon"
+                      )
+                        return null;
                       const isSel = el.id === selectedId;
                       const interactive = tool === "select";
                       const common: React.CSSProperties = {
@@ -1666,6 +2280,25 @@ export const PdfEditor: React.FC = () => {
                             {el.text}
                           </div>
                         );
+                      } else if (el.type === "ellipse") {
+                        boxStyle.border = `${el.strokeWidth * zoom}px solid ${el.color}`;
+                        boxStyle.borderRadius = "50%";
+                      } else if (el.type === "link") {
+                        boxStyle.border = "1px solid #2563eb";
+                        boxStyle.background = "#2563eb14";
+                        inner = (
+                          <div
+                            className="w-full h-full overflow-hidden pointer-events-none flex items-end"
+                            style={{ color: "#1d4ed8" }}
+                          >
+                            <span
+                              className="truncate underline px-1"
+                              style={{ fontSize: Math.max(9, 11 * zoom) }}
+                            >
+                              {el.url}
+                            </span>
+                          </div>
+                        );
                       }
                       return (
                         <div
@@ -1710,6 +2343,17 @@ export const PdfEditor: React.FC = () => {
                         const isSel = el.id === selectedId;
                         const hit = tool === "select" ? "stroke" : "none";
                         if (el.type === "line") {
+                          const ang = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
+                          const alen = Math.max(6, el.strokeWidth * 3.5);
+                          const spread = Math.PI / 7;
+                          const a1 = {
+                            x: el.x2 - alen * Math.cos(ang - spread),
+                            y: el.y2 - alen * Math.sin(ang - spread),
+                          };
+                          const a2 = {
+                            x: el.x2 - alen * Math.cos(ang + spread),
+                            y: el.y2 - alen * Math.sin(ang + spread),
+                          };
                           return (
                             <g key={el.id}>
                               <line
@@ -1732,6 +2376,75 @@ export const PdfEditor: React.FC = () => {
                                 strokeLinecap="round"
                                 style={{ pointerEvents: "none" }}
                               />
+                              {el.variant === "arrow" && (
+                                <>
+                                  <line
+                                    x1={el.x2}
+                                    y1={el.y2}
+                                    x2={a1.x}
+                                    y2={a1.y}
+                                    stroke={el.color}
+                                    strokeWidth={el.strokeWidth}
+                                    strokeLinecap="round"
+                                    style={{ pointerEvents: "none" }}
+                                  />
+                                  <line
+                                    x1={el.x2}
+                                    y1={el.y2}
+                                    x2={a2.x}
+                                    y2={a2.y}
+                                    stroke={el.color}
+                                    strokeWidth={el.strokeWidth}
+                                    strokeLinecap="round"
+                                    style={{ pointerEvents: "none" }}
+                                  />
+                                </>
+                              )}
+                            </g>
+                          );
+                        }
+                        if (el.type === "polygon") {
+                          const ppts = el.points
+                            .map((p) => `${p.x},${p.y}`)
+                            .join(" ");
+                          return (
+                            <g key={el.id}>
+                              <polygon
+                                points={ppts}
+                                fill="none"
+                                stroke="transparent"
+                                strokeWidth={el.strokeWidth + 12}
+                                style={{ pointerEvents: hit, cursor: "move" }}
+                                onPointerDown={(e) =>
+                                  onElementPointerDown(e as any, el)
+                                }
+                              />
+                              <polygon
+                                points={ppts}
+                                fill="none"
+                                stroke={el.color}
+                                strokeWidth={el.strokeWidth}
+                                strokeLinejoin="round"
+                                style={{ pointerEvents: "none" }}
+                              />
+                              {isSel &&
+                                (() => {
+                                  const b = boundsOf(el);
+                                  return (
+                                    <rect
+                                      x={b.x}
+                                      y={b.y}
+                                      width={b.width}
+                                      height={b.height}
+                                      fill="none"
+                                      stroke="#3b82f6"
+                                      strokeWidth={1}
+                                      strokeDasharray="4 4"
+                                      vectorEffect="non-scaling-stroke"
+                                      style={{ pointerEvents: "none" }}
+                                    />
+                                  );
+                                })()}
                             </g>
                           );
                         }
@@ -1776,6 +2489,38 @@ export const PdfEditor: React.FC = () => {
                           </g>
                         );
                       })}
+
+                      {/* in-progress polygon */}
+                      {poly && poly.pageIndex === page.pageIndex && (
+                        <g style={{ pointerEvents: "none" }}>
+                          <polyline
+                            points={[
+                              ...poly.points,
+                              ...(polyTip ? [polyTip] : []),
+                            ]
+                              .map((p) => `${p.x},${p.y}`)
+                              .join(" ")}
+                            fill="rgba(37,99,235,0.06)"
+                            stroke="#2563eb"
+                            strokeWidth={draft.strokeWidth}
+                            strokeDasharray="4 3"
+                            strokeLinejoin="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          {poly.points.map((p, i) => (
+                            <circle
+                              key={i}
+                              cx={p.x}
+                              cy={p.y}
+                              r={i === 0 ? 5 : 3}
+                              fill={i === 0 ? "#2563eb" : "#fff"}
+                              stroke="#2563eb"
+                              strokeWidth={1.5}
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          ))}
+                        </g>
+                      )}
                     </svg>
 
                     {/* line endpoint handles (HTML, constant px) */}
@@ -1797,6 +2542,31 @@ export const PdfEditor: React.FC = () => {
                               data-testid={`endpoint-p2-${el.id}`}
                             />
                           </React.Fragment>
+                        ))}
+
+                    {/* search highlights */}
+                    {searchOpen &&
+                      matches
+                        .map((m, i) => ({ m, i }))
+                        .filter(({ m }) => m.pageIndex === page.pageIndex)
+                        .map(({ m, i }) => (
+                          <div
+                            key={`match-${i}`}
+                            className="absolute pointer-events-none rounded-[1px]"
+                            style={{
+                              left: m.x * zoom,
+                              top: m.y * zoom,
+                              width: m.width * zoom,
+                              height: m.height * zoom,
+                              background:
+                                i === matchIdx
+                                  ? "rgba(37,99,235,0.45)"
+                                  : "rgba(250,204,21,0.45)",
+                              outline:
+                                i === matchIdx ? "1px solid #1d4ed8" : "none",
+                            }}
+                            data-testid={`search-hit-${i}`}
+                          />
                         ))}
                   </div>
                   <span className="text-xs text-gray-400 mt-1">
@@ -1848,6 +2618,16 @@ export const PdfEditor: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {srcBytes && (
+        <ManagePagesModal
+          open={manageOpen}
+          onOpenChange={setManageOpen}
+          srcBytes={srcBytes}
+          pages={pages}
+          onApply={applyPageChanges}
+        />
       )}
     </div>
   );
