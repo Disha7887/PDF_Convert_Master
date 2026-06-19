@@ -69,18 +69,24 @@ export const TestimonialsSection = (): JSX.Element => {
             Ready to Transform Your PDF Workflow?
           </h3>
           <p className="text-base text-gray-600 text-center mb-8">
-            Join millions of users who trust our platform for their document
-            needs
+            Every tool is 100% free with no sign-up required. Create an account
+            only when you're ready to access our developer API.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button className="font-semibold px-8 py-4 h-[59px] rounded-full">
-              Get Started Free
+            <Button
+              className="font-semibold px-8 py-4 h-[59px] rounded-full"
+              onClick={() => setLocation("/tools")}
+              data-testid="button-browse-tools"
+            >
+              Browse All Tools — Free
             </Button>
             <Button
               variant="outline"
               className="bg-white text-gray-900 border-gray-200 font-semibold px-8 py-4 h-[59px] rounded-lg"
+              onClick={() => setLocation("/signup")}
+              data-testid="button-home-api-access"
             >
-              Contact Sales
+              Get API Access
             </Button>
           </div>
         </div>

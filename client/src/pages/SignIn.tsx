@@ -92,7 +92,7 @@ export const SignIn: React.FC = () => {
             
             {/* Subtitle */}
             <p className="text-sm text-gray-600">
-              Welcome back! Please sign in to your account
+              Welcome back! Sign in to access your API dashboard
             </p>
           </div>
 

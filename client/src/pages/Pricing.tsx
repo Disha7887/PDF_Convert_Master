@@ -2,11 +2,13 @@ import React from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Code2, Archive, FileImage } from "lucide-react";
+import { Check, Code2, Archive, FileImage, Gift } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 
 export const Pricing: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,7 +22,7 @@ export const Pricing: React.FC = () => {
             <p className="text-lg text-gray-600">
               {isAuthenticated
                 ? "Manage your subscription and billing"
-                : "Choose a plan that fits your needs"
+                : "Pricing unlocks our developer API — every web tool stays free, no account required"
               }
             </p>
           </div>
@@ -132,6 +134,13 @@ export const Pricing: React.FC = () => {
                     <span className="text-gray-600 ml-1">/month</span>
                   </div>
                   <p className="text-sm text-gray-600">or $90/year (save 17%)</p>
+                  <div
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700"
+                    data-testid="badge-promo-basic"
+                  >
+                    <Gift className="w-3.5 h-3.5" />
+                    12 months free
+                  </div>
                 </div>
                 <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
@@ -155,13 +164,23 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Standard processing speed</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full mt-auto">
-                  {isAuthenticated ? "Downgrade" : "Get Started"}
+                <Button
+                  variant="outline"
+                  className="w-full mt-auto"
+                  onClick={!isAuthenticated ? () => setLocation("/signup") : undefined}
+                  data-testid="button-plan-basic"
+                >
+                  {isAuthenticated ? "Downgrade" : "Get API Access"}
                 </Button>
               </div>
 
               {/* Pro Plan - Current */}
               <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-6 relative flex flex-col h-full">
+                {!isAuthenticated && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white border-blue-600 hover:bg-blue-600">
+                    Most Popular
+                  </Badge>
+                )}
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
                   <div className="flex items-end justify-center mb-4">
@@ -169,6 +188,13 @@ export const Pricing: React.FC = () => {
                     <span className="text-gray-600 ml-1">/month</span>
                   </div>
                   <p className="text-sm text-gray-600">or $290/year (save 17%)</p>
+                  <div
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700"
+                    data-testid="badge-promo-pro"
+                  >
+                    <Gift className="w-3.5 h-3.5" />
+                    12 months free
+                  </div>
                 </div>
                 <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
@@ -196,8 +222,13 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">Advanced tools</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full mt-auto">
-                  {isAuthenticated ? "Current Plan" : "Most Popular"}
+                <Button
+                  variant="outline"
+                  className="w-full mt-auto"
+                  onClick={!isAuthenticated ? () => setLocation("/signup") : undefined}
+                  data-testid="button-plan-pro"
+                >
+                  {isAuthenticated ? "Current Plan" : "Get API Access"}
                 </Button>
               </div>
 
@@ -210,6 +241,13 @@ export const Pricing: React.FC = () => {
                     <span className="text-gray-600 ml-1">/month</span>
                   </div>
                   <p className="text-sm text-gray-600">or $990/year (save 17%)</p>
+                  <div
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700"
+                    data-testid="badge-promo-enterprise"
+                  >
+                    <Gift className="w-3.5 h-3.5" />
+                    12 months free
+                  </div>
                 </div>
                 <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
@@ -241,7 +279,12 @@ export const Pricing: React.FC = () => {
                     <span className="text-sm text-gray-700">SLA guarantee</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full mt-auto">
+                <Button
+                  variant="outline"
+                  className="w-full mt-auto"
+                  onClick={!isAuthenticated ? () => setLocation("/contact") : undefined}
+                  data-testid="button-plan-enterprise"
+                >
                   {isAuthenticated ? "Upgrade" : "Contact Sales"}
                 </Button>
               </div>

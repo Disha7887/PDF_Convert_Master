@@ -113,7 +113,11 @@ export const SignUp: React.FC = () => {
             
             {/* Subtitle */}
             <p className="text-sm text-gray-600">
-              Create your account to get started
+              Create an account to get your API access
+            </p>
+            <p className="text-xs text-gray-500">
+              All conversion tools are free to use — no account needed. Sign up
+              to unlock the developer API.
             </p>
           </div>
 

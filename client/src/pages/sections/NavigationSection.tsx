@@ -88,8 +88,9 @@ export const NavigationSection = (): JSX.Element => {
             <Button
               className="h-10 px-6 py-2 rounded-full font-medium text-base [text-shadow:0px_10px_15px_#0000001a]"
               onClick={handleGetStarted}
+              data-testid="button-nav-api-access"
             >
-              Get Started
+              API Access
             </Button>
           </div>
 
@@ -119,7 +120,7 @@ export const NavigationSection = (): JSX.Element => {
                     }}
                     data-testid="mobile-button-get-started"
                   >
-                    Get Started
+                    Get API Access
                   </Button>
                 </div>
               )}
