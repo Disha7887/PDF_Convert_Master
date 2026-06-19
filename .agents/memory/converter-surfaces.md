@@ -17,9 +17,22 @@ Any request to change a converter's upload prompt, status icon, or stage styling
 - `client/src/pages/upload/UpscaleImage.tsx` — standalone page with its own processing/error visuals.
 - `client/src/components/UploadModal.tsx` — used by `LiveTools` (`/dashboard/live-tools`).
 - `client/src/components/UploadPage.tsx` — used by `UploadDemo`.
+- `client/src/components/pdf-tools/PdfToolShell.tsx` (`PdfDropzone`) — empty-state upload for every PDF Editor tool page (`/upload/{crop,sign,watermark,add-image,delete-pages,ocr}-pdf`) AND the main `PdfEditor.tsx` (`/upload/edit-pdf`). `PdfEditor` is an easy-to-miss caller — it's a separate render path, not a `/upload/<id>` page wrapper.
 
 **Dead / unrouted (skip):** `client/src/components/FileUploadModal.tsx` and
 `client/src/components/ui/bouncing-upload-icon.tsx` (after the Lottie migration).
+
+**Per-tool upload icon (not the generic Lottie):** the upload prompt shows the
+SELECTED tool's own icon via `ToolIconBadge` (exported from
+`converter-status-icon.tsx`). Two prop shapes feed it — keep both in sync when
+adding a surface: `ConverterStatusIcon`/`PdfDropzone` take the COMPONENT form
+(`toolIcon` = lucide ComponentType + `toolIconColor/BgColor/BorderColor` from
+`toolConfigs[id]`); `EnhancedUploadArea`/`ImageDropzone` take the NODE form
+(`toolIcon` = pre-rendered `<Icon/>` ReactNode + `toolIconBg` = bg/border classes).
+Generic syncing Lottie only remains as the fallback when no `toolIcon` is passed,
+and for drag-over / loading states. **Why:** "make the upload icon per-tool"
+fanned out across all these surfaces and review failed twice for missing
+`ImageDropzone`, then `PdfEditor.tsx`/`edit-pdf`.
 
 **Why:** a single "make it global" request fanned out across 9 live surfaces; the
 first pass only hit 2 and failed review. There is no central converter shell.

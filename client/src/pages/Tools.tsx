@@ -516,7 +516,15 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           }`}
           data-testid={`dropzone-${toolConfig.id}`}
         >
-          <ConverterStatusIcon status="upload" size={88} className="mb-3" />
+          <ConverterStatusIcon
+            status="upload"
+            size={88}
+            className="mb-3"
+            toolIcon={toolConfig.icon}
+            toolIconColor={toolConfig.iconColor}
+            toolIconBgColor={toolConfig.iconBgColor}
+            toolIconBorderColor={toolConfig.iconBorderColor}
+          />
 
           <h3 className="text-xl font-bold text-gray-900 mb-1">
             {toolConfig.dropAreaText}

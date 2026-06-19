@@ -117,7 +117,13 @@ export const ResizeImageUpload = () => {
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!file ? (
-        <ImageDropzone acceptedFormats={ACCEPTED} maxSizeMB={MAX_MB} onFile={handleFile} />
+        <ImageDropzone
+          acceptedFormats={ACCEPTED}
+          maxSizeMB={MAX_MB}
+          onFile={handleFile}
+          toolIcon={<Maximize2 className="w-8 h-8 text-blue-500" />}
+          toolIconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+        />
       ) : (
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-3">

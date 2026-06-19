@@ -110,7 +110,14 @@ export function CropPdfUpload() {
       description={cfg.description}
     >
       {pages.length === 0 ? (
-        <PdfDropzone onFile={onFile} loading={loading} />
+        <PdfDropzone
+          onFile={onFile}
+          loading={loading}
+          toolIcon={cfg.icon}
+          toolIconColor={cfg.iconColor}
+          toolIconBgColor={cfg.iconBgColor}
+          toolIconBorderColor={cfg.iconBorderColor}
+        />
       ) : (
         <div>
           <div className="flex flex-wrap items-center gap-3 mb-6">

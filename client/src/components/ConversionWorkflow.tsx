@@ -520,6 +520,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               onDrop={handleDrop}
               currentFileCount={selectedFiles.length}
               showAdvancedFeatures={true}
+              toolIcon={toolIcon}
+              toolIconBg={iconBg}
             />
           )}
 
@@ -581,6 +583,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                   onDrop={handleDrop}
                   currentFileCount={selectedFiles.length}
                   showAdvancedFeatures={false}
+                  toolIcon={toolIcon}
+                  toolIconBg={iconBg}
                 />
               </div>
 

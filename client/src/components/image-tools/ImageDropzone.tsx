@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
-import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { ConverterStatusIcon, ToolIconBadge } from "@/components/converter-status-icon";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImageDropzoneProps {
@@ -7,6 +7,10 @@ interface ImageDropzoneProps {
   maxSizeMB: number;
   onFile: (file: File) => void;
   testId?: string;
+  /** Tool-specific icon shown in the upload prompt (badge form). */
+  toolIcon?: React.ReactNode;
+  /** Tailwind bg/border classes for the tool-icon badge. */
+  toolIconBg?: string;
 }
 
 export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
@@ -14,6 +18,8 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
   maxSizeMB,
   onFile,
   testId,
+  toolIcon,
+  toolIconBg,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -79,7 +85,15 @@ export const ImageDropzone: React.FC<ImageDropzoneProps> = ({
         }}
         data-testid="input-file"
       />
-      <ConverterStatusIcon status="upload" size={80} className="mb-4" />
+      {isDragOver ? (
+        <ConverterStatusIcon status="upload" size={80} className="mb-4" />
+      ) : toolIcon ? (
+        <ToolIconBadge size={80} bgClassName={toolIconBg} className="mb-4">
+          {toolIcon}
+        </ToolIconBadge>
+      ) : (
+        <ConverterStatusIcon status="upload" size={80} className="mb-4" />
+      )}
       <p className="text-lg font-medium text-gray-700 dark:text-gray-200">
         Drop an image here, or click to browse
       </p>

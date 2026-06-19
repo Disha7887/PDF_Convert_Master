@@ -58,6 +58,11 @@ interface PdfDropzoneProps {
   title?: string;
   subtitle?: string;
   testId?: string;
+  /** Tool-specific icon shown in the upload prompt instead of the generic one. */
+  toolIcon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  toolIconColor?: string;
+  toolIconBgColor?: string;
+  toolIconBorderColor?: string;
 }
 
 /** Dashed upload dropzone used as the empty state for each tool. */
@@ -68,6 +73,10 @@ export function PdfDropzone({
   title = "Drop your PDF here",
   subtitle = "or click to browse files",
   testId = "dropzone-pdf",
+  toolIcon,
+  toolIconColor,
+  toolIconBgColor,
+  toolIconBorderColor,
 }: PdfDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
@@ -111,7 +120,15 @@ export function PdfDropzone({
       {loading ? (
         <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-3" />
       ) : (
-        <ConverterStatusIcon status="upload" size={88} className="mb-3" />
+        <ConverterStatusIcon
+          status="upload"
+          size={88}
+          className="mb-3"
+          toolIcon={toolIcon}
+          toolIconColor={toolIconColor}
+          toolIconBgColor={toolIconBgColor}
+          toolIconBorderColor={toolIconBorderColor}
+        />
       )}
       <h3 className="text-xl font-bold text-gray-900 mb-1">
         {loading ? "Opening PDF…" : title}

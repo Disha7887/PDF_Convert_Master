@@ -127,7 +127,13 @@ export const RotateImageUpload = () => {
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!file ? (
-        <ImageDropzone acceptedFormats={ACCEPTED} maxSizeMB={MAX_MB} onFile={handleFile} />
+        <ImageDropzone
+          acceptedFormats={ACCEPTED}
+          maxSizeMB={MAX_MB}
+          onFile={handleFile}
+          toolIcon={<RotateCw className="w-8 h-8 text-blue-500" />}
+          toolIconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+        />
       ) : (
         <div className="grid md:grid-cols-2 gap-8">
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 flex items-center justify-center min-h-[300px]">

@@ -154,7 +154,15 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
             isDragOver ? "opacity-80" : ""
           }`}
         >
-          <ConverterStatusIcon status="upload" size={112} className="mb-2" />
+          <ConverterStatusIcon
+            status="upload"
+            size={112}
+            className="mb-2"
+            toolIcon={tool.icon}
+            toolIconColor={tool.iconColor}
+            toolIconBgColor={tool.iconBgColor}
+            toolIconBorderColor={tool.iconBorderColor}
+          />
 
           <h2
             className="font-bold text-gray-900 text-xl text-center mb-3"

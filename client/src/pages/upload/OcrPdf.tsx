@@ -277,7 +277,14 @@ export function OcrPdfUpload() {
       description={cfg.description}
     >
       {!file ? (
-        <PdfDropzone onFile={onFile} loading={loading} />
+        <PdfDropzone
+          onFile={onFile}
+          loading={loading}
+          toolIcon={cfg.icon}
+          toolIconColor={cfg.iconColor}
+          toolIconBgColor={cfg.iconBgColor}
+          toolIconBorderColor={cfg.iconBorderColor}
+        />
       ) : (
         <div className="space-y-6">
           <div className="flex flex-wrap items-end gap-4 bg-white border border-gray-200 rounded-xl p-4">

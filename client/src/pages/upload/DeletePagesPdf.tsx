@@ -106,7 +106,14 @@ export function DeletePagesPdfUpload() {
       description={cfg.description}
     >
       {pages.length === 0 ? (
-        <PdfDropzone onFile={onFile} loading={loading} />
+        <PdfDropzone
+          onFile={onFile}
+          loading={loading}
+          toolIcon={cfg.icon}
+          toolIconColor={cfg.iconColor}
+          toolIconBgColor={cfg.iconBgColor}
+          toolIconBorderColor={cfg.iconBorderColor}
+        />
       ) : (
         <div>
           <div className="flex flex-wrap items-center gap-3 mb-6 sticky top-0 z-10 bg-gray-50/90 backdrop-blur py-3">

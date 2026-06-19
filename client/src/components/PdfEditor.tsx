@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { PdfDropzone } from "@/components/pdf-tools/PdfToolShell";
+import { toolConfigs } from "@/lib/toolConfig";
 import { ManagePagesModal } from "@/components/pdf-tools/ManagePagesModal";
 import {
   readFileBytes,
@@ -1602,9 +1603,17 @@ export const PdfEditor: React.FC = () => {
 
   // --- empty state -----------------------------------------------------------
   if (pages.length === 0) {
+    const editCfg = toolConfigs["edit-pdf"];
     return (
       <div className="max-w-3xl mx-auto px-4">
-        <PdfDropzone onFile={loadPdf} loading={loading} />
+        <PdfDropzone
+          onFile={loadPdf}
+          loading={loading}
+          toolIcon={editCfg.icon}
+          toolIconColor={editCfg.iconColor}
+          toolIconBgColor={editCfg.iconBgColor}
+          toolIconBorderColor={editCfg.iconBorderColor}
+        />
       </div>
     );
   }

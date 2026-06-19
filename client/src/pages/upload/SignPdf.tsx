@@ -255,7 +255,14 @@ export function SignPdfUpload() {
       description={cfg.description}
     >
       {pages.length === 0 ? (
-        <PdfDropzone onFile={onFile} loading={loading} />
+        <PdfDropzone
+          onFile={onFile}
+          loading={loading}
+          toolIcon={cfg.icon}
+          toolIconColor={cfg.iconColor}
+          toolIconBgColor={cfg.iconBgColor}
+          toolIconBorderColor={cfg.iconBorderColor}
+        />
       ) : (
         <div className="grid lg:grid-cols-[360px_1fr] gap-8">
           <div className="space-y-4">

@@ -731,7 +731,13 @@ function SingleImageTool({ tool, title, description, actionLabel, icon }: ToolCo
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
     >
       {!current ? (
-        <ImageDropzone acceptedFormats={ACCEPTED} maxSizeMB={MAX_MB} onFile={handleFile} />
+        <ImageDropzone
+          acceptedFormats={ACCEPTED}
+          maxSizeMB={MAX_MB}
+          onFile={handleFile}
+          toolIcon={icon}
+          toolIconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+        />
       ) : (
         <div className="space-y-6">
           {/* Preview */}

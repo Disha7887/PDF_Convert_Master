@@ -10,7 +10,7 @@ import {
   CloudUpload,
   Sparkles
 } from "lucide-react";
-import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { ConverterStatusIcon, ToolIconBadge } from "@/components/converter-status-icon";
 
 interface EnhancedUploadAreaProps {
   acceptedFormats: string[];
@@ -24,6 +24,10 @@ interface EnhancedUploadAreaProps {
   isDisabled?: boolean;
   currentFileCount?: number;
   showAdvancedFeatures?: boolean;
+  /** Tool-specific icon shown in the upload prompt (badge form). */
+  toolIcon?: React.ReactNode;
+  /** Tailwind bg/border classes for the tool-icon badge. */
+  toolIconBg?: string;
 }
 
 export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
@@ -37,7 +41,9 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
   onDrop,
   isDisabled = false,
   currentFileCount = 0,
-  showAdvancedFeatures = true
+  showAdvancedFeatures = true,
+  toolIcon,
+  toolIconBg,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isHovering, setIsHovering] = useState(false);
@@ -132,6 +138,10 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
             <CloudUpload className="w-16 h-16 text-blue-500 animate-bounce" />
             <Sparkles className="w-6 h-6 text-blue-400 absolute -top-2 -right-2 animate-pulse" />
           </div>
+        ) : toolIcon ? (
+          <ToolIconBadge size={96} bgClassName={toolIconBg}>
+            {toolIcon}
+          </ToolIconBadge>
         ) : (
           <ConverterStatusIcon status="upload" size={96} />
         )}
