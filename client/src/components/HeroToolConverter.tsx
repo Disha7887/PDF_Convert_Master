@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
-import { UploadIcon, Download, RefreshCw } from "lucide-react";
+import { UploadDropzone } from "@/components/upload/UploadDropzone";
+import { Download, RefreshCw } from "lucide-react";
 import {
   ToolConfig,
   getToolActionLabel,
@@ -20,8 +20,6 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,8 +31,6 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     };
   }, []);
 
-  const maxBytes = parseFloat(tool.maxFileSize) * 1024 * 1024;
-  const chips = tool.acceptedFormats.map((f) => f.replace(".", "").toUpperCase());
   const label = getToolActionLabel(tool);
 
   const reset = () => {
@@ -42,7 +38,6 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     setFileName("");
     setError(null);
     setDownloadUrl(null);
-    if (inputRef.current) inputRef.current.value = "";
   };
 
   const pollJob = (jobId: number) =>
@@ -102,102 +97,28 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     }
   };
 
-  const handleFiles = (files: FileList | null) => {
-    const f = files?.[0];
-    if (!f) return;
-    const ext = "." + (f.name.split(".").pop()?.toLowerCase() || "");
-    if (!tool.acceptedFormats.includes(ext)) {
-      setFileName(f.name);
-      setError(`Please select a ${chips.join("/")} file.`);
-      setStage("error");
-      return;
-    }
-    if (f.size > maxBytes) {
-      setFileName(f.name);
-      setError(`File is too large — the limit is ${tool.maxFileSize}.`);
-      setStage("error");
-      return;
-    }
-    convert(f);
-  };
+  if (stage === "idle") {
+    return (
+      <UploadDropzone
+        acceptedFormats={tool.acceptedFormats}
+        maxFileSize={tool.maxFileSize}
+        toolId={tool.id}
+        title={tool.dropAreaText}
+        actionLabel={label}
+        onFiles={(files) => convert(files[0])}
+        onValidationError={(msg) => {
+          setFileName("");
+          setError(msg);
+          setStage("error");
+        }}
+        className="w-full md:w-[584px] min-h-[405px] justify-center rounded-3xl border-blue-300 p-[50px] shadow-sm"
+        testId={`hero-converter-${tool.id}`}
+      />
+    );
+  }
 
   return (
-    <Card
-      className={cardShell}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setIsDragOver(true);
-      }}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        setIsDragOver(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        setIsDragOver(false);
-        handleFiles(e.dataTransfer.files);
-      }}
-      data-testid={`hero-converter-${tool.id}`}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept={tool.acceptedFormats.join(",")}
-        className="hidden"
-        data-testid={`input-hero-${tool.id}`}
-        onChange={(e) => handleFiles(e.target.files)}
-      />
-
-      {stage === "idle" && (
-        <div
-          className={`flex flex-col items-center justify-center w-full transition-colors ${
-            isDragOver ? "opacity-80" : ""
-          }`}
-        >
-          <ConverterStatusIcon
-            status="upload"
-            size={112}
-            className="mb-2"
-            toolId={tool.id}
-          />
-
-          <h2
-            className="font-bold text-gray-900 text-xl text-center mb-3"
-            data-testid={`text-hero-heading-${tool.id}`}
-          >
-            {tool.dropAreaText}
-          </h2>
-
-          <p className="font-normal text-gray-600 text-base text-center mb-8">
-            or click to browse files
-          </p>
-
-          <AnimatedSelectButton
-            onClick={() => inputRef.current?.click()}
-            className="h-[57px] px-12 py-4 mb-8 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
-            data-testid={`button-hero-action-${tool.id}`}
-          >
-            <UploadIcon className="mr-2 h-5 w-5" />
-            <span className="text-base">{label}</span>
-          </AnimatedSelectButton>
-
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {chips.map((c) => (
-              <span
-                key={c}
-                className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500"
-                data-testid={`chip-hero-${tool.id}-${c}`}
-              >
-                {c}
-              </span>
-            ))}
-            <span className="inline-flex items-center text-xs text-gray-400">
-              Max {tool.maxFileSize}
-            </span>
-          </div>
-        </div>
-      )}
-
+    <Card className={cardShell} data-testid={`hero-converter-${tool.id}`}>
       {stage === "converting" && (
         <div className="flex flex-col items-center justify-center w-full text-center">
           <ConverterStatusIcon status="processing" size={96} className="mb-3" />

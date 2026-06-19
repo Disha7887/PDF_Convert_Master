@@ -1,6 +1,6 @@
-import React, { useRef, useState } from "react";
-import { ShieldCheck } from "lucide-react";
-import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import React from "react";
+import { UploadDropzone } from "@/components/upload/UploadDropzone";
+import { ToolPageShell } from "@/components/upload/ToolPageShell";
 
 interface PdfToolLayoutProps {
   icon: React.ComponentType<any>;
@@ -23,31 +23,15 @@ export function PdfToolLayout({
   children,
 }: PdfToolLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        <div className="flex items-start gap-4 mb-8">
-          <div
-            className={`w-14 h-14 flex items-center justify-center rounded-2xl border ${iconBorderColor} ${iconBgColor} shadow-sm shrink-0`}
-          >
-            <Icon className={`w-7 h-7 ${iconColor}`} />
-          </div>
-          <div>
-            <h1
-              className="text-2xl sm:text-3xl font-bold text-gray-900"
-              data-testid="heading-tool-title"
-            >
-              {title}
-            </h1>
-            <p className="text-gray-500 mt-1">{description}</p>
-            <p className="inline-flex items-center gap-1.5 text-xs text-gray-400 mt-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
-              Processed entirely in your browser — your file never leaves your device.
-            </p>
-          </div>
-        </div>
-        {children}
-      </div>
-    </div>
+    <ToolPageShell
+      title={title}
+      description={description}
+      icon={<Icon className={`w-7 h-7 ${iconColor}`} />}
+      iconBoxClassName={`${iconBorderColor} ${iconBgColor}`}
+      trustText="Processed entirely in your browser — your file never leaves your device."
+    >
+      {children}
+    </ToolPageShell>
   );
 }
 
@@ -58,6 +42,8 @@ interface PdfDropzoneProps {
   title?: string;
   subtitle?: string;
   testId?: string;
+  /** Max file size in MB used for validation copy + checks. */
+  maxSizeMB?: number;
   /** Tool id; the upload prompt plays that tool's own Lottie animation. */
   toolId?: string;
 }
@@ -70,72 +56,27 @@ export function PdfDropzone({
   title = "Drop your PDF here",
   subtitle = "or click to browse files",
   testId = "dropzone-pdf",
+  maxSizeMB = 200,
   toolId,
 }: PdfDropzoneProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [drag, setDrag] = useState(false);
-
-  const pick = (files: FileList | null) => {
-    const f = files?.[0];
-    if (f) onFile(f);
-  };
+  const exts = accept
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith("."));
+  const acceptedFormats = exts.length ? exts : [".pdf"];
 
   return (
-    <div
-      onClick={() => !loading && inputRef.current?.click()}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDrag(true);
-      }}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        setDrag(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        setDrag(false);
-        pick(e.dataTransfer.files);
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          inputRef.current?.click();
-        }
-      }}
-      className={`flex flex-col items-center justify-center text-center cursor-pointer rounded-2xl border-2 border-dashed px-6 py-16 transition-colors ${
-        drag
-          ? "border-blue-500 bg-blue-50"
-          : "border-blue-200 bg-white hover:bg-blue-50/50"
-      }`}
-      data-testid={testId}
-    >
-      {loading ? (
-        <ConverterStatusIcon status="processing" size={88} className="mb-3" />
-      ) : (
-        <ConverterStatusIcon
-          status="upload"
-          size={88}
-          className="mb-3"
-          toolId={toolId}
-        />
-      )}
-      <h3 className="text-xl font-bold text-gray-900 mb-1">
-        {loading ? "Opening PDF…" : title}
-      </h3>
-      <p className="text-sm text-gray-500">{subtitle}</p>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        className="hidden"
-        onChange={(e) => {
-          pick(e.target.files);
-          e.target.value = "";
-        }}
-        data-testid="input-pdf"
-      />
-    </div>
+    <UploadDropzone
+      acceptedFormats={acceptedFormats}
+      maxFileSize={maxSizeMB}
+      toolId={toolId}
+      title={title}
+      subtitle={subtitle}
+      actionLabel="Select PDF"
+      loading={loading}
+      loadingText="Opening PDF…"
+      onFiles={(files) => onFile(files[0])}
+      testId={testId}
+    />
   );
 }

@@ -11,6 +11,8 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { UploadDropzone } from "@/components/upload/UploadDropzone";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
 import { OrderedFileList } from "@/components/OrderedFileList";
 import {
@@ -515,77 +517,19 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           {toolConfig.description}
         </DialogDescription>
 
-        {/* The file input lives inside the dialog (not the background card) so
-            it is never in an inert/aria-hidden subtree while the popup is open. */}
-        <input
-          ref={inputRef}
-          type="file"
-          accept={acceptAttr}
+        <UploadDropzone
+          acceptedFormats={toolConfig.acceptedFormats}
+          maxFileSize={toolConfig.maxFileSize}
           multiple={isMultiMerge}
-          onChange={handleInputChange}
-          className="hidden"
-          data-testid={`input-file-${toolConfig.id}`}
+          maxFiles={isMultiMerge ? MAX_MERGE_FILES : undefined}
+          currentFileCount={isMultiMerge ? mergeFiles.length : 0}
+          toolId={toolConfig.id}
+          title={toolConfig.dropAreaText}
+          actionLabel={getActionLabel(toolConfig)}
+          validate={false}
+          onFiles={(files) => selectFile(files)}
+          testId={`dropzone-${toolConfig.id}`}
         />
-
-        <div
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragOver(true);
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            setIsDragOver(false);
-          }}
-          onDrop={handleDrop}
-          className={`flex flex-col items-center justify-center text-center cursor-pointer rounded-2xl border-2 border-dashed px-6 py-10 transition-colors ${
-            isDragOver
-              ? "border-blue-500 bg-blue-50"
-              : "border-blue-200 bg-blue-50/40 hover:bg-blue-50"
-          }`}
-          data-testid={`dropzone-${toolConfig.id}`}
-        >
-          <ConverterStatusIcon
-            status="upload"
-            size={88}
-            className="mb-3"
-            toolId={toolConfig.id}
-          />
-
-          <h3 className="text-xl font-bold text-gray-900 mb-1">
-            {toolConfig.dropAreaText}
-          </h3>
-          <p className="text-sm text-gray-500 mb-6">or click to browse files</p>
-
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              inputRef.current?.click();
-            }}
-            className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full shadow-lg transition-all hover:shadow-xl"
-            data-testid={`button-select-${toolConfig.id}`}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            {getActionLabel(toolConfig)}
-          </Button>
-
-          {/* Supported file types — generated from this tool's accepted formats */}
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-6">
-            {toolConfig.acceptedFormats.map((fmt) => (
-              <span
-                key={fmt}
-                className="inline-flex items-center gap-1 text-xs font-medium text-gray-500"
-                data-testid={`format-${toolConfig.id}-${fmt.replace(".", "")}`}
-              >
-                <FileText className="w-3.5 h-3.5 text-gray-400" />
-                {fmt.replace(".", "").toUpperCase()}
-              </span>
-            ))}
-          </div>
-          <p className="text-[11px] text-gray-400 mt-3">
-            Max file size: {toolConfig.maxFileSize}
-          </p>
-        </div>
       </DialogContent>
     </Dialog>
   );
@@ -1073,9 +1017,10 @@ export const Tools: React.FC = () => {
       : toolsData.filter((tool) => tool.category === activeFilter);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen overflow-hidden bg-white">
+      <AnimatedBackground particleCount={14} className="opacity-50" />
       {/* Filter Buttons */}
-      <div className="w-full py-8 px-4 sm:px-8 lg:px-20">
+      <div className="relative z-10 w-full py-8 px-4 sm:px-8 lg:px-20">
         <div className="max-w-screen-xl mx-auto">
           <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pb-8">
             {filterButtons.map((buttonName, index) => (
@@ -1098,7 +1043,7 @@ export const Tools: React.FC = () => {
       </div>
 
       {/* Tools Grid */}
-      <div className="w-full px-4 sm:px-8 lg:px-20 pb-16">
+      <div className="relative z-10 w-full px-4 sm:px-8 lg:px-20 pb-16">
         <div className="max-w-screen-xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 place-items-start justify-items-center">
             {filteredTools.map((tool) => (

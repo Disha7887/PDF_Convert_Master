@@ -9,6 +9,7 @@ import {
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { ToolsNavDropdowns, MobileNav } from "@/components/ToolsNavMenu";
+import { ToolSearch } from "@/components/ToolSearch";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
@@ -76,6 +77,7 @@ export const NavigationSection = (): JSX.Element => {
 
           {/* Auth Buttons (desktop) */}
           <div className="hidden lg:flex items-center space-x-3">
+            <ToolSearch />
             <Button
               variant="outline"
               className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { EnhancedUploadArea } from "@/components/ui/enhanced-upload-area";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { ToolPageShell } from "@/components/upload/ToolPageShell";
 import { FileItem } from "@/components/ui/file-item";
 
 interface ConversionWorkflowProps {
@@ -464,18 +465,13 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   const hasCompletedFiles = completedFilesCount > 0;
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-4">
-          <div className={`w-16 h-16 rounded-2xl border-2 ${iconBg} flex items-center justify-center shadow-lg`}>
-            {toolIcon}
-          </div>
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{toolTitle}</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">{toolDescription}</p>
-      </div>
-
+    <ToolPageShell
+      title={toolTitle}
+      description={toolDescription}
+      icon={toolIcon}
+      iconBoxClassName={iconBg}
+      maxWidth="max-w-4xl"
+    >
       {/* Main Workflow Card */}
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         
@@ -713,6 +709,6 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </ToolPageShell>
   );
 };

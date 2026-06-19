@@ -1,1 +1,1 @@
-- [PDF editor overprint dedup](pdf-editor-overprint.md) — fake-bold PDFs overprint text twice; pdf.js returns dup runs; dedupe when making text editable or it doubles & needs deleting twice.
+- [PDF Convert Master — repo gotchas](pdf-convert-master.md) — live frontend is `client/` only (`frontend/` is inert), `npm run build` skips type-check, forbidden config files, single-header topology.
