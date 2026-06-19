@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NavigationSection } from "@/pages/sections/NavigationSection";
 import { DashboardHeader } from "./DashboardHeader";
 import { FooterSection } from "@/pages/sections/FooterSection";
+import { PageLoader } from "@/components/page-loader";
 
 interface DynamicLayoutProps {
   children: React.ReactNode;
@@ -10,18 +11,11 @@ interface DynamicLayoutProps {
 }
 
 export const DynamicLayout = ({ children, isDashboardPage = false }: DynamicLayoutProps): JSX.Element => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <PageLoader label="Loading..." />;
   }
 
   // For dashboard pages, always use DashboardLayout structure

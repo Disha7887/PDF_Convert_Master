@@ -44,6 +44,16 @@ toolConfig but were left without `toolId`; check ALL surfaces below.
 **Why:** a single "make it global" request fanned out across 9 live surfaces; the
 first pass only hit 2 and failed review. There is no central converter shell.
 
+**Website-loading (not converter) gates use `PageLoader`.** The full-screen
+"loading my website" indicator is `client/src/components/page-loader.tsx`
+(`PageLoader`), which plays the SAME shared `assets/lottie/processing.json` as the
+converter "processing" stage. It's wired into the two auth-resolution gates:
+`ProtectedRoute.tsx` and `DynamicLayout.tsx` (both gate on `useAuth().loading`).
+The shared processing Lottie therefore covers BOTH website-loading and converter
+processing — change the animation by replacing `processing.json`, not by editing
+call sites. `PdfToolShell.tsx`'s "Opening PDF…" dropzone state also uses
+`ConverterStatusIcon status="processing"` (not a lucide spinner).
+
 **How to apply:** shared status icon lives in `client/src/components/converter-status-icon.tsx`
 (`ConverterStatusIcon`). Keep tiny inline indicators (w-4 step badges, per-file
 `FileItem` chips, in-button spinners) as lucide — Lottie at ~16px looks wrong.

@@ -20,3 +20,12 @@ After adding a new component usage, always load the affected page in the
 preview/screenshot to confirm it actually renders. When you split a component
 into a new file and reference it from multiple files, add the import to EVERY
 consuming file, not just the first one.
+
+**Same trap, silent variant — wrong destructured field name.** Because there is
+no `tsc` gate, destructuring a field that doesn't exist (e.g.
+`const { isLoading } = useAuth()` when the context only exposes `loading`)
+compiles fine and yields `undefined` at runtime, so `if (isLoading) {...}` never
+fires and the branch silently no-ops (no error, no overlay). `AuthContext` here
+exposes `loading` (boolean, starts `true`), NOT `isLoading`. When wiring a
+loading/auth gate, grep the context for the real field name first; a green build
+will not tell you the gate is dead.

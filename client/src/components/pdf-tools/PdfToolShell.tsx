@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 
 interface PdfToolLayoutProps {
@@ -112,7 +112,7 @@ export function PdfDropzone({
       data-testid={testId}
     >
       {loading ? (
-        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-3" />
+        <ConverterStatusIcon status="processing" size={88} className="mb-3" />
       ) : (
         <ConverterStatusIcon
           status="upload"
