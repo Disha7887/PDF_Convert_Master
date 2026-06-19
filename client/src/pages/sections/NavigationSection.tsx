@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { ToolsNavDropdowns } from "@/components/ToolsNavMenu";
+import { ToolsNavDropdowns, MobileNav } from "@/components/ToolsNavMenu";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
@@ -35,8 +35,8 @@ export const NavigationSection = (): JSX.Element => {
   };
 
   return (
-    <header className="w-full h-[65px] bg-white border-b border-gray-200 shadow-[0px_1px_3px_0px_#0000000d,0px_1px_2px_-1px_#0000000d]">
-      <div className="max-w-screen-xl mx-auto px-8 h-[65px]">
+    <header className="relative z-50 w-full h-[65px] bg-white border-b border-gray-200 shadow-[0px_1px_3px_0px_#0000000d,0px_1px_2px_-1px_#0000000d]">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-[65px]">
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <div className="flex items-center h-7">
@@ -46,7 +46,7 @@ export const NavigationSection = (): JSX.Element => {
           </div>
 
           {/* Navigation Menu */}
-          <NavigationMenu className="flex justify-center">
+          <NavigationMenu className="hidden lg:flex justify-center">
             <NavigationMenuList className="flex items-center space-x-8">
               <NavigationMenuItem>
                 <NavigationMenuLink
@@ -74,8 +74,8 @@ export const NavigationSection = (): JSX.Element => {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Auth Buttons */}
-          <div className="flex items-center space-x-3">
+          {/* Auth Buttons (desktop) */}
+          <div className="hidden lg:flex items-center space-x-3">
             <Button
               variant="outline"
               className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
@@ -89,6 +89,39 @@ export const NavigationSection = (): JSX.Element => {
             >
               Get Started
             </Button>
+          </div>
+
+          {/* Mobile menu */}
+          <div className="lg:hidden">
+            <MobileNav
+              homeItem={leadingItem}
+              trailingItems={trailingItems}
+              footer={(close) => (
+                <div className="flex flex-col gap-3">
+                  <Button
+                    variant="outline"
+                    className="w-full h-[42px] rounded-lg border border-gray-300 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
+                    onClick={() => {
+                      setLocation('/signin');
+                      close();
+                    }}
+                    data-testid="mobile-button-login"
+                  >
+                    Log In
+                  </Button>
+                  <Button
+                    className="w-full h-10 rounded-full font-medium text-base"
+                    onClick={() => {
+                      handleGetStarted();
+                      close();
+                    }}
+                    data-testid="mobile-button-get-started"
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              )}
+            />
           </div>
         </div>
       </div>

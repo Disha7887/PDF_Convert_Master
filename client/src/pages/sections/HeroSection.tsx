@@ -52,13 +52,13 @@ export const HeroSection = (): JSX.Element => {
   ];
 
   return (
-    <section className="flex flex-col w-full items-start relative bg-white min-h-screen overflow-hidden">
+    <section className="flex flex-col w-full items-start relative bg-white overflow-hidden">
       <div className="flex flex-col w-full items-start relative">
         {/* Animated background */}
         <AnimatedBackground particleCount={35} />
 
         <div className="flex w-full items-center relative z-10">
-          <div className="max-w-screen-xl mx-auto px-8 py-20 w-full relative">
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 w-full relative">
               <div className="flex flex-wrap w-full items-center gap-12 relative">
                 {/* Left column - Text content */}
                 <div className="flex flex-col w-full md:w-[584px] items-start relative">
@@ -77,7 +77,7 @@ export const HeroSection = (): JSX.Element => {
 
                       <div className="pt-4">
                         <h1
-                          className="font-bold text-gray-900 text-5xl leading-[48px] max-w-[584px]"
+                          className="font-bold text-gray-900 text-3xl sm:text-4xl lg:text-5xl leading-tight max-w-[584px]"
                           data-testid="text-hero-title"
                         >
                           {activeTool

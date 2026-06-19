@@ -35,11 +35,11 @@ export const APIDocumentationSection = (): JSX.Element => {
   ];
 
   return (
-    <section className="relative bg-white py-24 overflow-hidden">
+    <section className="relative bg-white py-16 sm:py-20 lg:py-24 overflow-hidden">
       {/* Animated background */}
       <AnimatedBackground particleCount={22} />
 
-      <div className="max-w-7xl mx-auto px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
           <Badge className="mb-4 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200">

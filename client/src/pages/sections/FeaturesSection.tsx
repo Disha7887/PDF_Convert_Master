@@ -110,14 +110,14 @@ export const FeaturesSection = (): JSX.Element => {
   ];
 
   return (
-    <section className="relative w-full py-24 bg-white overflow-hidden">
+    <section className="relative w-full py-16 sm:py-20 lg:py-24 bg-white overflow-hidden">
       {/* Animated background */}
       <AnimatedBackground particleCount={25} />
 
-      <div className="max-w-screen-xl mx-auto px-8 relative z-10">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="mb-20 text-center">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6 leading-[48px]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
             Transform Your PDF Workflow
           </h2>
           <p className="text-xl text-gray-600 max-w-screen-md mx-auto leading-[32.5px]">

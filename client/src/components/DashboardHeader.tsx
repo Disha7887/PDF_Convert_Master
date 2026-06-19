@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { ToolsNavDropdowns } from "@/components/ToolsNavMenu";
+import { ToolsNavDropdowns, MobileNav } from "@/components/ToolsNavMenu";
 import {
   Bell,
   ChevronDown,
@@ -55,7 +55,7 @@ export const DashboardHeader = (): JSX.Element => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="relative z-50 bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div className="flex items-center justify-between">
         {/* Left - Logo */}
         <div className="flex items-center">
@@ -63,14 +63,14 @@ export const DashboardHeader = (): JSX.Element => {
             onClick={handleLogoClick}
             className="cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <h1 className="[font-family:'Poppins',Helvetica] font-bold text-gray-900 text-xl leading-7 whitespace-nowrap">
+            <h1 className="[font-family:'Poppins',Helvetica] font-bold text-gray-900 text-base sm:text-xl leading-7 whitespace-nowrap">
               PDF Convert Master
             </h1>
           </div>
         </div>
 
         {/* Center - Navigation Menu */}
-        <NavigationMenu className="flex justify-center">
+        <NavigationMenu className="hidden xl:flex justify-center">
           <NavigationMenuList className="flex items-center space-x-6">
             <NavigationMenuItem>
               <NavigationMenuLink
@@ -99,21 +99,21 @@ export const DashboardHeader = (): JSX.Element => {
         </NavigationMenu>
 
         {/* Right - Plan Status, Notifications and Profile */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           {/* Plan Status */}
-          <div className="flex items-center px-3 py-2 rounded-lg border border-blue-200 bg-blue-50">
+          <div className="hidden xl:flex items-center px-3 py-2 rounded-lg border border-blue-200 bg-blue-50">
             <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
             <span className="text-sm font-medium text-blue-700">{user?.plan || 'Pro Plan'}</span>
           </div>
 
           {/* Manage Plan Button */}
-          <Button variant="outline" className="text-sm" onClick={handleManagePlan}>
+          <Button variant="outline" className="hidden xl:inline-flex text-sm" onClick={handleManagePlan}>
             <Settings className="w-4 h-4 mr-2" />
             Manage Plan
           </Button>
 
           {/* Notifications */}
-          <Button variant="outline" size="icon" className="relative">
+          <Button variant="outline" size="icon" className="hidden sm:inline-flex relative">
             <Bell className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
               2
@@ -127,11 +127,11 @@ export const DashboardHeader = (): JSX.Element => {
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <span className="text-sm font-semibold">{user?.email?.charAt(0).toUpperCase() || 'U'}</span>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium">{user?.email || 'User'}</p>
+                <div className="text-left hidden xl:block max-w-[160px]">
+                  <p className="text-sm font-medium truncate">{user?.email || 'User'}</p>
                   <p className="text-xs text-blue-100">{user?.plan || 'Free Plan'}</p>
                 </div>
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-4 h-4 hidden xl:block" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -150,6 +150,28 @@ export const DashboardHeader = (): JSX.Element => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Mobile menu */}
+          <div className="xl:hidden">
+            <MobileNav
+              homeItem={leadingItem}
+              trailingItems={trailingItems}
+              footer={(close) => (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    handleManagePlan();
+                    close();
+                  }}
+                  data-testid="mobile-button-manage-plan"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Manage Plan
+                </Button>
+              )}
+            />
+          </div>
         </div>
       </div>
     </header>

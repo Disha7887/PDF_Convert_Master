@@ -82,11 +82,11 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ title, description, time, s
       <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mr-4">
         <Check className="w-4 h-4 text-green-600" />
       </div>
-      <div className="flex-1">
-        <p className="text-base font-medium text-gray-900">{title}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-base font-medium text-gray-900 truncate">{title}</p>
         <p className="text-sm text-gray-600 truncate">{description}</p>
       </div>
-      <div className="text-right ml-4">
+      <div className="text-right ml-4 shrink-0">
         <p className="text-sm text-gray-500">{time}</p>
         <Badge className={`text-xs ${statusColors[status]}`}>
           {status}
@@ -107,9 +107,9 @@ export const Dashboard: React.FC = () => {
   return (
       <div className="min-h-screen bg-gray-50">
 
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
+        <aside className="w-full lg:w-64 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 lg:min-h-screen">
           <div className="p-4">
             {/* Search */}
             <div className="relative mb-6">

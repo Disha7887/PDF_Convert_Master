@@ -17,9 +17,9 @@ export const APISetup: React.FC = () => {
   return (
     
       <div className="min-h-screen bg-gray-50">
-        <div className="flex">
+        <div className="flex flex-col lg:flex-row">
           {/* Sidebar */}
-          <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
+          <aside className="w-full lg:w-64 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 lg:min-h-screen">
             <div className="p-4">
               {/* Search */}
               <div className="relative mb-6">

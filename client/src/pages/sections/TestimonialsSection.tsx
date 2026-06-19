@@ -22,11 +22,11 @@ export const TestimonialsSection = (): JSX.Element => {
   };
 
   return (
-    <section className="w-full py-24 bg-white relative overflow-hidden">
+    <section className="w-full py-16 sm:py-20 lg:py-24 bg-white relative overflow-hidden">
       {/* Animated background */}
       <AnimatedBackground particleCount={25} />
 
-      <div className="max-w-screen-xl mx-auto px-8 relative z-10">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col items-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 text-center leading-10 mb-4">
             Everything You Need for PDF Success
