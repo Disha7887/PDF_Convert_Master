@@ -25,6 +25,15 @@ import { useLocation } from "wouter";
 // Tools grouped for the navbar dropdowns
 const PDF_FROM = ["pdf-to-word", "pdf-to-excel", "pdf-to-powerpoint", "pdf-to-images"];
 const PDF_TO = ["word-to-pdf", "excel-to-pdf", "powerpoint-to-pdf", "images-to-pdf", "html-to-pdf"];
+const PDF_EDITOR_COL1 = ["edit-pdf", "sign-pdf", "rotate-pdf", "merge-pdfs", "split-pdf", "crop-pdf"];
+const PDF_EDITOR_COL2 = [
+  "watermark-pdf",
+  "add-image-pdf",
+  "compress-images",
+  "compress-pdf",
+  "delete-pages-pdf",
+  "ocr-pdf",
+];
 const IMAGE_TOOLS = [
   "resize-images",
   "crop-images",
@@ -96,6 +105,10 @@ export const ToolsNavDropdowns = (): JSX.Element => {
               ))}
             </div>
           </div>
+          <div className="border-t border-gray-100 px-4 pt-3 pb-1">
+            <ColumnHeading>Edit</ColumnHeading>
+            <ToolLink id="edit-pdf" />
+          </div>
           <div className="border-t border-gray-100 px-4 py-3">
             <NavigationMenuLink asChild>
               <button
@@ -107,6 +120,27 @@ export const ToolsNavDropdowns = (): JSX.Element => {
                 View all tools →
               </button>
             </NavigationMenuLink>
+          </div>
+        </NavigationMenuContent>
+      </NavigationMenuItem>
+
+      {/* PDF Editor */}
+      <NavigationMenuItem>
+        <NavigationMenuTrigger className={triggerClass} data-testid="nav-pdf-editor">
+          PDF Editor
+        </NavigationMenuTrigger>
+        <NavigationMenuContent>
+          <div className="grid w-[520px] grid-cols-2 gap-x-6 gap-y-0.5 p-4">
+            <div>
+              {PDF_EDITOR_COL1.map((id) => (
+                <ToolLink key={id} id={id} />
+              ))}
+            </div>
+            <div>
+              {PDF_EDITOR_COL2.map((id) => (
+                <ToolLink key={id} id={id} />
+              ))}
+            </div>
           </div>
         </NavigationMenuContent>
       </NavigationMenuItem>
@@ -232,6 +266,10 @@ export const MobileNav = ({
                 {PDF_TO.map((id) => (
                   <MobileToolButton key={id} id={id} onNavigate={close} />
                 ))}
+                <p className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Edit
+                </p>
+                <MobileToolButton id="edit-pdf" onNavigate={close} />
                 <button
                   type="button"
                   onClick={() => go("/tools")}
@@ -240,6 +278,17 @@ export const MobileNav = ({
                 >
                   View all tools →
                 </button>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="pdf-editor" className="border-none">
+              <AccordionTrigger className="px-3 py-2.5 text-base font-medium text-gray-700 hover:no-underline">
+                PDF Editor
+              </AccordionTrigger>
+              <AccordionContent className="pb-1">
+                {[...PDF_EDITOR_COL1, ...PDF_EDITOR_COL2].map((id) => (
+                  <MobileToolButton key={id} id={id} onNavigate={close} />
+                ))}
               </AccordionContent>
             </AccordionItem>
 

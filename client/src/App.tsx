@@ -45,6 +45,12 @@ import { UpscaleImageUpload } from "@/pages/upload/UpscaleImage";
 import { RemoveBackgroundUpload } from "@/pages/upload/RemoveBackground";
 import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
 import { EditPdfUpload } from "@/pages/upload/EditPdf";
+import { CropPdfUpload } from "@/pages/upload/CropPdf";
+import { SignPdfUpload } from "@/pages/upload/SignPdf";
+import { WatermarkPdfUpload } from "@/pages/upload/WatermarkPdf";
+import { AddImagePdfUpload } from "@/pages/upload/AddImagePdf";
+import { DeletePagesPdfUpload } from "@/pages/upload/DeletePagesPdf";
+import { OcrPdfUpload } from "@/pages/upload/OcrPdf";
 import { UploadDemo } from "@/pages/UploadDemo";
 import { ResizeImageTool, CropImageTool, RotateImageTool } from "@/pages/ImageEditTools";
 import { Features } from "@/pages/Features";
@@ -259,6 +265,43 @@ function Router() {
       <Route path="/upload/rotate-pdf">
         <DynamicLayout>
           <RotatePdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      {/* PDF Editor tools (client-side) */}
+      <Route path="/upload/crop-pdf">
+        <DynamicLayout>
+          <CropPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/sign-pdf">
+        <DynamicLayout>
+          <SignPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/watermark-pdf">
+        <DynamicLayout>
+          <WatermarkPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/add-image-pdf">
+        <DynamicLayout>
+          <AddImagePdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/delete-pages-pdf">
+        <DynamicLayout>
+          <DeletePagesPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/ocr-pdf">
+        <DynamicLayout>
+          <OcrPdfUpload />
         </DynamicLayout>
       </Route>
 

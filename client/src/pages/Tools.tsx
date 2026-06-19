@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
 import {
@@ -60,6 +61,18 @@ const manualEditMap: Record<string, EditOp> = {
   "crop-images": "crop",
   "rotate-images": "rotate",
 };
+
+// Editor tools live on their own full-page route (client-side editors). Clicking
+// their /tools card navigates there instead of opening the inline upload popup.
+const NAVIGATE_TOOL_IDS = new Set([
+  "edit-pdf",
+  "crop-pdf",
+  "sign-pdf",
+  "watermark-pdf",
+  "add-image-pdf",
+  "delete-pages-pdf",
+  "ocr-pdf",
+]);
 const editSuffixMap: Record<EditOp, string> = {
   resize: "resized",
   crop: "cropped",
@@ -122,6 +135,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
+  const [, setLocation] = useLocation();
+  const isNavigateTool = NAVIGATE_TOOL_IDS.has(toolConfig.id);
   const editUrlRef = useRef<string | null>(null);
   // Bumped on every new edit action (open/apply) and on reset; an async decode
   // whose token no longer matches is stale and must not touch state.
@@ -288,6 +303,10 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    if (isNavigateTool) {
+      setLocation(toolConfig.route);
+      return;
+    }
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       selectFile(e.dataTransfer.files);
     }
@@ -543,11 +562,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => setUploadOpen(true)}
+          onClick={() =>
+            isNavigateTool ? setLocation(toolConfig.route) : setUploadOpen(true)
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              setUploadOpen(true);
+              isNavigateTool ? setLocation(toolConfig.route) : setUploadOpen(true);
             }
           }}
           className={`${cardBase} ${cardIdle} cursor-pointer`}
@@ -1014,6 +1035,12 @@ export const Tools: React.FC = () => {
     "split-pdf",
     "compress-pdf",
     "rotate-pdf",
+    "crop-pdf",
+    "sign-pdf",
+    "watermark-pdf",
+    "add-image-pdf",
+    "delete-pages-pdf",
+    "ocr-pdf",
   ];
 
   const toolsData = mainToolKeys.map((key) => toolConfigs[key]).filter(Boolean);
