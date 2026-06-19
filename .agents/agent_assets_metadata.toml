@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "xiZfsYtXDjOI0jj4cGX52"
+uri = "file://artifacts/pdf-convert-mobile/assets/images/icon.png"
+type = "image"
+title = "pdf convert master app icon"

@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/pdf-convert-mobile/"
+title = "PDF Convert Master"
+version = "1.0.0"
+id = "artifacts/pdf-convert-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/pdf-convert-mobile/" ]
+localPort = 24364
+
+[services.development]
+run = "pnpm --filter @workspace/pdf-convert-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pdf-convert-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/pdf-convert-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "24364"
+BASE_PATH = "/pdf-convert-mobile/"
