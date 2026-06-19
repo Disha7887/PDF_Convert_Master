@@ -33,8 +33,10 @@ or hardcoded `"resize-images"` etc.) — there are no more `ToolIconBadge` or
 `toolIcon*`/color/bg/border props (those were removed; the old lucide-badge
 approach was reverted). Gotchas: (1) `/upload/compress-image` passes the SINGULAR
 `toolType`, so `TOOL_ANIMATIONS` needs both `"compress-images"` and an alias
-`"compress-image"`; (2) PDF-Editor tool ids (`crop-pdf`,`sign-pdf`,`edit-pdf`,…)
-are NOT in `TOOL_ANIMATIONS` → they intentionally fall back to syncing-file;
+`"compress-image"`; (2) most PDF-Editor tool ids now HAVE card/upload
+animations (`crop-pdf`,`sign-pdf`,`watermark-pdf`,`add-image-pdf`,`ocr-pdf`);
+only `edit-pdf` and `delete-pages-pdf` remain unmapped and fall back to
+syncing-file (upload area) / static lucide (card);
 (3) `EnhancedUploadArea` still swaps to a lucide CloudUpload/Sparkles affordance
 during DRAG-OVER only (intentional drop cue), and that is pre-existing, not the
 resting per-tool icon. **Why:** review failed for missing `UploadPage.tsx`

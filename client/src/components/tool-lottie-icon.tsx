@@ -3,7 +3,8 @@ import { LottieIcon } from "@/components/ui/lottie-icon";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
 
 import wordFile from "@/assets/lottie/word-file.json";
-import excelFile from "@/assets/lottie/excel-file-searching.json";
+import pdfToExcel from "@/assets/lottie/pdf-to-excel.json";
+import excelFileScanning from "@/assets/lottie/excel-file-scanning.json";
 import ppt from "@/assets/lottie/ppt.json";
 import pptToPdf from "@/assets/lottie/ppt_to_pdf.json";
 import pdf from "@/assets/lottie/pdf.json";
@@ -14,24 +15,30 @@ import cropTool from "@/assets/lottie/crop-tool.json";
 import rotateImage from "@/assets/lottie/rotate-image.json";
 import compress from "@/assets/lottie/compress.json";
 import aiUpscaling from "@/assets/lottie/ai-upscaling.json";
-import bgRemover from "@/assets/lottie/bg_remover.json";
+import removeImage from "@/assets/lottie/remove-image.json";
 import pdfMerger from "@/assets/lottie/pdf_merger.json";
 import pdfSplitter from "@/assets/lottie/pdf_splitter.json";
 import pdfCompression from "@/assets/lottie/pdf_compression.json";
 import pdfRotate from "@/assets/lottie/pdf_rotate.json";
+import cropPdf from "@/assets/lottie/crop-pdf.json";
+import signPdf from "@/assets/lottie/signature-pdf.json";
+import watermarkPdf from "@/assets/lottie/watermark-pdf.json";
+import addImagePdf from "@/assets/lottie/add-image-to-pdf.json";
+import ocrPdf from "@/assets/lottie/ocr-pdf.json";
 
 /**
  * Maps each tool id to the Lottie animation the user provided. The filename of
- * each uploaded animation identifies its tool; document-format animations
- * (word/excel) are shared between the matching "PDF→X" and "X→PDF" tools, and
- * the generic picture/image animations cover the image<->pdf + format tools.
+ * each uploaded animation identifies its tool. Word is shared between
+ * "PDF→Word" and "Word→PDF"; Excel now has a dedicated animation per direction
+ * (pdf-to-excel vs excel-file-scanning). The generic picture/image animations
+ * cover the image<->pdf + format tools.
  */
 export const TOOL_ANIMATIONS: Record<string, unknown> = {
   // PDF conversion
   "pdf-to-word": wordFile,
   "word-to-pdf": wordFile,
-  "pdf-to-excel": excelFile,
-  "excel-to-pdf": excelFile,
+  "pdf-to-excel": pdfToExcel,
+  "excel-to-pdf": excelFileScanning,
   "pdf-to-powerpoint": ppt,
   "powerpoint-to-pdf": pptToPdf,
   "html-to-pdf": pdf,
@@ -45,12 +52,18 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "compress-images": compress,
   "compress-image": compress,
   "upscale-images": aiUpscaling,
-  "remove-background": bgRemover,
+  "remove-background": removeImage,
   // PDF management
   "merge-pdfs": pdfMerger,
   "split-pdf": pdfSplitter,
   "compress-pdf": pdfCompression,
   "rotate-pdf": pdfRotate,
+  // PDF editor
+  "crop-pdf": cropPdf,
+  "sign-pdf": signPdf,
+  "watermark-pdf": watermarkPdf,
+  "add-image-pdf": addImagePdf,
+  "ocr-pdf": ocrPdf,
 };
 
 export interface ToolLottieIconProps {
