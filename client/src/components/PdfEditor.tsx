@@ -261,6 +261,55 @@ type DragState =
       moved: boolean;
     };
 
+// Inline, on-page text editor: a contentEditable rendered EXACTLY over a text
+// element so the user types directly on the PDF page (blinking caret in place)
+// instead of in a side panel. Its text is set ONCE on mount and is not React-
+// controlled afterwards, so parent re-renders never reset the caret position.
+const InlineTextEditor: React.FC<{
+  initial: string;
+  style: React.CSSProperties;
+  onChange: (text: string) => void;
+  onCommit: () => void;
+  testId?: string;
+}> = ({ initial, style, onChange, onCommit, testId }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    node.textContent = initial;
+    node.focus();
+    // Select the whole run so typing replaces it; click/arrows place the caret.
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <span
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      spellCheck={false}
+      role="textbox"
+      aria-label="Edit PDF text"
+      data-testid={testId}
+      style={style}
+      onInput={(e) => onChange(e.currentTarget.textContent ?? "")}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" && !e.shiftKey) || e.key === "Escape") {
+          e.preventDefault();
+          onCommit();
+        }
+        e.stopPropagation();
+      }}
+      onBlur={onCommit}
+      onPointerDown={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+    />
+  );
+};
+
 export const PdfEditor: React.FC = () => {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
@@ -270,6 +319,12 @@ export const PdfEditor: React.FC = () => {
   const [past, setPast] = useState<EditElement[][]>([]);
   const [future, setFuture] = useState<EditElement[][]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Id of the text element being typed into inline (blinking caret) on the page.
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  // Tracks the last pointerdown on a text run so we can detect a double-tap in
+  // onPointerDown itself. (onDoubleClick is unreliable here: the first click's
+  // setPointerCapture retargets the synthesized click/dblclick to the page.)
+  const lastTextTapRef = useRef<{ id: string; t: number }>({ id: "", t: 0 });
   const [tool, setTool] = useState<Tool>("select");
   const [zoom, setZoom] = useState(1);
   const [activePage, setActivePage] = useState(0);
@@ -355,6 +410,7 @@ export const PdfEditor: React.FC = () => {
     setPast(past.slice(0, -1));
     setElements(prev);
     setSelectedId(null);
+    setEditingTextId(null);
     editSessionRef.current = null;
   };
   const redo = () => {
@@ -364,6 +420,7 @@ export const PdfEditor: React.FC = () => {
     setFuture(future.slice(1));
     setElements(next);
     setSelectedId(null);
+    setEditingTextId(null);
     editSessionRef.current = null;
   };
 
@@ -389,6 +446,7 @@ export const PdfEditor: React.FC = () => {
         setPast([]);
         setFuture([]);
         setSelectedId(null);
+        setEditingTextId(null);
         setActivePage(0);
         setZoom(1);
         setFile(f);
@@ -448,6 +506,7 @@ export const PdfEditor: React.FC = () => {
         setPast([]);
         setFuture([]);
         setSelectedId(null);
+        setEditingTextId(null);
         textPromiseRef.current = null;
         setTextByPage(null);
         setSearchOpen(false);
@@ -712,6 +771,9 @@ export const PdfEditor: React.FC = () => {
     }
 
     if (tool === "text") {
+      // Prevent the mousedown focus default from blurring the inline editor
+      // that auto-opens for the new text element.
+      e.preventDefault();
       pushHistory(elementsRef.current);
       const el: TextEl = {
         id: genId(),
@@ -728,6 +790,7 @@ export const PdfEditor: React.FC = () => {
       };
       setElements((prev) => [...prev, el]);
       setSelectedId(el.id);
+      setEditingTextId(el.id);
       setTool("select");
       return;
     }
@@ -1866,17 +1929,6 @@ export const PdfEditor: React.FC = () => {
       <div className="flex flex-wrap items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-3 min-h-[48px]">
         {showText && (
           <>
-            {selected?.type === "text" && (
-              <input
-                className="px-2 py-1 rounded border bg-white text-sm min-w-[160px] flex-1"
-                value={selected.text}
-                onChange={(e) =>
-                  propEdit(`${selected.id}:text`, selected.id, { text: e.target.value })
-                }
-                placeholder="Text…"
-                data-testid="input-text-content"
-              />
-            )}
             <select
               className="px-2 py-1 rounded border bg-white text-sm"
               value={selected?.type === "text" ? selected.family : draft.family}
@@ -2240,34 +2292,82 @@ export const PdfEditor: React.FC = () => {
                         ? "outline outline-2 outline-blue-500"
                         : "";
                       if (el.type === "text") {
+                        const isEditing = editingTextId === el.id;
+                        const textStyle: React.CSSProperties = {
+                          fontSize: el.fontSize * zoom,
+                          color: el.color,
+                          fontFamily: CSS_FONT[el.family],
+                          fontWeight: el.bold ? 700 : 400,
+                          fontStyle: el.italic ? "italic" : "normal",
+                          whiteSpace: "pre",
+                          lineHeight: 1,
+                          display: "block",
+                        };
                         return (
                           <div
                             key={el.id}
-                            style={common}
+                            style={{
+                              ...common,
+                              pointerEvents: isEditing
+                                ? "auto"
+                                : common.pointerEvents,
+                              cursor: isEditing
+                                ? "text"
+                                : interactive
+                                  ? "text"
+                                  : common.cursor,
+                            }}
                             className={selRing}
-                            onPointerDown={(e) => onElementPointerDown(e, el)}
-                            onDoubleClick={() => {
+                            onPointerDown={(e) => {
+                              if (isEditing) return; // let caret clicks through
+                              const now = Date.now();
+                              const last = lastTextTapRef.current;
+                              if (last.id === el.id && now - last.t < 400) {
+                                // double-tap -> edit text inline on the page.
+                                // preventDefault stops the browser's mousedown
+                                // focus default from immediately blurring the
+                                // inline editor we're about to mount + focus.
+                                e.preventDefault();
+                                e.stopPropagation();
+                                lastTextTapRef.current = { id: "", t: 0 };
+                                setSelectedId(el.id);
+                                setEditingTextId(el.id);
+                                return;
+                              }
+                              lastTextTapRef.current = { id: el.id, t: now };
+                              onElementPointerDown(e, el);
+                            }}
+                            onDoubleClick={(e) => {
+                              // fallback for environments where dblclick survives
+                              e.stopPropagation();
                               setSelectedId(el.id);
-                              (document.querySelector(
-                                '[data-testid="input-text-content"]',
-                              ) as HTMLInputElement | null)?.focus();
+                              setEditingTextId(el.id);
                             }}
                             data-testid={`el-${el.id}`}
                           >
-                            <span
-                              style={{
-                                fontSize: el.fontSize * zoom,
-                                color: el.color,
-                                fontFamily: CSS_FONT[el.family],
-                                fontWeight: el.bold ? 700 : 400,
-                                fontStyle: el.italic ? "italic" : "normal",
-                                whiteSpace: "pre",
-                                lineHeight: 1,
-                                display: "block",
-                              }}
-                            >
-                              {el.text || " "}
-                            </span>
+                            {isEditing ? (
+                              <InlineTextEditor
+                                initial={el.text}
+                                style={{
+                                  ...textStyle,
+                                  outline: "none",
+                                  background: "transparent",
+                                  caretColor: el.color,
+                                  cursor: "text",
+                                  minWidth: "1ch",
+                                }}
+                                onChange={(text) =>
+                                  propEdit(`${el.id}:text`, el.id, { text })
+                                }
+                                onCommit={() => {
+                                  setEditingTextId(null);
+                                  editSessionRef.current = null;
+                                }}
+                                testId={`input-inline-${el.id}`}
+                              />
+                            ) : (
+                              <span style={textStyle}>{el.text || " "}</span>
+                            )}
                           </div>
                         );
                       }

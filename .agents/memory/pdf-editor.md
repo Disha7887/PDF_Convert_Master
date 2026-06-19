@@ -25,3 +25,22 @@ description: Non-obvious constraints when adding/editing elements in client/src/
   (`sampleTextColors` batch helper), or you re-decode the full page image once per
   run. **How to apply:** prefer the batch sampler for whole-page work; the single
   `sampleTextColor` is fine only for one box.
+
+- **Inline on-page text editing = contentEditable mounted over the run; entered by
+  detecting a 2nd pointerdown (manual double-tap), NOT onDoubleClick.** The
+  element's `onElementPointerDown` calls `setPointerCapture(page)`, which retargets
+  the subsequent native `click`/`dblclick` to the page container — so React
+  `onDoubleClick` on the element never fires. Track `{id,t}` of the last tap and,
+  on a 2nd pointerdown on the same id within ~400ms, enter edit mode.
+  **Why:** verified via e2e that dblclick lands on `page-0`, not the text run.
+
+- **CRITICAL focus-theft race when opening a contentEditable during pointerdown:**
+  after the React pointerdown handler returns, the browser's default mousedown
+  focus action fires and immediately blurs (focusout) the editor you just
+  mounted+focused → `onBlur`→commit tears it down before the user can type. **Fix:
+  call `e.preventDefault()` on that pointerdown** (both the double-tap-to-edit
+  branch AND the click-to-create-new-text branch) to cancel the focus default.
+  `useLayoutEffect` for focus alone does NOT fix it — the theft happens after the
+  handler regardless. **How to apply:** any "click/tap opens an auto-focused
+  inline input" interaction in this editor needs preventDefault on the originating
+  pointerdown.
