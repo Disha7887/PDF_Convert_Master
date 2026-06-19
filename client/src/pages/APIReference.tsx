@@ -38,6 +38,22 @@ export const APIReference: React.FC = () => {
     },
   });
 
+  // Tool-specific request options honoured by the live /api/v1 endpoint.
+  // (Format list + max size come straight from /api/tools so they never drift.)
+  const TOOL_OPTIONS: Record<string, { name: string; desc: string }[]> = {
+    convert_image_format: [
+      { name: "outputFormat", desc: "Target format — one of png, jpg, webp, gif, avif, tiff" },
+    ],
+    compress_image: [
+      { name: "quality", desc: "Compression quality 10–100 (default 80)" },
+    ],
+  };
+
+  const fileRule = (type: string) =>
+    type === "merge_pdfs"
+      ? "2–20 files (one field per file, named file)"
+      : "Exactly 1 file (field named file)";
+
   const sampleTool = tools.find((t) => t.type === "pdf_to_word") || tools[0];
   const sampleType = sampleTool?.type || "pdf_to_word";
   const curlExample = `curl -X POST "${baseUrl}/${sampleType}" \\
@@ -249,22 +265,71 @@ export const APIReference: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="text-lg font-semibold">Available Endpoints</CardTitle>
                   </CardHeader>
-                  <div className="p-6 pt-0 space-y-2 max-h-[420px] overflow-y-auto">
+                  <div className="p-6 pt-0 space-y-3 max-h-[520px] overflow-y-auto">
                     {isLoading ? (
                       <div className="flex items-center justify-center py-8 text-gray-500" data-testid="status-tools-loading">
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Loading endpoints...
                       </div>
                     ) : (
-                      tools.map((tool) => (
-                        <div key={tool.type} className="p-2 rounded-lg" data-testid={`endpoint-${tool.type}`}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-mono text-gray-900">POST /api/v1/{tool.type}</span>
-                            <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                      tools.map((tool) => {
+                        const opts = TOOL_OPTIONS[tool.type] || [];
+                        return (
+                          <div
+                            key={tool.type}
+                            className="p-3 rounded-lg border border-gray-100 bg-gray-50/50"
+                            data-testid={`endpoint-${tool.type}`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-mono text-gray-900">POST /api/v1/{tool.type}</span>
+                              <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">{tool.name}</p>
+
+                            <div className="space-y-1.5 text-xs text-gray-600">
+                              <div data-testid={`endpoint-accepts-${tool.type}`}>
+                                <span className="font-medium text-gray-700">Accepts: </span>
+                                {tool.inputFormats && tool.inputFormats.length > 0 ? (
+                                  <span className="inline-flex flex-wrap gap-1 align-middle">
+                                    {tool.inputFormats.map((f) => (
+                                      <code key={f} className="px-1.5 py-0.5 rounded bg-gray-200 text-gray-700">.{f}</code>
+                                    ))}
+                                  </span>
+                                ) : (
+                                  <span>—</span>
+                                )}
+                              </div>
+
+                              <div data-testid={`endpoint-maxsize-${tool.type}`}>
+                                <span className="font-medium text-gray-700">Max size: </span>
+                                {tool.maxFileSize} MB per file
+                              </div>
+
+                              <div data-testid={`endpoint-files-${tool.type}`}>
+                                <span className="font-medium text-gray-700">Files: </span>
+                                {fileRule(tool.type)}
+                              </div>
+
+                              <div data-testid={`endpoint-options-${tool.type}`}>
+                                <span className="font-medium text-gray-700">Options: </span>
+                                {opts.length > 0 ? (
+                                  <span>
+                                    {opts.map((o, i) => (
+                                      <span key={o.name}>
+                                        <code className="px-1 py-0.5 rounded bg-gray-200 text-gray-700">{o.name}</code>
+                                        <span className="text-gray-500"> — {o.desc}</span>
+                                        {i < opts.length - 1 ? "; " : ""}
+                                      </span>
+                                    ))}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-500">None</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-500">{tool.name}</p>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </Card>
