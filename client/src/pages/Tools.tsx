@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
+import { OrderedFileList } from "@/components/OrderedFileList";
 import {
   ResizeModal,
   CropModal,
@@ -78,6 +79,10 @@ const editSuffixMap: Record<EditOp, string> = {
   crop: "cropped",
   rotate: "rotated",
 };
+
+// Backend /api/merge-pdfs caps at 20 files; enforce the same limit client-side so
+// the card never submits an over-limit batch the server would reject.
+const MAX_MERGE_FILES = 20;
 
 type CardStage = "idle" | "ready" | "converting" | "done" | "error";
 
@@ -264,7 +269,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         }
         valid.push(f);
       }
-      setMergeFiles((prev) => [...prev, ...valid]);
+      const remaining = MAX_MERGE_FILES - mergeFiles.length;
+      if (remaining <= 0) {
+        setStage("ready");
+        return;
+      }
+      const toAdd = valid.slice(0, remaining);
+      setMergeFiles((prev) => [...prev, ...toAdd]);
       setError(null);
       setStage("ready");
       return;
@@ -391,6 +402,24 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     setMergeFiles((prev) => {
       const next = prev.filter((_, i) => i !== index);
       if (next.length === 0) setStage("idle");
+      return next;
+    });
+  };
+
+  const moveMergeFileUp = (index: number) => {
+    setMergeFiles((prev) => {
+      if (index <= 0) return prev;
+      const next = [...prev];
+      [next[index - 1], next[index]] = [next[index], next[index - 1]];
+      return next;
+    });
+  };
+
+  const moveMergeFileDown = (index: number) => {
+    setMergeFiles((prev) => {
+      if (index >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[index + 1], next[index]] = [next[index], next[index + 1]];
       return next;
     });
   };
@@ -791,38 +820,17 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           onDrop={handleDrop}
         >
           <div
-            className={`space-y-2 mb-3 max-h-[180px] overflow-y-auto pr-1 rounded-xl ${
+            className={`mb-3 max-h-[180px] overflow-y-auto pr-1 rounded-xl ${
               isDragOver ? "ring-2 ring-blue-400" : ""
             }`}
           >
-            {mergeFiles.map((f, i) => (
-              <div
-                key={`${f.name}-${f.size}-${i}`}
-                className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 bg-white"
-                data-testid={`row-mergefile-${i}`}
-              >
-                <div className="w-7 h-7 flex items-center justify-center rounded-md bg-blue-50 shrink-0">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className="text-xs font-medium text-gray-900 truncate"
-                    data-testid={`text-mergefile-${i}`}
-                  >
-                    {f.name}
-                  </p>
-                  <p className="text-[10px] text-gray-500">{formatBytes(f.size)}</p>
-                </div>
-                <button
-                  onClick={() => removeMergeFile(i)}
-                  className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
-                  aria-label="Remove file"
-                  data-testid={`button-remove-mergefile-${i}`}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+            <OrderedFileList
+              files={mergeFiles}
+              onMoveUp={moveMergeFileUp}
+              onMoveDown={moveMergeFileDown}
+              onRemove={removeMergeFile}
+              size="compact"
+            />
           </div>
 
           <p
