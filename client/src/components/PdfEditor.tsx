@@ -1145,12 +1145,30 @@ export const PdfEditor: React.FC = () => {
       const existing = elementsRef.current.filter(
         (el): el is TextEl => el.type === "text" && el.pageIndex === pageIndex,
       );
-      const fresh = runs.filter(
-        (run) =>
-          !existing.some(
-            (el) => Math.abs(el.x - run.x) < 3 && Math.abs(el.y - run.y) < 3,
-          ),
-      );
+      // Build the runs we'll make editable, skipping two kinds of duplicates:
+      //   1. runs that already have an editable box (preserves earlier edits)
+      //   2. OVERPRINTED duplicates within this page. Many generated PDFs
+      //      (e.g. bank statements) fake bold by printing the same string twice
+      //      a hair apart; pdf.js returns BOTH. Turning each into its own box
+      //      stacks two text elements (and two whiteouts) at the same spot —
+      //      which looks like "double text" and forces the user to delete twice.
+      //      Collapsing same-string, near-coincident runs fixes both symptoms.
+      const fresh: typeof runs = [];
+      for (const run of runs) {
+        const alreadyEditable = existing.some(
+          (el) => Math.abs(el.x - run.x) < 3 && Math.abs(el.y - run.y) < 3,
+        );
+        if (alreadyEditable) continue;
+        const tol = Math.max(2, run.fontSize * 0.5);
+        const dupInBatch = fresh.some(
+          (f) =>
+            f.str.trim() === run.str.trim() &&
+            Math.abs(f.x - run.x) < tol &&
+            Math.abs(f.y - run.y) < tol,
+        );
+        if (dupInBatch) continue;
+        fresh.push(run);
+      }
       if (fresh.length === 0) {
         toast({ title: "This page's text is already editable" });
         setTool("select");
