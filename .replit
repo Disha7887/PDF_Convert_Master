@@ -1,51 +1,32 @@
-modules = ["nodejs-20", "web", "bash", "postgresql-16", "python-3.11"]
-run = "npm run dev"
-hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
-
-[nix]
-channel = "stable-25_05"
-packages = ["unzipNLS", "rsync"]
+modules = ["nodejs-24", "python-3.11"]
 
 [deployment]
+router = "application"
 deploymentTarget = "autoscale"
-run = ["node", "./dist/index.cjs"]
-build = ["npm", "run", "build"]
 
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 23636
-externalPort = 3000
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
 
 [workflows]
 runButton = "Project"
 
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-waitForPort = 5000
-
 [agent]
-integrations = ["javascript_database:1.0.0", "javascript_auth_all_persistance:1.0.0", "replicate:1.0.0"]
-stack = "FULLSTACK_JS"
+stack = "PNPM_WORKSPACE"
 expertMode = true
 
-[userenv]
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
 
-[userenv.shared]
-JWT_SECRET = "0e6bd5f6b238b3a981a829e2c5600e8aa3c10540094361b9bc54eae4fea3aaa8e98b03b198511b30d4590762ec9c7e4d01e809f6136c8474e60c9318c6598a2c"
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 21027
+externalPort = 3000
+
+[[ports]]
+localPort = 23636
+externalPort = 80
