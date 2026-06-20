@@ -165,12 +165,16 @@ export const generateApiKeyHandler = async (req: AuthenticatedRequest, res: Resp
     }
 
     // Generate new API key
-    const apiKey = generateApiKey();
+    const rawKey = generateApiKey();
+    const { hashApiKey } = await import("../utils/generateApiKey");
+    const hash = hashApiKey(rawKey);
+    const last4 = rawKey.slice(-4);
     
-    // Store API key in database
+    // Store hashed key in database — never store the raw plaintext key
     const newApiKey = await storage.createApiKey({
       userId,
-      apiKey
+      apiKey: hash,
+      keyLast4: last4,
     });
 
     res.status(201).json({
@@ -178,7 +182,7 @@ export const generateApiKeyHandler = async (req: AuthenticatedRequest, res: Resp
       message: "API key generated successfully",
       data: {
         id: newApiKey.id,
-        apiKey: newApiKey.apiKey,
+        apiKey: rawKey,
         createdAt: newApiKey.createdAt
       }
     });

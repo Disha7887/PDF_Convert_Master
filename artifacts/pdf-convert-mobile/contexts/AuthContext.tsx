@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       // Real backend (gated)
       try {
-        const response = await fetch(`${API_BASE_URL}/signin`, {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         : { success: false, error: res.error ?? "Sign up failed" };
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/signup`, {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

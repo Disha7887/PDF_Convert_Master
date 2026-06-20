@@ -165,6 +165,16 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Developer */}
+      {isAuthenticated && (
+        <>
+          <Text style={styles.sectionTitle}>Developer</Text>
+          <View style={[styles.group, cardShadow]}>
+            <SettingRow icon="key" label="API Keys" onPress={() => go(ROUTES.apiSetup)} />
+          </View>
+        </>
+      )}
+
       {/* More */}
       <Text style={styles.sectionTitle}>More</Text>
       <View style={[styles.group, cardShadow]}>
