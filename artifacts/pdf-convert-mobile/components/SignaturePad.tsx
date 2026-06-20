@@ -2,10 +2,12 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   LayoutChangeEvent,
   PanResponder,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
+  type ViewStyle,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
@@ -13,6 +15,13 @@ import colors from "@/constants/colors";
 import { fonts } from "@/constants/theme";
 
 const C = colors.light;
+
+// On web the browser locks in `touch-action` at touchstart, so toggling
+// `scrollEnabled` mid-gesture can't stop a scroll that already began. Setting
+// `touch-action: none` statically on the drawing surface stops the browser from
+// ever starting a page scroll from a touch that begins on the pad.
+const WEB_NO_TOUCH_SCROLL =
+  Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : null;
 
 export interface SignatureData {
   /** SVG path `d` strings, in pad-pixel space (origin top-left). */
@@ -113,7 +122,11 @@ export default function SignaturePad({
 
   return (
     <View style={{ gap: 8 }}>
-      <View style={styles.pad} onLayout={onLayout} {...responder.panHandlers}>
+      <View
+        style={[styles.pad, WEB_NO_TOUCH_SCROLL]}
+        onLayout={onLayout}
+        {...responder.panHandlers}
+      >
         <Svg width="100%" height="100%">
           {paths.map((d, i) => (
             <Path

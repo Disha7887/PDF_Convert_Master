@@ -14,6 +14,7 @@ import {
   Text,
   TextInput,
   View,
+  type ViewStyle,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
@@ -33,6 +34,13 @@ import { renderPdfPage } from "@/services/pdfRender";
 const C = colors.light;
 /** Pages to synthesise only when the editor is opened without a source file. */
 const PAGE_COUNT = 4;
+
+// On web the browser locks in `touch-action` at touchstart, so toggling
+// `scrollEnabled` mid-gesture can't stop a scroll that already began. Setting
+// `touch-action: none` statically on the draggable elements stops the browser
+// from ever starting a page scroll from a touch that begins on them.
+const WEB_NO_TOUCH_SCROLL =
+  Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : null;
 
 /** Render + cache a real page image. Returns null while loading or on native. */
 function useRenderedPage(
@@ -1115,12 +1123,13 @@ function DraggableBox({
           width: boxW,
           height: boxH,
         },
+        WEB_NO_TOUCH_SCROLL,
       ]}
       {...move.panHandlers}
     >
       {children}
       <View
-        style={styles.resizeHandle}
+        style={[styles.resizeHandle, WEB_NO_TOUCH_SCROLL]}
         hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
         {...resize.panHandlers}
       >
@@ -1183,6 +1192,7 @@ function DragMove({
       style={[
         styles.dragMove,
         { left: value.x * container.width, top: value.y * container.height },
+        WEB_NO_TOUCH_SCROLL,
       ]}
       {...move.panHandlers}
     >
@@ -1288,11 +1298,12 @@ function CropBox({
           width: value.w * container.width,
           height: value.h * container.height,
         },
+        WEB_NO_TOUCH_SCROLL,
       ]}
       {...move.panHandlers}
     >
       <View
-        style={styles.resizeHandle}
+        style={[styles.resizeHandle, WEB_NO_TOUCH_SCROLL]}
         hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
         {...resize.panHandlers}
       >

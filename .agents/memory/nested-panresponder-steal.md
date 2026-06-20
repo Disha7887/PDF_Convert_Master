@@ -39,8 +39,28 @@ handlers (only `resize` did), so the ScrollView stole vertical drags.
    terminate(`false`); the screen holds an `interacting` state and passes
    `scrollEnabled={!interacting}` to `ScreenScroll`. `ScreenScroll` already forwards
    `...rest` to the underlying `ScrollView`, so `scrollEnabled` just works.
-   **Why both:** capture handlers stop RN responder-steal (native); `scrollEnabled`
-   off also kills browser/`touch-action` scroll on Expo web. Capture alone isn't
-   enough on web.
+   **Why both:** capture handlers stop RN responder-steal and the `scrollEnabled`
+   flip stops the parent ScrollView — both on NATIVE. Neither reliably stops the
+   in-progress scroll on Expo **web** (see the web gotcha below); web needs a
+   static `touch-action: none`.
 **Always reset `interacting` on release AND terminate** or the page scroll stays
 permanently frozen. Use refs (`iRef.current = onInteract`) to avoid stale closures.
+
+### Web gotcha: `scrollEnabled` toggle is too late — use static `touch-action: none`
+
+The `scrollEnabled={!interacting}` state flip does NOT fix the scroll on Expo **web**
+for the gesture in progress. The browser evaluates `touch-action` at *touchstart* and
+locks in whether the touch may scroll; flipping `scrollEnabled` (which changes
+overflow/`touch-action`) mid-gesture has no effect on the already-started touch — the
+page still scrolls on the very drag the user is doing. This is why the capture-handler
++ scrollEnabled fix "didn't work" on web.
+
+**Fix:** put `touch-action: none` *statically* on every draggable element (so it's
+already set at touchstart). In react-native-web, set it via style:
+`Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : null`
+and add it to the style array of each pan-handler-bearing View (drag box, resize
+handle, move-only wrapper, crop frame, signature pad). RN's `ViewStyle` has no
+`touchAction`, so cast through `unknown`.
+
+Net: native relies on capture handlers + grant-time `scrollEnabled` flip; web relies
+on static `touch-action: none`. Keep all three — they cover different platforms.

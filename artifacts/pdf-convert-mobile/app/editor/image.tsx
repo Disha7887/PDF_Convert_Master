@@ -14,6 +14,7 @@ import {
   Text,
   TextInput,
   View,
+  type ViewStyle,
 } from "react-native";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
@@ -25,6 +26,13 @@ import { fonts } from "@/constants/theme";
 import { getToolById } from "@/constants/tools";
 
 const C = colors.light;
+
+// On web the browser locks in `touch-action` at touchstart, so toggling
+// `scrollEnabled` mid-gesture can't stop a scroll that already began. Setting
+// `touch-action: none` statically on the draggable elements stops the browser
+// from ever starting a page scroll from a touch that begins on them.
+const WEB_NO_TOUCH_SCROLL =
+  Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : null;
 
 const CROP_ASPECTS: { label: string; value: number | undefined }[] = [
   { label: "Free", value: undefined },
@@ -575,11 +583,12 @@ function CropBox({
           width: value.w * container.width,
           height: value.h * container.height,
         },
+        WEB_NO_TOUCH_SCROLL,
       ]}
       {...move.panHandlers}
     >
       <View
-        style={styles.resizeHandle}
+        style={[styles.resizeHandle, WEB_NO_TOUCH_SCROLL]}
         hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
         {...resize.panHandlers}
       >
