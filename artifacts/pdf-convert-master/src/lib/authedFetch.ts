@@ -16,6 +16,49 @@ export async function authedFetch(
   return fetch(url, { ...options, headers });
 }
 
+// Error thrown when a conversion request comes back 401 (expired/invalid JWT or
+// a revoked API key). It carries an in-app destination so the UI can render an
+// actionable link to either the sign-in page or the API Setup page.
+export class AuthError extends Error {
+  linkTo: string;
+  linkLabel: string;
+  constructor(message: string, linkTo: string, linkLabel: string) {
+    super(message);
+    this.name = "AuthError";
+    this.linkTo = linkTo;
+    this.linkLabel = linkLabel;
+  }
+}
+
+// Inspect a conversion response. When the server replied 401, return a
+// user-friendly AuthError (with a link target) so callers can throw it instead
+// of surfacing a generic "Conversion failed" message. Returns null otherwise.
+export function getAuthError(
+  status: number,
+  serverError?: string,
+): AuthError | null {
+  if (status !== 401) return null;
+
+  // A revoked/invalid API key (API callers) → point them at API Setup.
+  if ((serverError || "").toLowerCase().includes("api key")) {
+    return new AuthError(
+      "Invalid API key — check your API Setup.",
+      "/dashboard/api-setup",
+      "Go to API Setup",
+    );
+  }
+
+  // Otherwise the web session JWT is missing/expired → point them at sign-in.
+  const loggedIn = !!getAuthToken();
+  return new AuthError(
+    loggedIn
+      ? "Your session has expired. Please log in again to continue."
+      : "Please log in to convert files.",
+    "/signin",
+    loggedIn ? "Log in again" : "Log in",
+  );
+}
+
 // Convenience helper that performs an authed fetch and parses JSON, throwing a
 // friendly error when the response is not ok.
 export async function authedJson<T = any>(

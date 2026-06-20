@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { authedFetch } from "@/lib/authedFetch";
+import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
 import {
   Upload,
@@ -132,6 +133,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<AuthError | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [outputName, setOutputName] = useState<string>("");
   const [isDragOver, setIsDragOver] = useState(false);
@@ -375,6 +377,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     setStage("converting");
     setProgress(8);
     setError(null);
+    setAuthError(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -391,11 +394,14 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         body: formData,
       });
       const data = await res.json();
+      const authErr = getAuthError(res.status, data?.error);
+      if (authErr) throw authErr;
       if (!data.success) {
         throw new Error(data.error || "Could not start conversion");
       }
       await pollJob(data.data.jobId);
     } catch (err) {
+      if (err instanceof AuthError) setAuthError(err);
       setError(err instanceof Error ? err.message : "Conversion failed");
       setStage("error");
     }
@@ -432,6 +438,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     setStage("converting");
     setProgress(8);
     setError(null);
+    setAuthError(null);
     try {
       const formData = new FormData();
       for (const f of mergeFiles) formData.append("files", f);
@@ -441,11 +448,14 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         body: formData,
       });
       const data = await res.json();
+      const authErr = getAuthError(res.status, data?.error);
+      if (authErr) throw authErr;
       if (!data.success) {
         throw new Error(data.error || "Could not start merge");
       }
       await pollJob(data.data.jobId);
     } catch (err) {
+      if (err instanceof AuthError) setAuthError(err);
       setError(err instanceof Error ? err.message : "Merge failed");
       setStage("error");
     }
@@ -468,6 +478,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     setMergeFiles([]);
     setProgress(0);
     setError(null);
+    setAuthError(null);
     setDownloadUrl(null);
     setOutputName("");
     setIsDragOver(false);
@@ -945,14 +956,24 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
         <div className="flex flex-col items-center justify-center py-4">
           <ConverterStatusIcon status="error" size={80} className="mb-2" />
           <p className="text-base font-bold text-gray-900 mb-1">
-            Something went wrong
+            {authError ? "Sign in required" : "Something went wrong"}
           </p>
           <p
-            className="text-xs text-gray-500 text-center px-2 mb-5"
+            className="text-xs text-gray-500 text-center px-2 mb-3"
             data-testid={`text-error-${toolConfig.id}`}
           >
             {error}
           </p>
+
+          {authError && (
+            <div className="mb-4">
+              <AuthErrorAction
+                to={authError.linkTo}
+                label={authError.linkLabel}
+                testId={`link-auth-${toolConfig.id}`}
+              />
+            </div>
+          )}
 
           <Button
             onClick={() => inputRef.current?.click()}

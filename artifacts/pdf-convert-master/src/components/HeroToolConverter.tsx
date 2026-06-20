@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { authedFetch } from "@/lib/authedFetch";
+import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { UploadDropzone } from "@/components/upload/UploadDropzone";
 import { Download, RefreshCw } from "lucide-react";
@@ -20,6 +21,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
   const [stage, setStage] = useState<Stage>("idle");
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<AuthError | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const mountedRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -38,6 +40,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     setStage("idle");
     setFileName("");
     setError(null);
+    setAuthError(null);
     setDownloadUrl(null);
   };
 
@@ -78,6 +81,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
   const convert = async (f: File) => {
     setStage("converting");
     setError(null);
+    setAuthError(null);
     setFileName(f.name);
     setDownloadUrl(null);
     try {
@@ -89,10 +93,13 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
       fd.append("options", JSON.stringify({}));
       const res = await authedFetch("/api/convert", { method: "POST", body: fd });
       const data = await res.json();
+      const authErr = getAuthError(res.status, data?.error);
+      if (authErr) throw authErr;
       if (!data.success) throw new Error(data.error || "Conversion failed");
       await pollJob(data.data.jobId);
     } catch (e) {
       if (!mountedRef.current) return;
+      if (e instanceof AuthError) setAuthError(e);
       setError(e instanceof Error ? e.message : "Conversion failed");
       setStage("error");
     }
@@ -169,11 +176,20 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
             Something went wrong
           </h2>
           <p
-            className="text-red-600 text-sm mb-6 max-w-full"
+            className="text-red-600 text-sm mb-4 max-w-full"
             data-testid={`text-hero-error-${tool.id}`}
           >
             {error}
           </p>
+          {authError && (
+            <div className="mb-6">
+              <AuthErrorAction
+                to={authError.linkTo}
+                label={authError.linkLabel}
+                testId={`link-hero-auth-${tool.id}`}
+              />
+            </div>
+          )}
           <Button
             onClick={reset}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8"

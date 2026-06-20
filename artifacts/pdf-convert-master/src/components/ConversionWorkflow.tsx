@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
-import { authedFetch } from "@/lib/authedFetch";
+import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
 import { Button } from "@/components/ui/button";
+import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -57,6 +58,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   const [batchProgress, setBatchProgress] = useState(0);
   const [isConverting, setIsConverting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<AuthError | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
@@ -165,6 +167,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setBatchProgress(0);
     setIsConverting(false);
     setErrorMessage(null);
+    setAuthError(null);
     
     toast({
       title: "All files cleared",
@@ -180,6 +183,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setIsConverting(true);
     setBatchProgress(0);
     setErrorMessage(null);
+    setAuthError(null);
 
     // Mark all valid files as converting
     setSelectedFiles(prev => prev.map(file => 
@@ -198,6 +202,20 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       // after all individual files are actually completed
       
     } catch (error) {
+      if (error instanceof AuthError) {
+        setAuthError(error);
+        setErrorMessage(error.message);
+        setStage('error');
+        setIsConverting(false);
+
+        toast({
+          title: "Sign in required",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       setErrorMessage(error instanceof Error ? error.message : 'Batch conversion failed');
       setStage('error');
       setIsConverting(false);
@@ -457,6 +475,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setBatchProgress(0);
     setIsConverting(false);
     setErrorMessage(null);
+    setAuthError(null);
     setIsDragOver(false);
   };
 
@@ -697,8 +716,19 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                 <ConverterStatusIcon status="error" size={88} />
               </div>
               <div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Conversion Failed</h3>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                  {authError ? 'Sign in required' : 'Conversion Failed'}
+                </h3>
                 <p className="text-red-600">{errorMessage}</p>
+                {authError && (
+                  <div className="mt-3">
+                    <AuthErrorAction
+                      to={authError.linkTo}
+                      label={authError.linkLabel}
+                      testId="link-workflow-auth"
+                    />
+                  </div>
+                )}
               </div>
               <Button
                 onClick={resetWorkflow}
