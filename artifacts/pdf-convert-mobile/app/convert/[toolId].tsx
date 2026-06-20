@@ -467,15 +467,15 @@ export default function ConvertScreen() {
                 Accepted: {tool.acceptedFormats.join(", ")}
               </Text>
             ) : null}
-            <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
+            <View style={{ gap: 10, width: "100%", marginTop: 16, alignItems: "center" }}>
               <Button
                 label="Choose another file"
                 icon="folder"
-                fullWidth
                 onPress={() => {
                   setError(null);
                   setStage("select");
                 }}
+                style={{ alignSelf: "center" }}
                 testID="button-choose-another"
               />
             </View>
