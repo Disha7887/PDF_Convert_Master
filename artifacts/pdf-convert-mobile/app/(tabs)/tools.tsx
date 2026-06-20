@@ -39,13 +39,6 @@ export default function ToolsScreen() {
     <ScreenScroll insetTop tabBar>
       <AppHeader subtitle="All 27 tools, one tap away" />
 
-      <View style={styles.titleBlock}>
-        <Text style={styles.title}>All Tools</Text>
-        <Text style={styles.subtitle}>
-          Every conversion, image and PDF tool in one place.
-        </Text>
-      </View>
-
       {/* Search */}
       <View style={styles.searchWrap}>
         <Feather name="search" size={16} color={C.mutedForeground} />
