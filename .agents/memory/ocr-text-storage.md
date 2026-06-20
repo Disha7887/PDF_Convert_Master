@@ -13,6 +13,13 @@ deleted when `GET /api/download/:jobId` serves the file.
 must be fetched by the client **before** it triggers the PDF download, because the
 download handler purges all of that job's stores.
 
+**Client download UX:** the OCR result screen lets the user re-download in multiple
+formats *after* the PDF was already downloaded once. So for the PDF option it MUST
+reuse the locally-held `output.uri` (the file fetched at conversion time) — never
+re-call `/api/download`, which would 404 post-cleanup. Text-derived formats (TXT,
+HTML, .doc-via-HTML, Markdown) are generated on-device from the already-fetched OCR
+pages, so they keep working regardless of server cleanup.
+
 **Why:** the mobile flow already fetches OCR text inside `getConversionResult` (right
 after polling completes) and only then calls `downloadOutput`, so cleanup-on-download
 is safe. Reordering those steps would 404 the text.

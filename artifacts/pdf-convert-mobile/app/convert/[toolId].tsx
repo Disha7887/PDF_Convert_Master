@@ -8,11 +8,11 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import FileBrokenIcon from "@/components/FileBrokenIcon";
-import { Button, Card, ScreenScroll } from "@/components/ui";
+import { Button, Card, Field, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
@@ -135,18 +135,81 @@ async function downloadOutput(downloadUrl: string, name: string): Promise<string
 }
 
 /**
- * Materializes a plain-text file and returns a shareable URI. Web uses a blob
+ * Materializes a text-based file and returns a shareable URI. Web uses a blob
  * object-URL; native writes to the cache dir so Sharing can hand off the path.
  */
-async function makeTextFileUri(text: string, name: string): Promise<string> {
+async function makeFileUri(
+  content: string,
+  name: string,
+  mimeType = "text/plain",
+): Promise<string> {
   if (Platform.OS === "web") {
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
     return URL.createObjectURL(blob);
   }
   const file = new File(Paths.cache, sanitizeName(name));
   file.create({ overwrite: true, intermediates: true });
-  file.write(text);
+  file.write(content);
   return file.uri;
+}
+
+// ── OCR download formats ──────────────────────────────────────────────────────
+type OcrFormat = "pdf" | "doc" | "txt" | "html" | "md";
+
+interface OcrFormatDef {
+  id: OcrFormat;
+  label: string;
+  ext: string;
+  mime: string;
+  color: string;
+  icon: keyof typeof Feather.glyphMap;
+}
+
+/**
+ * Formats we can genuinely produce from an OCR result: the searchable PDF the
+ * server already built, plus text-derived documents generated on-device. We
+ * deliberately omit formats we can't honestly create from recognized text
+ * (spreadsheets, slideshows, images).
+ */
+const OCR_FORMATS: OcrFormatDef[] = [
+  { id: "pdf", label: "PDF", ext: "pdf", mime: "application/pdf", color: "#f7433d", icon: "file-text" },
+  { id: "doc", label: "Word", ext: "doc", mime: "application/msword", color: "#2563eb", icon: "file-text" },
+  { id: "txt", label: "TXT", ext: "txt", mime: "text/plain", color: "#0ea5e9", icon: "file" },
+  { id: "html", label: "HTML", ext: "html", mime: "text/html", color: "#f97316", icon: "code" },
+  { id: "md", label: "Markdown", ext: "md", mime: "text/markdown", color: "#16a34a", icon: "hash" },
+];
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Builds the file contents for a text-derived OCR export format. */
+function buildOcrContent(format: OcrFormat, pages: string[], title: string): string {
+  const trimmed = pages.map((p) => p.trim());
+  switch (format) {
+    case "md":
+      return trimmed.map((t, i) => `## Page ${i + 1}\n\n${t}`).join("\n\n");
+    case "html":
+    case "doc": {
+      const head =
+        format === "doc"
+          ? `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body>`
+          : `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body style="font-family:sans-serif">`;
+      const body = trimmed
+        .map(
+          (t, i) =>
+            `<h2>Page ${i + 1}</h2><pre style="white-space:pre-wrap;font-family:inherit;font-size:14px">${escapeHtml(t)}</pre>`,
+        )
+        .join("\n");
+      return `${head}${body}</body></html>`;
+    }
+    case "txt":
+    default:
+      return trimmed.map((t, i) => `--- Page ${i + 1} ---\n${t}`).join("\n\n");
+  }
 }
 
 async function shareFile(uri: string, name: string): Promise<boolean> {
@@ -202,9 +265,20 @@ export default function ConvertScreen() {
   );
   const [outputFormat, setOutputFormat] = useState<string>("png");
   const [quality, setQuality] = useState<number>(75);
-  const [ocrPages, setOcrPages] = useState<string[] | null>(null);
+  const [ocrPages, setOcrPages] = useState<string[] | null>(
+    previewStage === "done" && tool?.serverToolType === "ocr_pdf"
+      ? [
+          "Total withdrawals -$5,415.20\nTotal deposits $5,475.00\nBanking services provided by Choice Financial Group, Member FDIC.",
+          "All Transactions\nDate (UTC) Description Type Amount End of Day Balance\nFeb 17 ACH transfer $59.83",
+        ]
+      : null,
+  );
   const [copiedAll, setCopiedAll] = useState(false);
   const [copiedPage, setCopiedPage] = useState<number | null>(null);
+  const [ocrPageIndex, setOcrPageIndex] = useState(0);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<OcrFormat>("pdf");
+  const [fileName, setFileName] = useState("");
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -330,6 +404,7 @@ export default function ConvertScreen() {
         : await materializeOutput(name, result.sampleKey, tool, files);
       setOutput({ uri, name });
       setOcrPages(result.ocrPages && result.ocrPages.length > 0 ? result.ocrPages : null);
+      setOcrPageIndex(0);
       setStage("done");
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -366,8 +441,10 @@ export default function ConvertScreen() {
     setFiles([]);
     setOutput(null);
     setOcrPages(null);
+    setOcrPageIndex(0);
     setCopiedAll(false);
     setCopiedPage(null);
+    setDownloadOpen(false);
     setError(null);
     setStage("select");
   }, []);
@@ -391,21 +468,46 @@ export default function ConvertScreen() {
     [ocrPages],
   );
 
-  const onDownloadText = useCallback(async () => {
-    if (!ocrPages) return;
-    const body = ocrPages
-      .map((t, i) => `--- Page ${i + 1} ---\n${t.trim()}`)
-      .join("\n\n");
-    const base = (output?.name ?? "ocr").replace(/\.[^./]+$/, "") || "ocr";
-    const txtName = `${base}.txt`;
+  const prevPage = useCallback(() => {
+    setOcrPageIndex((i) => Math.max(0, i - 1));
+  }, []);
+
+  const nextPage = useCallback(() => {
+    setOcrPageIndex((i) =>
+      ocrPages ? Math.min(ocrPages.length - 1, i + 1) : i,
+    );
+  }, [ocrPages]);
+
+  const openDownload = useCallback(() => {
+    const base =
+      (output?.name ?? "ocr-result").replace(/\.[^./]+$/, "") || "ocr-result";
+    setFileName(base);
+    setSelectedFormat("pdf");
+    setDownloadOpen(true);
+  }, [output]);
+
+  const onConfirmDownload = useCallback(async () => {
+    if (!output) return;
+    const fmt =
+      OCR_FORMATS.find((f) => f.id === selectedFormat) ?? OCR_FORMATS[0];
+    const base = (fileName.trim() || "ocr-result").replace(/\.[^./]+$/, "");
+    const fullName = `${base}.${fmt.ext}`;
+    setDownloadOpen(false);
     try {
-      const uri = await makeTextFileUri(body, txtName);
-      const ok = await shareFile(uri, txtName);
+      let uri: string;
+      if (fmt.id === "pdf" || !ocrPages) {
+        // The searchable PDF the server already produced.
+        uri = output.uri;
+      } else {
+        const content = buildOcrContent(fmt.id, ocrPages, base);
+        uri = await makeFileUri(content, fullName, fmt.mime);
+      }
+      const ok = await shareFile(uri, fullName);
       if (!ok) setError("Sharing isn't available on this platform.");
     } catch {
-      setError("Could not export the text file.");
+      setError("Could not prepare the download.");
     }
-  }, [ocrPages, output]);
+  }, [output, ocrPages, selectedFormat, fileName]);
 
   const removeFile = useCallback((uri: string) => {
     setFiles((prev) => prev.filter((f) => f.uri !== uri));
@@ -439,7 +541,12 @@ export default function ConvertScreen() {
 
   const isEditorTool = tool.editor === "pdf" || tool.editor === "image";
 
+  const activeFormat =
+    OCR_FORMATS.find((f) => f.id === selectedFormat) ?? OCR_FORMATS[0];
+  const previewName = `${(fileName.trim() || "ocr-result").replace(/\.[^./]+$/, "")}.${activeFormat.ext}`;
+
   return (
+    <>
     <ScreenScroll insetTop>
       <BackRow onPress={goBack} title={tool.title} />
 
@@ -615,10 +722,10 @@ export default function ConvertScreen() {
 
             <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
               <Button
-                label="Download / Share"
+                label={ocrPages ? "Download" : "Download / Share"}
                 icon="download"
                 fullWidth
-                onPress={onShare}
+                onPress={ocrPages ? openDownload : onShare}
                 testID="button-share"
               />
               <Button
@@ -651,43 +758,86 @@ export default function ConvertScreen() {
               </View>
             </Pressable>
           </View>
-          <Text style={styles.ocrHint}>Tap a page to copy just its text.</Text>
+          <Text style={styles.ocrHint}>Tap the page to copy just its text.</Text>
 
-          <View style={{ gap: 12, marginTop: 12 }}>
-            {ocrPages.map((t, i) => {
-              const text = t.trim();
-              return (
-                <Pressable
-                  key={i}
-                  onPress={() => onCopyPage(i)}
-                  style={styles.ocrPage}
-                  testID={`ocr-page-${i + 1}`}
-                >
-                  <View style={styles.ocrPageHeader}>
-                    <Text style={styles.ocrPageLabel}>Page {i + 1}</Text>
-                    <Feather
-                      name={copiedPage === i ? "check" : "copy"}
-                      size={13}
-                      color={copiedPage === i ? C.primary : C.mutedForeground}
-                    />
-                  </View>
-                  <Text style={styles.ocrPageText} selectable>
-                    {text || "No text detected on this page."}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <Pressable
+            onPress={() => onCopyPage(ocrPageIndex)}
+            style={[styles.ocrPage, { marginTop: 12 }]}
+            testID={`ocr-page-${ocrPageIndex + 1}`}
+          >
+            <View style={styles.ocrPageHeader}>
+              <Text style={styles.ocrPageLabel}>Page {ocrPageIndex + 1}</Text>
+              <Feather
+                name={copiedPage === ocrPageIndex ? "check" : "copy"}
+                size={13}
+                color={copiedPage === ocrPageIndex ? C.primary : C.mutedForeground}
+              />
+            </View>
+            <Text style={styles.ocrPageText} selectable>
+              {(ocrPages[ocrPageIndex] ?? "").trim() ||
+                "No text detected on this page."}
+            </Text>
+          </Pressable>
 
-          <View style={{ marginTop: 14 }}>
-            <Button
-              label="Download .txt"
-              icon="file-text"
-              variant="outline"
-              fullWidth
-              onPress={onDownloadText}
-              testID="button-download-txt"
-            />
+          <View style={styles.ocrNav}>
+            <Pressable
+              onPress={prevPage}
+              disabled={ocrPageIndex === 0}
+              hitSlop={8}
+              style={[
+                styles.ocrNavBtn,
+                ocrPageIndex === 0 && styles.ocrNavBtnDisabled,
+              ]}
+              testID="button-ocr-prev"
+            >
+              <Feather
+                name="chevron-left"
+                size={16}
+                color={ocrPageIndex === 0 ? C.mutedForeground : C.primary}
+              />
+              <Text
+                style={[
+                  styles.ocrNavText,
+                  ocrPageIndex === 0 && styles.ocrNavTextDisabled,
+                ]}
+              >
+                Back
+              </Text>
+            </Pressable>
+
+            <Text style={styles.ocrNavLabel}>
+              Page {ocrPageIndex + 1} of {ocrPages.length}
+            </Text>
+
+            <Pressable
+              onPress={nextPage}
+              disabled={ocrPageIndex >= ocrPages.length - 1}
+              hitSlop={8}
+              style={[
+                styles.ocrNavBtn,
+                ocrPageIndex >= ocrPages.length - 1 && styles.ocrNavBtnDisabled,
+              ]}
+              testID="button-ocr-next"
+            >
+              <Text
+                style={[
+                  styles.ocrNavText,
+                  ocrPageIndex >= ocrPages.length - 1 &&
+                    styles.ocrNavTextDisabled,
+                ]}
+              >
+                Next
+              </Text>
+              <Feather
+                name="chevron-right"
+                size={16}
+                color={
+                  ocrPageIndex >= ocrPages.length - 1
+                    ? C.mutedForeground
+                    : C.primary
+                }
+              />
+            </Pressable>
           </View>
         </Card>
       )}
@@ -738,6 +888,83 @@ export default function ConvertScreen() {
         </Card>
       )}
     </ScreenScroll>
+
+      {/* Download format chooser */}
+      <Modal
+        visible={downloadOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDownloadOpen(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setDownloadOpen(false)}
+        >
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Download</Text>
+            <Text style={styles.modalSubtitle}>
+              Choose a format and edit the file name.
+            </Text>
+
+            <View style={styles.formatGrid}>
+              {OCR_FORMATS.map((f) => {
+                const active = selectedFormat === f.id;
+                return (
+                  <Pressable
+                    key={f.id}
+                    onPress={() => setSelectedFormat(f.id)}
+                    style={[styles.formatTile, active && styles.formatTileActive]}
+                    testID={`format-${f.id}`}
+                  >
+                    <View style={[styles.formatBadge, { backgroundColor: f.color }]}>
+                      <Feather name={f.icon} size={15} color="#fff" />
+                    </View>
+                    <Text style={styles.formatLabel}>{f.label}</Text>
+                    <Feather
+                      name={active ? "check-circle" : "circle"}
+                      size={17}
+                      color={active ? C.primary : C.border}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={{ marginTop: 4 }}>
+              <Field
+                label="File name"
+                value={fileName}
+                onChangeText={setFileName}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder="ocr-result"
+              />
+              <Text style={styles.modalPreview} numberOfLines={1}>
+                {previewName}
+              </Text>
+            </View>
+
+            <View style={styles.modalActions}>
+              <Button
+                label="Cancel"
+                variant="outline"
+                onPress={() => setDownloadOpen(false)}
+                style={{ flex: 1 }}
+                testID="button-download-cancel"
+              />
+              <Button
+                label="Download"
+                icon="download"
+                onPress={onConfirmDownload}
+                style={{ flex: 1 }}
+                testID="button-download-confirm"
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -881,6 +1108,97 @@ const styles = StyleSheet.create({
   },
   ocrPageLabel: { fontSize: 12.5, color: C.foreground, fontFamily: fonts.bodySemibold },
   ocrPageText: { fontSize: 13.5, lineHeight: 20, color: C.foreground, fontFamily: fonts.body },
+  ocrNav: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  ocrNavBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: C.background,
+  },
+  ocrNavBtnDisabled: { opacity: 0.45 },
+  ocrNavText: { fontSize: 13, color: C.primary, fontFamily: fonts.bodySemibold },
+  ocrNavTextDisabled: { color: C.mutedForeground },
+  ocrNavLabel: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.45)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: C.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 28,
+    gap: 12,
+    ...(Platform.OS === "web" ? { maxWidth: 460, width: "100%", alignSelf: "center" } : null),
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: C.border,
+    alignSelf: "center",
+    marginBottom: 4,
+  },
+  modalTitle: { fontSize: 20, color: C.foreground, fontFamily: fonts.headingBold },
+  modalSubtitle: {
+    fontSize: 13.5,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+    marginTop: -4,
+  },
+  formatGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 4,
+  },
+  formatTile: {
+    flexBasis: "47%",
+    flexGrow: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: C.border,
+    backgroundColor: C.background,
+  },
+  formatTileActive: { borderColor: C.primary, backgroundColor: C.surfaceAlt },
+  formatBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  formatLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: C.foreground,
+    fontFamily: fonts.bodySemibold,
+  },
+  modalPreview: {
+    fontSize: 12,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+    marginTop: 6,
+  },
+  modalActions: { flexDirection: "row", gap: 10, marginTop: 8 },
 
   successWrap: { alignItems: "center", gap: 6 },
   successIcon: {

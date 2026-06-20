@@ -1,12 +1,12 @@
 - [Expo web + Metro on Replit](expo-web-metro-replit.md) — Metro cache/lazy-bundle/log-staleness quirks; verify on expo domain not localhost:80; tslib→CJS resolver fixes pdf-lib Hermes crash.
-- [Canvas live-frame gallery (Expo)](canvas-expo-live-frames.md) — embed every Expo route as `state:"live"` iframes on `$REPLIT_EXPO_DEV_DOMAIN`; refreshing failed frames to live works once the dev server is running.
+- [Canvas live-frame gallery (Expo)](canvas-expo-live-frames.md) — embed Expo routes as `state:"live"` iframes on `$REPLIT_EXPO_DEV_DOMAIN`.
 - [Canvas + Expo prototyping](canvas-expo-prototype.md) — patterns for prototyping Expo screens on the canvas.
 - [Coral rebrand](color-rebrand.md) — pdf-convert app branding is CORAL `#f7433d` (user-required); never revert to blue `#2563eb`.
 - [Mobile loaders](mobile-loaders.md) — all loading/processing states in pdf-convert-mobile use the shared `Loader`/`ScreenLoader` (processing.json), not ActivityIndicator.
 - [Lottie on Expo web](lottie-expo-web.md) — lottie-react-native@7 web needs the `@lottiefiles/dotlottie-react` optional peer installed.
 - [OCR text side-channel](ocr-text-storage.md) — in-memory job stores are purged on /api/download; fetch OCR text (and any per-job side data) before triggering download.
 - [api-server tsc vs esbuild](api-server-typecheck.md) — tsc is pre-existingly red on dead `routes_broken.ts`; app builds via esbuild. Don't "green" it as a side task.
-- [Watermark/overlay text fit](watermark-text-fit.md) — size overlay font from box WIDTH (`boxW*k/len`), NOT box height/aspect; decouple box height (own aspect). Off-screen measuring races font load; adjustsFontSizeToFit is web-unsupported.
+- [Watermark/overlay text fit](watermark-text-fit.md) — size overlay font from box WIDTH not height; off-screen measuring races font load; adjustsFontSizeToFit is web-unsupported.
 - [Nested PanResponder steal](nested-panresponder-steal.md) — child handle inside a draggable parent only "moves"; fix with capture handlers + `onPanResponderTerminationRequest:false` + hitSlop.
 - [pdf.js web-only split](pdfjs-mobile-web-split.md) — real PDF page rendering: pdfjs imported only from `.web.ts` (native stub), worker via unpkg CDN; draw/type signature via SignaturePad + drawSvgPath.
-- [Mobile real conversions](mobile-real-conversions.md) — Expo CONVERT tools hit the real api-server; web FormData needs a real Blob (RN uri-cast fails on web); conversions are always-real via USE_REAL_CONVERSIONS, independent of USE_MOCK_DATA; EXPO_PUBLIC_DOMAIN inlined at bundle time (restart expo after change).
+- [Mobile real conversions](mobile-real-conversions.md) — Expo CONVERT tools hit real api-server; web FormData needs a real Blob; always-real via USE_REAL_CONVERSIONS; EXPO_PUBLIC_DOMAIN inlined at bundle time.
