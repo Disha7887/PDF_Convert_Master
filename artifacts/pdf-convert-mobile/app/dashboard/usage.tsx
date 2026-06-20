@@ -62,7 +62,7 @@ function SignInGate() {
       </View>
       <Text style={styles.gateTitle}>Sign in required</Text>
       <Text style={styles.gateText}>Sign in to view your usage statistics.</Text>
-      <Button label="Sign In" icon="log-in" onPress={() => router.push(ROUTES.signIn as never)} />
+      <Button label="Sign In" icon="log-in" onPress={() => router.push(ROUTES.signIn as never)} style={{ alignSelf: "center" }} />
     </View>
   );
 }
