@@ -4,6 +4,7 @@ import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
@@ -151,11 +152,26 @@ async function makeFileUri(
   return file.uri;
 }
 
-// ── OCR download formats ──────────────────────────────────────────────────────
+// ── Download formats ──────────────────────────────────────────────────────────
+/** Text-derived OCR export formats we can build on-device from recognized text. */
 type OcrFormat = "pdf" | "doc" | "txt" | "html" | "md";
 
-interface OcrFormatDef {
-  id: OcrFormat;
+type FormatId =
+  | "pdf"
+  | "docx"
+  | "doc"
+  | "pptx"
+  | "ppt"
+  | "xlsx"
+  | "xls"
+  | "png"
+  | "jpg"
+  | "txt"
+  | "html"
+  | "md";
+
+interface FormatDef {
+  id: string;
   label: string;
   ext: string;
   mime: string;
@@ -164,18 +180,119 @@ interface OcrFormatDef {
 }
 
 /**
- * Formats we can genuinely produce from an OCR result: the searchable PDF the
- * server already built, plus text-derived documents generated on-device. We
- * deliberately omit formats we can't honestly create from recognized text
- * (spreadsheets, slideshows, images).
+ * How a chosen download option is actually produced from the conversion result.
+ *  - passthrough: hand back the file the server/mock already produced, unchanged.
+ *  - reencode:    genuinely re-encode a single-image result to PNG/JPG on-device.
+ *  - ocrText:     build a Word/TXT/HTML/Markdown file from the recognized OCR text.
  */
-const OCR_FORMATS: OcrFormatDef[] = [
-  { id: "pdf", label: "PDF", ext: "pdf", mime: "application/pdf", color: "#f7433d", icon: "file-text" },
-  { id: "doc", label: "Word", ext: "doc", mime: "application/msword", color: "#2563eb", icon: "file-text" },
-  { id: "txt", label: "TXT", ext: "txt", mime: "text/plain", color: "#0ea5e9", icon: "file" },
-  { id: "html", label: "HTML", ext: "html", mime: "text/html", color: "#f97316", icon: "code" },
-  { id: "md", label: "Markdown", ext: "md", mime: "text/markdown", color: "#16a34a", icon: "hash" },
-];
+type ProduceKind =
+  | { kind: "passthrough" }
+  | { kind: "reencode"; to: "png" | "jpg" }
+  | { kind: "ocrText"; fmt: OcrFormat };
+
+type DownloadOption = FormatDef & { produce: ProduceKind };
+
+/** Master registry of downloadable file formats (badge colour + icon per type). */
+const FORMAT_REGISTRY: Record<FormatId, FormatDef> = {
+  pdf: { id: "pdf", label: "PDF", ext: "pdf", mime: "application/pdf", color: "#f7433d", icon: "file-text" },
+  docx: { id: "docx", label: "DOCX", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", color: "#2563eb", icon: "file-text" },
+  doc: { id: "doc", label: "Word", ext: "doc", mime: "application/msword", color: "#2563eb", icon: "file-text" },
+  pptx: { id: "pptx", label: "PPTX", ext: "pptx", mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation", color: "#f97316", icon: "monitor" },
+  ppt: { id: "ppt", label: "PPT", ext: "ppt", mime: "application/vnd.ms-powerpoint", color: "#f97316", icon: "monitor" },
+  xlsx: { id: "xlsx", label: "XLSX", ext: "xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", color: "#16a34a", icon: "grid" },
+  xls: { id: "xls", label: "XLS", ext: "xls", mime: "application/vnd.ms-excel", color: "#16a34a", icon: "grid" },
+  png: { id: "png", label: "PNG", ext: "png", mime: "image/png", color: "#a855f7", icon: "image" },
+  jpg: { id: "jpg", label: "JPG", ext: "jpg", mime: "image/jpeg", color: "#a855f7", icon: "image" },
+  txt: { id: "txt", label: "TXT", ext: "txt", mime: "text/plain", color: "#0ea5e9", icon: "file" },
+  html: { id: "html", label: "HTML", ext: "html", mime: "text/html", color: "#f97316", icon: "code" },
+  md: { id: "md", label: "Markdown", ext: "md", mime: "text/markdown", color: "#16a34a", icon: "hash" },
+};
+
+/** Tools whose result is a single raster image we can honestly re-encode to PNG/JPG. */
+const SINGLE_IMAGE_TOOLS = new Set([
+  "resize_image",
+  "crop_image",
+  "rotate_image",
+  "convert_image_format",
+  "compress_image",
+  "upscale_image",
+]);
+
+/** Builds a passthrough option from the actual produced file's extension (falls
+ *  back to the tool's declared output format when no result name is available). */
+function passthroughFormat(tool: Tool, outputName?: string): FormatDef {
+  const ext = outputName?.match(/\.([^./]+)$/)?.[1]?.toLowerCase();
+  if (ext) {
+    if (ext === "jpeg") return FORMAT_REGISTRY.jpg;
+    const known = (FORMAT_REGISTRY as Record<string, FormatDef>)[ext];
+    if (known) return known;
+    return {
+      id: ext,
+      label: ext.toUpperCase(),
+      ext,
+      mime: "application/octet-stream",
+      color: "#64748b",
+      icon: ext === "zip" ? "archive" : "file",
+    };
+  }
+  const out = tool.outputFormat.toLowerCase();
+  if (out.includes("docx") || out.includes("word")) return FORMAT_REGISTRY.docx;
+  if (out.includes("xlsx") || out.includes("excel")) return FORMAT_REGISTRY.xlsx;
+  if (out.includes("pptx") || out.includes("powerpoint")) return FORMAT_REGISTRY.pptx;
+  if (out.includes("png") || out.includes("jpg") || out.includes("image")) return FORMAT_REGISTRY.jpg;
+  return FORMAT_REGISTRY.pdf;
+}
+
+/**
+ * Computes the genuinely-deliverable download options for a tool's result:
+ *  - OCR PDF: the searchable PDF the server built, plus Word/TXT/HTML/Markdown
+ *    generated on-device from the recognized text (only when text is available).
+ *  - Single-image tools: PNG/JPG, re-encoded on-device (PNG only when the result
+ *    relies on transparency, since JPG can't preserve an alpha channel).
+ *  - Everything else (documents, multi-image ZIPs, PDFs): the exact file the
+ *    tool produced, passed through unchanged with its real extension.
+ * We deliberately never offer a format we can't honestly create from the result.
+ */
+function getDownloadFormats(
+  tool: Tool,
+  opts: { outputName?: string; hasOcrText: boolean },
+): DownloadOption[] {
+  const opt = (f: FormatDef, produce: ProduceKind): DownloadOption => ({ ...f, produce });
+
+  if (tool.serverToolType === "ocr_pdf") {
+    const list: DownloadOption[] = [opt(FORMAT_REGISTRY.pdf, { kind: "passthrough" })];
+    if (opts.hasOcrText) {
+      list.push(
+        opt(FORMAT_REGISTRY.doc, { kind: "ocrText", fmt: "doc" }),
+        opt(FORMAT_REGISTRY.txt, { kind: "ocrText", fmt: "txt" }),
+        opt(FORMAT_REGISTRY.html, { kind: "ocrText", fmt: "html" }),
+        opt(FORMAT_REGISTRY.md, { kind: "ocrText", fmt: "md" }),
+      );
+    }
+    return list;
+  }
+
+  const out = tool.outputFormat.toLowerCase();
+  if (SINGLE_IMAGE_TOOLS.has(tool.serverToolType ?? "")) {
+    if (out.includes("transparency")) return [opt(FORMAT_REGISTRY.png, { kind: "reencode", to: "png" })];
+    return [
+      opt(FORMAT_REGISTRY.png, { kind: "reencode", to: "png" }),
+      opt(FORMAT_REGISTRY.jpg, { kind: "reencode", to: "jpg" }),
+    ];
+  }
+
+  return [opt(passthroughFormat(tool, opts.outputName), { kind: "passthrough" })];
+}
+
+/** Re-encodes an image to PNG or JPG on-device (genuine pixel conversion). */
+async function reencodeImage(uri: string, fmt: "png" | "jpg"): Promise<string> {
+  const ref = await ImageManipulator.manipulate(uri).renderAsync();
+  const result = await ref.saveAsync({
+    format: fmt === "png" ? SaveFormat.PNG : SaveFormat.JPEG,
+    compress: 0.92,
+  });
+  return result.uri;
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -241,7 +358,7 @@ export default function ConvertScreen() {
   const previewStage: Stage | null =
     preview === "processing" || preview === "converting"
       ? "converting"
-      : preview === "success" || preview === "done"
+      : preview === "success" || preview === "done" || preview === "download"
         ? "done"
         : preview === "error"
           ? "error"
@@ -274,8 +391,8 @@ export default function ConvertScreen() {
   const [copiedAll, setCopiedAll] = useState(false);
   const [copiedPage, setCopiedPage] = useState<number | null>(null);
   const [ocrPageIndex, setOcrPageIndex] = useState(0);
-  const [downloadOpen, setDownloadOpen] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<OcrFormat>("pdf");
+  const [downloadOpen, setDownloadOpen] = useState(preview === "download");
+  const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
   const [fileName, setFileName] = useState("");
 
   const goBack = useCallback(() => {
@@ -477,49 +594,53 @@ export default function ConvertScreen() {
   }, [ocrPages]);
 
   const openDownload = useCallback(() => {
+    if (!tool) return;
     const base =
-      (output?.name ?? "ocr-result").replace(/\.[^./]+$/, "") || "ocr-result";
+      (output?.name ?? "output").replace(/\.[^./]+$/, "") || "output";
     setFileName(base);
-    setSelectedFormat("pdf");
+    setSelectedFormat(
+      getDownloadFormats(tool, { outputName: output?.name, hasOcrText: !!ocrPages })[0].id,
+    );
     setDownloadOpen(true);
-  }, [output]);
+  }, [output, tool, ocrPages]);
 
   const onConfirmDownload = useCallback(async () => {
-    if (!output) return;
-    const fmt =
-      OCR_FORMATS.find((f) => f.id === selectedFormat) ?? OCR_FORMATS[0];
-    const base = (fileName.trim() || "ocr-result").replace(/\.[^./]+$/, "");
+    if (!tool || !output) return;
+    const formats = getDownloadFormats(tool, {
+      outputName: output.name,
+      hasOcrText: !!ocrPages,
+    });
+    const fmt = formats.find((f) => f.id === selectedFormat) ?? formats[0];
+    const base = (fileName.trim() || "output").replace(/\.[^./]+$/, "") || "output";
     const fullName = `${base}.${fmt.ext}`;
     setDownloadOpen(false);
     try {
       let uri: string;
-      if (fmt.id === "pdf" || !ocrPages) {
-        // The searchable PDF the server already produced.
-        uri = output.uri;
-      } else {
-        const content = buildOcrContent(fmt.id, ocrPages, base);
-        uri = await makeFileUri(content, fullName, fmt.mime);
+      switch (fmt.produce.kind) {
+        case "ocrText":
+          // Word/TXT/HTML/Markdown built on-device from the recognized text.
+          uri = ocrPages
+            ? await makeFileUri(buildOcrContent(fmt.produce.fmt, ocrPages, base), fullName, fmt.mime)
+            : output.uri;
+          break;
+        case "reencode":
+          // Genuine pixel re-encode of a single-image result.
+          uri = output.uri ? await reencodeImage(output.uri, fmt.produce.to) : output.uri;
+          break;
+        default:
+          // Hand back the exact file the tool produced (document / PDF / ZIP).
+          uri = output.uri;
       }
       const ok = await shareFile(uri, fullName);
       if (!ok) setError("Sharing isn't available on this platform.");
     } catch {
       setError("Could not prepare the download.");
     }
-  }, [output, ocrPages, selectedFormat, fileName]);
+  }, [tool, output, ocrPages, selectedFormat, fileName]);
 
   const removeFile = useCallback((uri: string) => {
     setFiles((prev) => prev.filter((f) => f.uri !== uri));
   }, []);
-
-  const onShare = useCallback(async () => {
-    if (!output) return;
-    try {
-      const ok = await shareFile(output.uri, output.name);
-      if (!ok) setError("Sharing isn't available on this platform.");
-    } catch {
-      setError("Could not open the share sheet.");
-    }
-  }, [output]);
 
   if (!tool) {
     return (
@@ -539,9 +660,13 @@ export default function ConvertScreen() {
 
   const isEditorTool = tool.editor === "pdf" || tool.editor === "image";
 
+  const downloadFormats = getDownloadFormats(tool, {
+    outputName: output?.name,
+    hasOcrText: !!ocrPages,
+  });
   const activeFormat =
-    OCR_FORMATS.find((f) => f.id === selectedFormat) ?? OCR_FORMATS[0];
-  const previewName = `${(fileName.trim() || "ocr-result").replace(/\.[^./]+$/, "")}.${activeFormat.ext}`;
+    downloadFormats.find((f) => f.id === selectedFormat) ?? downloadFormats[0];
+  const previewName = `${(fileName.trim() || "output").replace(/\.[^./]+$/, "") || "output"}.${activeFormat.ext}`;
 
   return (
     <>
@@ -723,10 +848,10 @@ export default function ConvertScreen() {
 
             <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
               <Button
-                label={ocrPages ? "Download" : "Download / Share"}
+                label="Download"
                 icon="download"
                 fullWidth
-                onPress={ocrPages ? openDownload : onShare}
+                onPress={openDownload}
                 testID="button-share"
               />
               <Button
@@ -902,14 +1027,28 @@ export default function ConvertScreen() {
           onPress={() => setDownloadOpen(false)}
         >
           <Pressable style={styles.modalCard} onPress={() => {}}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Download</Text>
-            <Text style={styles.modalSubtitle}>
-              Choose a format and edit the file name.
-            </Text>
+            <View style={styles.celebrateHeader}>
+              <View style={styles.celebrateIcon}>
+                <Feather name="award" size={26} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.celebrateTitle}>Awesome job!</Text>
+                <Text style={styles.celebrateSubtitle}>
+                  Your {tool.title} file is ready to download.
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setDownloadOpen(false)}
+                hitSlop={8}
+                testID="button-download-close"
+              >
+                <Feather name="x" size={22} color={C.mutedForeground} />
+              </Pressable>
+            </View>
 
+            <Text style={styles.modalSectionLabel}>Download as:</Text>
             <View style={styles.formatGrid}>
-              {OCR_FORMATS.map((f) => {
+              {downloadFormats.map((f) => {
                 const active = selectedFormat === f.id;
                 return (
                   <Pressable
@@ -918,15 +1057,17 @@ export default function ConvertScreen() {
                     style={[styles.formatTile, active && styles.formatTileActive]}
                     testID={`format-${f.id}`}
                   >
+                    <Feather
+                      name={active ? "check-circle" : "circle"}
+                      size={18}
+                      color={active ? C.primary : C.border}
+                    />
                     <View style={[styles.formatBadge, { backgroundColor: f.color }]}>
                       <Feather name={f.icon} size={15} color="#fff" />
                     </View>
-                    <Text style={styles.formatLabel}>{f.label}</Text>
-                    <Feather
-                      name={active ? "check-circle" : "circle"}
-                      size={17}
-                      color={active ? C.primary : C.border}
-                    />
+                    <Text style={styles.formatLabel} numberOfLines={1}>
+                      {f.label}
+                    </Text>
                   </Pressable>
                 );
               })}
@@ -939,7 +1080,7 @@ export default function ConvertScreen() {
                 onChangeText={setFileName}
                 autoCapitalize="none"
                 autoCorrect={false}
-                placeholder="ocr-result"
+                placeholder="output"
               />
               <Text style={styles.modalPreview} numberOfLines={1}>
                 {previewName}
@@ -1146,20 +1287,32 @@ const styles = StyleSheet.create({
     gap: 12,
     ...(Platform.OS === "web" ? { maxWidth: 460, width: "100%", alignSelf: "center" } : null),
   },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: C.border,
-    alignSelf: "center",
+  celebrateHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     marginBottom: 4,
   },
-  modalTitle: { fontSize: 20, color: C.foreground, fontFamily: fonts.headingBold },
-  modalSubtitle: {
-    fontSize: 13.5,
+  celebrateIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: C.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  celebrateTitle: { fontSize: 20, color: C.foreground, fontFamily: fonts.headingBold },
+  celebrateSubtitle: {
+    fontSize: 13,
     color: C.mutedForeground,
     fontFamily: fonts.body,
-    marginTop: -4,
+    marginTop: 1,
+  },
+  modalSectionLabel: {
+    fontSize: 14,
+    color: C.foreground,
+    fontFamily: fonts.bodySemibold,
+    marginTop: 4,
   },
   formatGrid: {
     flexDirection: "row",

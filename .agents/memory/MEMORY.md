@@ -10,3 +10,4 @@
 - [Nested PanResponder steal](nested-panresponder-steal.md) — child handle inside a draggable parent only "moves"; fix with capture handlers + `onPanResponderTerminationRequest:false` + hitSlop.
 - [pdf.js web-only split](pdfjs-mobile-web-split.md) — real PDF page rendering: pdfjs imported only from `.web.ts` (native stub), worker via unpkg CDN; draw/type signature via SignaturePad + drawSvgPath.
 - [Mobile real conversions](mobile-real-conversions.md) — Expo CONVERT tools hit real api-server; web FormData needs a real Blob; always-real via USE_REAL_CONVERSIONS; EXPO_PUBLIC_DOMAIN inlined at bundle time.
+- [Download format honesty](download-format-honesty.md) — only offer download formats the result can genuinely become; pdf_to_images is a ZIP (not a re-encodable image); gate OCR text formats on recognized-text availability.
