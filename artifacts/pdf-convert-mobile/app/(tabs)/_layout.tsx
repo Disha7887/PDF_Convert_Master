@@ -7,7 +7,7 @@ import { SymbolView } from "expo-symbols";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
-import AuthLottieButton from "@/components/AuthLottieButton";
+import AuthButton from "@/components/AuthButton";
 import { fonts } from "@/constants/theme";
 import { useColors } from "@/hooks/useColors";
 
@@ -116,7 +116,7 @@ export default function TabLayout() {
   return (
     <View style={{ flex: 1 }}>
       {isLiquidGlassAvailable() ? <NativeTabLayout /> : <ClassicTabLayout />}
-      <AuthLottieButton />
+      <AuthButton />
     </View>
   );
 }
