@@ -9,7 +9,6 @@ import * as Print from "expo-print";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -19,6 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Loader } from "@/components/Loader";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
 import { ROUTES } from "@/constants/routes";
@@ -187,7 +187,7 @@ export default function ScannerScreen() {
                 </Pressable>
               </>
             ) : (
-              <ActivityIndicator color={C.primary} />
+              <Loader size={48} />
             )}
           </View>
         )}
@@ -236,7 +236,7 @@ export default function ScannerScreen() {
           disabled={!showCamera || capturing}
         >
           {capturing ? (
-            <ActivityIndicator color="#fff" />
+            <Loader size={40} />
           ) : (
             <View style={styles.shutterInner} />
           )}
@@ -248,7 +248,7 @@ export default function ScannerScreen() {
           disabled={pages.length === 0 || saving}
         >
           {saving ? (
-            <ActivityIndicator color={C.primary} />
+            <Loader size={36} />
           ) : (
             <>
               <Feather name="check" size={22} color={pages.length === 0 ? C.mutedForeground : C.primary} />

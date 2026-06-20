@@ -1,7 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -17,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Loader } from "@/components/Loader";
 import colors from "@/constants/colors";
 import { SCREEN_PADDING, cardShadow, fonts } from "@/constants/theme";
 
@@ -136,7 +136,7 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={v.fg} size="small" />
+        <Loader size={s.icon + 10} />
       ) : (
         <>
           {icon && <Feather name={icon} size={s.icon} color={v.fg} />}

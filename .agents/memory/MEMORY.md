@@ -1,1 +1,1 @@
-- [Global color rebrand](color-rebrand.md) — how to swap a brand color everywhere across the web (Tailwind) + Expo apps without missing surfaces.
+- [Mobile loaders](mobile-loaders.md) — all loading/processing states in pdf-convert-mobile use the shared `Loader`/`ScreenLoader` (processing.json), not ActivityIndicator.

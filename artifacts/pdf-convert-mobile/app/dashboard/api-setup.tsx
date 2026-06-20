@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { Loader } from "@/components/Loader";
 import { Badge, Button, Card, Field, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -195,7 +196,9 @@ export default function ApiSetupScreen() {
 
         {/* Keys list */}
         {keysLoading ? (
-          <Text style={styles.emptyText}>Loading keys…</Text>
+          <View style={{ alignItems: "center", paddingVertical: 24 }}>
+            <Loader size={48} />
+          </View>
         ) : keys.length === 0 ? (
           <View style={styles.emptyBox}>
             <View style={styles.emptyIcon}>

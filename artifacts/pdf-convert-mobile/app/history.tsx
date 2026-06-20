@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { Loader } from "@/components/Loader";
 import { Badge, Button, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -66,7 +67,11 @@ export default function HistoryScreen() {
         </View>
       )}
 
-      {loading ? null : entries.length === 0 ? (
+      {loading ? (
+        <View style={styles.loadingWrap}>
+          <Loader size={64} />
+        </View>
+      ) : entries.length === 0 ? (
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
             <Feather name="clock" size={34} color={C.primary} />
@@ -130,6 +135,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   count: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
+  loadingWrap: { alignItems: "center", paddingVertical: 60 },
   empty: { alignItems: "center", paddingVertical: 60, gap: 12 },
   emptyIcon: {
     width: 72,

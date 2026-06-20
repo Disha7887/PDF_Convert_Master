@@ -19,6 +19,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ScreenLoader } from "@/components/Loader";
 import colors from "@/constants/colors";
 import { fonts } from "@/constants/theme";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -92,7 +93,13 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!fontsLoaded && !fontError) {
+    return (
+      <SafeAreaProvider>
+        <ScreenLoader />
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
