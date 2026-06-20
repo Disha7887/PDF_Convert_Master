@@ -39,6 +39,25 @@ function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
+function timeAgo(value: string | null): string {
+  if (!value) return "";
+  const d = new Date(value).getTime();
+  if (Number.isNaN(d)) return "";
+  const mins = Math.floor((Date.now() - d) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+const STATUS_BADGE: Record<string, string> = {
+  completed: "bg-green-100 text-green-700",
+  failed: "bg-red-100 text-red-700",
+  processing: "bg-amber-100 text-amber-700",
+  pending: "bg-gray-100 text-gray-700",
+};
+
 interface StatCardProps {
   title: string;
   value: string;
@@ -287,6 +306,39 @@ export const UsageStatistics: React.FC = () => {
                               className="bg-blue-600 h-2 rounded-full"
                               style={{ width: `${Math.round((tool.count / maxCount) * 100)}%` }}
                             ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              {/* Recent conversions */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Recent Conversions</CardTitle>
+                </CardHeader>
+                <div className="p-6 pt-0">
+                  {usage && usage.recent.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-8 text-center" data-testid="empty-usage-recent">No conversions recorded yet.</p>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {(usage?.recent ?? []).map((job) => (
+                        <div
+                          key={job.id}
+                          className="flex items-center justify-between gap-4 py-3"
+                          data-testid={`usage-recent-${job.id}`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-700 truncate">{job.toolName}</p>
+                            <p className="text-xs text-gray-500 truncate">{job.inputFilename}</p>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <Badge className={`capitalize border-0 ${STATUS_BADGE[job.status] ?? "bg-gray-100 text-gray-700"}`}>
+                              {job.status}
+                            </Badge>
+                            <span className="text-xs text-gray-500 w-16 text-right">{timeAgo(job.createdAt)}</span>
                           </div>
                         </div>
                       ))}
