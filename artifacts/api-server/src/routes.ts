@@ -2502,11 +2502,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: j.createdAt,
         }));
 
+      // Per-day breakdown for the last 14 days (oldest -> newest), so charts can
+      // plot real activity. Days with no conversions are included with count 0.
+      const DAY_WINDOW = 14;
+      const toLocalDateKey = (d: Date) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+      const dayCounts: Record<string, number> = {};
+      for (const j of jobs) {
+        if (!j.createdAt) continue;
+        const created = new Date(j.createdAt as any);
+        if (Number.isNaN(created.getTime())) continue;
+        const key = toLocalDateKey(created);
+        dayCounts[key] = (dayCounts[key] || 0) + 1;
+      }
+      const byDay: { date: string; count: number }[] = [];
+      const today = new Date();
+      for (let i = DAY_WINDOW - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = toLocalDateKey(d);
+        byDay.push({ date: key, count: dayCounts[key] || 0 });
+      }
+
       return res.json({
         success: true,
         data: {
           totals: { total, completed, failed, apiCalls, webCalls, successRate, dataProcessed, activeKeys: keys.length },
           mostUsed,
+          byDay,
           recent,
         },
       });

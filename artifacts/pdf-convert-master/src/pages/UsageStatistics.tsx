@@ -21,6 +21,7 @@ interface UsageData {
     activeKeys: number;
   };
   mostUsed: { type: string; name: string; count: number }[];
+  byDay: { date: string; count: number }[];
   recent: {
     id: number;
     toolType: string;
@@ -99,6 +100,13 @@ export const UsageStatistics: React.FC = () => {
 
   const totals = usage?.totals;
   const maxCount = Math.max(1, ...((usage?.mostUsed ?? []).map((t) => t.count)));
+  const byDay = usage?.byDay ?? [];
+  const maxDay = Math.max(1, ...byDay.map((d) => d.count));
+  const dayLabel = (dateKey: string) => {
+    const parsed = new Date(`${dateKey}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return dateKey;
+    return parsed.toLocaleDateString(undefined, { weekday: "short" });
+  };
 
   return (
     
@@ -313,6 +321,31 @@ export const UsageStatistics: React.FC = () => {
                   )}
                 </div>
               </Card>
+
+              {/* Daily usage bar chart */}
+              {byDay.length > 0 && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">Daily Usage</CardTitle>
+                    <p className="text-sm text-gray-500">Conversions over the last {byDay.length} days</p>
+                  </CardHeader>
+                  <div className="p-6 pt-0">
+                    <div className="flex items-end justify-between gap-2 h-40" data-testid="usage-daily-chart">
+                      {byDay.map((day) => (
+                        <div key={day.date} className="flex flex-1 flex-col items-center justify-end gap-2 h-full">
+                          <span className="text-xs text-gray-500">{day.count}</span>
+                          <div
+                            className="w-full rounded-md bg-blue-600 min-h-[4px]"
+                            style={{ height: `${Math.round((day.count / maxDay) * 100)}%` }}
+                            data-testid={`usage-daily-bar-${day.date}`}
+                          ></div>
+                          <span className="text-xs text-gray-400">{dayLabel(day.date)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               {/* Recent conversions */}
               <Card className="mt-6">

@@ -96,6 +96,14 @@ interface RealUsageData extends UsageStats {
   recent: RecentJob[];
 }
 
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function dayLabel(dateKey: string): string {
+  const parsed = new Date(`${dateKey}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return dateKey;
+  return WEEKDAY_LABELS[parsed.getDay()] ?? dateKey;
+}
+
 async function fetchRealUsage(token: string): Promise<RealUsageData> {
   const res = await fetch(`${API_BASE_URL}/usage`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -118,7 +126,9 @@ async function fetchRealUsage(token: string): Promise<RealUsageData> {
       toolTitle: m.name,
       count: m.count,
     })),
-    byDay: [],
+    byDay: ((d.byDay ?? []) as { date: string; count: number }[])
+      .slice(-7)
+      .map((day) => ({ date: dayLabel(day.date), count: day.count })),
     byCategory: [],
     activeKeys: t.activeKeys,
     recent: d.recent as RecentJob[],
