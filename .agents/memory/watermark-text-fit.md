@@ -8,24 +8,25 @@ description: How to size single-line overlay text so it fits a draggable box wid
 The PDF watermark/signature overlays use a fixed-aspect `DraggableBox`; the box
 height comes from `aspect` and the overlay font size is `boxWidthPx * aspect`.
 
-**Rule (measure, don't guess):** size the box from the *measured* glyph width,
-not a per-character length heuristic. Render a hidden `<Text>` (opacity 0,
-absolutely positioned off-screen) with the same `fontFamily`/`letterSpacing` at a
-reference font size (e.g. 100) and read `e.nativeEvent.layout.width` in
-`onLayout` → `unit = width / 100` (width-per-point). Then
-`aspect = clamp(0.8 / unit)` so the rendered text width = `unit * fontSize =
-0.8 * boxW`, i.e. ~10% margin each side. A length-based guess
-(`1/(L*k)`) was tried first and kept overflowing because the real advance varies
-by font/string.
+**Rule:** size the text with a length-based box aspect, the same way the Sign
+tool's `signAspect` does — `aspect = clamp(1 / textLength)` for the bold
+watermark font, so font size = `boxW * aspect` and the rendered text lands at
+~80% of the box width (fits with margin). Force `letterSpacing: 0` and
+`numberOfLines={1}`.
 
-**Why:** `adjustsFontSizeToFit` does NOT work on Expo web (native only), so the
-on-screen fit is governed entirely by the computed font size — there is no
-auto-shrink safety net. Measuring the actual text is the only reliable fit.
+**Why NOT to measure off-screen:** an earlier version rendered a hidden `<Text>`
+at font size 100 and read `onLayout` width to compute an exact unit. This RACED
+the web font load: the measurement ran with the *fallback* font (narrower),
+produced too small a unit, and the overlay font came out too big — the watermark
+overflowed its box on freshly-loaded / real PDF pages (it looked fine only when
+the font was already cached). The Sign tool never had this bug because it uses
+the simple length heuristic. Do not reintroduce a measuring `<Text>` unless you
+also re-measure after fonts finish loading.
 
-**How to apply:** if a watermark/overlay clips or overflows the dashed box,
-the hidden measurer + `0.8/unit` aspect is the source of truth; lower the `0.8`
-for more margin. Also force `letterSpacing: 0` on the overlay (the base
-`wmText` style sets `letterSpacing: 2`, which widens it). The pdf-lib builder
-draws watermark text horizontally from `wmPlace`, sizing via
-`helv.widthOfTextAtSize`, so builder output is exact regardless of the preview
-approximation; only the on-screen preview needs the measurement.
+**Also:** `adjustsFontSizeToFit` does NOT work on Expo web (native only), so it
+is not a safety net — the computed font size must be correct on its own.
+
+**Builder parity:** the pdf-lib builder draws watermark text horizontally from
+`wmPlace`, sizing via `helv.widthOfTextAtSize`, so the exported PDF is exact
+regardless of the preview's approximation; only the on-screen preview uses the
+length heuristic.

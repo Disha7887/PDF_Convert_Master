@@ -192,9 +192,6 @@ export default function PdfEditorScreen() {
   const [wmText, setWmText] = useState("CONFIDENTIAL");
   const [wmOpacity, setWmOpacity] = useState(0.22);
   const [wmPos, setWmPos] = useState<Placement>({ x: 0.15, y: 0.42, w: 0.7 });
-  // Measured width-per-point of the watermark text (set by a hidden measuring
-  // <Text>), so the box/font sizing fits the real glyphs instead of a guess.
-  const [wmUnit, setWmUnit] = useState(8);
 
   // add-image
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -235,12 +232,12 @@ export default function PdfEditorScreen() {
         : 0.4
       : Math.max(0.12, Math.min(0.6, 2 / Math.max(1, signName.trim().length)));
 
-  // Aspect (height/width) of the watermark box. `wmUnit` is the measured text
-  // width at font size 1, so font size = boxW * wmAspect makes the rendered text
-  // width = wmUnit * fontSize = 0.8 * boxW — i.e. it always fits the box width
-  // with a small margin, on both native and web (adjustsFontSizeToFit is
-  // web-unsupported, so we cannot rely on it).
-  const wmAspect = Math.max(0.04, Math.min(0.6, 0.8 / Math.max(1, wmUnit)));
+  // Same approach as the Sign tool's signAspect: derive the box aspect from the
+  // text length so font size = boxW * wmAspect keeps the bold text inside the box
+  // width (~80%). No off-screen measuring text — that raced the web font load and
+  // over-sized the text before the bold font had loaded (caused overflow).
+  const wmLen = Math.max(1, (wmText.trim() || "WATERMARK").length);
+  const wmAspect = Math.max(0.05, Math.min(0.6, 1 / wmLen));
 
   // Snap the watermark box to one of nine anchor positions, keeping its size.
   const placeWatermark = useCallback(
@@ -530,29 +527,6 @@ export default function PdfEditorScreen() {
                     </Text>
                   </DragMove>
                 ))}
-
-            {/* hidden text used only to measure the real glyph width */}
-            {mode === "watermark" && (
-              <View
-                style={styles.wmMeasure}
-                pointerEvents="none"
-                aria-hidden
-              >
-                <Text
-                  style={{
-                    fontFamily: fonts.headingBold,
-                    fontSize: 100,
-                    letterSpacing: 0,
-                  }}
-                  onLayout={(e) => {
-                    const w = e.nativeEvent.layout.width;
-                    if (w > 0) setWmUnit(w / 100);
-                  }}
-                >
-                  {wmText || "WATERMARK"}
-                </Text>
-              </View>
-            )}
 
             {/* watermark overlay — drag to move, corner to resize */}
             {mode === "watermark" && pageBox.width > 0 && (
@@ -1375,13 +1349,6 @@ const styles = StyleSheet.create({
   dragMove: { position: "absolute", paddingHorizontal: 4, paddingVertical: 2 },
   overlayText: { fontFamily: fonts.bodySemibold },
   wmWrap: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
-  wmMeasure: {
-    position: "absolute",
-    left: -9999,
-    top: 0,
-    opacity: 0,
-    alignItems: "flex-start",
-  },
   wmText: {
     fontSize: 34,
     fontFamily: fonts.headingBold,
