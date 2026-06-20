@@ -2358,15 +2358,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // User registration
   app.post("/api/signup", register);
+  app.post("/api/auth/register", register); // alias used by web AuthContext
   
   // User sign in
   app.post("/api/signin", signin);
+  app.post("/api/auth/login", signin); // alias used by web AuthContext
   
   // Protected route: Get current user (dashboard)
   app.get("/api/dashboard", authenticateUser, getCurrentUser);
   
   // Protected route: Get user profile
   app.get("/api/user", authenticateUser, getCurrentUser);
+  app.get("/api/auth/user", authenticateUser, getCurrentUser); // alias
 
   // API health check
   // ===========================================================================
