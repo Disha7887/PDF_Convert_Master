@@ -6,7 +6,7 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
@@ -30,6 +30,18 @@ import {
 
 const C = colors.light;
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
+
+/** Show a friendly "taking longer" hint once a job runs past this many seconds. */
+const LONG_RUN_THRESHOLD_S = 30;
+
+/** Server tool types expected to run noticeably longer than average. */
+const SLOW_SERVER_TYPES = ["upscale", "remove_background", "remove_bg", "bg_remove", "ocr"];
+
+/** Rough total processing estimate (seconds), used only for the long-run hint. */
+function estimatedTotalSeconds(tool: Tool): number {
+  const t = tool.serverToolType ?? "";
+  return SLOW_SERVER_TYPES.some((s) => t.includes(s)) ? 90 : 45;
+}
 
 /** Output formats offered by the "Convert Image Format" tool. */
 const IMAGE_FORMAT_OPTIONS = ["png", "jpg", "webp", "gif", "avif", "tiff"] as const;
@@ -174,6 +186,22 @@ export default function ConvertScreen() {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.tools as never);
   }, [router]);
+
+  // Track elapsed processing time so we can reassure the user (and show an
+  // estimate) when a conversion runs longer than usual. Works for every tool.
+  const [elapsedSec, setElapsedSec] = useState(0);
+  useEffect(() => {
+    if (stage !== "converting") {
+      setElapsedSec(0);
+      return;
+    }
+    const startedAt = Date.now();
+    setElapsedSec(0);
+    const id = setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [stage]);
 
   const pickFiles = useCallback(async () => {
     if (!tool) return;
@@ -494,6 +522,14 @@ export default function ConvertScreen() {
           <Text style={styles.centerText}>
             Processing your file{files.length !== 1 ? "s" : ""} with {tool.title}.
           </Text>
+          {elapsedSec >= LONG_RUN_THRESHOLD_S && (
+            <View style={styles.longRunBox} testID="text-taking-longer">
+              <Text style={styles.longRunTitle}>This is taking longer than usual.</Text>
+              <Text style={styles.longRunText}>
+                {`Estimated time remaining: about ${Math.max(estimatedTotalSeconds(tool) - elapsedSec, 5)}s`}
+              </Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -701,6 +737,9 @@ const styles = StyleSheet.create({
   fileMeta: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 2 },
 
   centerState: { alignItems: "center", gap: 10, paddingVertical: 48 },
+  longRunBox: { alignItems: "center", gap: 4, marginTop: 16, paddingHorizontal: 24 },
+  longRunTitle: { fontSize: 13.5, color: C.warning, fontFamily: fonts.headingSemibold, textAlign: "center" },
+  longRunText: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center" },
   centerTitle: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingSemibold, marginTop: 8 },
   centerText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center" },
 
