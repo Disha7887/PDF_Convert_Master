@@ -44,6 +44,17 @@ export interface TextItemInput {
   text: string;
   size: number;
   color: string;
+  /** Top-left position as page fractions (0..1). Defaults applied when absent. */
+  x?: number;
+  y?: number;
+}
+
+/** A crop rectangle expressed as page fractions (0..1) from the top-left. */
+export interface CropRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 export interface BuildPdfInput {
@@ -59,6 +70,8 @@ export interface BuildPdfInput {
 
   textItems?: TextItemInput[];
   cropInset?: number;
+  /** Free crop rectangle from the editor (takes precedence over cropInset). */
+  cropRect?: CropRect;
   signName?: string;
   signFont?: string;
   /** Drawn signature: SVG path strings in pad-pixel space + pad dimensions. */
@@ -67,6 +80,8 @@ export interface BuildPdfInput {
   signPlace?: Placement;
   wmText?: string;
   wmOpacity?: number;
+  /** Watermark font size in PDF points. */
+  wmSize?: number;
   imageUri?: string;
   /** Where the image is placed/sized on the page (from the editor preview). */
   imagePlace?: Placement;
@@ -185,23 +200,43 @@ export async function buildEditedPdf(input: BuildPdfInput): Promise<string> {
       for (const [pageIdx, list] of byPage) {
         const page = pages[pageIdx];
         if (!page) continue;
-        const { height } = page.getSize();
-        let y = height - 60;
+        const { width, height } = page.getSize();
+        let stack = height - 60;
         for (const it of list) {
+          // Use the editor-supplied top-left placement when present; otherwise
+          // fall back to a simple top-down stack.
+          const hasPos = typeof it.x === "number" && typeof it.y === "number";
+          const x = hasPos ? (it.x as number) * width : 50;
+          const baseline = hasPos
+            ? height * (1 - (it.y as number)) - it.size
+            : stack;
           page.drawText(sanitizeText(it.text), {
-            x: 50,
-            y,
+            x,
+            y: baseline,
             size: it.size,
             font: helv,
             color: hexToRgb(it.color),
           });
-          y -= it.size + 14;
+          stack -= it.size + 14;
         }
       }
       break;
     }
 
     case "crop": {
+      const rect = input.cropRect;
+      if (rect && (rect.x > 0 || rect.y > 0 || rect.w < 1 || rect.h < 1)) {
+        for (const page of pages) {
+          const { width, height } = page.getSize();
+          page.setCropBox(
+            width * rect.x,
+            height * (1 - (rect.y + rect.h)),
+            width * rect.w,
+            height * rect.h,
+          );
+        }
+        break;
+      }
       const inset = input.cropInset ?? 0;
       if (inset > 0) {
         for (const page of pages) {
@@ -264,7 +299,7 @@ export async function buildEditedPdf(input: BuildPdfInput): Promise<string> {
     case "watermark": {
       const text = sanitizeText((input.wmText ?? "WATERMARK").trim() || "WATERMARK");
       const opacity = input.wmOpacity ?? 0.22;
-      const size = 56;
+      const size = input.wmSize ?? 56;
       const angleDeg = 35;
       const rad = (angleDeg * Math.PI) / 180;
       for (const page of pages) {

@@ -68,10 +68,21 @@ const WM_OPACITY: { label: string; value: number }[] = [
   { label: "Medium", value: 0.22 },
   { label: "Strong", value: 0.38 },
 ];
+const WM_SIZES: { label: string; value: number }[] = [
+  { label: "Small", value: 36 },
+  { label: "Medium", value: 56 },
+  { label: "Large", value: 84 },
+];
 const SIGN_FONTS: { label: string; family: string }[] = [
   { label: "Classic", family: fonts.heading },
   { label: "Modern", family: fonts.headingSemibold },
   { label: "Bold", family: fonts.headingBold },
+];
+const SIGN_SIZES: { label: string; w: number }[] = [
+  { label: "Small", w: 0.25 },
+  { label: "Medium", w: 0.4 },
+  { label: "Large", w: 0.6 },
+  { label: "X-Large", w: 0.8 },
 ];
 
 interface TextItem {
@@ -80,6 +91,8 @@ interface TextItem {
   text: string;
   size: number;
   color: string;
+  x: number;
+  y: number;
 }
 
 function stripExt(name: string): string {
@@ -171,8 +184,13 @@ export default function PdfEditorScreen() {
   const [color, setColor] = useState(TEXT_COLORS[0]);
   const [items, setItems] = useState<TextItem[]>([]);
 
-  // crop
-  const [cropInset, setCropInset] = useState(0.1);
+  // crop — a free rectangle as page fractions (top-left origin)
+  const [cropRect, setCropRect] = useState<Placement & { h: number }>({
+    x: 0.1,
+    y: 0.1,
+    w: 0.8,
+    h: 0.8,
+  });
 
   // sign
   const [signMode, setSignMode] = useState<"type" | "draw">("type");
@@ -184,6 +202,7 @@ export default function PdfEditorScreen() {
   // watermark
   const [wmText, setWmText] = useState("CONFIDENTIAL");
   const [wmOpacity, setWmOpacity] = useState(0.22);
+  const [wmSize, setWmSize] = useState(56);
 
   // add-image
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -227,10 +246,21 @@ export default function PdfEditorScreen() {
   const addTextItem = useCallback(() => {
     const t = textValue.trim();
     if (!t) return;
-    setItems((prev) => [
-      ...prev,
-      { id: `t_${Date.now()}`, page, text: t, size: fontSize, color },
-    ]);
+    setItems((prev) => {
+      const onPage = prev.filter((it) => it.page === page).length;
+      return [
+        ...prev,
+        {
+          id: `t_${Date.now()}`,
+          page,
+          text: t,
+          size: fontSize,
+          color,
+          x: 0.08,
+          y: Math.min(0.85, 0.08 + onPage * 0.08),
+        },
+      ];
+    });
     setTextValue("");
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [textValue, page, fontSize, color]);
@@ -286,14 +316,17 @@ export default function PdfEditorScreen() {
           text: it.text,
           size: it.size,
           color: it.color,
+          x: it.x,
+          y: it.y,
         })),
-        cropInset,
+        cropRect,
         signName: signMode === "type" ? signName : "",
         signFont,
         signDraw: signMode === "draw" ? signDraw ?? undefined : undefined,
         signPlace: signPos,
         wmText,
         wmOpacity,
+        wmSize,
         imageUri: imageUri ?? undefined,
         imagePlace: imgPos,
         deletedPages: Array.from(deleted),
@@ -319,7 +352,7 @@ export default function PdfEditorScreen() {
     fileName,
     mode,
     items,
-    cropInset,
+    cropRect,
     signMode,
     signName,
     signFont,
@@ -327,6 +360,7 @@ export default function PdfEditorScreen() {
     signPos,
     wmText,
     wmOpacity,
+    wmSize,
     imageUri,
     imgPos,
     deleted,
@@ -449,27 +483,47 @@ export default function PdfEditorScreen() {
               </View>
             )}
 
-            {/* edit overlays */}
+            {/* edit overlays — each text box can be dragged to position */}
             {mode === "edit" &&
+              pageBox.width > 0 &&
               items
                 .filter((it) => it.page === page)
-                .map((it, idx) => (
-                  <Text
+                .map((it) => (
+                  <DragMove
                     key={it.id}
-                    style={[
-                      styles.overlayText,
-                      { color: it.color, fontSize: it.size, top: 16 + idx * 28 },
-                    ]}
-                    numberOfLines={1}
+                    container={pageBox}
+                    value={{ x: it.x, y: it.y }}
+                    onChange={(pos) =>
+                      setItems((prev) =>
+                        prev.map((p) =>
+                          p.id === it.id ? { ...p, x: pos.x, y: pos.y } : p,
+                        ),
+                      )
+                    }
                   >
-                    {it.text}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.overlayText,
+                        { color: it.color, fontSize: it.size },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {it.text}
+                    </Text>
+                  </DragMove>
                 ))}
 
             {/* watermark overlay */}
             {mode === "watermark" && (
               <View style={styles.wmWrap} pointerEvents="none">
-                <Text style={[styles.wmText, { opacity: wmOpacity }]}>{wmText || "WATERMARK"}</Text>
+                <Text
+                  style={[
+                    styles.wmText,
+                    { opacity: wmOpacity, fontSize: 34 * (wmSize / 56) },
+                  ]}
+                >
+                  {wmText || "WATERMARK"}
+                </Text>
               </View>
             )}
 
@@ -551,19 +605,12 @@ export default function PdfEditorScreen() {
               </DraggableBox>
             ) : null}
 
-            {/* crop frame */}
-            {mode === "crop" && cropInset > 0 && (
-              <View
-                style={[
-                  styles.cropFrame,
-                  {
-                    top: `${cropInset * 100}%`,
-                    bottom: `${cropInset * 100}%`,
-                    left: `${cropInset * 100}%`,
-                    right: `${cropInset * 100}%`,
-                  },
-                ]}
-                pointerEvents="none"
+            {/* crop frame — drag to move, drag the corner to resize */}
+            {mode === "crop" && pageBox.width > 0 && (
+              <CropBox
+                container={pageBox}
+                value={cropRect}
+                onChange={setCropRect}
               />
             )}
           </View>
@@ -643,17 +690,36 @@ export default function PdfEditorScreen() {
 
         {mode === "crop" && (
           <View style={{ gap: 14 }}>
-            <Text style={styles.controlTitle}>Trim margins</Text>
-            <Text style={styles.controlHelp}>Crop the same margin off every page.</Text>
+            <Text style={styles.controlTitle}>Crop area</Text>
+            <Text style={styles.controlHelp}>
+              Drag the frame to move it and drag the corner handle to resize, or
+              pick a quick margin below. The same area is cropped on every page.
+            </Text>
             <View style={styles.chipRow}>
-              {CROP_PRESETS.map((p) => (
-                <Chip
-                  key={p.label}
-                  label={p.label}
-                  active={cropInset === p.inset}
-                  onPress={() => setCropInset(p.inset)}
-                />
-              ))}
+              {CROP_PRESETS.map((p) => {
+                const rect =
+                  p.inset === 0
+                    ? { x: 0, y: 0, w: 1, h: 1 }
+                    : {
+                        x: p.inset,
+                        y: p.inset,
+                        w: 1 - p.inset * 2,
+                        h: 1 - p.inset * 2,
+                      };
+                const active =
+                  Math.abs(cropRect.x - rect.x) < 0.001 &&
+                  Math.abs(cropRect.y - rect.y) < 0.001 &&
+                  Math.abs(cropRect.w - rect.w) < 0.001 &&
+                  Math.abs(cropRect.h - rect.h) < 0.001;
+                return (
+                  <Chip
+                    key={p.label}
+                    label={p.label}
+                    active={active}
+                    onPress={() => setCropRect(rect)}
+                  />
+                );
+              })}
             </View>
           </View>
         )}
@@ -722,6 +788,26 @@ export default function PdfEditorScreen() {
                 </View>
               </>
             )}
+
+            <View>
+              <Text style={styles.controlLabel}>Size</Text>
+              <View style={styles.chipRow}>
+                {SIGN_SIZES.map((s) => (
+                  <Chip
+                    key={s.label}
+                    label={s.label}
+                    active={Math.abs(signPos.w - s.w) < 0.001}
+                    onPress={() =>
+                      setSignPos((p) => ({ ...p, w: Math.min(s.w, 1 - p.x) }))
+                    }
+                  />
+                ))}
+              </View>
+              <Text style={styles.controlHelp}>
+                Pick a size, or drag the signature to move it and drag the corner
+                handle to resize.
+              </Text>
+            </View>
           </View>
         )}
 
@@ -746,6 +832,19 @@ export default function PdfEditorScreen() {
                     label={o.label}
                     active={wmOpacity === o.value}
                     onPress={() => setWmOpacity(o.value)}
+                  />
+                ))}
+              </View>
+            </View>
+            <View>
+              <Text style={styles.controlLabel}>Size</Text>
+              <View style={styles.chipRow}>
+                {WM_SIZES.map((s) => (
+                  <Chip
+                    key={s.label}
+                    label={s.label}
+                    active={wmSize === s.value}
+                    onPress={() => setWmSize(s.value)}
                   />
                 ))}
               </View>
@@ -921,8 +1020,13 @@ function DraggableBox({
   const resize = useMemo(
     () =>
       PanResponder.create({
+        // Claim the gesture on the handle and never let the parent "move"
+        // responder steal it (that bug made the corner handle only pan).
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
         },
@@ -958,8 +1062,161 @@ function DraggableBox({
       {...move.panHandlers}
     >
       {children}
-      <View style={styles.resizeHandle} {...resize.panHandlers}>
-        <Feather name="maximize-2" size={11} color="#ffffff" />
+      <View
+        style={styles.resizeHandle}
+        hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+        {...resize.panHandlers}
+      >
+        <Feather name="maximize-2" size={12} color="#ffffff" />
+      </View>
+    </View>
+  );
+}
+
+/** A move-only draggable wrapper that auto-sizes to its content (used for text). */
+function DragMove({
+  container,
+  value,
+  onChange,
+  children,
+}: {
+  container: { width: number; height: number };
+  value: { x: number; y: number };
+  onChange: (p: { x: number; y: number }) => void;
+  children: React.ReactNode;
+}) {
+  const vRef = React.useRef(value);
+  vRef.current = value;
+  const cRef = React.useRef(container);
+  cRef.current = container;
+  const start = React.useRef(value);
+
+  const move = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          start.current = { ...vRef.current };
+        },
+        onPanResponderMove: (_e, g) => {
+          const c = cRef.current;
+          if (!c.width || !c.height) return;
+          onChange({
+            x: clampFrac(start.current.x + g.dx / c.width, 0, 0.9),
+            y: clampFrac(start.current.y + g.dy / c.height, 0.02, 0.96),
+          });
+        },
+      }),
+    [onChange],
+  );
+
+  return (
+    <View
+      style={[
+        styles.dragMove,
+        { left: value.x * container.width, top: value.y * container.height },
+      ]}
+      {...move.panHandlers}
+    >
+      {children}
+    </View>
+  );
+}
+
+/** A free crop rectangle: drag the body to move, drag the corner to resize. */
+function CropBox({
+  container,
+  value,
+  onChange,
+}: {
+  container: { width: number; height: number };
+  value: { x: number; y: number; w: number; h: number };
+  onChange: (p: { x: number; y: number; w: number; h: number }) => void;
+}) {
+  const vRef = React.useRef(value);
+  vRef.current = value;
+  const cRef = React.useRef(container);
+  cRef.current = container;
+  const start = React.useRef(value);
+  const MIN = 0.12;
+
+  const move = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          start.current = { ...vRef.current };
+        },
+        onPanResponderMove: (_e, g) => {
+          const c = cRef.current;
+          if (!c.width || !c.height) return;
+          const x = clampFrac(
+            start.current.x + g.dx / c.width,
+            0,
+            Math.max(0, 1 - start.current.w),
+          );
+          const y = clampFrac(
+            start.current.y + g.dy / c.height,
+            0,
+            Math.max(0, 1 - start.current.h),
+          );
+          onChange({ x, y, w: start.current.w, h: start.current.h });
+        },
+      }),
+    [onChange],
+  );
+
+  const resize = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: () => {
+          start.current = { ...vRef.current };
+        },
+        onPanResponderMove: (_e, g) => {
+          const c = cRef.current;
+          if (!c.width || !c.height) return;
+          const w = clampFrac(
+            start.current.w + g.dx / c.width,
+            MIN,
+            1 - start.current.x,
+          );
+          const h = clampFrac(
+            start.current.h + g.dy / c.height,
+            MIN,
+            1 - start.current.y,
+          );
+          onChange({ x: start.current.x, y: start.current.y, w, h });
+        },
+      }),
+    [onChange],
+  );
+
+  return (
+    <View
+      style={[
+        styles.cropFrame,
+        {
+          left: value.x * container.width,
+          top: value.y * container.height,
+          width: value.w * container.width,
+          height: value.h * container.height,
+        },
+      ]}
+      {...move.panHandlers}
+    >
+      <View
+        style={styles.resizeHandle}
+        hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+        {...resize.panHandlers}
+      >
+        <Feather name="maximize-2" size={12} color="#ffffff" />
       </View>
     </View>
   );
@@ -1066,7 +1323,8 @@ const styles = StyleSheet.create({
   segmentActive: { backgroundColor: C.background },
   segmentText: { fontSize: 13.5, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
   segmentTextActive: { color: C.primary, fontFamily: fonts.bodySemibold },
-  overlayText: { position: "absolute", left: 20, fontFamily: fonts.bodySemibold },
+  dragMove: { position: "absolute", paddingHorizontal: 4, paddingVertical: 2 },
+  overlayText: { fontFamily: fonts.bodySemibold },
   wmWrap: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   wmText: {
     fontSize: 34,
