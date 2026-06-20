@@ -305,6 +305,13 @@ async function reencodeImage(uri: string, fmt: "png" | "jpg"): Promise<string> {
   return result.uri;
 }
 
+/** Filled selection tick (user-provided glyph), tinted with the given colour. */
+function tickXml(color: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" id="correct">
+  <path fill="${color}" d="M32 12a20 20 0 1 0 20 20 20 20 0 0 0-20-20Zm9.41 16.41-11 11a2 2 0 0 1-2.82 0l-6-6a2 2 0 0 1 2.82-2.82L29 35.17l9.59-9.58a2 2 0 0 1 2.82 2.82Z"/>
+</svg>`;
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -1073,11 +1080,11 @@ export default function ConvertScreen() {
                     style={[styles.formatTile, active && styles.formatTileActive]}
                     testID={`format-${f.id}`}
                   >
-                    <Feather
-                      name={active ? "check-circle" : "circle"}
-                      size={18}
-                      color={active ? C.primary : C.border}
-                    />
+                    {active ? (
+                      <SvgXml xml={tickXml(C.primary)} width={20} height={20} />
+                    ) : (
+                      <Feather name="circle" size={18} color={C.border} />
+                    )}
                     {iconXml ? (
                       <SvgXml xml={iconXml} width={28} height={28} />
                     ) : (
