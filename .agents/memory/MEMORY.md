@@ -4,4 +4,5 @@
 - [Coral rebrand](color-rebrand.md) — pdf-convert app branding is CORAL `#f7433d` (user-required); never revert to blue `#2563eb`.
 - [Mobile loaders](mobile-loaders.md) — all loading/processing states in pdf-convert-mobile use the shared `Loader`/`ScreenLoader` (processing.json), not ActivityIndicator.
 - [Lottie on Expo web](lottie-expo-web.md) — lottie-react-native@7 web needs the `@lottiefiles/dotlottie-react` optional peer installed.
+- [pdf.js web-only split](pdfjs-mobile-web-split.md) — real PDF page rendering: pdfjs imported only from `.web.ts` (native stub), worker via unpkg CDN; draw/type signature via SignaturePad + drawSvgPath.
 - [Mobile real conversions](mobile-real-conversions.md) — Expo CONVERT tools hit the real api-server; web FormData needs a real Blob (RN uri-cast fails on web); conversions are always-real via USE_REAL_CONVERSIONS, independent of USE_MOCK_DATA; EXPO_PUBLIC_DOMAIN inlined at bundle time (restart expo after change).

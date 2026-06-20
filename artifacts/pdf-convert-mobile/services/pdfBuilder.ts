@@ -9,6 +9,8 @@ import {
   type RGB,
 } from "pdf-lib";
 
+import { readPdfBytes } from "./pdfDoc";
+
 /**
  * Real PDF generation for the mobile editor. Every editor mode resolves here and
  * produces genuine PDF bytes via pdf-lib (no copy-only / placeholder output).
@@ -49,6 +51,8 @@ export interface BuildPdfInput {
   cropInset?: number;
   signName?: string;
   signFont?: string;
+  /** Drawn signature: SVG path strings in pad-pixel space + pad dimensions. */
+  signDraw?: { paths: string[]; width: number; height: number };
   wmText?: string;
   wmOpacity?: number;
   imageUri?: string;
@@ -107,7 +111,7 @@ async function loadOrCreateDoc(
     // with placeholder pages.
     let bytes: Uint8Array;
     try {
-      bytes = await new File(srcUri).bytes();
+      bytes = await readPdfBytes(srcUri);
     } catch {
       throw new Error("Could not read the selected PDF. Please try again.");
     }
@@ -201,13 +205,40 @@ export async function buildEditedPdf(input: BuildPdfInput): Promise<string> {
     }
 
     case "sign": {
+      const draw = input.signDraw;
+      const page = pages[input.activePage] ?? pages[pages.length - 1];
+      const { width } = page.getSize();
+      if (draw && draw.paths.length && draw.width > 0) {
+        // Embed the drawn signature as vector strokes. pdf-lib's drawSvgPath
+        // uses SVG coordinates (y-down) anchored at (x, y); strokes extend down
+        // from y, so anchor above the signature line.
+        const targetW = 220;
+        const scale = targetW / draw.width;
+        const drawH = draw.height * scale;
+        const x = Math.max(40, width - targetW - 50);
+        const yTop = 62 + drawH + 6;
+        for (const d of draw.paths) {
+          page.drawSvgPath(d, {
+            x,
+            y: yTop,
+            scale,
+            borderColor: rgb(0.11, 0.14, 0.2),
+            borderWidth: 1.8,
+          });
+        }
+        page.drawLine({
+          start: { x, y: 62 },
+          end: { x: width - 50, y: 62 },
+          thickness: 1,
+          color: rgb(0.6, 0.62, 0.66),
+        });
+        break;
+      }
       const name = (input.signName ?? "").trim();
       if (name) {
         const oblique = await doc.embedFont(StandardFonts.HelveticaOblique);
-        const page = pages[input.activePage] ?? pages[pages.length - 1];
         const size = 24;
         const textW = oblique.widthOfTextAtSize(sanitizeText(name), size);
-        const { width } = page.getSize();
         page.drawText(sanitizeText(name), {
           x: Math.max(40, width - textW - 50),
           y: 70,

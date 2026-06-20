@@ -69,6 +69,7 @@
     "expo-sharing": "^14.0.8",
     "lottie-react": "^2.4.1",
     "lottie-react-native": "~7.3.8",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.0.227"
   }
 }

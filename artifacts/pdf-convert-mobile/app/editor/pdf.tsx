@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Image,
   Platform,
@@ -14,8 +14,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
+import { Loader } from "@/components/Loader";
+import SignaturePad, { type SignatureData } from "@/components/SignaturePad";
 import { Badge, Button, Card, Chip, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { addHistory } from "@/constants/history";
@@ -23,9 +26,33 @@ import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import { getToolById } from "@/constants/tools";
 import { buildEditedPdf, type EditorMode } from "@/services/pdfBuilder";
+import { getPdfPageCount } from "@/services/pdfDoc";
+import { renderPdfPage } from "@/services/pdfRender";
 
 const C = colors.light;
+/** Pages to synthesise only when the editor is opened without a source file. */
 const PAGE_COUNT = 4;
+
+/** Render + cache a real page image. Returns null while loading or on native. */
+function useRenderedPage(
+  uri: string | undefined,
+  pageIndex: number,
+  width: number,
+): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setUrl(null);
+    if (!uri) return;
+    renderPdfPage(uri, pageIndex, width)
+      .then((u) => alive && setUrl(u))
+      .catch(() => alive && setUrl(null));
+    return () => {
+      alive = false;
+    };
+  }, [uri, pageIndex, width]);
+  return url;
+}
 
 const TEXT_COLORS = ["#1c2434", "#f7433d", "#ef4444", "#22c55e", "#f59e0b"];
 const FONT_SIZES = [12, 16, 20, 28];
@@ -86,6 +113,37 @@ export default function PdfEditorScreen() {
 
   const [page, setPage] = useState(0);
 
+  // Real document info (page count is read from the actual PDF, not hardcoded).
+  const [pageCount, setPageCount] = useState<number | null>(params.uri ? null : PAGE_COUNT);
+  const [docError, setDocError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    if (!params.uri) {
+      setPageCount(PAGE_COUNT);
+      return;
+    }
+    setPageCount(null);
+    setDocError(null);
+    getPdfPageCount(params.uri)
+      .then((n) => alive && setPageCount(Math.max(1, n)))
+      .catch(() => {
+        if (!alive) return;
+        setPageCount(null);
+        setDocError("Could not read this PDF — it may be corrupted or password-protected.");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [params.uri]);
+
+  // Keep the active page in range when the real count arrives.
+  useEffect(() => {
+    if (pageCount != null && page > pageCount - 1) setPage(pageCount - 1);
+  }, [pageCount, page]);
+
+  const pageImage = useRenderedPage(params.uri, page, 620);
+
   // edit
   const [textValue, setTextValue] = useState("");
   const [fontSize, setFontSize] = useState(16);
@@ -96,8 +154,10 @@ export default function PdfEditorScreen() {
   const [cropInset, setCropInset] = useState(0.1);
 
   // sign
+  const [signMode, setSignMode] = useState<"type" | "draw">("type");
   const [signName, setSignName] = useState("");
   const [signFont, setSignFont] = useState(SIGN_FONTS[0].family);
+  const [signDraw, setSignDraw] = useState<SignatureData | null>(null);
 
   // watermark
   const [wmText, setWmText] = useState("CONFIDENTIAL");
@@ -193,8 +253,9 @@ export default function PdfEditorScreen() {
           color: it.color,
         })),
         cropInset,
-        signName,
+        signName: signMode === "type" ? signName : "",
         signFont,
+        signDraw: signMode === "draw" ? signDraw ?? undefined : undefined,
         wmText,
         wmOpacity,
         imageUri: imageUri ?? undefined,
@@ -223,8 +284,10 @@ export default function PdfEditorScreen() {
     mode,
     items,
     cropInset,
+    signMode,
     signName,
     signFont,
+    signDraw,
     wmText,
     wmOpacity,
     imageUri,
@@ -301,39 +364,45 @@ export default function PdfEditorScreen() {
       </View>
 
       {/* Page preview surface */}
-      {mode === "delete-pages" ? (
+      {pageCount == null ? (
+        <View style={styles.loadingSurface}>
+          {docError ? (
+            <Text style={styles.errorText}>{docError}</Text>
+          ) : (
+            <>
+              <Loader size={56} />
+              <Text style={styles.loadingText}>Loading your PDF…</Text>
+            </>
+          )}
+        </View>
+      ) : mode === "delete-pages" ? (
         <View style={styles.pageGrid}>
-          {Array.from({ length: PAGE_COUNT }).map((_, i) => {
-            const isDeleted = deleted.has(i);
-            return (
-              <Pressable
-                key={i}
-                onPress={() => toggleDeleted(i)}
-                style={styles.thumbWrap}
-                testID={`thumb-page-${i + 1}`}
-              >
-                <View style={[styles.thumb, isDeleted && styles.thumbDeleted]}>
-                  <Text style={styles.thumbNum}>{i + 1}</Text>
-                  {isDeleted && (
-                    <View style={styles.thumbBadge}>
-                      <Feather name="trash-2" size={16} color={C.destructiveForeground} />
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.thumbLabel}>Page {i + 1}</Text>
-              </Pressable>
-            );
-          })}
+          {Array.from({ length: pageCount }).map((_, i) => (
+            <DeleteThumb
+              key={i}
+              uri={params.uri}
+              index={i}
+              deleted={deleted.has(i)}
+              onToggle={() => toggleDeleted(i)}
+            />
+          ))}
         </View>
       ) : (
         <View style={styles.pageSurface}>
           <View style={styles.page}>
-            {/* simulated page text lines */}
-            <View style={styles.pageLinesWrap} pointerEvents="none">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <View key={i} style={[styles.pageLine, { width: `${60 + ((i * 13) % 35)}%` }]} />
-              ))}
-            </View>
+            {/* real rasterised page (web) or a clean frame fallback */}
+            {pageImage ? (
+              <Image
+                source={{ uri: pageImage }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.pageFallback} pointerEvents="none">
+                <Feather name="file-text" size={38} color={C.mutedForeground} />
+                <Text style={styles.pageFallbackText}>Page {page + 1}</Text>
+              </View>
+            )}
 
             {/* edit overlays */}
             {mode === "edit" &&
@@ -359,9 +428,33 @@ export default function PdfEditorScreen() {
               </View>
             )}
 
-            {/* signature overlay */}
-            {mode === "sign" && signName ? (
+            {/* signature overlay — typed */}
+            {mode === "sign" && signMode === "type" && signName ? (
               <Text style={[styles.signOverlay, { fontFamily: signFont }]}>{signName}</Text>
+            ) : null}
+
+            {/* signature overlay — drawn */}
+            {mode === "sign" && signMode === "draw" && signDraw && signDraw.paths.length ? (
+              <View style={styles.signDrawOverlay} pointerEvents="none">
+                <Svg
+                  width="100%"
+                  height="100%"
+                  viewBox={`0 0 ${signDraw.width} ${signDraw.height}`}
+                  preserveAspectRatio="xMaxYMax meet"
+                >
+                  {signDraw.paths.map((d, i) => (
+                    <Path
+                      key={i}
+                      d={d}
+                      stroke={C.foreground}
+                      strokeWidth={2.5}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ))}
+                </Svg>
+              </View>
             ) : null}
 
             {/* add-image overlay */}
@@ -401,14 +494,14 @@ export default function PdfEditorScreen() {
               <Feather name="chevron-left" size={18} color={C.foreground} />
             </Pressable>
             <Text style={styles.pageNavText}>
-              Page {page + 1} of {PAGE_COUNT}
+              Page {page + 1} of {pageCount}
             </Text>
             <Pressable
-              onPress={() => setPage((p) => Math.min(PAGE_COUNT - 1, p + 1))}
-              disabled={page === PAGE_COUNT - 1}
+              onPress={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              disabled={page === pageCount - 1}
               style={({ pressed }) => [
                 styles.navBtn,
-                { opacity: page === PAGE_COUNT - 1 ? 0.4 : pressed ? 0.6 : 1 },
+                { opacity: page === pageCount - 1 ? 0.4 : pressed ? 0.6 : 1 },
               ]}
               testID="button-next-page"
             >
@@ -482,28 +575,68 @@ export default function PdfEditorScreen() {
 
         {mode === "sign" && (
           <View style={{ gap: 14 }}>
-            <Text style={styles.controlTitle}>Type your signature</Text>
-            <TextInput
-              value={signName}
-              onChangeText={setSignName}
-              placeholder="Your name"
-              placeholderTextColor={C.mutedForeground}
-              style={[styles.input, { fontFamily: signFont, fontSize: 18 }]}
-              testID="input-signature"
-            />
-            <View>
-              <Text style={styles.controlLabel}>Style</Text>
-              <View style={styles.chipRow}>
-                {SIGN_FONTS.map((f) => (
-                  <Chip
-                    key={f.label}
-                    label={f.label}
-                    active={signFont === f.family}
-                    onPress={() => setSignFont(f.family)}
-                  />
-                ))}
-              </View>
+            <View style={styles.segmented}>
+              <Pressable
+                onPress={() => setSignMode("draw")}
+                style={[styles.segment, signMode === "draw" && styles.segmentActive]}
+                testID="button-sign-draw"
+              >
+                <Feather
+                  name="edit-2"
+                  size={15}
+                  color={signMode === "draw" ? C.primary : C.mutedForeground}
+                />
+                <Text style={[styles.segmentText, signMode === "draw" && styles.segmentTextActive]}>
+                  Draw
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setSignMode("type")}
+                style={[styles.segment, signMode === "type" && styles.segmentActive]}
+                testID="button-sign-type"
+              >
+                <Feather
+                  name="type"
+                  size={15}
+                  color={signMode === "type" ? C.primary : C.mutedForeground}
+                />
+                <Text style={[styles.segmentText, signMode === "type" && styles.segmentTextActive]}>
+                  Type
+                </Text>
+              </Pressable>
             </View>
+
+            {signMode === "draw" ? (
+              <View style={{ gap: 6 }}>
+                <Text style={styles.controlTitle}>Draw your signature</Text>
+                <SignaturePad onChange={setSignDraw} />
+              </View>
+            ) : (
+              <>
+                <Text style={styles.controlTitle}>Type your signature</Text>
+                <TextInput
+                  value={signName}
+                  onChangeText={setSignName}
+                  placeholder="Your name"
+                  placeholderTextColor={C.mutedForeground}
+                  style={[styles.input, { fontFamily: signFont, fontSize: 18 }]}
+                  testID="input-signature"
+                />
+                <View>
+                  <Text style={styles.controlLabel}>Style</Text>
+                  <View style={styles.chipRow}>
+                    {SIGN_FONTS.map((f) => (
+                      <Chip
+                        key={f.label}
+                        label={f.label}
+                        active={signFont === f.family}
+                        onPress={() => setSignFont(f.family)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
           </View>
         )}
 
@@ -568,7 +701,7 @@ export default function PdfEditorScreen() {
           <View style={{ gap: 10 }}>
             <Text style={styles.controlTitle}>Select pages to delete</Text>
             <Text style={styles.controlHelp}>
-              Tap a page to mark it for removal. {deleted.size} of {PAGE_COUNT} selected.
+              Tap a page to mark it for removal. {deleted.size} of {pageCount ?? 0} selected.
             </Text>
           </View>
         )}
@@ -580,6 +713,37 @@ export default function PdfEditorScreen() {
         <Button label={meta.action} icon="save" fullWidth onPress={save} testID="button-save" />
       </View>
     </ScreenScroll>
+  );
+}
+
+function DeleteThumb({
+  uri,
+  index,
+  deleted,
+  onToggle,
+}: {
+  uri?: string;
+  index: number;
+  deleted: boolean;
+  onToggle: () => void;
+}) {
+  const img = useRenderedPage(uri, index, 260);
+  return (
+    <Pressable onPress={onToggle} style={styles.thumbWrap} testID={`thumb-page-${index + 1}`}>
+      <View style={[styles.thumb, deleted && styles.thumbDeleted]}>
+        {img ? (
+          <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="contain" />
+        ) : (
+          <Text style={styles.thumbNum}>{index + 1}</Text>
+        )}
+        {deleted && (
+          <View style={styles.thumbBadge}>
+            <Feather name="trash-2" size={16} color={C.destructiveForeground} />
+          </View>
+        )}
+      </View>
+      <Text style={styles.thumbLabel}>Page {index + 1}</Text>
+    </Pressable>
   );
 }
 
@@ -643,8 +807,41 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 3,
   },
-  pageLinesWrap: { gap: 12, marginTop: 6 },
-  pageLine: { height: 8, borderRadius: 4, backgroundColor: C.muted },
+  pageFallback: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", gap: 8 },
+  pageFallbackText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
+  loadingSurface: {
+    width: "100%",
+    aspectRatio: 1 / 1.414,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: C.card,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 24,
+  },
+  loadingText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
+  signDrawOverlay: { position: "absolute", right: 18, bottom: 22, width: "44%", height: "20%" },
+  segmented: {
+    flexDirection: "row",
+    gap: 6,
+    backgroundColor: C.muted,
+    borderRadius: 12,
+    padding: 4,
+  },
+  segment: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 9,
+  },
+  segmentActive: { backgroundColor: C.background },
+  segmentText: { fontSize: 13.5, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
+  segmentTextActive: { color: C.primary, fontFamily: fonts.bodySemibold },
   overlayText: { position: "absolute", left: 20, fontFamily: fonts.bodySemibold },
   wmWrap: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   wmText: {
