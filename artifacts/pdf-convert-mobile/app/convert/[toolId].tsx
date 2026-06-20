@@ -10,8 +10,7 @@ import React, { useCallback, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
-import ToolLottieIcon from "@/components/ToolLottieIcon";
-import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
+import { Button, Card, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
 import { addHistory } from "@/constants/history";
@@ -291,24 +290,6 @@ export default function ConvertScreen() {
   return (
     <ScreenScroll insetTop>
       <BackRow onPress={goBack} title={tool.title} />
-
-      {/* Tool identity */}
-      <View style={styles.hero}>
-        <View style={styles.iconTile}>
-          <ToolLottieIcon toolId={tool.id} size={48} />
-        </View>
-        <Text style={styles.title} testID="text-tool-title">
-          {tool.title}
-        </Text>
-        <Text style={styles.desc} testID="text-tool-description">
-          {tool.description}
-        </Text>
-        <View style={styles.badgeRow}>
-          <Badge label={tool.acceptedFormats.join(", ") || "Any file"} tone="neutral" />
-          <Badge label={`Up to ${tool.maxFileSize}`} tone="neutral" />
-          <Badge label={`→ ${tool.outputFormat}`} tone="primary" />
-        </View>
-      </View>
 
       {/* Select stage */}
       {stage === "select" && (

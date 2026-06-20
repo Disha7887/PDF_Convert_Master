@@ -45,8 +45,11 @@ export function AppHeader({ subtitle = "Convert · Organize · Transform" }: App
           <Text style={styles.avatarText}>{user?.avatarInitials ?? "U"}</Text>
         </Pressable>
       ) : (
-        <Pressable style={styles.signIn} onPress={() => router.push(ROUTES.signIn as never)}>
-          <Text style={styles.signInText}>Sign In</Text>
+        <Pressable
+          style={styles.avatar}
+          onPress={() => router.push(ROUTES.signIn as never)}
+        >
+          <Feather name="user" size={20} color={C.primary} />
         </Pressable>
       )}
     </View>
@@ -81,13 +84,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: { fontSize: 13, color: C.primary, fontFamily: fonts.bodyBold },
-  signIn: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 999,
-    backgroundColor: C.primary,
-  },
-  signInText: { fontSize: 13, color: "#fff", fontFamily: fonts.bodySemibold },
 });
 
 export default AppHeader;
