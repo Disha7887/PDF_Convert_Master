@@ -5,9 +5,11 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Button, Card, ScreenScroll } from "@/components/ui";
+import { API_BASE_URL } from "@/constants/api";
 import colors from "@/constants/colors";
+import { USE_MOCK_DATA } from "@/constants/config";
 import { ROUTES } from "@/constants/routes";
-import { cardShadow, fonts } from "@/constants/theme";
+import { fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_KEYS, type UsageStats } from "@/mocks/data";
 import { mockApi } from "@/mocks/mockApi";
@@ -24,6 +26,18 @@ function formatBytes(bytes: number): string {
   const units = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+function timeAgo(value: string | null): string {
+  if (!value) return "";
+  const d = new Date(value).getTime();
+  if (Number.isNaN(d)) return "";
+  const mins = Math.floor((Date.now() - d) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 function StatCard({
@@ -67,13 +81,69 @@ function SignInGate() {
   );
 }
 
-export default function UsageScreen() {
-  const { isAuthenticated } = useAuth();
+interface RecentJob {
+  id: number;
+  toolType: string;
+  toolName: string;
+  inputFilename: string;
+  status: string;
+  source: string;
+  createdAt: string | null;
+}
 
-  const { data: usage } = useQuery<UsageStats>({
-    queryKey: ["usage-stats"],
-    queryFn: () => mockApi.getUsageStats(),
-    enabled: isAuthenticated,
+interface RealUsageData extends UsageStats {
+  activeKeys: number;
+  recent: RecentJob[];
+}
+
+async function fetchRealUsage(token: string): Promise<RealUsageData> {
+  const res = await fetch(`${API_BASE_URL}/usage`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch usage (${res.status})`);
+  const payload = await res.json();
+  const d = payload.data;
+  const t = d.totals;
+  return {
+    totalConversions: t.total,
+    conversionsThisMonth: 0,
+    conversionsToday: 0,
+    apiCalls: t.apiCalls,
+    successRate: t.successRate,
+    avgProcessingTimeSec: 0,
+    storageUsedMB: t.dataProcessed / (1024 * 1024),
+    storageLimitMB: 0,
+    byTool: (d.mostUsed as { type: string; name: string; count: number }[]).map((m) => ({
+      toolId: m.type,
+      toolTitle: m.name,
+      count: m.count,
+    })),
+    byDay: [],
+    byCategory: [],
+    activeKeys: t.activeKeys,
+    recent: d.recent as RecentJob[],
+  };
+}
+
+const STATUS_COLOR: Record<string, string> = {
+  completed: "#16a34a",
+  failed: "#dc2626",
+  processing: "#d97706",
+  pending: "#6b7280",
+};
+
+export default function UsageScreen() {
+  const { isAuthenticated, token } = useAuth();
+
+  const { data: usage } = useQuery<RealUsageData>({
+    queryKey: USE_MOCK_DATA ? ["usage-stats"] : ["usage-stats-real", token],
+    queryFn: USE_MOCK_DATA
+      ? async () => {
+          const stats = await mockApi.getUsageStats();
+          return { ...stats, activeKeys: API_KEYS.filter((k) => k.status === "active").length, recent: [] };
+        }
+      : () => fetchRealUsage(token!),
+    enabled: isAuthenticated && (USE_MOCK_DATA || !!token),
   });
 
   if (!isAuthenticated) {
@@ -84,10 +154,10 @@ export default function UsageScreen() {
     );
   }
 
-  const activeKeys = API_KEYS.filter((k) => k.status === "active").length;
   const byDay = usage?.byDay ?? [];
   const byTool = usage?.byTool ?? [];
   const byCategory = usage?.byCategory ?? [];
+  const recent = usage?.recent ?? [];
   const maxDay = Math.max(1, ...byDay.map((d) => d.count));
   const maxTool = Math.max(1, ...byTool.map((t) => t.count));
   const maxCategory = Math.max(1, ...byCategory.map((c) => c.count));
@@ -101,7 +171,11 @@ export default function UsageScreen() {
         <StatCard
           title="Files Converted"
           value={(usage?.totalConversions ?? 0).toLocaleString()}
-          subtitle={`${(usage?.conversionsThisMonth ?? 0).toLocaleString()} this month · ${(usage?.conversionsToday ?? 0).toLocaleString()} today`}
+          subtitle={
+            USE_MOCK_DATA
+              ? `${(usage?.conversionsThisMonth ?? 0).toLocaleString()} this month`
+              : `${usage?.apiCalls ?? 0} via API · ${(usage?.totalConversions ?? 0) - (usage?.apiCalls ?? 0)} via web`
+          }
           icon="file-text"
         />
         <StatCard
@@ -119,38 +193,31 @@ export default function UsageScreen() {
         <StatCard
           title="Success Rate"
           value={`${usage?.successRate ?? 0}%`}
-          subtitle={`${activeKeys} active API keys`}
+          subtitle={`${usage?.activeKeys ?? 0} active API keys`}
           icon="check"
           iconTone="green"
         />
       </View>
 
-      {/* Daily usage bar chart */}
-      <Card style={styles.section}>
-        <Text style={styles.cardTitle}>Daily Usage</Text>
-        <Text style={styles.cardSub}>Conversions over the last 7 days</Text>
-        {byDay.length === 0 ? (
-          <Text style={styles.empty}>No conversions recorded yet.</Text>
-        ) : (
+      {/* Daily usage bar chart — only shown when backend returns per-day data (mock mode) */}
+      {byDay.length > 0 && (
+        <Card style={styles.section}>
+          <Text style={styles.cardTitle}>Daily Usage</Text>
+          <Text style={styles.cardSub}>Conversions over the last 7 days</Text>
           <View style={styles.chartRow}>
             {byDay.map((day, i) => {
               const h = Math.round((day.count / maxDay) * DAILY_CHART_HEIGHT);
               return (
                 <View key={day.date} style={styles.chartCol}>
                   <Text style={styles.chartValue}>{day.count}</Text>
-                  <View
-                    style={[
-                      styles.chartBar,
-                      { height: Math.max(h, 4), backgroundColor: chartColor(i) },
-                    ]}
-                  />
+                  <View style={[styles.chartBar, { height: Math.max(h, 4), backgroundColor: chartColor(i) }]} />
                   <Text style={styles.chartLabel}>{day.date}</Text>
                 </View>
               );
             })}
           </View>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {/* Most used tools */}
       <Card style={styles.section}>
@@ -162,22 +229,12 @@ export default function UsageScreen() {
             {byTool.map((tool, i) => (
               <View key={tool.toolId} style={styles.barItem}>
                 <View style={styles.barLabelRow}>
-                  <Text style={styles.barName} numberOfLines={1}>
-                    {tool.toolTitle}
-                  </Text>
-                  <Text style={styles.barCount}>
-                    {tool.count} {tool.count === 1 ? "use" : "uses"}
-                  </Text>
+                  <Text style={styles.barName} numberOfLines={1}>{tool.toolTitle}</Text>
+                  <Text style={styles.barCount}>{tool.count} {tool.count === 1 ? "use" : "uses"}</Text>
                 </View>
                 <View style={styles.track}>
                   <View
-                    style={[
-                      styles.fill,
-                      {
-                        width: `${Math.round((tool.count / maxTool) * 100)}%`,
-                        backgroundColor: chartColor(i),
-                      },
-                    ]}
+                    style={[styles.fill, { width: `${Math.round((tool.count / maxTool) * 100)}%`, backgroundColor: chartColor(i) }]}
                   />
                 </View>
               </View>
@@ -186,33 +243,46 @@ export default function UsageScreen() {
         )}
       </Card>
 
-      {/* Usage by category */}
-      <Card style={styles.section}>
-        <Text style={styles.cardTitle}>Usage by Category</Text>
-        {byCategory.length === 0 ? (
-          <Text style={styles.empty}>No conversions recorded yet.</Text>
-        ) : (
+      {/* Usage by category — only shown when backend returns category data (mock mode) */}
+      {byCategory.length > 0 && (
+        <Card style={styles.section}>
+          <Text style={styles.cardTitle}>Usage by Category</Text>
           <View style={styles.barList}>
             {byCategory.map((cat, i) => (
               <View key={cat.category} style={styles.barItem}>
                 <View style={styles.barLabelRow}>
-                  <Text style={styles.barName} numberOfLines={1}>
-                    {cat.category}
-                  </Text>
-                  <Text style={styles.barCount}>
-                    {cat.count} {cat.count === 1 ? "use" : "uses"}
-                  </Text>
+                  <Text style={styles.barName} numberOfLines={1}>{cat.category}</Text>
+                  <Text style={styles.barCount}>{cat.count} {cat.count === 1 ? "use" : "uses"}</Text>
                 </View>
                 <View style={styles.track}>
                   <View
-                    style={[
-                      styles.fill,
-                      {
-                        width: `${Math.round((cat.count / maxCategory) * 100)}%`,
-                        backgroundColor: chartColor(i),
-                      },
-                    ]}
+                    style={[styles.fill, { width: `${Math.round((cat.count / maxCategory) * 100)}%`, backgroundColor: chartColor(i) }]}
                   />
+                </View>
+              </View>
+            ))}
+          </View>
+        </Card>
+      )}
+
+      {/* Recent conversions */}
+      <Card style={styles.section}>
+        <Text style={styles.cardTitle}>Recent Conversions</Text>
+        {recent.length === 0 ? (
+          <Text style={styles.empty}>No conversions recorded yet.</Text>
+        ) : (
+          <View style={styles.recentList}>
+            {recent.map((job) => (
+              <View key={job.id} style={styles.recentRow}>
+                <View style={styles.recentLeft}>
+                  <Text style={styles.recentTool} numberOfLines={1}>{job.toolName}</Text>
+                  <Text style={styles.recentFile} numberOfLines={1}>{job.inputFilename}</Text>
+                </View>
+                <View style={styles.recentRight}>
+                  <Text style={[styles.recentStatus, { color: STATUS_COLOR[job.status] ?? "#6b7280" }]}>
+                    {job.status}
+                  </Text>
+                  <Text style={styles.recentTime}>{timeAgo(job.createdAt)}</Text>
                 </View>
               </View>
             ))}
@@ -251,12 +321,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
 
-  chartRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
-    marginTop: 18,
-  },
+  chartRow: { flexDirection: "row", alignItems: "flex-end", gap: 8, marginTop: 18 },
   chartCol: { flex: 1, alignItems: "center", justifyContent: "flex-end", gap: 6 },
   chartValue: { fontSize: 11, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
   chartBar: { width: "70%", borderRadius: 6 },
@@ -264,21 +329,28 @@ const styles = StyleSheet.create({
 
   barList: { gap: 14, marginTop: 16 },
   barItem: { gap: 6 },
-  barLabelRow: {
+  barLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  barName: { flex: 1, fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
+  barCount: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body },
+  track: { height: 8, borderRadius: 999, backgroundColor: C.muted, overflow: "hidden" },
+  fill: { height: 8, borderRadius: 999 },
+
+  recentList: { gap: 12, marginTop: 14 },
+  recentRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: C.border,
   },
-  barName: { flex: 1, fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
-  barCount: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body },
-  track: {
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: C.muted,
-    overflow: "hidden",
-  },
-  fill: { height: 8, borderRadius: 999 },
+  recentLeft: { flex: 1, gap: 2 },
+  recentTool: { fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
+  recentFile: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body },
+  recentRight: { alignItems: "flex-end", gap: 2 },
+  recentStatus: { fontSize: 12, fontFamily: fonts.bodyMedium, textTransform: "capitalize" },
+  recentTime: { fontSize: 11, color: C.mutedForeground, fontFamily: fonts.body },
 
   gate: { alignItems: "center", paddingVertical: 60, gap: 12 },
   gateIcon: {
