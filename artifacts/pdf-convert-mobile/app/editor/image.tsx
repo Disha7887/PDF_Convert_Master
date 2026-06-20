@@ -209,7 +209,7 @@ export default function ImageEditorScreen() {
         <View style={styles.emptyState}>
           <Feather name="image" size={40} color={C.border} />
           <Text style={styles.emptyTitle}>No image to edit</Text>
-          <Button label="Browse tools" icon="grid" onPress={() => router.replace(ROUTES.tools as never)} />
+          <Button label="Browse tools" icon="grid" onPress={() => router.replace(ROUTES.tools as never)} style={{ alignSelf: "center" }} />
         </View>
       </ScreenScroll>
     );

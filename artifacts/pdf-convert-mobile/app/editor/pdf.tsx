@@ -229,7 +229,7 @@ export default function PdfEditorScreen() {
         <View style={styles.emptyState}>
           <Feather name="alert-triangle" size={40} color={C.border} />
           <Text style={styles.emptyTitle}>Editor unavailable</Text>
-          <Button label="Browse tools" icon="grid" onPress={() => router.replace(ROUTES.tools as never)} />
+          <Button label="Browse tools" icon="grid" onPress={() => router.replace(ROUTES.tools as never)} style={{ alignSelf: "center" }} />
         </View>
       </ScreenScroll>
     );
