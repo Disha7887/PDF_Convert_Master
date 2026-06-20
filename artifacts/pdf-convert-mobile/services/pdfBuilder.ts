@@ -1,4 +1,3 @@
-import { File, Paths } from "expo-file-system";
 import {
   PDFDocument,
   StandardFonts,
@@ -10,6 +9,17 @@ import {
 } from "pdf-lib";
 
 import { readPdfBytes } from "./pdfDoc";
+import { writePdfOutput } from "./pdfWrite";
+
+/** Placement of a placed element, as fractions of the page (top-left origin). */
+export interface Placement {
+  /** Left edge, 0..1 of page width. */
+  x: number;
+  /** Top edge, 0..1 of page height (measured from the top). */
+  y: number;
+  /** Width, 0..1 of page width. */
+  w: number;
+}
 
 /**
  * Real PDF generation for the mobile editor. Every editor mode resolves here and
@@ -53,10 +63,13 @@ export interface BuildPdfInput {
   signFont?: string;
   /** Drawn signature: SVG path strings in pad-pixel space + pad dimensions. */
   signDraw?: { paths: string[]; width: number; height: number };
+  /** Where the signature is placed/sized on the page (from the editor preview). */
+  signPlace?: Placement;
   wmText?: string;
   wmOpacity?: number;
   imageUri?: string;
-  imageScale?: number;
+  /** Where the image is placed/sized on the page (from the editor preview). */
+  imagePlace?: Placement;
   deletedPages?: number[];
 }
 
@@ -140,7 +153,7 @@ async function loadOrCreateDoc(
 async function imageBytesAndKind(
   uri: string,
 ): Promise<{ bytes: Uint8Array; isPng: boolean }> {
-  const bytes = await new File(uri).bytes();
+  const bytes = await readPdfBytes(uri);
   const isPng =
     bytes.length > 3 &&
     bytes[0] === 0x89 &&
@@ -207,50 +220,42 @@ export async function buildEditedPdf(input: BuildPdfInput): Promise<string> {
     case "sign": {
       const draw = input.signDraw;
       const page = pages[input.activePage] ?? pages[pages.length - 1];
-      const { width } = page.getSize();
+      const { width, height } = page.getSize();
+      // Default placement (bottom-right) when the editor didn't supply one.
+      const place = input.signPlace ?? { x: 0.55, y: 0.78, w: 0.4 };
+      const targetW = Math.max(40, place.w * width);
+      // Top of the placed box in PDF coords (y is bottom-up; place.y is from top).
+      const yTopPdf = height * (1 - place.y);
+      const xPdf = place.x * width;
       if (draw && draw.paths.length && draw.width > 0) {
         // Embed the drawn signature as vector strokes. pdf-lib's drawSvgPath
-        // uses SVG coordinates (y-down) anchored at (x, y); strokes extend down
-        // from y, so anchor above the signature line.
-        const targetW = 220;
+        // anchors the path at (x, y) with strokes extending downward, so the
+        // box top maps directly to yTopPdf.
         const scale = targetW / draw.width;
-        const drawH = draw.height * scale;
-        const x = Math.max(40, width - targetW - 50);
-        const yTop = 62 + drawH + 6;
         for (const d of draw.paths) {
           page.drawSvgPath(d, {
-            x,
-            y: yTop,
+            x: xPdf,
+            y: yTopPdf,
             scale,
             borderColor: rgb(0.11, 0.14, 0.2),
             borderWidth: 1.8,
           });
         }
-        page.drawLine({
-          start: { x, y: 62 },
-          end: { x: width - 50, y: 62 },
-          thickness: 1,
-          color: rgb(0.6, 0.62, 0.66),
-        });
         break;
       }
       const name = (input.signName ?? "").trim();
       if (name) {
         const oblique = await doc.embedFont(StandardFonts.HelveticaOblique);
-        const size = 24;
-        const textW = oblique.widthOfTextAtSize(sanitizeText(name), size);
-        page.drawText(sanitizeText(name), {
-          x: Math.max(40, width - textW - 50),
-          y: 70,
+        const clean = sanitizeText(name);
+        // Size the text so it fills the placed box width.
+        const baseW = oblique.widthOfTextAtSize(clean, 24) || 1;
+        const size = Math.min(96, Math.max(8, (targetW / baseW) * 24));
+        page.drawText(clean, {
+          x: xPdf,
+          y: yTopPdf - size,
           size,
           font: oblique,
           color: rgb(0.11, 0.14, 0.2),
-        });
-        page.drawLine({
-          start: { x: Math.max(40, width - textW - 50), y: 62 },
-          end: { x: width - 50, y: 62 },
-          thickness: 1,
-          color: rgb(0.6, 0.62, 0.66),
         });
       }
       break;
@@ -284,12 +289,13 @@ export async function buildEditedPdf(input: BuildPdfInput): Promise<string> {
         const embedded = isPng ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
         const page = pages[input.activePage] ?? pages[0];
         const { width, height } = page.getSize();
-        const scale = input.imageScale ?? 0.4;
-        const drawW = (width - 100) * scale;
+        const place = input.imagePlace ?? { x: 0.3, y: 0.35, w: 0.4 };
+        const drawW = Math.max(20, place.w * width);
         const drawH = (drawW / embedded.width) * embedded.height;
+        const yTopPdf = height * (1 - place.y);
         page.drawImage(embedded, {
-          x: (width - drawW) / 2,
-          y: (height - drawH) / 2,
+          x: place.x * width,
+          y: yTopPdf - drawH,
           width: drawW,
           height: drawH,
         });
@@ -311,8 +317,5 @@ export async function buildEditedPdf(input: BuildPdfInput): Promise<string> {
   }
 
   const out = await doc.save();
-  const file = new File(Paths.cache, sanitizeName(input.outName));
-  file.create({ overwrite: true, intermediates: true });
-  file.write(out);
-  return file.uri;
+  return writePdfOutput(out, sanitizeName(input.outName));
 }

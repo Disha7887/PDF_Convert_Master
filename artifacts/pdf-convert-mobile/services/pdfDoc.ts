@@ -26,3 +26,20 @@ export async function getPdfPageCount(uri: string): Promise<number> {
   const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
   return doc.getPageCount();
 }
+
+/**
+ * Return the size (in PDF points) of a single page. Used by the editor to size
+ * the on-screen preview to the real page aspect ratio so placed signatures and
+ * images map 1:1 onto the generated PDF (pages aren't always A4).
+ */
+export async function getPdfPageSize(
+  uri: string,
+  pageIndex: number,
+): Promise<{ width: number; height: number }> {
+  const bytes = await readPdfBytes(uri);
+  const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+  const pages = doc.getPages();
+  const page = pages[pageIndex] ?? pages[0];
+  const { width, height } = page.getSize();
+  return { width, height };
+}

@@ -7,6 +7,7 @@ import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Image,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -25,8 +26,8 @@ import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import { getToolById } from "@/constants/tools";
-import { buildEditedPdf, type EditorMode } from "@/services/pdfBuilder";
-import { getPdfPageCount } from "@/services/pdfDoc";
+import { buildEditedPdf, type EditorMode, type Placement } from "@/services/pdfBuilder";
+import { getPdfPageCount, getPdfPageSize } from "@/services/pdfDoc";
 import { renderPdfPage } from "@/services/pdfRender";
 
 const C = colors.light;
@@ -116,6 +117,9 @@ export default function PdfEditorScreen() {
   // Real document info (page count is read from the actual PDF, not hardcoded).
   const [pageCount, setPageCount] = useState<number | null>(params.uri ? null : PAGE_COUNT);
   const [docError, setDocError] = useState<string | null>(null);
+  // Height/width of the active page (defaults to A4) so the preview box matches
+  // the real page — keeps placed elements aligned with the generated PDF.
+  const [pageAspect, setPageAspect] = useState(1.414);
 
   useEffect(() => {
     let alive = true;
@@ -142,6 +146,23 @@ export default function PdfEditorScreen() {
     if (pageCount != null && page > pageCount - 1) setPage(pageCount - 1);
   }, [pageCount, page]);
 
+  // Match the preview box to the real page aspect ratio for accurate placement.
+  useEffect(() => {
+    let alive = true;
+    if (!params.uri) {
+      setPageAspect(1.414);
+      return;
+    }
+    getPdfPageSize(params.uri, page)
+      .then((s) => {
+        if (alive && s.width > 0 && s.height > 0) setPageAspect(s.height / s.width);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [params.uri, page]);
+
   const pageImage = useRenderedPage(params.uri, page, 620);
 
   // edit
@@ -158,6 +179,7 @@ export default function PdfEditorScreen() {
   const [signName, setSignName] = useState("");
   const [signFont, setSignFont] = useState(SIGN_FONTS[0].family);
   const [signDraw, setSignDraw] = useState<SignatureData | null>(null);
+  const [signPos, setSignPos] = useState<Placement>({ x: 0.55, y: 0.78, w: 0.4 });
 
   // watermark
   const [wmText, setWmText] = useState("CONFIDENTIAL");
@@ -165,7 +187,11 @@ export default function PdfEditorScreen() {
 
   // add-image
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageScale, setImageScale] = useState(0.4);
+  const [imageAspect, setImageAspect] = useState(1);
+  const [imgPos, setImgPos] = useState<Placement>({ x: 0.3, y: 0.35, w: 0.4 });
+
+  // On-screen size of the page preview (px), used to map gestures to the page.
+  const [pageBox, setPageBox] = useState({ width: 0, height: 0 });
 
   // delete-pages
   const [deleted, setDeleted] = useState<Set<number>>(new Set());
@@ -189,6 +215,14 @@ export default function PdfEditorScreen() {
     };
     return map[mode] ?? map.edit;
   }, [mode]);
+
+  // Height/width ratio of the signature box, used to size the draggable overlay.
+  const signAspect =
+    signMode === "draw"
+      ? signDraw && signDraw.width > 0
+        ? signDraw.height / signDraw.width
+        : 0.4
+      : Math.max(0.12, Math.min(0.6, 2 / Math.max(1, signName.trim().length)));
 
   const addTextItem = useCallback(() => {
     const t = textValue.trim();
@@ -221,6 +255,7 @@ export default function PdfEditorScreen() {
       const rendered = await ImageManipulator.manipulate(picked).renderAsync();
       const out = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.92 });
       setImageUri(out.uri);
+      if (out.width > 0 && out.height > 0) setImageAspect(out.height / out.width);
     } catch {
       setImageUri(picked);
     }
@@ -256,10 +291,11 @@ export default function PdfEditorScreen() {
         signName: signMode === "type" ? signName : "",
         signFont,
         signDraw: signMode === "draw" ? signDraw ?? undefined : undefined,
+        signPlace: signPos,
         wmText,
         wmOpacity,
         imageUri: imageUri ?? undefined,
-        imageScale,
+        imagePlace: imgPos,
         deletedPages: Array.from(deleted),
       });
       setSaved({ uri, name });
@@ -288,10 +324,11 @@ export default function PdfEditorScreen() {
     signName,
     signFont,
     signDraw,
+    signPos,
     wmText,
     wmOpacity,
     imageUri,
-    imageScale,
+    imgPos,
     deleted,
     page,
     params.uri,
@@ -389,7 +426,15 @@ export default function PdfEditorScreen() {
         </View>
       ) : (
         <View style={styles.pageSurface}>
-          <View style={styles.page}>
+          <View
+            style={[styles.page, { aspectRatio: 1 / pageAspect }]}
+            onLayout={(e) =>
+              setPageBox({
+                width: e.nativeEvent.layout.width,
+                height: e.nativeEvent.layout.height,
+              })
+            }
+          >
             {/* real rasterised page (web) or a clean frame fallback */}
             {pageImage ? (
               <Image
@@ -428,19 +473,42 @@ export default function PdfEditorScreen() {
               </View>
             )}
 
-            {/* signature overlay — typed */}
-            {mode === "sign" && signMode === "type" && signName ? (
-              <Text style={[styles.signOverlay, { fontFamily: signFont }]}>{signName}</Text>
+            {/* signature overlay — typed (drag to move, corner to resize) */}
+            {mode === "sign" && signMode === "type" && signName.trim() && pageBox.width > 0 ? (
+              <DraggableBox
+                container={pageBox}
+                value={signPos}
+                aspect={signAspect}
+                onChange={setSignPos}
+              >
+                <Text
+                  style={[styles.signFill, { fontFamily: signFont }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {signName}
+                </Text>
+              </DraggableBox>
             ) : null}
 
-            {/* signature overlay — drawn */}
-            {mode === "sign" && signMode === "draw" && signDraw && signDraw.paths.length ? (
-              <View style={styles.signDrawOverlay} pointerEvents="none">
+            {/* signature overlay — drawn (drag to move, corner to resize) */}
+            {mode === "sign" &&
+            signMode === "draw" &&
+            signDraw &&
+            signDraw.paths.length &&
+            pageBox.width > 0 ? (
+              <DraggableBox
+                container={pageBox}
+                value={signPos}
+                aspect={signAspect}
+                onChange={setSignPos}
+              >
                 <Svg
                   width="100%"
                   height="100%"
                   viewBox={`0 0 ${signDraw.width} ${signDraw.height}`}
-                  preserveAspectRatio="xMaxYMax meet"
+                  preserveAspectRatio="none"
+                  style={{ pointerEvents: "none" }}
                 >
                   {signDraw.paths.map((d, i) => (
                     <Path
@@ -454,16 +522,23 @@ export default function PdfEditorScreen() {
                     />
                   ))}
                 </Svg>
-              </View>
+              </DraggableBox>
             ) : null}
 
-            {/* add-image overlay */}
-            {mode === "add-image" && imageUri ? (
-              <Image
-                source={{ uri: imageUri }}
-                style={[styles.imgOverlay, { width: `${Math.round(imageScale * 100)}%` }]}
-                resizeMode="contain"
-              />
+            {/* add-image overlay (drag to move, corner to resize) */}
+            {mode === "add-image" && imageUri && pageBox.width > 0 ? (
+              <DraggableBox
+                container={pageBox}
+                value={imgPos}
+                aspect={imageAspect}
+                onChange={setImgPos}
+              >
+                <Image
+                  source={{ uri: imageUri }}
+                  style={StyleSheet.absoluteFill}
+                  resizeMode="contain"
+                />
+              </DraggableBox>
             ) : null}
 
             {/* crop frame */}
@@ -687,11 +762,16 @@ export default function PdfEditorScreen() {
                     <Chip
                       key={s}
                       label={`${Math.round(s * 100)}%`}
-                      active={imageScale === s}
-                      onPress={() => setImageScale(s)}
+                      active={Math.abs(imgPos.w - s) < 0.001}
+                      onPress={() =>
+                        setImgPos((p) => ({ ...p, w: Math.min(s, 1 - p.x) }))
+                      }
                     />
                   ))}
                 </View>
+                <Text style={styles.controlHelp}>
+                  Drag the image to move it; drag the corner handle to resize.
+                </Text>
               </View>
             )}
           </View>
@@ -767,6 +847,114 @@ function BackRow({ onPress, title }: { onPress: () => void; title?: string }) {
   );
 }
 
+function clampFrac(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/**
+ * A finger-draggable, corner-resizable overlay used to position signatures and
+ * images on the page preview. All geometry is kept as fractions of the page
+ * (`Placement`) so it maps directly onto the generated PDF. Refs hold the latest
+ * value/container so PanResponder callbacks never read stale closures.
+ */
+function DraggableBox({
+  container,
+  value,
+  aspect,
+  onChange,
+  children,
+  minW = 0.08,
+}: {
+  container: { width: number; height: number };
+  value: Placement;
+  aspect: number;
+  onChange: (p: Placement) => void;
+  children: React.ReactNode;
+  minW?: number;
+}) {
+  const vRef = React.useRef(value);
+  vRef.current = value;
+  const cRef = React.useRef(container);
+  cRef.current = container;
+  const aRef = React.useRef(aspect);
+  aRef.current = aspect;
+  const start = React.useRef<Placement>(value);
+
+  const move = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          start.current = { ...vRef.current };
+        },
+        onPanResponderMove: (_e, g) => {
+          const c = cRef.current;
+          if (!c.width || !c.height) return;
+          const hFrac = (start.current.w * c.width * aRef.current) / c.height;
+          const x = clampFrac(
+            start.current.x + g.dx / c.width,
+            0,
+            Math.max(0, 1 - start.current.w),
+          );
+          const y = clampFrac(
+            start.current.y + g.dy / c.height,
+            0,
+            Math.max(0, 1 - hFrac),
+          );
+          onChange({ x, y, w: start.current.w });
+        },
+      }),
+    [onChange],
+  );
+
+  const resize = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          start.current = { ...vRef.current };
+        },
+        onPanResponderMove: (_e, g) => {
+          const c = cRef.current;
+          if (!c.width || !c.height) return;
+          const maxW = Math.max(minW, 1 - start.current.x);
+          let w = clampFrac(start.current.w + g.dx / c.width, minW, maxW);
+          // Keep the box inside the bottom edge as it grows.
+          const hFrac = (w * c.width * aRef.current) / c.height;
+          if (start.current.y + hFrac > 1 && aRef.current > 0) {
+            w = ((1 - start.current.y) * c.height) / (c.width * aRef.current);
+          }
+          onChange({ x: start.current.x, y: start.current.y, w });
+        },
+      }),
+    [onChange, minW],
+  );
+
+  const boxW = value.w * container.width;
+  const boxH = boxW * aspect;
+  return (
+    <View
+      style={[
+        styles.dragBox,
+        {
+          left: value.x * container.width,
+          top: value.y * container.height,
+          width: boxW,
+          height: boxH,
+        },
+      ]}
+      {...move.panHandlers}
+    >
+      {children}
+      <View style={styles.resizeHandle} {...resize.panHandlers}>
+        <Feather name="maximize-2" size={11} color="#ffffff" />
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   backRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
   backBtn: {
@@ -800,7 +988,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     overflow: "hidden",
-    padding: 20,
     shadowColor: "#0f172a",
     shadowOpacity: 0.08,
     shadowRadius: 14,
@@ -822,7 +1009,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   loadingText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
-  signDrawOverlay: { position: "absolute", right: 18, bottom: 22, width: "44%", height: "20%" },
+  dragBox: {
+    position: "absolute",
+    borderWidth: 1.5,
+    borderColor: C.primary,
+    borderStyle: "dashed",
+    borderRadius: 4,
+    backgroundColor: "rgba(247,67,61,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  signFill: {
+    width: "100%",
+    height: "100%",
+    textAlign: "center",
+    textAlignVertical: "center",
+    fontSize: 96,
+    color: C.foreground,
+  },
+  resizeHandle: {
+    position: "absolute",
+    right: -11,
+    bottom: -11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: C.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#ffffff",
+  },
   segmented: {
     flexDirection: "row",
     gap: 6,
@@ -851,14 +1068,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "-32deg" }],
     letterSpacing: 2,
   },
-  signOverlay: {
-    position: "absolute",
-    right: 24,
-    bottom: 28,
-    fontSize: 24,
-    color: C.foreground,
-  },
-  imgOverlay: { position: "absolute", alignSelf: "center", top: "30%", aspectRatio: 1, borderRadius: 6 },
   cropFrame: {
     position: "absolute",
     borderWidth: 2,

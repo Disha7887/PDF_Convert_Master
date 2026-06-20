@@ -28,3 +28,20 @@ the native bundle never includes it; native falls back to a clean page frame.
 strings + pad dims. `services/pdfBuilder.ts` embeds drawn strokes as vector via
 `page.drawSvgPath` (scaled from pad width), and still supports typed signatures with
 a font style. Both paths are wired through the editor's Draw/Type segmented toggle.
+
+# expo-file-system File/Paths is native-only
+`new File(...)`, `Paths.cache`, and `file.create/write` from `expo-file-system`
+call native methods (e.g. `this.validatePath()`) that DO NOT exist on web — they
+throw "this.validatePath is not a function" when a build runs on Expo web.
+
+**Rule:** never call the expo-file-system `File`/`Paths` API directly in code that
+runs on web. Read bytes via `readPdfBytes` (fetch on web, File on native) and write
+output via `writePdfOutput` (`services/pdfWrite.ts` native + `pdfWrite.web.ts` Blob +
+`URL.createObjectURL`). Same `.web.ts` platform-split pattern as pdf.js.
+
+# Editor preview must match real page aspect for placement
+Drag/resize placement in `app/editor/pdf.tsx` stores geometry as page fractions
+(`Placement {x,y,w}`) mapped to pdf-lib coords in `pdfBuilder.ts`
+(`yTopPdf=height*(1-place.y)`). For preview overlays to land where the PDF draws
+them, the preview box `aspectRatio` MUST equal the real page aspect — derive it from
+`getPdfPageSize(uri, page)` (pdf-lib), not a hard-coded A4 ratio.
