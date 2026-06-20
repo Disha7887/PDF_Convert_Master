@@ -186,7 +186,7 @@ export const HeroSection = (): JSX.Element => {
                 {activeTool ? (
                   <HeroToolConverter key={activeTool.id} tool={activeTool} />
                 ) : (
-                <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-white rounded-3xl border-2 border-dashed border-blue-300 shadow-sm">
+                <Card className="flex flex-col w-full md:w-[584px] h-[405px] items-start p-[50px] bg-card rounded-3xl border-2 border-dashed border-blue-300 shadow-sm">
                   <div className="flex flex-col items-center justify-center w-full p-0">
                     <ConverterStatusIcon status="upload" size={80} className="mb-3" />
 

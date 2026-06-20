@@ -42,7 +42,7 @@ export const cardShadow = Platform.select({
 /** Stronger shadow for the primary CTA / hero card. */
 export const heroShadow = Platform.select({
   ios: {
-    shadowColor: "#2563eb",
+    shadowColor: "#f7433d",
     shadowOpacity: 0.18,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 12 },

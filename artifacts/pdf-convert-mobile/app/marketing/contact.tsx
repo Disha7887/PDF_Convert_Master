@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 20 },
   hero: { paddingHorizontal: 24, paddingVertical: 44, gap: 16 },
   heroTitle: { fontSize: 28, lineHeight: 36, color: "#fff", fontFamily: fonts.headingBold },
-  heroSubtitle: { fontSize: 15, lineHeight: 23, color: "#dbeafe", fontFamily: fonts.body },
+  heroSubtitle: { fontSize: 15, lineHeight: 23, color: "#ffe1de", fontFamily: fonts.body },
   heroStats: { flexDirection: "row", gap: 12, marginTop: 4 },
   heroStat: {
     flex: 1,

@@ -1,6 +1,13 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
-import { Platform, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import AppHeader from "@/components/AppHeader";
 import ToolCard from "@/components/ToolCard";
@@ -13,6 +20,9 @@ const C = colors.light;
 
 export default function ToolsScreen() {
   const [query, setQuery] = useState("");
+  const { width } = useWindowDimensions();
+  const numColumns = width < 360 ? 1 : 2;
+  const colWidth = numColumns === 1 ? "100%" : "48%";
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -61,7 +71,13 @@ export default function ToolsScreen() {
               <Text style={styles.emptyText}>No tools match “{query}”.</Text>
             </View>
           ) : (
-            filtered.map((tool) => <ToolCard key={tool.id} tool={tool} />)
+            <View style={styles.grid}>
+              {filtered.map((tool) => (
+                <View key={tool.id} style={{ width: colWidth }}>
+                  <ToolCard tool={tool} variant="grid" />
+                </View>
+              ))}
+            </View>
           )}
         </View>
       ) : (
@@ -70,9 +86,13 @@ export default function ToolsScreen() {
           return (
             <View key={cat} style={styles.categoryBlock}>
               <Text style={styles.categoryLabel}>{cat}</Text>
-              {list.map((tool) => (
-                <ToolCard key={tool.id} tool={tool} />
-              ))}
+              <View style={styles.grid}>
+                {list.map((tool) => (
+                  <View key={tool.id} style={{ width: colWidth }}>
+                    <ToolCard tool={tool} variant="grid" />
+                  </View>
+                ))}
+              </View>
             </View>
           );
         })
@@ -106,6 +126,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
   },
   categoryBlock: { marginBottom: 20 },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 12,
+  },
   categoryLabel: {
     fontSize: 13,
     letterSpacing: 0.5,

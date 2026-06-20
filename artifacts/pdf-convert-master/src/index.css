@@ -26,7 +26,7 @@
   .btn-red-gradient:hover,
   .btn-blue-gradient:hover,
   .btn-green-gradient:hover {
-    background: hsl(217 91% 47%);
+    background: hsl(2 80% 52%);
     box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.08), 0 12px 22px -6px hsl(var(--primary) / 0.55);
     transform: translateY(-1px);
   }
@@ -93,11 +93,11 @@
 
   .shimmer-bg {
     background: linear-gradient(90deg,
-      rgba(37, 99, 235, 1) 0%,
-      rgba(29, 78, 216, 1) 25%,
-      rgba(96, 165, 250, 0.85) 50%,
-      rgba(29, 78, 216, 1) 75%,
-      rgba(37, 99, 235, 1) 100%
+      rgba(247, 67, 61, 1) 0%,
+      rgba(224, 45, 39, 1) 25%,
+      rgba(249, 122, 112, 0.85) 50%,
+      rgba(224, 45, 39, 1) 75%,
+      rgba(247, 67, 61, 1) 100%
     );
     background-size: 200% 100%;
     animation: shimmer-bg 1.5s ease-in-out infinite;
@@ -105,23 +105,23 @@
 
   /* Custom blue color variants for precise gradient control */
   .from-red-650 {
-    --tw-gradient-from: #2563eb var(--tw-gradient-from-position);
-    --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-from: #f7433d var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(247 67 61 / 0) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
   }
 
   .via-red-650 {
-    --tw-gradient-to: rgb(29 78 216 / 0) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-from), #1d4ed8 var(--tw-gradient-via-position), var(--tw-gradient-to);
+    --tw-gradient-to: rgb(224 45 39 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #e02d27 var(--tw-gradient-via-position), var(--tw-gradient-to);
   }
 
   .to-red-750 {
-    --tw-gradient-to: #1e40af var(--tw-gradient-to-position);
+    --tw-gradient-to: #b9211c var(--tw-gradient-to-position);
   }
 
   .hover\:via-red-750:hover {
-    --tw-gradient-to: rgb(30 64 175 / 0) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-from), #1e40af var(--tw-gradient-via-position), var(--tw-gradient-to);
+    --tw-gradient-to: rgb(185, 33, 28 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), #b9211c var(--tw-gradient-via-position), var(--tw-gradient-to);
   }
 
   /* Performance optimizations for particle animations */
@@ -142,12 +142,12 @@
 
   /* Search highlight improvements */
   .search-highlight {
-    background-color: rgb(219 234 254) !important;
-    color: rgb(30 58 138) !important;
+    background-color: rgb(255 225 222) !important;
+    color: rgb(143 26 22) !important;
     padding: 2px 4px !important;
     border-radius: 4px !important;
     font-weight: 500 !important;
-    border: 1px solid rgb(147 197 253) !important;
+    border: 1px solid rgb(252 170 163) !important;
   }
 
   /* Search dropdown improvements */
@@ -198,22 +198,22 @@
     --border: 220 14% 91%;
     --input: 220 14% 91%;
 
-    --card: 0 0% 100%;
+    --card: 220 20% 97%;
     --card-foreground: 220 16% 18%;
 
-    --primary: 217 91% 53%;
+    --primary: 2 92% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 16% 96%;
     --secondary-foreground: 220 16% 25%;
 
-    --accent: 214 100% 97%;
-    --accent-foreground: 217 91% 45%;
+    --accent: 2 100% 97%;
+    --accent-foreground: 2 80% 48%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --ring: 217 91% 53%;
+    --ring: 2 92% 60%;
 
     --radius: 0.75rem;
   }
@@ -237,7 +237,7 @@
     --card: 222 47% 9%;
     --card-foreground: 213 31% 91%;
 
-    --primary: 217 91% 60%;
+    --primary: 2 92% 62%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 33% 18%;
@@ -246,7 +246,7 @@
     --destructive: 0 63% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --ring: 217 91% 60%;
+    --ring: 2 92% 62%;
 
     --radius: 0.75rem;
   }

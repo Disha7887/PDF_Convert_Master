@@ -25,7 +25,7 @@ import { getToolById } from "@/constants/tools";
 const C = colors.light;
 const PAGE_COUNT = 4;
 
-const TEXT_COLORS = ["#1c2434", "#2563eb", "#ef4444", "#22c55e", "#f59e0b"];
+const TEXT_COLORS = ["#1c2434", "#f7433d", "#ef4444", "#22c55e", "#f59e0b"];
 const FONT_SIZES = [12, 16, 20, 28];
 const CROP_PRESETS: { label: string; inset: number }[] = [
   { label: "None", inset: 0 },

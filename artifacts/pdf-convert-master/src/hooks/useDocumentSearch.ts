@@ -264,9 +264,9 @@ export const printSearchResults = (query: string, results: SearchResult[], pageT
         <title>Search Results - ${pageType}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+          h1 { color: #333; border-bottom: 2px solid #f7433d; padding-bottom: 10px; }
           .result { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-          .result-title { font-weight: bold; color: #2563eb; margin-bottom: 5px; }
+          .result-title { font-weight: bold; color: #f7433d; margin-bottom: 5px; }
           .result-content { color: #666; line-height: 1.5; }
           .match-score { font-size: 12px; color: #999; float: right; }
           .query { background: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 20px; }

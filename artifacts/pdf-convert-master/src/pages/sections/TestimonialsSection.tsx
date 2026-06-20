@@ -45,7 +45,7 @@ export const TestimonialsSection = (): JSX.Element => {
                 key={tool.id}
                 type="button"
                 onClick={() => handleToolClick(tool)}
-                className="group flex flex-col items-center text-center gap-3 rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className="group flex flex-col items-center text-center gap-3 rounded-2xl border border-gray-200/70 bg-card p-5 transition-all hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 data-testid={`card-tool-${tool.id}`}
               >
                 <span

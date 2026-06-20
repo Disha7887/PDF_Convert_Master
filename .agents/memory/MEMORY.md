@@ -1,2 +1,1 @@
-- [Canvas live-frame gallery for the Expo app](canvas-expo-live-frames.md) — embed `$REPLIT_EXPO_DEV_DOMAIN/<route>` as live iframes; dashboard renders signed-out inline, editors need a file param.
-- [Lottie on Expo web](lottie-expo-web.md) — lottie-react-native uses WASM dotlottie on web (fragile behind proxy); use a `.web.tsx` with lottie-react + shared resolver.
+- [Global color rebrand](color-rebrand.md) — how to swap a brand color everywhere across the web (Tailwind) + Expo apps without missing surfaces.

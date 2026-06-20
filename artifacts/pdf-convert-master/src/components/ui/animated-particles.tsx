@@ -53,12 +53,12 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
     const particleArray: Particle[] = [];
     
     const colors = [
-      'rgba(37, 99, 235, 0.35)',  // Blue
-      'rgba(59, 130, 246, 0.3)',  // Blue 500
-      'rgba(96, 165, 250, 0.25)', // Blue 400
-      'rgba(29, 78, 216, 0.3)',   // Deep blue
-      'rgba(147, 197, 253, 0.25)',// Light blue
-      'rgba(37, 99, 235, 0.2)',   // Soft blue
+      'rgba(247, 67, 61, 0.35)',  // Blue
+      'rgba(251, 93, 82, 0.3)',  // Blue 500
+      'rgba(249, 122, 112, 0.25)', // Blue 400
+      'rgba(224, 45, 39, 0.3)',   // Deep blue
+      'rgba(252, 170, 163, 0.25)',// Light blue
+      'rgba(247, 67, 61, 0.2)',   // Soft blue
     ];
 
     const directions: Particle['direction'][] = [
@@ -85,9 +85,9 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
   // Memoize decorative line/dot positions so they don't jump on re-render.
   const floatingLines = useMemo<FloatingLine[]>(() => {
     const lineColors = [
-      'rgba(37, 99, 235, 0.2)',
-      'rgba(59, 130, 246, 0.15)',
-      'rgba(96, 165, 250, 0.12)',
+      'rgba(247, 67, 61, 0.2)',
+      'rgba(251, 93, 82, 0.15)',
+      'rgba(249, 122, 112, 0.12)',
     ];
     return Array.from({ length: 8 }).map((_, i) => ({
       id: i,
@@ -103,9 +103,9 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
 
   const pulseDots = useMemo<PulseDot[]>(() => {
     const dotColors = [
-      'rgba(37, 99, 235, 0.4)',
-      'rgba(59, 130, 246, 0.3)',
-      'rgba(96, 165, 250, 0.25)',
+      'rgba(247, 67, 61, 0.4)',
+      'rgba(251, 93, 82, 0.3)',
+      'rgba(249, 122, 112, 0.25)',
     ];
     return Array.from({ length: 12 }).map((_, i) => ({
       id: i,

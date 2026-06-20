@@ -44,7 +44,7 @@ export const FeaturesSection = (): JSX.Element => {
         "Transform your documents between different formats with perfect quality preservation.",
       features: ["PDF to Word", "Word to PDF", "Excel to PDF", "Image to PDF"],
       borderColor: "border-blue-500/30",
-      iconColor: "#2563eb",
+      iconColor: "#f7433d",
       bgColor: "bg-blue-500/10",
     },
     {
@@ -54,7 +54,7 @@ export const FeaturesSection = (): JSX.Element => {
         "Merge, split, and reorganize your PDF documents with powerful editing tools.",
       features: ["Merge PDFs", "Split PDFs", "Compress Files", "Rotate Pages"],
       borderColor: "border-blue-500/30",
-      iconColor: "#2563eb",
+      iconColor: "#f7433d",
       bgColor: "bg-blue-500/10",
     },
     {
@@ -69,7 +69,7 @@ export const FeaturesSection = (): JSX.Element => {
         "Digital Signature",
       ],
       borderColor: "border-blue-500/30",
-      iconColor: "#2563eb",
+      iconColor: "#f7433d",
       bgColor: "bg-blue-500/10",
     },
   ];
@@ -192,13 +192,13 @@ export const FeaturesSection = (): JSX.Element => {
 
           {/* Right Column - UI Preview */}
           <div className="flex-1 min-w-[300px]">
-            <div className="rounded-3xl border border-gray-200 p-[33px] bg-white shadow-sm">
+            <div className="rounded-3xl border border-gray-200 p-[33px] bg-card shadow-sm">
               <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                 {/* Browser Controls */}
                 <div className="flex items-center mb-6">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   <div className="w-3 h-3 bg-blue-400 rounded-full ml-3"></div>
-                  <div className="w-3 h-3 bg-[#2563eb] rounded-full ml-3"></div>
+                  <div className="w-3 h-3 bg-[#f7433d] rounded-full ml-3"></div>
                   <div className="flex-1 ml-3 bg-[#f2f4f5] rounded-full px-4 py-2">
                     <span className="text-sm text-gray-600">
                       PDF Converter Pro
@@ -294,7 +294,7 @@ export const FeaturesSection = (): JSX.Element => {
                 </div>
 
                 <Card
-                  className={`relative bg-white rounded-2xl border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300 z-10 h-full flex flex-col`}
+                  className={`relative bg-card rounded-2xl border ${card.borderColor} hover:${card.borderColor.replace('/30', '/50')} transition-all duration-300 z-10 h-full flex flex-col`}
                 >
                   <div className="p-6 lg:p-8 flex flex-col h-full">
                     {/* Icon Container */}

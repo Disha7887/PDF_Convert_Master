@@ -10,7 +10,7 @@ import { fonts, heroShadow } from "@/constants/theme";
 
 const C = colors.light;
 
-const HERO_GRADIENT = ["#1e3a8a", "#1e40af"] as const;
+const HERO_GRADIENT = ["#8f1a16", "#b9211c"] as const;
 
 interface Article {
   id: string;
@@ -210,7 +210,7 @@ export default function Screen() {
         style={[styles.hero, heroShadow]}
       >
         <View style={styles.heroBadge}>
-          <Feather name="book-open" size={14} color="#dbeafe" />
+          <Feather name="book-open" size={14} color="#ffe1de" />
           <Text style={styles.heroBadgeText}>Educational Hub</Text>
         </View>
         <Text style={styles.heroTitle}>Learn More About PDF Tools</Text>
@@ -222,7 +222,7 @@ export default function Screen() {
         <View style={styles.statsGrid}>
           {STATS.map((stat) => (
             <View key={stat.label} style={styles.statTile}>
-              <Feather name={stat.icon} size={22} color="#bfdbfe" />
+              <Feather name={stat.icon} size={22} color="#fecdc8" />
               <Text style={styles.statValue}>{stat.value}</Text>
               <Text style={styles.statLabel}>{stat.label}</Text>
             </View>
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  heroBadgeText: { fontSize: 12, color: "#dbeafe", fontFamily: fonts.bodySemibold },
+  heroBadgeText: { fontSize: 12, color: "#ffe1de", fontFamily: fonts.bodySemibold },
   heroTitle: { fontSize: 26, lineHeight: 32, color: "#ffffff", fontFamily: fonts.headingBold },
   heroSubtitle: {
     fontSize: 15,
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   statValue: { fontSize: 24, color: "#ffffff", fontFamily: fonts.headingBold },
-  statLabel: { fontSize: 12, color: "#bfdbfe", fontFamily: fonts.body },
+  statLabel: { fontSize: 12, color: "#fecdc8", fontFamily: fonts.body },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   sectionTitle: {
     fontSize: 22,

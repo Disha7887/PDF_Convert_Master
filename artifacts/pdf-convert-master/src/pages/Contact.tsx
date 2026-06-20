@@ -120,11 +120,11 @@ export const Contact = (): JSX.Element => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#EFF6FF] via-[#EFF6FF] to-[#EFF6FF]">
+    <div className="bg-gradient-to-br from-[#fff1f0] via-[#fff1f0] to-[#fff1f0]">
 
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#1E40AF] via-[#2563EB] to-[#1E3A8A] py-24">
+      <section className="relative bg-gradient-to-br from-[#b9211c] via-[#f7433d] to-[#8f1a16] py-24">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-6xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">

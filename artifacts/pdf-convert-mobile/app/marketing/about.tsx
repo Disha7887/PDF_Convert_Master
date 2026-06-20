@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 23,
     textAlign: "center",
-    color: "#dbeafe",
+    color: "#ffe1de",
     fontFamily: fonts.body,
   },
   heroMeta: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 18, marginTop: 4 },

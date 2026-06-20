@@ -75,7 +75,7 @@ export function WatermarkPdfUpload() {
   const [text, setText] = useState("CONFIDENTIAL");
   const [fontKey, setFontKey] = useState("Helvetica Bold");
   const [fontSize, setFontSize] = useState(60);
-  const [color, setColor] = useState("#1d4ed8");
+  const [color, setColor] = useState("#e02d27");
 
   // Image options
   const [imgUrl, setImgUrl] = useState<string | null>(null);

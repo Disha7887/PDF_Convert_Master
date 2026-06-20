@@ -223,7 +223,7 @@ const STAMP_PRESETS: { label: string; color: string }[] = [
   { label: "APPROVED", color: "#16a34a" },
   { label: "CONFIDENTIAL", color: "#dc2626" },
   { label: "DRAFT", color: "#6b7280" },
-  { label: "REVIEWED", color: "#2563eb" },
+  { label: "REVIEWED", color: "#f7433d" },
   { label: "FINAL", color: "#7c3aed" },
   { label: "PAID", color: "#0891b2" },
 ];
@@ -361,7 +361,7 @@ export const PdfEditor: React.FC = () => {
   const [polyTip, setPolyTip] = useState<{ x: number; y: number } | null>(null);
 
   const [draft, setDraft] = useState({
-    color: "#1d4ed8",
+    color: "#e02d27",
     strokeWidth: 3,
     family: "Helvetica" as FontFamily,
     fontSize: 18,
@@ -2469,12 +2469,12 @@ export const PdfEditor: React.FC = () => {
                         boxStyle.border = `${el.strokeWidth * zoom}px solid ${el.color}`;
                         boxStyle.borderRadius = "50%";
                       } else if (el.type === "link") {
-                        boxStyle.border = "1px solid #2563eb";
-                        boxStyle.background = "#2563eb14";
+                        boxStyle.border = "1px solid #f7433d";
+                        boxStyle.background = "#f7433d14";
                         inner = (
                           <div
                             className="w-full h-full overflow-hidden pointer-events-none flex items-end"
-                            style={{ color: "#1d4ed8" }}
+                            style={{ color: "#e02d27" }}
                           >
                             <span
                               className="truncate underline px-1"
@@ -2622,7 +2622,7 @@ export const PdfEditor: React.FC = () => {
                                       width={b.width}
                                       height={b.height}
                                       fill="none"
-                                      stroke="#3b82f6"
+                                      stroke="#fb5d52"
                                       strokeWidth={1}
                                       strokeDasharray="4 4"
                                       vectorEffect="non-scaling-stroke"
@@ -2663,7 +2663,7 @@ export const PdfEditor: React.FC = () => {
                                     width={b.width}
                                     height={b.height}
                                     fill="none"
-                                    stroke="#3b82f6"
+                                    stroke="#fb5d52"
                                     strokeWidth={1}
                                     strokeDasharray="4 4"
                                     vectorEffect="non-scaling-stroke"
@@ -2685,8 +2685,8 @@ export const PdfEditor: React.FC = () => {
                             ]
                               .map((p) => `${p.x},${p.y}`)
                               .join(" ")}
-                            fill="rgba(37,99,235,0.06)"
-                            stroke="#2563eb"
+                            fill="rgba(247, 67, 61,0.06)"
+                            stroke="#f7433d"
                             strokeWidth={draft.strokeWidth}
                             strokeDasharray="4 3"
                             strokeLinejoin="round"
@@ -2698,8 +2698,8 @@ export const PdfEditor: React.FC = () => {
                               cx={p.x}
                               cy={p.y}
                               r={i === 0 ? 5 : 3}
-                              fill={i === 0 ? "#2563eb" : "#fff"}
-                              stroke="#2563eb"
+                              fill={i === 0 ? "#f7433d" : "#fff"}
+                              stroke="#f7433d"
                               strokeWidth={1.5}
                               vectorEffect="non-scaling-stroke"
                             />
@@ -2745,10 +2745,10 @@ export const PdfEditor: React.FC = () => {
                               height: m.height * zoom,
                               background:
                                 i === matchIdx
-                                  ? "rgba(37,99,235,0.45)"
+                                  ? "rgba(247, 67, 61,0.45)"
                                   : "rgba(250,204,21,0.45)",
                               outline:
-                                i === matchIdx ? "1px solid #1d4ed8" : "none",
+                                i === matchIdx ? "1px solid #e02d27" : "none",
                             }}
                             data-testid={`search-hit-${i}`}
                           />

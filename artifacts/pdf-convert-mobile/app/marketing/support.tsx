@@ -12,7 +12,7 @@ import { fonts, heroShadow } from "@/constants/theme";
 
 const C = colors.light;
 
-const HERO_GRADIENT = ["#2563eb", "#1d4ed8", "#1e40af"] as const;
+const HERO_GRADIENT = ["#f7433d", "#e02d27", "#b9211c"] as const;
 
 type FeatherName = keyof typeof Feather.glyphMap;
 

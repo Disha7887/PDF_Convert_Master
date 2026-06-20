@@ -7,6 +7,22 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Brand rebrand: the legacy "blue" utility scale now resolves to the
+        // coral brand color (#f7433d). This recolors every `*-blue-*` utility
+        // across the app without touching individual files.
+        blue: {
+          50: "#fff1f0",
+          100: "#ffe1de",
+          200: "#fecdc8",
+          300: "#fcaaa3",
+          400: "#f97a70",
+          500: "#fb5d52",
+          600: "#f7433d",
+          700: "#e02d27",
+          800: "#b9211c",
+          900: "#8f1a16",
+          950: "#5c0f0c",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
