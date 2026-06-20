@@ -65,6 +65,7 @@ function RootLayoutNav() {
       <Stack.Screen name="marketing/privacy" options={{ title: "Privacy Policy" }} />
 
       {/* Dashboard suite */}
+      <Stack.Screen name="dashboard/index" options={{ title: "Workspace" }} />
       <Stack.Screen name="dashboard/usage" options={{ title: "Usage Statistics" }} />
       <Stack.Screen name="dashboard/api-setup" options={{ title: "API Setup" }} />
       <Stack.Screen name="dashboard/api-reference" options={{ title: "API Reference" }} />

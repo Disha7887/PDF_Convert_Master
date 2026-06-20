@@ -13,6 +13,7 @@ import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
+import { addFile } from "@/constants/files";
 import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
@@ -228,6 +229,19 @@ export default function ConvertScreen() {
         outputFormat: tool.outputFormat,
         timestamp: Date.now(),
         status: "completed",
+      });
+      await addFile({
+        id: `f_${Date.now()}`,
+        kind: tool.outputFormat.toLowerCase().includes("pdf")
+          ? "converted-pdf"
+          : "converted-file",
+        name,
+        uri,
+        elementCount: files.length,
+        createdAt: Date.now(),
+        toolId: tool.id,
+        toolTitle: tool.title,
+        outputFormat: tool.outputFormat,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Conversion failed.");

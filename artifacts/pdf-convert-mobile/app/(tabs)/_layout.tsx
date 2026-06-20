@@ -20,22 +20,28 @@ const TABS: {
 }[] = [
   { name: "index", title: "Home", feather: "home", sf: { default: "house", selected: "house.fill" } },
   {
+    name: "files",
+    title: "Files",
+    feather: "folder",
+    sf: { default: "folder", selected: "folder.fill" },
+  },
+  {
     name: "tools",
     title: "Tools",
     feather: "grid",
     sf: { default: "square.grid.2x2", selected: "square.grid.2x2.fill" },
   },
   {
-    name: "dashboard",
-    title: "Dashboard",
-    feather: "bar-chart-2",
-    sf: { default: "chart.bar", selected: "chart.bar.fill" },
+    name: "scanner",
+    title: "Scanner",
+    feather: "camera",
+    sf: { default: "camera", selected: "camera.fill" },
   },
   {
-    name: "more",
-    title: "More",
-    feather: "menu",
-    sf: { default: "ellipsis.circle", selected: "ellipsis.circle.fill" },
+    name: "settings",
+    title: "Settings",
+    feather: "settings",
+    sf: { default: "gearshape", selected: "gearshape.fill" },
   },
 ];
 

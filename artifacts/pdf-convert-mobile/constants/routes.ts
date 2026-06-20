@@ -5,9 +5,10 @@
 export const ROUTES = {
   // Tabs
   home: "/",
+  files: "/files",
   tools: "/tools",
-  dashboardTab: "/dashboard",
-  more: "/more",
+  scanner: "/scanner",
+  settings: "/settings",
 
   // Stack — tool flow
   convert: (toolId: string) => `/convert/${toolId}`,
@@ -29,7 +30,7 @@ export const ROUTES = {
   signIn: "/auth/sign-in",
   signUp: "/auth/sign-up",
 
-  // Dashboard suite
+  // Dashboard suite (reachable from Settings)
   dashboardHome: "/dashboard",
   usage: "/dashboard/usage",
   apiSetup: "/dashboard/api-setup",

@@ -14,10 +14,14 @@ route (SPA) and sends no `X-Frame-Options`/CSP frame block, so iframes render.
 Routes mirror the `app/` file tree; canonical paths live in `constants/routes.ts`.
 
 **How to apply / gotchas:**
-- Dashboard pages (`app/dashboard/*`, `(tabs)/dashboard`) do NOT redirect when
-  logged out — they render an inline "Sign In" empty state. A fresh iframe starts
-  signed out (empty AsyncStorage/localStorage). Use live frames so the user can
-  click Sign In to reach authed views; you cannot pre-auth an iframe.
+- There is no Dashboard tab anymore — bottom tabs are Home, Files, Tools,
+  Scanner, Settings. The dashboard suite lives at `app/dashboard/*` with a
+  `app/dashboard/index.tsx` Workspace landing (reached from Settings), all
+  registered as root stack screens.
+- Dashboard pages (`app/dashboard/*`) do NOT redirect when logged out — they
+  render an inline "Sign In" empty state. A fresh iframe starts signed out (empty
+  AsyncStorage/localStorage). Use live frames so the user can click Sign In to
+  reach authed views; you cannot pre-auth an iframe.
 - Editors (`app/editor/pdf`, `app/editor/image`) and `convert/[toolId]` only
   `router.replace('/tools')` inside their `goBack` handler, not on mount — without
   a `uri`/valid `toolId` they show a standalone "no document"/empty state.

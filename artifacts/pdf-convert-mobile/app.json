@@ -44,6 +44,12 @@
       "expo-web-browser",
       "expo-document-picker",
       "expo-image-picker",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow PDF Convert Master to use the camera to scan documents."
+        }
+      ],
       "expo-asset"
     ],
     "experiments": {

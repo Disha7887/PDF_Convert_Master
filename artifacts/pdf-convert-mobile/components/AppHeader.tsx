@@ -40,7 +40,7 @@ export function AppHeader({ subtitle = "Convert · Organize · Transform" }: App
       {isAuthenticated ? (
         <Pressable
           style={styles.avatar}
-          onPress={() => router.push(ROUTES.dashboardHome as never)}
+          onPress={() => router.push(ROUTES.settings as never)}
         >
           <Text style={styles.avatarText}>{user?.avatarInitials ?? "U"}</Text>
         </Pressable>
