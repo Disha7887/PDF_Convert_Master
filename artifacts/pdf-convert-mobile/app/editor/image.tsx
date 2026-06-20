@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 
+import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import { Badge, Button, Card, Chip, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { addHistory } from "@/constants/history";
@@ -74,7 +75,20 @@ function computeCropRect(
   };
 }
 
-async function shareFile(uri: string): Promise<boolean> {
+/**
+ * Saves/shares the output. On web there is no native share sheet, so we trigger
+ * a real file download via an anchor element; on native we open the share sheet.
+ */
+async function shareFile(uri: string, name: string): Promise<boolean> {
+  if (Platform.OS === "web") {
+    const a = document.createElement("a");
+    a.href = uri;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return true;
+  }
   if (!(await Sharing.isAvailableAsync())) return false;
   await Sharing.shareAsync(uri);
   return true;
@@ -234,7 +248,7 @@ export default function ImageEditorScreen() {
   const onShare = useCallback(async () => {
     if (!saved) return;
     try {
-      const ok = await shareFile(saved.uri);
+      const ok = await shareFile(saved.uri, saved.name);
       if (!ok) setError("Sharing isn't available on this platform.");
     } catch {
       setError("Could not open the share sheet.");
@@ -260,9 +274,7 @@ export default function ImageEditorScreen() {
         <BackRow onPress={goBack} title={meta.title} />
         <Card style={{ marginTop: 8 }}>
           <View style={styles.successWrap}>
-            <View style={styles.successIcon}>
-              <Feather name="check-circle" size={30} color={C.success} />
-            </View>
+            <ConverterStatusIcon status="success" size={88} />
             <Text style={styles.successTitle} testID="text-success">
               Saved successfully
             </Text>
