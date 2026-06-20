@@ -92,7 +92,8 @@ export enum ToolType {
   MERGE_PDFS = "merge_pdfs",
   SPLIT_PDF = "split_pdf",
   COMPRESS_PDF = "compress_pdf",
-  ROTATE_PDF = "rotate_pdf"
+  ROTATE_PDF = "rotate_pdf",
+  OCR_PDF = "ocr_pdf"
 }
 
 // Conversion jobs table  

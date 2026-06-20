@@ -25,6 +25,7 @@ import { PDFParse } from "pdf-parse";
 import { Document, Packer, Paragraph, TextRun, PageBreak } from "docx";
 import pptxgen from "pptxgenjs";
 import JSZip from "jszip";
+import * as Tesseract from "tesseract.js";
 
 // pptxgenjs is published as CommonJS; depending on the bundler/runtime the
 // default import can resolve to either the class or a namespace wrapper.
@@ -331,7 +332,10 @@ async function performActualConversion(
         
       case 'remove_background':
         return await removeBackground(fileBuffer, inputExtension, outputFilename);
-        
+
+      case 'ocr_pdf':
+        return await ocrPdf(fileBuffer, outputFilename);
+
       default:
         return { success: false, error: `Unsupported conversion type: ${toolType}` };
     }
@@ -781,6 +785,109 @@ async function rotatePdf(pdfBuffer: Buffer, outputFilename: string) {
     };
   } catch (error) {
     throw new Error(`PDF rotation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Pull every word + bounding box out of a Tesseract result, regardless of which
+// shape the version returns (`data.words` on older builds, nested `data.blocks`
+// on newer ones).
+function collectOcrWords(
+  data: any,
+): Array<{ text: string; x0: number; y0: number; x1: number; y1: number }> {
+  const out: Array<{ text: string; x0: number; y0: number; x1: number; y1: number }> = [];
+  const push = (w: any) => {
+    if (w?.text && w.bbox) {
+      out.push({ text: w.text, x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1 });
+    }
+  };
+  if (Array.isArray(data?.words) && data.words.length) {
+    data.words.forEach(push);
+    return out;
+  }
+  for (const block of data?.blocks ?? []) {
+    for (const para of block?.paragraphs ?? []) {
+      for (const line of para?.lines ?? []) {
+        for (const word of line?.words ?? []) push(word);
+      }
+    }
+  }
+  return out;
+}
+
+// OCR PDF: rasterise each page, recognise the text with Tesseract, then rebuild
+// the PDF from the original pages with an invisible (opacity 0) text layer placed
+// over the recognised words — the result looks identical but the text is now
+// selectable and searchable.
+async function ocrPdf(pdfBuffer: Buffer, outputFilename: string) {
+  let worker: Tesseract.Worker | null = null;
+  const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+  try {
+    const srcDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+    const outDoc = await PDFDocument.create();
+    const font = await outDoc.embedFont(StandardFonts.Helvetica);
+
+    const shots = await parser.getScreenshot({ scale: 2 });
+    const pageImages = new Map<number, Buffer>();
+    for (const pg of shots.pages) {
+      if (pg.data) pageImages.set(pg.pageNumber, Buffer.from(pg.data));
+    }
+
+    worker = await Tesseract.createWorker("eng");
+
+    const pageCount = srcDoc.getPageCount();
+    let recognisedWords = 0;
+
+    for (let i = 0; i < pageCount; i++) {
+      const [page] = await outDoc.copyPages(srcDoc, [i]);
+      outDoc.addPage(page);
+      const { width: pdfW, height: pdfH } = page.getSize();
+
+      const img = pageImages.get(i + 1);
+      if (!img) continue;
+
+      const meta = await sharp(img).metadata();
+      const imgW = meta.width ?? 0;
+      const imgH = meta.height ?? 0;
+      if (!imgW || !imgH) continue;
+
+      const result = await worker.recognize(img, {}, { blocks: true });
+      const words = collectOcrWords(result.data);
+      const scaleX = pdfW / imgW;
+      const scaleY = pdfH / imgH;
+
+      for (const w of words) {
+        // Helvetica (WinAnsi) can't encode arbitrary glyphs — keep printable ASCII.
+        const text = w.text.replace(/[^\x20-\x7E]/g, "").trim();
+        if (!text) continue;
+        const fontSize = Math.max(1, (w.y1 - w.y0) * scaleY);
+        page.drawText(text, {
+          x: w.x0 * scaleX,
+          y: pdfH - w.y1 * scaleY,
+          size: fontSize,
+          font,
+          color: rgb(0, 0, 0),
+          opacity: 0,
+        });
+        recognisedWords++;
+      }
+    }
+
+    outDoc.setTitle("Searchable PDF (OCR)");
+    outDoc.setProducer("PDF Convert Master OCR");
+    const bytes = await outDoc.save();
+
+    console.log(`OCR complete: ${pageCount} pages, ${recognisedWords} words recognised`);
+
+    return {
+      success: true,
+      convertedBuffer: Buffer.from(bytes),
+      mimeType: "application/pdf",
+    };
+  } catch (error) {
+    throw new Error(`OCR failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+  } finally {
+    try { if (worker) await worker.terminate(); } catch { /* ignore */ }
+    try { await parser.destroy(); } catch { /* ignore */ }
   }
 }
 

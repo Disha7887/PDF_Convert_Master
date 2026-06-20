@@ -102,6 +102,7 @@ async function buildAll() {
       "electron",
       "pdfjs-dist",
       "pdf-parse",
+      "tesseract.js",
       "@napi-rs/canvas",
     ],
     sourcemap: "linked",

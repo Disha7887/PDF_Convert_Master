@@ -287,6 +287,17 @@ export class MemStorage implements IStorage {
         outputFormat: "pdf",
         maxFileSize: 100,
         processingTimeEstimate: 15
+      },
+      {
+        id: 21,
+        name: "OCR PDF",
+        type: ToolType.OCR_PDF,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Recognise text in scanned PDFs and export a searchable PDF",
+        inputFormats: ["pdf"],
+        outputFormat: "pdf",
+        maxFileSize: 100,
+        processingTimeEstimate: 60
       }
     ];
   }
@@ -665,6 +676,17 @@ export class DatabaseStorage implements IStorage {
         outputFormat: "pdf",
         maxFileSize: 100,
         processingTimeEstimate: 15
+      },
+      {
+        id: 21,
+        name: "OCR PDF",
+        type: ToolType.OCR_PDF,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Recognise text in scanned PDFs and export a searchable PDF",
+        inputFormats: ["pdf"],
+        outputFormat: "pdf",
+        maxFileSize: 100,
+        processingTimeEstimate: 60
       }
     ];
   }
