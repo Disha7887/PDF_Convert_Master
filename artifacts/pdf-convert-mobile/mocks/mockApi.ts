@@ -86,6 +86,10 @@ export const mockApi = {
     return mockDelay(key);
   },
 
+  async deleteApiKey(id: string): Promise<{ success: boolean; id: string }> {
+    return mockDelay({ success: true, id });
+  },
+
   // ── Plans ─────────────────────────────────────────────────────────────────
   async getPlans(): Promise<Plan[]> {
     return mockDelay(PLANS);

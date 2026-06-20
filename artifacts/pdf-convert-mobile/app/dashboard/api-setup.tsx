@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Badge, Button, Card, Field, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
@@ -14,6 +14,20 @@ import { mockApi } from "@/mocks/mockApi";
 const C = colors.light;
 
 const monoFont = Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" });
+
+/** Cross-platform copy: uses the web clipboard API where available. */
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    const nav = (globalThis as { navigator?: { clipboard?: { writeText(t: string): Promise<void> } } }).navigator;
+    if (nav?.clipboard?.writeText) {
+      await nav.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // ignore — fall through to manual copy
+  }
+  return false;
+}
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -64,6 +78,14 @@ export default function ApiSetupScreen() {
   const [newKeyName, setNewKeyName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  // Reveal-once dialog
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Revoke confirmation
+  const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
+  const [revoking, setRevoking] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated) return;
     let active = true;
@@ -87,6 +109,31 @@ export default function ApiSetupScreen() {
     setKeys((prev) => [created, ...prev]);
     setNewKeyName("");
     setCreating(false);
+    setCopied(false);
+    setRevealedKey(created.key);
+  };
+
+  const handleCopy = async () => {
+    if (!revealedKey) return;
+    const ok = await copyToClipboard(revealedKey);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const closeReveal = () => {
+    setRevealedKey(null);
+    setCopied(false);
+  };
+
+  const confirmRevoke = async () => {
+    if (!revokeTarget || revoking) return;
+    setRevoking(true);
+    await mockApi.deleteApiKey(revokeTarget.id);
+    setKeys((prev) => prev.filter((k) => k.id !== revokeTarget.id));
+    setRevoking(false);
+    setRevokeTarget(null);
   };
 
   if (!isAuthenticated) {
@@ -174,11 +221,86 @@ export default function ApiSetupScreen() {
                   Created {formatDate(k.createdAt)} · Last used{" "}
                   {k.lastUsedAt ? formatDate(k.lastUsedAt) : "never"}
                 </Text>
+                <Pressable
+                  style={({ pressed }) => [styles.revokeBtn, { opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => setRevokeTarget(k)}
+                  hitSlop={6}
+                  testID={`button-revoke-${k.id}`}
+                >
+                  <Feather name="trash-2" size={15} color={C.destructive} />
+                  <Text style={styles.revokeText}>Revoke</Text>
+                </Pressable>
               </View>
             ))}
           </View>
         )}
       </Card>
+
+      {/* Reveal-once dialog */}
+      <Modal
+        visible={!!revealedKey}
+        transparent
+        animationType="fade"
+        onRequestClose={closeReveal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Copy your API key</Text>
+            <Text style={styles.modalDesc}>
+              This is the only time the full key will be shown. Store it somewhere safe.
+            </Text>
+            <View style={styles.revealRow}>
+              <Text style={styles.revealCode} selectable testID="text-revealed-key">
+                {revealedKey}
+              </Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [styles.copyBtn, { opacity: pressed ? 0.85 : 1 }]}
+              onPress={handleCopy}
+              testID="button-copy-key"
+            >
+              <Feather name={copied ? "check" : "copy"} size={16} color={C.primary} />
+              <Text style={styles.copyText}>{copied ? "Copied!" : "Copy key"}</Text>
+            </Pressable>
+            <Button label="Done" onPress={closeReveal} fullWidth testID="button-reveal-done" />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Revoke confirmation */}
+      <Modal
+        visible={!!revokeTarget}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRevokeTarget(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Revoke this API key?</Text>
+            <Text style={styles.modalDesc}>
+              Any application using{" "}
+              <Text style={styles.modalMono}>{revokeTarget ? maskKey(revokeTarget) : ""}</Text> will
+              immediately stop working. This cannot be undone.
+            </Text>
+            <View style={styles.modalActions}>
+              <Button
+                label="Cancel"
+                variant="outline"
+                onPress={() => setRevokeTarget(null)}
+                fullWidth
+              />
+              <Pressable
+                style={({ pressed }) => [styles.dangerBtn, { opacity: pressed || revoking ? 0.7 : 1 }]}
+                onPress={confirmRevoke}
+                disabled={revoking}
+                testID="button-confirm-revoke"
+              >
+                <Text style={styles.dangerBtnText}>{revoking ? "Revoking…" : "Revoke key"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenScroll>
   );
 }
@@ -228,6 +350,68 @@ const styles = StyleSheet.create({
   keyName: { flex: 1, fontSize: 15, color: C.foreground, fontFamily: fonts.bodySemibold },
   keyMask: { fontSize: 13, color: C.mutedForeground, fontFamily: monoFont },
   keyMeta: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body },
+  revokeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    marginTop: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: C.card,
+  },
+  revokeText: { fontSize: 13, color: C.destructive, fontFamily: fonts.bodySemibold },
+
+  // Modals
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: C.card,
+    borderRadius: 18,
+    padding: 22,
+    gap: 14,
+  },
+  modalTitle: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingBold },
+  modalDesc: { fontSize: 14, lineHeight: 21, color: C.mutedForeground, fontFamily: fonts.body },
+  modalMono: { fontFamily: monoFont, color: C.foreground },
+  revealRow: {
+    backgroundColor: C.muted,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: C.border,
+    padding: 14,
+  },
+  revealCode: { fontSize: 13, lineHeight: 20, color: C.foreground, fontFamily: monoFont },
+  copyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 11,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.primary,
+    backgroundColor: C.blue50,
+  },
+  copyText: { fontSize: 14, color: C.primary, fontFamily: fonts.bodySemibold },
+  modalActions: { gap: 12, marginTop: 2 },
+  dangerBtn: {
+    backgroundColor: C.destructive,
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  dangerBtnText: { fontSize: 15, color: "#fff", fontFamily: fonts.bodySemibold },
 
   gate: { alignItems: "center", paddingVertical: 60, gap: 12 },
   gateIcon: {

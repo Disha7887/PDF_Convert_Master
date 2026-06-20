@@ -15,11 +15,14 @@ export default function SignUpScreen() {
   const router = useRouter();
   const { signup, isAuthenticated, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function SignUpScreen() {
     setError(null);
 
     // Basic form validation
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !confirmPassword) {
       setError("Please fill in all fields");
       return;
     }
@@ -49,12 +52,21 @@ export default function SignUpScreen() {
       setError("Password must be at least 6 characters long");
       return;
     }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       const result = await signup(email, password);
       if (result.success) {
-        router.replace(ROUTES.dashboardHome as never);
+        // Mock signup creates the account but does not start a session —
+        // mirror the web flow by redirecting to sign-in after a short delay.
+        setSuccess(true);
+        setTimeout(() => {
+          router.replace(ROUTES.signIn as never);
+        }, 2000);
       } else {
         setError(result.error || "Sign up failed");
       }
@@ -133,6 +145,28 @@ export default function SignUpScreen() {
             />
           </View>
 
+          <View style={{ gap: 6 }}>
+            <View style={styles.labelRow}>
+              <Text style={styles.fieldLabel}>Confirm Password</Text>
+              <Pressable
+                onPress={() => setShowConfirmPassword((v) => !v)}
+                hitSlop={8}
+                testID="button-toggle-confirm-password"
+              >
+                <Text style={styles.toggleText}>{showConfirmPassword ? "Hide" : "Show"}</Text>
+              </Pressable>
+            </View>
+            <Field
+              icon="lock"
+              placeholder="Confirm your password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+              testID="input-confirm-password"
+            />
+          </View>
+
           {error ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText} testID="text-error">
@@ -141,14 +175,48 @@ export default function SignUpScreen() {
             </View>
           ) : null}
 
+          {success ? (
+            <View style={styles.successBox}>
+              <Text style={styles.successText} testID="text-success">
+                Account created successfully! Redirecting to sign in...
+              </Text>
+            </View>
+          ) : null}
+
           <Button
             label={isSubmitting ? "Creating Account..." : "Create Account"}
             onPress={handleSubmit}
             loading={isSubmitting}
+            disabled={success}
             fullWidth
             size="lg"
             testID="button-create-account"
           />
+
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>Or continue with</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Social buttons (non-functional placeholders, parity with web) */}
+          <View style={styles.socialRow}>
+            <Pressable
+              style={({ pressed }) => [styles.socialBtn, { opacity: pressed ? 0.7 : 1 }]}
+              testID="button-google"
+            >
+              <Feather name="chrome" size={16} color={C.foreground} />
+              <Text style={styles.socialText}>Google</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.socialBtn, { opacity: pressed ? 0.7 : 1 }]}
+              testID="button-github"
+            >
+              <Feather name="github" size={16} color={C.foreground} />
+              <Text style={styles.socialText}>GitHub</Text>
+            </Pressable>
+          </View>
 
           {/* Sign In link */}
           <View style={styles.linkRow}>
@@ -226,6 +294,31 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   errorText: { fontSize: 13, color: "#dc2626", fontFamily: fonts.body },
+  successBox: {
+    backgroundColor: "#f0fdf4",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+    borderRadius: 12,
+    padding: 12,
+  },
+  successText: { fontSize: 13, color: "#16a34a", fontFamily: fonts.body },
+  dividerRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
+  dividerText: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body },
+  socialRow: { flexDirection: "row", gap: 12 },
+  socialBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: C.card,
+  },
+  socialText: { fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
   linkRow: {
     flexDirection: "row",
     flexWrap: "wrap",

@@ -140,6 +140,30 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* ── 1b. Hero dropzone (parity with web hero upload card) ─────────── */}
+      <Card style={styles.dropzone}>
+        <View style={styles.dropzoneIcon}>
+          <Feather name="upload-cloud" size={40} color={C.primary} />
+        </View>
+        <Text style={styles.dropTitle}>Drop your PDF here</Text>
+        <Text style={styles.dropSub}>or click to browse files</Text>
+        <Button
+          label="Select PDF File"
+          icon="upload"
+          onPress={() => go(ROUTES.convert("pdf-to-word"))}
+          style={styles.dropBtn}
+          testID="button-hero-select-file"
+        />
+        <View style={styles.formatRow}>
+          {["PDF", "DOC", "XLS", "JPG"].map((f) => (
+            <View key={f} style={styles.formatChip}>
+              <Feather name="file" size={12} color={C.mutedForeground} />
+              <Text style={styles.formatText}>{f}</Text>
+            </View>
+          ))}
+        </View>
+      </Card>
+
       {/* ── 2. Stats row ────────────────────────────────────────────────── */}
       <View style={styles.statsGrid}>
         {HOME_STATS.map((stat) => (
@@ -328,6 +352,33 @@ const styles = StyleSheet.create({
   trustRow: { flexDirection: "row", flexWrap: "wrap", gap: 16, marginTop: 6 },
   trustItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   trustText: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body },
+
+  // Hero dropzone
+  dropzone: {
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: "#93c5fd",
+    marginBottom: 28,
+  },
+  dropzoneIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: C.blue50,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  dropTitle: { fontSize: 19, color: C.foreground, fontFamily: fonts.headingBold },
+  dropSub: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.body },
+  dropBtn: { marginTop: 10 },
+  formatRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 14, marginTop: 8 },
+  formatChip: { flexDirection: "row", alignItems: "center", gap: 4 },
+  formatText: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body },
 
   // Stats
   statsGrid: {
