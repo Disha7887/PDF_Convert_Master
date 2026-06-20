@@ -1,22 +1,33 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Loader } from "@/components/Loader";
 import { Badge, Button, Card, Field, ScreenScroll } from "@/components/ui";
+import { API_BASE_URL } from "@/constants/api";
 import colors from "@/constants/colors";
+import { USE_MOCK_DATA } from "@/constants/config";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
-import type { ApiKey } from "@/mocks/data";
 import { mockApi } from "@/mocks/mockApi";
 
 const C = colors.light;
+const KEY_LIMIT = 3;
 
 const monoFont = Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" });
 
-/** Cross-platform copy: uses the web clipboard API where available. */
+/** Normalised API key shape used in this screen regardless of source. */
+interface KeyItem {
+  id: string;
+  name: string | null;
+  maskedKey: string;
+  createdAt: string | null;
+  lastUsedAt: string | null;
+}
+
+/** Cross-platform clipboard helper */
 async function copyToClipboard(text: string): Promise<boolean> {
   try {
     const nav = (globalThis as { navigator?: { clipboard?: { writeText(t: string): Promise<void> } } }).navigator;
@@ -25,7 +36,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
       return true;
     }
   } catch {
-    // ignore — fall through to manual copy
+    // ignore
   }
   return false;
 }
@@ -37,15 +48,10 @@ function formatDate(value: string | null): string {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
-function maskKey(k: ApiKey): string {
-  const tail = k.key.slice(-4);
-  return `${k.prefix}_••••••••${tail}`;
-}
-
 const STEPS: { title: string; body: string }[] = [
   {
     title: "Generate API Key",
-    body: "Create your API key below to authenticate your requests. You can keep up to 10 keys.",
+    body: `Create your API key below to authenticate your requests. You can keep up to ${KEY_LIMIT} keys.`,
   },
   {
     title: "Configure Endpoints",
@@ -56,6 +62,55 @@ const STEPS: { title: string; body: string }[] = [
     body: "Make your first API call to ensure everything is working correctly.",
   },
 ];
+
+// ── Backend helpers (used when USE_MOCK_DATA is false) ─────────────────────
+
+async function fetchKeys(token: string): Promise<KeyItem[]> {
+  const res = await fetch(`${API_BASE_URL}/keys`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!res.ok || !body.success) throw new Error(body.error ?? "Failed to load keys");
+  return (body.data as any[]).map((k) => ({
+    id: k.id,
+    name: k.name ?? null,
+    maskedKey: k.maskedKey ?? "sk-••••",
+    createdAt: k.createdAt ?? null,
+    lastUsedAt: k.lastUsedAt ?? null,
+  }));
+}
+
+async function createKey(token: string, name: string): Promise<{ item: KeyItem; rawKey: string }> {
+  const res = await fetch(`${API_BASE_URL}/keys`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name || undefined }),
+  });
+  const body = await res.json();
+  if (!res.ok || !body.success) throw new Error(body.error ?? "Failed to create key");
+  const d = body.data;
+  return {
+    rawKey: d.apiKey as string,
+    item: {
+      id: d.id,
+      name: d.name ?? null,
+      maskedKey: d.maskedKey ?? "sk-••••",
+      createdAt: d.createdAt ?? null,
+      lastUsedAt: null,
+    },
+  };
+}
+
+async function deleteKey(token: string, id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/keys/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || (body && body.success === false)) throw new Error(body.error ?? "Failed to revoke key");
+}
+
+// ── Auth gate ──────────────────────────────────────────────────────────────
 
 function AuthGate() {
   const router = useRouter();
@@ -71,47 +126,85 @@ function AuthGate() {
   );
 }
 
-export default function ApiSetupScreen() {
-  const { isAuthenticated } = useAuth();
+// ── Main screen ────────────────────────────────────────────────────────────
 
-  const [keys, setKeys] = useState<ApiKey[]>([]);
+export default function ApiSetupScreen() {
+  const { isAuthenticated, token } = useAuth();
+
+  const [keys, setKeys] = useState<KeyItem[]>([]);
   const [keysLoading, setKeysLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Reveal-once dialog
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Revoke confirmation
-  const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<KeyItem | null>(null);
   const [revoking, setRevoking] = useState(false);
 
-  useEffect(() => {
+  const loadKeys = useCallback(async () => {
     if (!isAuthenticated) return;
-    let active = true;
-    mockApi.getApiKeys().then((k) => {
-      if (active) {
-        setKeys(k);
-        setKeysLoading(false);
+    setKeysLoading(true);
+    setError(null);
+    try {
+      if (USE_MOCK_DATA) {
+        const raw = await mockApi.getApiKeys();
+        setKeys(
+          raw.map((k) => ({
+            id: k.id,
+            name: k.name,
+            maskedKey: `${k.prefix}••••${k.key.slice(-4)}`,
+            createdAt: k.createdAt,
+            lastUsedAt: k.lastUsedAt,
+          })),
+        );
+      } else {
+        setKeys(await fetchKeys(token ?? ""));
       }
-    });
-    return () => {
-      active = false;
-    };
-  }, [isAuthenticated]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load keys");
+    } finally {
+      setKeysLoading(false);
+    }
+  }, [isAuthenticated, token]);
 
-  const atLimit = keys.length >= 10;
+  useEffect(() => {
+    loadKeys();
+  }, [loadKeys]);
+
+  const atLimit = keys.length >= KEY_LIMIT;
 
   const handleCreate = async () => {
     if (creating || atLimit) return;
     setCreating(true);
-    const created = await mockApi.createApiKey(newKeyName.trim());
-    setKeys((prev) => [created, ...prev]);
-    setNewKeyName("");
-    setCreating(false);
-    setCopied(false);
-    setRevealedKey(created.key);
+    setError(null);
+    try {
+      if (USE_MOCK_DATA) {
+        const created = await mockApi.createApiKey(newKeyName.trim());
+        setKeys((prev) => [
+          {
+            id: created.id,
+            name: created.name,
+            maskedKey: `${created.prefix}••••${created.key.slice(-4)}`,
+            createdAt: created.createdAt,
+            lastUsedAt: null,
+          },
+          ...prev,
+        ]);
+        setRevealedKey(created.key);
+      } else {
+        const { item, rawKey } = await createKey(token ?? "", newKeyName.trim());
+        setKeys((prev) => [item, ...prev]);
+        setRevealedKey(rawKey);
+      }
+      setNewKeyName("");
+      setCopied(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create key");
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleCopy = async () => {
@@ -131,10 +224,20 @@ export default function ApiSetupScreen() {
   const confirmRevoke = async () => {
     if (!revokeTarget || revoking) return;
     setRevoking(true);
-    await mockApi.deleteApiKey(revokeTarget.id);
-    setKeys((prev) => prev.filter((k) => k.id !== revokeTarget.id));
-    setRevoking(false);
-    setRevokeTarget(null);
+    setError(null);
+    try {
+      if (USE_MOCK_DATA) {
+        await mockApi.deleteApiKey(revokeTarget.id);
+      } else {
+        await deleteKey(token ?? "", revokeTarget.id);
+      }
+      setKeys((prev) => prev.filter((k) => k.id !== revokeTarget.id));
+      setRevokeTarget(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to revoke key");
+    } finally {
+      setRevoking(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -171,6 +274,13 @@ export default function ApiSetupScreen() {
       <Card style={styles.block} elevated={false}>
         <Text style={styles.cardTitle}>API Key Management</Text>
 
+        {error ? (
+          <View style={styles.errorBox}>
+            <Feather name="alert-circle" size={15} color={C.destructive} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
+
         {/* Create key */}
         <View style={styles.createRow}>
           <Field
@@ -190,7 +300,7 @@ export default function ApiSetupScreen() {
             testID="button-create-key"
           />
           {atLimit ? (
-            <Text style={styles.limitNote}>You've reached the limit of 10 keys.</Text>
+            <Text style={styles.limitNote}>You've reached the limit of {KEY_LIMIT} keys.</Text>
           ) : null}
         </View>
 
@@ -215,10 +325,10 @@ export default function ApiSetupScreen() {
                   <Text style={styles.keyName} numberOfLines={1}>
                     {k.name || "Untitled key"}
                   </Text>
-                  <Badge label={k.status} tone={k.status === "active" ? "success" : "danger"} />
+                  <Badge label="active" tone="success" />
                 </View>
                 <Text style={styles.keyMask} numberOfLines={1}>
-                  {maskKey(k)}
+                  {k.maskedKey}
                 </Text>
                 <Text style={styles.keyMeta}>
                   Created {formatDate(k.createdAt)} · Last used{" "}
@@ -240,12 +350,7 @@ export default function ApiSetupScreen() {
       </Card>
 
       {/* Reveal-once dialog */}
-      <Modal
-        visible={!!revealedKey}
-        transparent
-        animationType="fade"
-        onRequestClose={closeReveal}
-      >
+      <Modal visible={!!revealedKey} transparent animationType="fade" onRequestClose={closeReveal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Copy your API key</Text>
@@ -271,27 +376,17 @@ export default function ApiSetupScreen() {
       </Modal>
 
       {/* Revoke confirmation */}
-      <Modal
-        visible={!!revokeTarget}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setRevokeTarget(null)}
-      >
+      <Modal visible={!!revokeTarget} transparent animationType="fade" onRequestClose={() => setRevokeTarget(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Revoke this API key?</Text>
             <Text style={styles.modalDesc}>
               Any application using{" "}
-              <Text style={styles.modalMono}>{revokeTarget ? maskKey(revokeTarget) : ""}</Text> will
-              immediately stop working. This cannot be undone.
+              <Text style={styles.modalMono}>{revokeTarget?.maskedKey ?? ""}</Text> will immediately
+              stop working. This cannot be undone.
             </Text>
             <View style={styles.modalActions}>
-              <Button
-                label="Cancel"
-                variant="outline"
-                onPress={() => setRevokeTarget(null)}
-                fullWidth
-              />
+              <Button label="Cancel" variant="outline" onPress={() => setRevokeTarget(null)} fullWidth />
               <Pressable
                 style={({ pressed }) => [styles.dangerBtn, { opacity: pressed || revoking ? 0.7 : 1 }]}
                 onPress={confirmRevoke}
@@ -326,6 +421,9 @@ const styles = StyleSheet.create({
   stepTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.bodySemibold, marginBottom: 3 },
   stepText: { fontSize: 14, lineHeight: 20, color: C.mutedForeground, fontFamily: fonts.body },
 
+  errorBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#fff0f0", borderRadius: 8, padding: 10, marginTop: 12 },
+  errorText: { fontSize: 13, color: C.destructive, fontFamily: fonts.body, flex: 1 },
+
   createRow: { gap: 12, marginTop: 16 },
   limitNote: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body },
 
@@ -338,7 +436,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 16 },
   emptyCenterText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center" },
 
   keyCard: {
@@ -368,7 +465,6 @@ const styles = StyleSheet.create({
   },
   revokeText: { fontSize: 13, color: C.destructive, fontFamily: fonts.bodySemibold },
 
-  // Modals
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(15,23,42,0.45)",

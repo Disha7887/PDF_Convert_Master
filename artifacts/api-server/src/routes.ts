@@ -2387,10 +2387,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const name = rawName ? rawName.slice(0, 60) : null;
 
       const existing = await storage.getUserApiKeys(userId);
-      if (existing.length >= 10) {
+      if (existing.length >= 3) {
         return res.status(400).json({
           success: false,
-          error: "You have reached the maximum of 10 API keys. Revoke one to create another."
+          error: "You have reached the maximum of 3 API keys. Revoke one to create another."
         });
       }
 

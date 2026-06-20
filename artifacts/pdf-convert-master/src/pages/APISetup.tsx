@@ -270,7 +270,7 @@ export const APISetup: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-base font-medium text-gray-900 mb-1">Generate API Key</h3>
-                        <p className="text-sm text-gray-600">Create your API key below to authenticate your requests. You can keep up to 10 keys.</p>
+                        <p className="text-sm text-gray-600">Create your API key below to authenticate your requests. You can keep up to 3 keys.</p>
                       </div>
                     </div>
 
@@ -306,7 +306,7 @@ export const APISetup: React.FC = () => {
                   <Button
                     className="text-sm"
                     onClick={() => setCreateOpen(true)}
-                    disabled={keys.length >= 10}
+                    disabled={keys.length >= 3}
                     data-testid="button-create-key"
                   >
                     <Plus className="w-4 h-4 mr-2" />
