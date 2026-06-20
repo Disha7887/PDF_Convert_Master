@@ -15,22 +15,23 @@ import { AnimatedBackground } from "@/components/ui/animated-background";
 
 export const APIDocumentationSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const apiFeatures = [
     {
       icon: <Zap className="w-6 h-6" />,
-      title: "Lightning Fast",
-      description: "Process documents in seconds"
+      title: "Fast Conversions",
+      description: "Synchronous processing returns your file in the response"
     },
     {
       icon: <Shield className="w-6 h-6" />,
-      title: "Enterprise Security",
-      description: "Bank-level encryption"
+      title: "Secure by Design",
+      description: "API-key auth over HTTPS"
     },
     {
       icon: <Globe className="w-6 h-6" />,
-      title: "99.9% Uptime",
-      description: "Reliable global infrastructure"
+      title: "20+ Tools, One API",
+      description: "PDF & image conversion endpoints"
     }
   ];
 
@@ -50,8 +51,8 @@ export const APIDocumentationSection = (): JSX.Element => {
             Powerful PDF API for Developers
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Integrate PDF conversion and processing directly into your applications.
-            Trusted by 10,000+ developers worldwide.
+            Integrate PDF and image conversion directly into your applications
+            with a simple REST API.
           </p>
         </div>
 
@@ -80,11 +81,10 @@ export const APIDocumentationSection = (): JSX.Element => {
           <Card className="bg-gray-50 border border-gray-200 shadow-sm max-w-3xl mx-auto">
             <CardContent className="p-6">
               <pre className="text-sm text-gray-700 overflow-x-auto">
-                <code>{`curl -X POST "https://api.pdfconvertmaster.com/v1/convert" \\
+                <code>{`curl -X POST "${origin}/api/v1/word_to_pdf" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: multipart/form-data" \\
   -F "file=@document.docx" \\
-  -F "format=pdf"`}</code>
+  -o converted.pdf`}</code>
               </pre>
             </CardContent>
           </Card>
@@ -94,20 +94,20 @@ export const APIDocumentationSection = (): JSX.Element => {
         <div className="mb-16 pt-16 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">10,000+</div>
-              <div className="text-gray-600">Active Developers</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">20+</div>
+              <div className="text-gray-600">Conversion Tools</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">99.9%</div>
-              <div className="text-gray-600">API Uptime</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">1,000</div>
+              <div className="text-gray-600">Free Calls / Month</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">100M+</div>
-              <div className="text-gray-600">API Calls/Month</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">REST</div>
+              <div className="text-gray-600">Simple HTTP API</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">50ms</div>
-              <div className="text-gray-600">Avg Response Time</div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">No Card</div>
+              <div className="text-gray-600">Required to Start</div>
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 import { useLocation } from "wouter";
-import { Search, FileText, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Copy, Check, Loader2 } from "lucide-react";
+import { Search, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, Copy, Check, Loader2 } from "lucide-react";
 
 interface Tool {
   type: string;
@@ -21,6 +21,7 @@ export const APIReference: React.FC = () => {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [search, setSearch] = useState("");
 
   const handleNavigation = (path: string) => {
     setLocation(path);
@@ -47,12 +48,38 @@ export const APIReference: React.FC = () => {
     compress_image: [
       { name: "quality", desc: "Compression quality 10–100 (default 80)" },
     ],
+    resize_image: [
+      { name: "width", desc: "Target width in px" },
+      { name: "height", desc: "Target height in px" },
+      { name: "percentage", desc: "Scale by percent instead of width/height" },
+      { name: "maintainAspectRatio", desc: "Keep aspect ratio (default true)" },
+    ],
+    rotate_image: [
+      { name: "angle", desc: "Rotation in degrees (default 90)" },
+      { name: "flipHorizontal", desc: "Mirror horizontally (true/false)" },
+      { name: "flipVertical", desc: "Mirror vertically (true/false)" },
+    ],
+    crop_image: [
+      { name: "x", desc: "Left offset in px" },
+      { name: "y", desc: "Top offset in px" },
+      { name: "width", desc: "Crop width in px" },
+      { name: "height", desc: "Crop height in px (omit all four for a centered 75% crop)" },
+    ],
+    upscale_image: [
+      { name: "scale", desc: "Upscale factor — 2 or 4 (default 4); requires AI upscaling" },
+    ],
   };
 
   const fileRule = (type: string) =>
     type === "merge_pdfs"
-      ? "2–20 files (one field per file, named file)"
+      ? "2–20 files (one field per file, named files)"
       : "Exactly 1 file (field named file)";
+
+  const filteredTools = tools.filter((t) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return t.name.toLowerCase().includes(q) || t.type.toLowerCase().includes(q);
+  });
 
   const sampleTool = tools.find((t) => t.type === "pdf_to_word") || tools[0];
   const sampleType = sampleTool?.type || "pdf_to_word";
@@ -81,7 +108,13 @@ export const APIReference: React.FC = () => {
               {/* Search */}
               <div className="relative mb-6">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input placeholder="Search tools..." className="pl-10" />
+                <Input
+                  placeholder="Search tools..."
+                  className="pl-10"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  data-testid="input-search-tools"
+                />
               </div>
 
               {/* Navigation */}
@@ -153,17 +186,6 @@ export const APIReference: React.FC = () => {
                   </div>
                 </Button>
 
-                <Button variant="ghost" className="w-full justify-start p-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
-                    <FileText className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="text-sm font-medium text-gray-700">API Documentation</p>
-                    <p className="text-xs text-gray-500">Complete API docs</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                </Button>
-
                 <Button
                   variant="ghost"
                   className="w-full justify-start p-3"
@@ -185,11 +207,21 @@ export const APIReference: React.FC = () => {
                   Quick Actions
                 </h3>
                 <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => handleNavigation('/dashboard/live-tools')}
+                    data-testid="button-quick-upload"
+                  >
                     <Upload className="w-5 h-5 mr-3 text-gray-600" />
                     <span className="text-sm font-medium text-gray-700">Upload PDF</span>
                   </Button>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => handleNavigation('/dashboard/usage')}
+                    data-testid="button-quick-history"
+                  >
                     <Clock className="w-5 h-5 mr-3 text-gray-600" />
                     <span className="text-sm font-medium text-gray-700">View History</span>
                   </Button>
@@ -271,8 +303,12 @@ export const APIReference: React.FC = () => {
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Loading endpoints...
                       </div>
+                    ) : filteredTools.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-gray-500" data-testid="status-no-tools">
+                        No tools match “{search}”.
+                      </div>
                     ) : (
-                      tools.map((tool) => {
+                      filteredTools.map((tool) => {
                         const opts = TOOL_OPTIONS[tool.type] || [];
                         return (
                           <div

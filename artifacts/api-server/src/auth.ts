@@ -87,7 +87,7 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
 
     // Add user to request
     req.user = user;
-    next();
+    return next();
   } catch (error) {
     console.error("Authentication middleware error:", error);
     return res.status(500).json({
@@ -106,7 +106,7 @@ export async function register(req: Request, res: Response) {
       return res.status(400).json({
         success: false,
         error: "Validation failed",
-        details: validation.error.errors
+        details: validation.error.issues
       });
     }
 
@@ -135,7 +135,7 @@ export async function register(req: Request, res: Response) {
     // Return user data without password hash
     const { passwordHash: _, ...userWithoutPassword } = newUser;
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: {
         user: userWithoutPassword,
@@ -146,7 +146,7 @@ export async function register(req: Request, res: Response) {
 
   } catch (error) {
     console.error("Registration error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Registration failed"
     });
@@ -162,7 +162,7 @@ export async function signin(req: Request, res: Response) {
       return res.status(400).json({
         success: false,
         error: "Validation failed",
-        details: validation.error.errors
+        details: validation.error.issues
       });
     }
 
@@ -192,7 +192,7 @@ export async function signin(req: Request, res: Response) {
     // Return user data without password hash
     const { passwordHash: _, ...userWithoutPassword } = user;
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         user: userWithoutPassword,
@@ -203,7 +203,7 @@ export async function signin(req: Request, res: Response) {
 
   } catch (error) {
     console.error("Sign in error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Sign in failed"
     });
@@ -223,7 +223,7 @@ export async function getCurrentUser(req: Request, res: Response) {
     // Return user data without password hash
     const { passwordHash: _, ...userWithoutPassword } = req.user;
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         user: userWithoutPassword
@@ -232,7 +232,7 @@ export async function getCurrentUser(req: Request, res: Response) {
 
   } catch (error) {
     console.error("Get current user error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Failed to get user data"
     });

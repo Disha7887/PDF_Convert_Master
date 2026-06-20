@@ -9,26 +9,85 @@ import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { tools, type Tool } from "@/constants/tools";
+import { API_BASE_URL } from "@/constants/api";
 
 const C = colors.light;
 
 const monoFont = Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" });
 
-const BASE_URL = "https://pdfconvertmaster.com/api/v1";
+const BASE_URL = `${API_BASE_URL}/v1`;
+
+// Tool types backed by a real /api/v1 endpoint (the server ToolType enum).
+// Every other catalog tool is client-side only and has no public endpoint.
+const API_TOOL_TYPES = new Set<string>([
+  "pdf_to_word", "pdf_to_excel", "pdf_to_powerpoint", "pdf_to_images",
+  "word_to_pdf", "excel_to_pdf", "powerpoint_to_pdf", "html_to_pdf",
+  "images_to_pdf", "resize_image", "crop_image", "rotate_image",
+  "convert_image_format", "compress_image", "upscale_image", "remove_background",
+  "merge_pdfs", "split_pdf", "rotate_pdf", "compress_pdf", "ocr_pdf",
+]);
+
+const apiTools = tools.filter((t) => API_TOOL_TYPES.has(t.serverToolType));
 
 // Tool-specific request options honoured by the live /api/v1 endpoint.
 const TOOL_OPTIONS: Record<string, { name: string; desc: string }[]> = {
   convert_image_format: [
     { name: "outputFormat", desc: "Target format — one of png, jpg, webp, gif, avif, tiff" },
   ],
-  compress_images: [{ name: "quality", desc: "Compression quality 10–100 (default 80)" }],
+  compress_image: [{ name: "quality", desc: "Compression quality 10–100 (default 80)" }],
+  resize_image: [
+    { name: "width", desc: "Target width in px" },
+    { name: "height", desc: "Target height in px" },
+    { name: "percentage", desc: "Scale by percent instead of width/height" },
+    { name: "maintainAspectRatio", desc: "Keep aspect ratio (default true)" },
+  ],
+  rotate_image: [
+    { name: "angle", desc: "Rotation in degrees (default 90)" },
+    { name: "flipHorizontal", desc: "Mirror horizontally (true/false)" },
+    { name: "flipVertical", desc: "Mirror vertically (true/false)" },
+  ],
+  crop_image: [
+    { name: "x", desc: "Left offset in px" },
+    { name: "y", desc: "Top offset in px" },
+    { name: "width", desc: "Crop width in px" },
+    { name: "height", desc: "Crop height in px (omit all four for a centered 75% crop)" },
+  ],
+  upscale_image: [
+    { name: "scale", desc: "Upscale factor — 2 or 4 (default 4); requires AI upscaling" },
+  ],
 };
 
 function fileRule(type: string): string {
   return type === "merge_pdfs"
-    ? "2–20 files (one field per file, named file)"
+    ? "2–20 files (one field per file, named files)"
     : "Exactly 1 file (field named file)";
 }
+
+// Backend-enforced limits & accepted formats, mirrored from the api-server
+// tool config (storage.ts). Keep in sync if the server limits change.
+const BACKEND_TOOL_META: Record<string, { maxFileSizeMB: number; formats: string[] }> = {
+  pdf_to_word: { maxFileSizeMB: 50, formats: ["pdf"] },
+  pdf_to_excel: { maxFileSizeMB: 50, formats: ["pdf"] },
+  pdf_to_powerpoint: { maxFileSizeMB: 50, formats: ["pdf"] },
+  pdf_to_images: { maxFileSizeMB: 100, formats: ["pdf"] },
+  word_to_pdf: { maxFileSizeMB: 100, formats: ["doc", "docx"] },
+  excel_to_pdf: { maxFileSizeMB: 100, formats: ["xls", "xlsx"] },
+  powerpoint_to_pdf: { maxFileSizeMB: 200, formats: ["ppt", "pptx"] },
+  html_to_pdf: { maxFileSizeMB: 10, formats: ["html", "htm"] },
+  images_to_pdf: { maxFileSizeMB: 100, formats: ["jpg", "jpeg", "png", "gif", "bmp", "tiff"] },
+  compress_image: { maxFileSizeMB: 50, formats: ["jpg", "jpeg", "png", "gif", "bmp"] },
+  convert_image_format: { maxFileSizeMB: 50, formats: ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "webp"] },
+  crop_image: { maxFileSizeMB: 50, formats: ["jpg", "jpeg", "png", "gif", "bmp"] },
+  resize_image: { maxFileSizeMB: 50, formats: ["jpg", "jpeg", "png", "gif", "bmp"] },
+  rotate_image: { maxFileSizeMB: 50, formats: ["jpg", "jpeg", "png", "gif", "bmp"] },
+  upscale_image: { maxFileSizeMB: 25, formats: ["jpg", "jpeg", "png", "webp"] },
+  remove_background: { maxFileSizeMB: 25, formats: ["jpg", "jpeg", "png"] },
+  merge_pdfs: { maxFileSizeMB: 200, formats: ["pdf"] },
+  split_pdf: { maxFileSizeMB: 100, formats: ["pdf"] },
+  compress_pdf: { maxFileSizeMB: 200, formats: ["pdf"] },
+  rotate_pdf: { maxFileSizeMB: 100, formats: ["pdf"] },
+  ocr_pdf: { maxFileSizeMB: 100, formats: ["pdf"] },
+};
 
 const CURL_EXAMPLE = `curl -X POST "${BASE_URL}/pdf_to_word" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -64,6 +123,9 @@ function AuthGate() {
 
 function EndpointCard({ tool }: { tool: Tool }) {
   const opts = TOOL_OPTIONS[tool.serverToolType] || [];
+  const meta = BACKEND_TOOL_META[tool.serverToolType];
+  const accepts = meta ? meta.formats.map((f) => `.${f}`).join(", ") : tool.acceptedFormats.join(", ");
+  const maxSize = meta ? `${meta.maxFileSizeMB} MB` : tool.maxFileSize;
   return (
     <View style={styles.endpoint} testID={`endpoint-${tool.serverToolType}`}>
       <View style={styles.endpointHead}>
@@ -77,11 +139,11 @@ function EndpointCard({ tool }: { tool: Tool }) {
 
       <View style={styles.metaRow}>
         <Text style={styles.metaLabel}>Accepts: </Text>
-        <Text style={styles.metaValue}>{tool.acceptedFormats.join(", ")}</Text>
+        <Text style={styles.metaValue}>{accepts}</Text>
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.metaLabel}>Max size: </Text>
-        <Text style={styles.metaValue}>{tool.maxFileSize} per file</Text>
+        <Text style={styles.metaValue}>{maxSize} per file</Text>
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.metaLabel}>Files: </Text>
@@ -158,7 +220,7 @@ export default function ApiReferenceScreen() {
       {/* Available Endpoints */}
       <Text style={styles.sectionTitle}>Available Endpoints</Text>
       <View style={{ gap: 12 }}>
-        {tools.map((tool) => (
+        {apiTools.map((tool) => (
           <EndpointCard key={tool.id} tool={tool} />
         ))}
       </View>
