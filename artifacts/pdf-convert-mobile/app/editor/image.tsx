@@ -128,6 +128,8 @@ export default function ImageEditorScreen() {
   // crop — free draggable + resizable rectangle (fractions of the image)
   const [cropRect, setCropRect] = useState<CropRect>({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
   const [surf, setSurf] = useState(0);
+  // True while the user is dragging the crop box, so we freeze page scrolling.
+  const [interacting, setInteracting] = useState(false);
 
   // rotate
   const [angle, setAngle] = useState(0);
@@ -322,7 +324,7 @@ export default function ImageEditorScreen() {
   }
 
   return (
-    <ScreenScroll insetTop>
+    <ScreenScroll insetTop scrollEnabled={!interacting}>
       <BackRow onPress={goBack} title={meta.title} />
 
       <View style={styles.headerRow}>
@@ -364,6 +366,7 @@ export default function ImageEditorScreen() {
               container={{ width: imgBox.width, height: imgBox.height }}
               value={cropRect}
               onChange={setCropRect}
+              onInteract={setInteracting}
             />
           </View>
         )}
@@ -493,25 +496,36 @@ function CropBox({
   container,
   value,
   onChange,
+  onInteract,
 }: {
   container: { width: number; height: number };
   value: CropRect;
   onChange: (p: CropRect) => void;
+  onInteract?: (active: boolean) => void;
 }) {
   const vRef = useRef(value);
   vRef.current = value;
   const cRef = useRef(container);
   cRef.current = container;
   const start = useRef(value);
+  const iRef = useRef(onInteract);
+  iRef.current = onInteract;
   const MIN = 0.12;
 
+  // Both responders fully claim the gesture (capture + refuse termination) so the
+  // parent ScrollView can't steal the drag, and toggle `onInteract` so the screen
+  // can freeze page scrolling for the duration of the drag.
   const move = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
@@ -520,6 +534,8 @@ function CropBox({
           const y = clampFrac(start.current.y + g.dy / c.height, 0, Math.max(0, 1 - start.current.h));
           onChange({ x, y, w: start.current.w, h: start.current.h });
         },
+        onPanResponderRelease: () => iRef.current?.(false),
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [onChange],
   );
@@ -534,6 +550,7 @@ function CropBox({
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
@@ -542,6 +559,8 @@ function CropBox({
           const h = clampFrac(start.current.h + g.dy / c.height, MIN, 1 - start.current.y);
           onChange({ x: start.current.x, y: start.current.y, w, h });
         },
+        onPanResponderRelease: () => iRef.current?.(false),
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [onChange],
   );

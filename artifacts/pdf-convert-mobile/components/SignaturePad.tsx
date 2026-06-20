@@ -31,15 +31,21 @@ export interface SignatureData {
 export default function SignaturePad({
   onChange,
   strokeColor = "#1c2434",
+  onInteract,
 }: {
   onChange: (data: SignatureData | null) => void;
   strokeColor?: string;
+  /** Called with `true` while a stroke is in progress so the parent can freeze
+   *  page scrolling and not fight the drawing gesture. */
+  onInteract?: (active: boolean) => void;
 }) {
   const [paths, setPaths] = useState<string[]>([]);
   const [current, setCurrent] = useState("");
   const size = useRef({ width: 0, height: 0 });
   const pathsRef = useRef<string[]>([]);
   const currentRef = useRef("");
+  const iRef = useRef(onInteract);
+  iRef.current = onInteract;
 
   const emit = useCallback(() => {
     const all = pathsRef.current;
@@ -53,12 +59,18 @@ export default function SignaturePad({
   const responder = useMemo(
     () =>
       PanResponder.create({
+        // Fully claim the stroke so the parent ScrollView can't steal it and
+        // scroll the page mid-draw.
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (e) => {
           const { locationX, locationY } = e.nativeEvent;
           currentRef.current = `M ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
           setCurrent(currentRef.current);
+          iRef.current?.(true);
         },
         onPanResponderMove: (e) => {
           const { locationX, locationY } = e.nativeEvent;
@@ -77,7 +89,9 @@ export default function SignaturePad({
             setCurrent("");
             emit();
           }
+          iRef.current?.(false);
         },
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [emit],
   );

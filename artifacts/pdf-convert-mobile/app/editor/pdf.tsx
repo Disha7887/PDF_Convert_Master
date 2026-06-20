@@ -200,6 +200,8 @@ export default function PdfEditorScreen() {
 
   // On-screen size of the page preview (px), used to map gestures to the page.
   const [pageBox, setPageBox] = useState({ width: 0, height: 0 });
+  // True while dragging an overlay, so page scrolling is frozen during the drag.
+  const [interacting, setInteracting] = useState(false);
 
   // delete-pages
   const [deleted, setDeleted] = useState<Set<number>>(new Set());
@@ -445,7 +447,7 @@ export default function PdfEditorScreen() {
   }
 
   return (
-    <ScreenScroll insetTop>
+    <ScreenScroll insetTop scrollEnabled={!interacting}>
       <BackRow onPress={goBack} title={meta.title} />
 
       <View style={styles.headerRow}>
@@ -519,6 +521,7 @@ export default function PdfEditorScreen() {
                     key={it.id}
                     container={pageBox}
                     value={{ x: it.x, y: it.y }}
+                    onInteract={setInteracting}
                     onChange={(pos) =>
                       setItems((prev) =>
                         prev.map((p) =>
@@ -546,6 +549,7 @@ export default function PdfEditorScreen() {
                 value={wmPos}
                 aspect={wmAspect}
                 onChange={setWmPos}
+                onInteract={setInteracting}
               >
                 <Text
                   style={[
@@ -573,6 +577,7 @@ export default function PdfEditorScreen() {
                 value={signPos}
                 aspect={signAspect}
                 onChange={setSignPos}
+                onInteract={setInteracting}
               >
                 <Text
                   style={[
@@ -605,6 +610,7 @@ export default function PdfEditorScreen() {
                 value={signPos}
                 aspect={signAspect}
                 onChange={setSignPos}
+                onInteract={setInteracting}
               >
                 <Svg
                   width="100%"
@@ -635,6 +641,7 @@ export default function PdfEditorScreen() {
                 value={imgPos}
                 aspect={imageAspect}
                 onChange={setImgPos}
+                onInteract={setInteracting}
               >
                 <Image
                   source={{ uri: imageUri }}
@@ -650,6 +657,7 @@ export default function PdfEditorScreen() {
                 container={pageBox}
                 value={cropRect}
                 onChange={setCropRect}
+                onInteract={setInteracting}
               />
             )}
           </View>
@@ -799,7 +807,7 @@ export default function PdfEditorScreen() {
             {signMode === "draw" ? (
               <View style={{ gap: 6 }}>
                 <Text style={styles.controlTitle}>Draw your signature</Text>
-                <SignaturePad onChange={setSignDraw} />
+                <SignaturePad onChange={setSignDraw} onInteract={setInteracting} />
               </View>
             ) : (
               <>
@@ -1005,6 +1013,7 @@ function DraggableBox({
   value,
   aspect,
   onChange,
+  onInteract,
   children,
   minW = 0.08,
 }: {
@@ -1012,6 +1021,7 @@ function DraggableBox({
   value: Placement;
   aspect: number;
   onChange: (p: Placement) => void;
+  onInteract?: (active: boolean) => void;
   children: React.ReactNode;
   minW?: number;
 }) {
@@ -1022,14 +1032,22 @@ function DraggableBox({
   const aRef = React.useRef(aspect);
   aRef.current = aspect;
   const start = React.useRef<Placement>(value);
+  const iRef = React.useRef(onInteract);
+  iRef.current = onInteract;
 
+  // Capture + refuse-termination on both responders so the parent ScrollView
+  // can't steal the drag; `onInteract` lets the screen freeze page scrolling.
   const move = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
@@ -1047,6 +1065,8 @@ function DraggableBox({
           );
           onChange({ x, y, w: start.current.w });
         },
+        onPanResponderRelease: () => iRef.current?.(false),
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [onChange],
   );
@@ -1063,6 +1083,7 @@ function DraggableBox({
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
@@ -1076,6 +1097,8 @@ function DraggableBox({
           }
           onChange({ x: start.current.x, y: start.current.y, w });
         },
+        onPanResponderRelease: () => iRef.current?.(false),
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [onChange, minW],
   );
@@ -1112,11 +1135,13 @@ function DragMove({
   container,
   value,
   onChange,
+  onInteract,
   children,
 }: {
   container: { width: number; height: number };
   value: { x: number; y: number };
   onChange: (p: { x: number; y: number }) => void;
+  onInteract?: (active: boolean) => void;
   children: React.ReactNode;
 }) {
   const vRef = React.useRef(value);
@@ -1124,14 +1149,20 @@ function DragMove({
   const cRef = React.useRef(container);
   cRef.current = container;
   const start = React.useRef(value);
+  const iRef = React.useRef(onInteract);
+  iRef.current = onInteract;
 
   const move = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
@@ -1141,6 +1172,8 @@ function DragMove({
             y: clampFrac(start.current.y + g.dy / c.height, 0.02, 0.96),
           });
         },
+        onPanResponderRelease: () => iRef.current?.(false),
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [onChange],
   );
@@ -1163,25 +1196,33 @@ function CropBox({
   container,
   value,
   onChange,
+  onInteract,
 }: {
   container: { width: number; height: number };
   value: { x: number; y: number; w: number; h: number };
   onChange: (p: { x: number; y: number; w: number; h: number }) => void;
+  onInteract?: (active: boolean) => void;
 }) {
   const vRef = React.useRef(value);
   vRef.current = value;
   const cRef = React.useRef(container);
   cRef.current = container;
   const start = React.useRef(value);
+  const iRef = React.useRef(onInteract);
+  iRef.current = onInteract;
   const MIN = 0.12;
 
   const move = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
@@ -1198,6 +1239,8 @@ function CropBox({
           );
           onChange({ x, y, w: start.current.w, h: start.current.h });
         },
+        onPanResponderRelease: () => iRef.current?.(false),
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [onChange],
   );
@@ -1212,6 +1255,7 @@ function CropBox({
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
@@ -1228,6 +1272,8 @@ function CropBox({
           );
           onChange({ x: start.current.x, y: start.current.y, w, h });
         },
+        onPanResponderRelease: () => iRef.current?.(false),
+        onPanResponderTerminate: () => iRef.current?.(false),
       }),
     [onChange],
   );
