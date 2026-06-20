@@ -3,9 +3,10 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Image,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -39,40 +40,54 @@ function extOf(name: string): string {
   const m = name.toLowerCase().match(/\.[^./]+$/);
   return m ? m[0] : ".png";
 }
+interface CropRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+function clampFrac(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
+
 /**
- * Computes a real pixel-space crop rectangle on the original image. When an
- * aspect ratio is chosen we take the largest centered rect matching it; for
- * "Free" we crop the centered 80% region (mirrors the on-screen 10% inset).
+ * Converts the on-screen crop rectangle (fractions of the image) into a real
+ * pixel-space crop rect on the original image.
  */
 function computeCropRect(
   w: number,
   h: number,
-  aspect: number | undefined,
+  rect: CropRect,
 ): { originX: number; originY: number; width: number; height: number } {
-  if (!aspect) {
-    return {
-      originX: Math.round(w * 0.1),
-      originY: Math.round(h * 0.1),
-      width: Math.max(1, Math.round(w * 0.8)),
-      height: Math.max(1, Math.round(h * 0.8)),
-    };
-  }
+  const originX = Math.max(0, Math.round(rect.x * w));
+  const originY = Math.max(0, Math.round(rect.y * h));
+  return {
+    originX,
+    originY,
+    width: Math.max(1, Math.min(w - originX, Math.round(rect.w * w))),
+    height: Math.max(1, Math.min(h - originY, Math.round(rect.h * h))),
+  };
+}
+
+/** Largest centered crop rect (in image fractions) matching an aspect ratio. */
+function cropRectForAspect(
+  w: number,
+  h: number,
+  a: number | undefined,
+): CropRect {
+  if (!a || !w || !h) return { x: 0.05, y: 0.05, w: 0.9, h: 0.9 };
   const origRatio = w / h;
   let cw: number;
   let ch: number;
-  if (aspect >= origRatio) {
+  if (a >= origRatio) {
     cw = w;
-    ch = Math.max(1, Math.round(w / aspect));
+    ch = w / a;
   } else {
     ch = h;
-    cw = Math.max(1, Math.round(h * aspect));
+    cw = h * a;
   }
-  return {
-    originX: Math.max(0, Math.round((w - cw) / 2)),
-    originY: Math.max(0, Math.round((h - ch) / 2)),
-    width: Math.min(w, cw),
-    height: Math.min(h, ch),
-  };
+  return { x: (w - cw) / 2 / w, y: (h - ch) / 2 / h, w: cw / w, h: ch / h };
 }
 
 /**
@@ -110,14 +125,27 @@ export default function ImageEditorScreen() {
   const [height, setHeight] = useState("");
   const [lock, setLock] = useState(true);
 
-  // crop
-  const [aspect, setAspect] = useState<number | undefined>(undefined);
+  // crop — free draggable + resizable rectangle (fractions of the image)
+  const [cropRect, setCropRect] = useState<CropRect>({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  const [surf, setSurf] = useState(0);
 
   // rotate
   const [angle, setAngle] = useState(0);
 
   const [saved, setSaved] = useState<{ uri: string; name: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // The displayed (contained) image box inside the square preview surface, so the
+  // crop rectangle maps directly onto image pixels despite letterboxing.
+  const imgBox = useMemo(() => {
+    if (!surf || !origW || !origH) return null;
+    const r = origW / origH;
+    let w = surf;
+    let h = surf;
+    if (r >= 1) h = surf / r;
+    else w = surf * r;
+    return { left: (surf - w) / 2, top: (surf - h) / 2, width: w, height: h };
+  }, [surf, origW, origH]);
 
   useEffect(() => {
     if (!uri) return;
@@ -222,7 +250,7 @@ export default function ImageEditorScreen() {
       } else if (mode === "rotate") {
         ctx = ctx.rotate(angle);
       } else if (mode === "crop") {
-        ctx = ctx.crop(computeCropRect(origW, origH, aspect));
+        ctx = ctx.crop(computeCropRect(origW, origH, cropRect));
       }
 
       const ref = await ctx.renderAsync();
@@ -243,7 +271,7 @@ export default function ImageEditorScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save the image.");
     }
-  }, [tool, uri, fileName, mode, origW, origH, width, height, angle, aspect]);
+  }, [tool, uri, fileName, mode, origW, origH, width, height, angle, cropRect]);
 
   const onShare = useCallback(async () => {
     if (!saved) return;
@@ -312,23 +340,32 @@ export default function ImageEditorScreen() {
       </View>
 
       {/* Image preview surface */}
-      <View style={styles.previewSurface}>
+      <View
+        style={styles.previewSurface}
+        onLayout={(e) => setSurf(e.nativeEvent.layout.width)}
+      >
         <Image
           source={{ uri }}
           style={[styles.preview, mode === "rotate" && { transform: [{ rotate: `${angle}deg` }] }]}
           resizeMode="contain"
           testID="img-preview"
         />
-        {mode === "crop" && (
+        {mode === "crop" && imgBox && (
           <View
-            style={[
-              styles.cropFrame,
-              aspect
-                ? { width: "78%", aspectRatio: aspect }
-                : { top: "10%", bottom: "10%", left: "10%", right: "10%" },
-            ]}
-            pointerEvents="none"
-          />
+            style={{
+              position: "absolute",
+              left: imgBox.left,
+              top: imgBox.top,
+              width: imgBox.width,
+              height: imgBox.height,
+            }}
+          >
+            <CropBox
+              container={{ width: imgBox.width, height: imgBox.height }}
+              value={cropRect}
+              onChange={setCropRect}
+            />
+          </View>
         )}
       </View>
 
@@ -388,15 +425,17 @@ export default function ImageEditorScreen() {
 
         {mode === "crop" && (
           <View style={{ gap: 14 }}>
-            <Text style={styles.controlTitle}>Aspect ratio</Text>
-            <Text style={styles.controlHelp}>Pick a ratio for the crop region.</Text>
+            <Text style={styles.controlTitle}>Crop region</Text>
+            <Text style={styles.controlHelp}>
+              Drag the box to move it, and drag the corner handle to resize — or
+              pick a ratio:
+            </Text>
             <View style={styles.chipRow}>
               {CROP_ASPECTS.map((a) => (
                 <Chip
                   key={a.label}
                   label={a.label}
-                  active={aspect === a.value}
-                  onPress={() => setAspect(a.value)}
+                  onPress={() => setCropRect(cropRectForAspect(origW, origH, a.value))}
                 />
               ))}
             </View>
@@ -445,6 +484,92 @@ function BackRow({ onPress, title }: { onPress: () => void; title?: string }) {
   );
 }
 
+/**
+ * Free draggable + resizable crop rectangle (fractions of the image box). Drag
+ * the body to move; drag the corner handle to resize. Capture handlers stop the
+ * parent move responder from stealing the corner-resize gesture.
+ */
+function CropBox({
+  container,
+  value,
+  onChange,
+}: {
+  container: { width: number; height: number };
+  value: CropRect;
+  onChange: (p: CropRect) => void;
+}) {
+  const vRef = useRef(value);
+  vRef.current = value;
+  const cRef = useRef(container);
+  cRef.current = container;
+  const start = useRef(value);
+  const MIN = 0.12;
+
+  const move = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          start.current = { ...vRef.current };
+        },
+        onPanResponderMove: (_e, g) => {
+          const c = cRef.current;
+          if (!c.width || !c.height) return;
+          const x = clampFrac(start.current.x + g.dx / c.width, 0, Math.max(0, 1 - start.current.w));
+          const y = clampFrac(start.current.y + g.dy / c.height, 0, Math.max(0, 1 - start.current.h));
+          onChange({ x, y, w: start.current.w, h: start.current.h });
+        },
+      }),
+    [onChange],
+  );
+
+  const resize = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: () => {
+          start.current = { ...vRef.current };
+        },
+        onPanResponderMove: (_e, g) => {
+          const c = cRef.current;
+          if (!c.width || !c.height) return;
+          const w = clampFrac(start.current.w + g.dx / c.width, MIN, 1 - start.current.x);
+          const h = clampFrac(start.current.h + g.dy / c.height, MIN, 1 - start.current.y);
+          onChange({ x: start.current.x, y: start.current.y, w, h });
+        },
+      }),
+    [onChange],
+  );
+
+  return (
+    <View
+      style={[
+        styles.cropFrame,
+        {
+          left: value.x * container.width,
+          top: value.y * container.height,
+          width: value.w * container.width,
+          height: value.h * container.height,
+        },
+      ]}
+      {...move.panHandlers}
+    >
+      <View
+        style={styles.resizeHandle}
+        hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+        {...resize.panHandlers}
+      >
+        <Feather name="maximize-2" size={12} color="#ffffff" />
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   backRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
   backBtn: {
@@ -488,6 +613,19 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     borderRadius: 4,
     backgroundColor: "rgba(247,67,61,0.06)",
+  },
+  resizeHandle: {
+    position: "absolute",
+    right: -11,
+    bottom: -11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: C.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#ffffff",
   },
 
   controlTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.headingSemibold },

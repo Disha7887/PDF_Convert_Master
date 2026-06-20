@@ -68,21 +68,10 @@ const WM_OPACITY: { label: string; value: number }[] = [
   { label: "Medium", value: 0.22 },
   { label: "Strong", value: 0.38 },
 ];
-const WM_SIZES: { label: string; value: number }[] = [
-  { label: "Small", value: 36 },
-  { label: "Medium", value: 56 },
-  { label: "Large", value: 84 },
-];
 const SIGN_FONTS: { label: string; family: string }[] = [
   { label: "Classic", family: fonts.heading },
   { label: "Modern", family: fonts.headingSemibold },
   { label: "Bold", family: fonts.headingBold },
-];
-const SIGN_SIZES: { label: string; w: number }[] = [
-  { label: "Small", w: 0.25 },
-  { label: "Medium", w: 0.4 },
-  { label: "Large", w: 0.6 },
-  { label: "X-Large", w: 0.8 },
 ];
 
 interface TextItem {
@@ -202,7 +191,7 @@ export default function PdfEditorScreen() {
   // watermark
   const [wmText, setWmText] = useState("CONFIDENTIAL");
   const [wmOpacity, setWmOpacity] = useState(0.22);
-  const [wmSize, setWmSize] = useState(56);
+  const [wmPos, setWmPos] = useState<Placement>({ x: 0.15, y: 0.42, w: 0.7 });
 
   // add-image
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -242,6 +231,12 @@ export default function PdfEditorScreen() {
         ? signDraw.height / signDraw.width
         : 0.4
       : Math.max(0.12, Math.min(0.6, 2 / Math.max(1, signName.trim().length)));
+
+  // Aspect of the watermark box, derived from the text length (single line).
+  const wmAspect = Math.max(
+    0.12,
+    Math.min(0.5, 1.4 / Math.max(1, (wmText.trim() || "WATERMARK").length)),
+  );
 
   const addTextItem = useCallback(() => {
     const t = textValue.trim();
@@ -326,7 +321,7 @@ export default function PdfEditorScreen() {
         signPlace: signPos,
         wmText,
         wmOpacity,
-        wmSize,
+        wmPlace: wmPos,
         imageUri: imageUri ?? undefined,
         imagePlace: imgPos,
         deletedPages: Array.from(deleted),
@@ -360,7 +355,7 @@ export default function PdfEditorScreen() {
     signPos,
     wmText,
     wmOpacity,
-    wmSize,
+    wmPos,
     imageUri,
     imgPos,
     deleted,
@@ -513,18 +508,30 @@ export default function PdfEditorScreen() {
                   </DragMove>
                 ))}
 
-            {/* watermark overlay */}
-            {mode === "watermark" && (
-              <View style={styles.wmWrap} pointerEvents="none">
+            {/* watermark overlay — drag to move, corner to resize */}
+            {mode === "watermark" && pageBox.width > 0 && (
+              <DraggableBox
+                container={pageBox}
+                value={wmPos}
+                aspect={wmAspect}
+                onChange={setWmPos}
+              >
                 <Text
                   style={[
                     styles.wmText,
-                    { opacity: wmOpacity, fontSize: 34 * (wmSize / 56) },
+                    {
+                      opacity: wmOpacity,
+                      transform: [{ rotate: "0deg" }],
+                      width: "100%",
+                      textAlign: "center",
+                      fontSize: Math.max(8, wmPos.w * pageBox.width * wmAspect),
+                    },
                   ]}
+                  numberOfLines={1}
                 >
                   {wmText || "WATERMARK"}
                 </Text>
-              </View>
+              </DraggableBox>
             )}
 
             {/* signature overlay — typed (drag to move, corner to resize) */}
@@ -789,25 +796,10 @@ export default function PdfEditorScreen() {
               </>
             )}
 
-            <View>
-              <Text style={styles.controlLabel}>Size</Text>
-              <View style={styles.chipRow}>
-                {SIGN_SIZES.map((s) => (
-                  <Chip
-                    key={s.label}
-                    label={s.label}
-                    active={Math.abs(signPos.w - s.w) < 0.001}
-                    onPress={() =>
-                      setSignPos((p) => ({ ...p, w: Math.min(s.w, 1 - p.x) }))
-                    }
-                  />
-                ))}
-              </View>
-              <Text style={styles.controlHelp}>
-                Pick a size, or drag the signature to move it and drag the corner
-                handle to resize.
-              </Text>
-            </View>
+            <Text style={styles.controlHelp}>
+              Drag the signature to move it, and drag the corner handle to
+              resize.
+            </Text>
           </View>
         )}
 
@@ -836,19 +828,10 @@ export default function PdfEditorScreen() {
                 ))}
               </View>
             </View>
-            <View>
-              <Text style={styles.controlLabel}>Size</Text>
-              <View style={styles.chipRow}>
-                {WM_SIZES.map((s) => (
-                  <Chip
-                    key={s.label}
-                    label={s.label}
-                    active={wmSize === s.value}
-                    onPress={() => setWmSize(s.value)}
-                  />
-                ))}
-              </View>
-            </View>
+            <Text style={styles.controlHelp}>
+              Drag the watermark to move it, and drag the corner handle to
+              resize.
+            </Text>
           </View>
         )}
 

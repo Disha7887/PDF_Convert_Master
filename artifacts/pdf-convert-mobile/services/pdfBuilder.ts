@@ -1,7 +1,6 @@
 import {
   PDFDocument,
   StandardFonts,
-  degrees,
   rgb,
   type PDFFont,
   type PDFPage,
@@ -80,8 +79,8 @@ export interface BuildPdfInput {
   signPlace?: Placement;
   wmText?: string;
   wmOpacity?: number;
-  /** Watermark font size in PDF points. */
-  wmSize?: number;
+  /** Where the watermark is placed/sized on the page (from the editor preview). */
+  wmPlace?: Placement;
   imageUri?: string;
   /** Where the image is placed/sized on the page (from the editor preview). */
   imagePlace?: Placement;
@@ -299,19 +298,20 @@ export async function buildEditedPdf(input: BuildPdfInput): Promise<string> {
     case "watermark": {
       const text = sanitizeText((input.wmText ?? "WATERMARK").trim() || "WATERMARK");
       const opacity = input.wmOpacity ?? 0.22;
-      const size = input.wmSize ?? 56;
-      const angleDeg = 35;
-      const rad = (angleDeg * Math.PI) / 180;
+      // Free placement from the editor (drag to move, corner to resize). Size is
+      // derived from the box width so the text fills the placed box.
+      const place = input.wmPlace ?? { x: 0.15, y: 0.42, w: 0.7 };
       for (const page of pages) {
         const { width, height } = page.getSize();
-        const textW = helv.widthOfTextAtSize(text, size);
+        const targetW = Math.max(20, place.w * width);
+        const baseW = helv.widthOfTextAtSize(text, 24) || 1;
+        const size = Math.min(160, Math.max(8, (targetW / baseW) * 24));
         page.drawText(text, {
-          x: width / 2 - (textW / 2) * Math.cos(rad),
-          y: height / 2 - (textW / 2) * Math.sin(rad),
+          x: place.x * width,
+          y: height * (1 - place.y) - size,
           size,
           font: helv,
           color: rgb(0.4, 0.42, 0.46),
-          rotate: degrees(angleDeg),
           opacity,
         });
       }
