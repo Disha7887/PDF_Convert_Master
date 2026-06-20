@@ -10,6 +10,7 @@ import React, { useCallback, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
+import FileBrokenIcon from "@/components/FileBrokenIcon";
 import { Button, Card, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
@@ -28,7 +29,7 @@ import {
 const C = colors.light;
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
 
-type Stage = "select" | "converting" | "done" | "error";
+type Stage = "select" | "converting" | "done" | "error" | "unsupported";
 
 // ── helpers (module scope) ───────────────────────────────────────────────────
 function extOf(name: string): string {
@@ -105,14 +106,18 @@ export default function ConvertScreen() {
         ? "done"
         : preview === "error"
           ? "error"
-          : null;
+          : preview === "unsupported"
+            ? "unsupported"
+            : null;
 
   const [files, setFiles] = useState<PickedFile[]>([]);
   const [stage, setStage] = useState<Stage>(previewStage ?? "select");
   const [error, setError] = useState<string | null>(
     previewStage === "error"
       ? "That file format isn't supported. Please choose a different file."
-      : null,
+      : previewStage === "unsupported"
+        ? "That file type isn't supported by this tool. Please choose a different file."
+        : null,
   );
   const [output, setOutput] = useState<{ uri: string; name: string } | null>(
     previewStage === "done" ? { uri: "", name: "converted-document.docx" } : null,
@@ -172,8 +177,11 @@ export default function ConvertScreen() {
           ext &&
           !tool.acceptedFormats.includes(ext)
         ) {
-          setError(`Unsupported file. Accepted: ${tool.acceptedFormats.join(", ")}`);
-          continue;
+          setError(
+            `This tool doesn't support ${ext} files. Accepted formats: ${tool.acceptedFormats.join(", ")}.`,
+          );
+          setStage("unsupported");
+          return;
         }
         if (f.size && f.size > tool.maxFileSizeMB * 1024 * 1024) {
           setError(`"${f.name}" exceeds the ${tool.maxFileSize} limit.`);
@@ -444,6 +452,36 @@ export default function ConvertScreen() {
           </View>
         </Card>
       )}
+
+      {/* Unsupported file stage */}
+      {stage === "unsupported" && (
+        <Card style={{ marginTop: 4 }}>
+          <View style={styles.successWrap}>
+            <FileBrokenIcon size={108} />
+            <Text style={styles.successTitle}>Unsupported file</Text>
+            <Text style={styles.successText} testID="text-unsupported">
+              {error ?? "That file type isn't supported. Please choose a different file."}
+            </Text>
+            {tool.acceptedFormats.length > 0 ? (
+              <Text style={styles.acceptedText}>
+                Accepted: {tool.acceptedFormats.join(", ")}
+              </Text>
+            ) : null}
+            <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
+              <Button
+                label="Choose another file"
+                icon="folder"
+                fullWidth
+                onPress={() => {
+                  setError(null);
+                  setStage("select");
+                }}
+                testID="button-choose-another"
+              />
+            </View>
+          </View>
+        </Card>
+      )}
     </ScreenScroll>
   );
 }
@@ -594,6 +632,7 @@ const styles = StyleSheet.create({
   outputName: { flex: 1, fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
 
   errorText: { fontSize: 13, color: C.destructive, fontFamily: fonts.body, textAlign: "center", marginTop: 4 },
+  acceptedText: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.bodyMedium, textAlign: "center", marginTop: 2 },
 
   emptyState: { alignItems: "center", gap: 12, paddingVertical: 60 },
   emptyTitle: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingSemibold },
