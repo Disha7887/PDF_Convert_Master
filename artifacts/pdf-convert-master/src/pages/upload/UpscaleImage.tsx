@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { authedFetch } from "@/lib/authedFetch";
 import {
   TrendingUp,
   Download,
@@ -104,7 +105,7 @@ export const UpscaleImageUpload = () => {
       formData.append("fileSize", String(file.size));
       formData.append("options", JSON.stringify({ scale }));
 
-      const res = await fetch("/api/convert", { method: "POST", body: formData });
+      const res = await authedFetch("/api/convert", { method: "POST", body: formData });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
         throw new Error(data.error || data.details || "Failed to start upscaling");

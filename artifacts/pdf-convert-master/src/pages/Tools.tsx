@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { authedFetch } from "@/lib/authedFetch";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
@@ -385,7 +386,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       if (needsCompressionPicker) options.quality = compressionQuality;
       formData.append("options", JSON.stringify(options));
 
-      const res = await fetch("/api/convert", {
+      const res = await authedFetch("/api/convert", {
         method: "POST",
         body: formData,
       });
@@ -435,7 +436,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       const formData = new FormData();
       for (const f of mergeFiles) formData.append("files", f);
 
-      const res = await fetch("/api/merge-pdfs", {
+      const res = await authedFetch("/api/merge-pdfs", {
         method: "POST",
         body: formData,
       });

@@ -1,3 +1,5 @@
+import { authedFetch } from "./authedFetch";
+
 export interface UploadResult {
   id: string;
   url: string;
@@ -71,7 +73,7 @@ export async function uploadImageToServer(
   formData.append("file", blob, filename);
   formData.append("fileName", filename);
 
-  const res = await fetch("/api/uploads", { method: "POST", body: formData });
+  const res = await authedFetch("/api/uploads", { method: "POST", body: formData });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.success) {
     throw new Error(data.error || "Failed to upload image to the server.");

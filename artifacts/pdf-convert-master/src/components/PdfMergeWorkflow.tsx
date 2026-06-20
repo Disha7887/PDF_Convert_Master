@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { authedFetch } from "@/lib/authedFetch";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -213,7 +214,7 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
       // Append in the user-chosen order; the backend merges strictly in this order.
       for (const f of files) formData.append("files", f);
 
-      const res = await fetch("/api/merge-pdfs", {
+      const res = await authedFetch("/api/merge-pdfs", {
         method: "POST",
         body: formData,
       });

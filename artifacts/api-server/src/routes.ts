@@ -16,6 +16,7 @@ import { promisify } from "util";
 import sharp from "sharp";
 import { register, signin, getCurrentUser, authenticateUser } from "./auth";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
+import { requireConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
@@ -1526,7 +1527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Start file conversion job
-  app.post("/api/convert", upload.single('file'), async (req, res) => {
+  app.post("/api/convert", requireConversionAuth, upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -1577,9 +1578,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const job = await storage.createConversionJob({
-        userId: (req as AuthenticatedRequest).user?.id || null,
+        userId: (req as ConversionAuthRequest).user?.id || null,
         toolType,
         status: "pending",
+        source: (req as ConversionAuthRequest).authSource || "web",
         inputFilename: fileName,
         inputFileSize: fileSize,
         outputFilename: null,
@@ -1618,7 +1620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // single-file (upload.single), so PDF merging gets a dedicated multi-file
   // endpoint. It reuses the job + /api/download infrastructure so the frontend
   // polls and downloads exactly like every other tool.
-  app.post("/api/merge-pdfs", (req, res, next) => {
+  app.post("/api/merge-pdfs", requireConversionAuth, (req, res, next) => {
     // mergeUpload enforces the 100MB/file and 20-file caps during streaming and
     // rejects non-PDF extensions. Translate its errors into clean 400 JSON
     // instead of letting them fall through to the generic error handler.
@@ -1660,9 +1662,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const outputFilename = "merged.pdf";
 
       const job = await storage.createConversionJob({
-        userId: (req as AuthenticatedRequest).user?.id || null,
+        userId: (req as ConversionAuthRequest).user?.id || null,
         toolType: ToolType.MERGE_PDFS,
         status: "processing",
+        source: (req as ConversionAuthRequest).authSource || "web",
         inputFilename: files.map(f => f.originalname).join(", ").slice(0, 255),
         inputFileSize: totalInputSize,
         outputFilename: null,
@@ -1721,7 +1724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // dedicated multer config, re-encoded through Sharp to strip any active
   // content, safe server-derived mime/filename, per-IP rate limit, and
   // aggregate caps so the in-memory store can't grow unbounded.
-  app.post("/api/uploads", imageUpload.single('file'), async (req, res) => {
+  app.post("/api/uploads", requireConversionAuth, imageUpload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ success: false, error: "No valid image file uploaded" });

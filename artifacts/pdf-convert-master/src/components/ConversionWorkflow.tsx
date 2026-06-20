@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { authedFetch } from "@/lib/authedFetch";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -222,7 +223,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           formData.append('options', JSON.stringify({}));
 
           // Start conversion job with file upload
-          const response = await fetch('/api/convert', {
+          const response = await authedFetch('/api/convert', {
             method: 'POST',
             body: formData,
           });

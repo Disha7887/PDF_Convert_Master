@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { authedFetch } from "@/lib/authedFetch";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
@@ -86,7 +87,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
       fd.append("fileName", f.name);
       fd.append("fileSize", String(f.size));
       fd.append("options", JSON.stringify({}));
-      const res = await fetch("/api/convert", { method: "POST", body: fd });
+      const res = await authedFetch("/api/convert", { method: "POST", body: fd });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Conversion failed");
       await pollJob(data.data.jobId);
