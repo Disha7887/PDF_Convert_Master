@@ -1,1 +1,1 @@
-- [Expo web + Metro on Replit](expo-web-metro-replit.md) — Metro cache survives workflow restarts (rm /tmp/metro-cache*); lazy bundling = stale logs; verify on $REPLIT_EXPO_DEV_DOMAIN; lottie web needs @lottiefiles/dotlottie-react; don't require() .txt.
+- [Canvas live-frame gallery for the Expo app](canvas-expo-live-frames.md) — embed `$REPLIT_EXPO_DEV_DOMAIN/<route>` as live iframes; dashboard renders signed-out inline, editors need a file param.
