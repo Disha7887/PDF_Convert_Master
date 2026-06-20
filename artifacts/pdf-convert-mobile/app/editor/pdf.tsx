@@ -232,12 +232,23 @@ export default function PdfEditorScreen() {
         : 0.4
       : Math.max(0.12, Math.min(0.6, 2 / Math.max(1, signName.trim().length)));
 
-  // Same approach as the Sign tool's signAspect: derive the box aspect from the
-  // text length so font size = boxW * wmAspect keeps the bold text inside the box
-  // width (~80%). No off-screen measuring text — that raced the web font load and
-  // over-sized the text before the bold font had loaded (caused overflow).
+  // Watermark sizing. The box height has its own aspect (so short strings don't
+  // get a razor-thin band), and the font size is the SMALLER of a width-fit and a
+  // height-fit cap, so the text can never overflow the box at any length or after
+  // resize:
+  //   • width:  fontSize ≤ boxW * 0.9 / (len * 0.78)   (0.78 ≈ max bold-cap advance)
+  //             → text width = len * realAdvance * fontSize ≤ 0.9 * boxW
+  //   • height: fontSize ≤ boxH / 1.3                   (1.3 = line height)
   const wmLen = Math.max(1, (wmText.trim() || "WATERMARK").length);
-  const wmAspect = Math.max(0.05, Math.min(0.6, 1 / wmLen));
+  const wmAspect = Math.max(0.06, Math.min(0.6, 1.45 / wmLen));
+  const wmBoxWpx = wmPos.w * pageBox.width;
+  const wmFontSize = Math.max(
+    6,
+    Math.min(
+      (wmBoxWpx * 0.9) / (wmLen * 0.78),
+      (wmBoxWpx * wmAspect) / 1.3,
+    ),
+  );
 
   // Snap the watermark box to one of nine anchor positions, keeping its size.
   const placeWatermark = useCallback(
@@ -545,7 +556,7 @@ export default function PdfEditorScreen() {
                       letterSpacing: 0,
                       width: "100%",
                       textAlign: "center",
-                      fontSize: Math.max(8, wmPos.w * pageBox.width * wmAspect),
+                      fontSize: wmFontSize,
                     },
                   ]}
                   numberOfLines={1}

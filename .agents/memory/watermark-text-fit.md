@@ -5,28 +5,38 @@ description: How to size single-line overlay text so it fits a draggable box wid
 
 # Fitting single-line overlay text to a box width (pdf-convert-mobile)
 
-The PDF watermark/signature overlays use a fixed-aspect `DraggableBox`; the box
-height comes from `aspect` and the overlay font size is `boxWidthPx * aspect`.
+The PDF watermark/signature overlays live inside a fixed-aspect `DraggableBox`
+(box height = box width × `aspect`).
 
-**Rule:** size the text with a length-based box aspect, the same way the Sign
-tool's `signAspect` does — `aspect = clamp(1 / textLength)` for the bold
-watermark font, so font size = `boxW * aspect` and the rendered text lands at
-~80% of the box width (fits with margin). Force `letterSpacing: 0` and
-`numberOfLines={1}`.
+**The trap:** the original overlays set `fontSize = boxW * aspect`, i.e. font
+size is tied to the box *height*. To make a long string fit the *width*, you are
+then forced to shrink `aspect` (`~1/len`), which makes the box a razor-thin band;
+the single text line's line-height then exceeds the box height and pokes out past
+the edges — looks like overflow even though the width math "fits". The Sign tool
+only avoids this because its script font is narrow and names are short.
 
-**Why NOT to measure off-screen:** an earlier version rendered a hidden `<Text>`
-at font size 100 and read `onLayout` width to compute an exact unit. This RACED
-the web font load: the measurement ran with the *fallback* font (narrower),
-produced too small a unit, and the overlay font came out too big — the watermark
-overflowed its box on freshly-loaded / real PDF pages (it looked fine only when
-the font was already cached). The Sign tool never had this bug because it uses
-the simple length heuristic. Do not reintroduce a measuring `<Text>` unless you
-also re-measure after fonts finish loading.
+**Rule (decouple width-fit from box height; cap by BOTH):**
+- Give the box its **own** comfortable height via `aspect ≈ 1.45/textLength`
+  (clamped), so it is not a thin band.
+- Set the font to the **smaller** of a width-fit and a height-fit cap so it can
+  never overflow at any length or after resize:
+  - width: `fontSize ≤ boxW * 0.9 / (len * 0.78)` — `0.78` ≈ **max** bold-cap
+    advance (use the max, not the average, or wide-letter strings like "WWWW"
+    slip past); then `textWidth = len*realAdvance*fontSize ≤ 0.9*boxW`.
+  - height: `fontSize ≤ boxH / 1.3` (`1.3` = line height) — without this, the
+    aspect clamp lets very short strings grow a font taller than the box.
+  - `fontSize = max(6, min(widthCap, heightCap))`.
+- Keep `letterSpacing: 0` and `numberOfLines={1}`.
+- **Don't** use a single width-only formula with a fixed font floor: long strings
+  hit the floor and the floor breaks the width guarantee. The min(width,height)
+  cap handles len ∈ {1..80} cleanly.
 
-**Also:** `adjustsFontSizeToFit` does NOT work on Expo web (native only), so it
-is not a safety net — the computed font size must be correct on its own.
+**Do NOT** measure the text off-screen to compute a unit — that races the web
+font load (measures the narrower fallback, oversizes the overlay) and overflowed
+on freshly-loaded pages. `adjustsFontSizeToFit` is also web-unsupported, so it is
+not a safety net.
 
 **Builder parity:** the pdf-lib builder draws watermark text horizontally from
 `wmPlace`, sizing via `helv.widthOfTextAtSize`, so the exported PDF is exact
 regardless of the preview's approximation; only the on-screen preview uses the
-length heuristic.
+length-based estimate.

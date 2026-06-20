@@ -4,7 +4,7 @@
 - [Coral rebrand](color-rebrand.md) — pdf-convert app branding is CORAL `#f7433d` (user-required); never revert to blue `#2563eb`.
 - [Mobile loaders](mobile-loaders.md) — all loading/processing states in pdf-convert-mobile use the shared `Loader`/`ScreenLoader` (processing.json), not ActivityIndicator.
 - [Lottie on Expo web](lottie-expo-web.md) — lottie-react-native@7 web needs the `@lottiefiles/dotlottie-react` optional peer installed.
-- [Watermark/overlay text fit](watermark-text-fit.md) — size overlay text via length-based aspect (like Sign tool's signAspect); do NOT measure off-screen (races web font load → overflow); adjustsFontSizeToFit is web-unsupported.
+- [Watermark/overlay text fit](watermark-text-fit.md) — size overlay font from box WIDTH (`boxW*k/len`), NOT box height/aspect; decouple box height (own aspect). Off-screen measuring races font load; adjustsFontSizeToFit is web-unsupported.
 - [Nested PanResponder steal](nested-panresponder-steal.md) — child handle inside a draggable parent only "moves"; fix with capture handlers + `onPanResponderTerminationRequest:false` + hitSlop.
 - [pdf.js web-only split](pdfjs-mobile-web-split.md) — real PDF page rendering: pdfjs imported only from `.web.ts` (native stub), worker via unpkg CDN; draw/type signature via SignaturePad + drawSvgPath.
 - [Mobile real conversions](mobile-real-conversions.md) — Expo CONVERT tools hit the real api-server; web FormData needs a real Blob (RN uri-cast fails on web); conversions are always-real via USE_REAL_CONVERSIONS, independent of USE_MOCK_DATA; EXPO_PUBLIC_DOMAIN inlined at bundle time (restart expo after change).
