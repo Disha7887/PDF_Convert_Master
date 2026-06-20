@@ -9,7 +9,6 @@ import {
   View,
 } from "react-native";
 
-import AppHeader from "@/components/AppHeader";
 import ToolCard from "@/components/ToolCard";
 import { ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
@@ -37,8 +36,6 @@ export default function ToolsScreen() {
 
   return (
     <ScreenScroll insetTop tabBar>
-      <AppHeader subtitle="All 27 tools, one tap away" />
-
       {/* Search */}
       <View style={styles.searchWrap}>
         <Feather name="search" size={16} color={C.mutedForeground} />
