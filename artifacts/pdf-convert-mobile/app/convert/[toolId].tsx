@@ -7,15 +7,9 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
+import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
@@ -99,13 +93,30 @@ async function shareFile(uri: string): Promise<boolean> {
 // ── screen ───────────────────────────────────────────────────────────────────
 export default function ConvertScreen() {
   const router = useRouter();
-  const { toolId } = useLocalSearchParams<{ toolId: string }>();
+  const { toolId, preview } = useLocalSearchParams<{ toolId: string; preview?: string }>();
   const tool = getToolById(toolId);
 
+  // `preview` drives the canvas gallery: it initializes a specific stage so the
+  // success / error / processing states can be shown as standalone frames.
+  const previewStage: Stage | null =
+    preview === "processing" || preview === "converting"
+      ? "converting"
+      : preview === "success" || preview === "done"
+        ? "done"
+        : preview === "error"
+          ? "error"
+          : null;
+
   const [files, setFiles] = useState<PickedFile[]>([]);
-  const [stage, setStage] = useState<Stage>("select");
-  const [error, setError] = useState<string | null>(null);
-  const [output, setOutput] = useState<{ uri: string; name: string } | null>(null);
+  const [stage, setStage] = useState<Stage>(previewStage ?? "select");
+  const [error, setError] = useState<string | null>(
+    previewStage === "error"
+      ? "That file format isn't supported. Please choose a different file."
+      : null,
+  );
+  const [output, setOutput] = useState<{ uri: string; name: string } | null>(
+    previewStage === "done" ? { uri: "", name: "converted-document.docx" } : null,
+  );
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -294,7 +305,7 @@ export default function ConvertScreen() {
             testID="button-pick-file"
           >
             <View style={styles.dropIcon}>
-              <Feather name="upload-cloud" size={28} color={C.primary} />
+              <ConverterStatusIcon status="upload" toolId={tool.id} size={52} />
             </View>
             <Text style={styles.dropTitle}>{tool.dropAreaText}</Text>
             <Text style={styles.dropHint}>{tool.fileTypeHint}</Text>
@@ -376,7 +387,7 @@ export default function ConvertScreen() {
       {/* Converting stage */}
       {stage === "converting" && (
         <View style={styles.centerState} testID="status-converting">
-          <ActivityIndicator size="large" color={C.primary} />
+          <ConverterStatusIcon status="processing" size={96} />
           <Text style={styles.centerTitle}>Converting…</Text>
           <Text style={styles.centerText}>
             Processing your file{files.length !== 1 ? "s" : ""} with {tool.title}.
@@ -388,9 +399,7 @@ export default function ConvertScreen() {
       {stage === "done" && output && (
         <Card style={{ marginTop: 4 }}>
           <View style={styles.successWrap}>
-            <View style={styles.successIcon}>
-              <Feather name="check-circle" size={30} color={C.success} />
-            </View>
+            <ConverterStatusIcon status="success" size={88} />
             <Text style={styles.successTitle} testID="text-success">
               Conversion complete
             </Text>
@@ -429,9 +438,7 @@ export default function ConvertScreen() {
       {stage === "error" && (
         <Card style={{ marginTop: 4 }}>
           <View style={styles.successWrap}>
-            <View style={[styles.successIcon, { backgroundColor: "#fee2e2" }]}>
-              <Feather name="alert-circle" size={30} color={C.destructive} />
-            </View>
+            <ConverterStatusIcon status="error" size={88} />
             <Text style={styles.successTitle}>Something went wrong</Text>
             <Text style={styles.successText} testID="text-error">
               {error ?? "The conversion failed. Please try again."}

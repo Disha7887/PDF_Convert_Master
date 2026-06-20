@@ -63,6 +63,7 @@
     "expo-document-picker": "^14.0.8",
     "expo-file-system": "^19.0.23",
     "expo-sharing": "^14.0.8",
+    "lottie-react": "^2.4.1",
     "lottie-react-native": "~7.3.8"
   }
 }
