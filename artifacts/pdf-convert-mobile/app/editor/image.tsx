@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { File, Paths } from "expo-file-system";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
@@ -38,24 +38,40 @@ function extOf(name: string): string {
   const m = name.toLowerCase().match(/\.[^./]+$/);
   return m ? m[0] : ".png";
 }
-function sanitizeName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "_") || "output.png";
-}
-
-/** Copies the picked image into the cache under the output name (real image). */
-async function copyImageOutput(srcUri: string, name: string): Promise<string> {
-  const dest = new File(Paths.cache, sanitizeName(name));
-  try {
-    if (dest.exists) dest.delete();
-    const src = new File(srcUri);
-    src.copy(dest);
-    return dest.uri;
-  } catch {
-    // Fallback: write a placeholder so there's always something to share.
-    dest.create({ overwrite: true, intermediates: true });
-    dest.write(`PDF Convert Master — sample image output\nSource: ${srcUri}\n`);
-    return dest.uri;
+/**
+ * Computes a real pixel-space crop rectangle on the original image. When an
+ * aspect ratio is chosen we take the largest centered rect matching it; for
+ * "Free" we crop the centered 80% region (mirrors the on-screen 10% inset).
+ */
+function computeCropRect(
+  w: number,
+  h: number,
+  aspect: number | undefined,
+): { originX: number; originY: number; width: number; height: number } {
+  if (!aspect) {
+    return {
+      originX: Math.round(w * 0.1),
+      originY: Math.round(h * 0.1),
+      width: Math.max(1, Math.round(w * 0.8)),
+      height: Math.max(1, Math.round(h * 0.8)),
+    };
   }
+  const origRatio = w / h;
+  let cw: number;
+  let ch: number;
+  if (aspect >= origRatio) {
+    cw = w;
+    ch = Math.max(1, Math.round(w / aspect));
+  } else {
+    ch = h;
+    cw = Math.max(1, Math.round(h * aspect));
+  }
+  return {
+    originX: Math.max(0, Math.round((w - cw) / 2)),
+    originY: Math.max(0, Math.round((h - ch) / 2)),
+    width: Math.min(w, cw),
+    height: Math.min(h, ch),
+  };
 }
 
 async function shareFile(uri: string): Promise<boolean> {
@@ -171,10 +187,33 @@ export default function ImageEditorScreen() {
     if (!tool || !uri) return;
     setError(null);
     try {
-      const ext = extOf(fileName);
-      const name = `${stripExt(fileName)}-${mode}${ext}`;
-      const outUri = await copyImageOutput(uri, name);
-      setSaved({ uri: outUri, name });
+      if (mode !== "rotate" && (origW === 0 || origH === 0)) {
+        setError("Couldn't read the image dimensions. Please try another image.");
+        return;
+      }
+
+      const isPng = extOf(fileName).toLowerCase() === ".png";
+      const format = isPng ? SaveFormat.PNG : SaveFormat.JPEG;
+      const outExt = isPng ? ".png" : ".jpg";
+      const name = `${stripExt(fileName)}-${mode}${outExt}`;
+
+      let ctx = ImageManipulator.manipulate(uri);
+      if (mode === "resize") {
+        const w = parseInt(width, 10);
+        const h = parseInt(height, 10);
+        ctx = ctx.resize({
+          width: Number.isFinite(w) && w > 0 ? w : origW,
+          height: Number.isFinite(h) && h > 0 ? h : origH,
+        });
+      } else if (mode === "rotate") {
+        ctx = ctx.rotate(angle);
+      } else if (mode === "crop") {
+        ctx = ctx.crop(computeCropRect(origW, origH, aspect));
+      }
+
+      const ref = await ctx.renderAsync();
+      const result = await ref.saveAsync({ format, compress: 0.92 });
+      setSaved({ uri: result.uri, name });
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -190,7 +229,7 @@ export default function ImageEditorScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save the image.");
     }
-  }, [tool, uri, fileName, mode]);
+  }, [tool, uri, fileName, mode, origW, origH, width, height, angle, aspect]);
 
   const onShare = useCallback(async () => {
     if (!saved) return;
@@ -436,7 +475,7 @@ const styles = StyleSheet.create({
     borderColor: C.primary,
     borderStyle: "dashed",
     borderRadius: 4,
-    backgroundColor: "rgba(37,99,235,0.06)",
+    backgroundColor: "rgba(247,67,61,0.06)",
   },
 
   controlTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.headingSemibold },

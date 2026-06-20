@@ -1,1 +1,6 @@
+- [Expo web + Metro on Replit](expo-web-metro-replit.md) — Metro cache/lazy-bundle/log-staleness quirks; verify on expo domain not localhost:80; tslib→CJS resolver fixes pdf-lib Hermes crash.
+- [Canvas live-frame gallery (Expo)](canvas-expo-live-frames.md) — embed every Expo route as `state:"live"` iframes on `$REPLIT_EXPO_DEV_DOMAIN`; refreshing failed frames to live works once the dev server is running.
+- [Canvas + Expo prototyping](canvas-expo-prototype.md) — patterns for prototyping Expo screens on the canvas.
+- [Coral rebrand](color-rebrand.md) — pdf-convert app branding is CORAL `#f7433d` (user-required); never revert to blue `#2563eb`.
 - [Mobile loaders](mobile-loaders.md) — all loading/processing states in pdf-convert-mobile use the shared `Loader`/`ScreenLoader` (processing.json), not ActivityIndicator.
+- [Lottie on Expo web](lottie-expo-web.md) — lottie-react-native@7 web needs the `@lottiefiles/dotlottie-react` optional peer installed.

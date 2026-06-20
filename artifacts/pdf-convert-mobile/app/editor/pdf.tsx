@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
-import { File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useMemo, useState } from "react";
@@ -21,6 +21,7 @@ import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import { getToolById } from "@/constants/tools";
+import { buildEditedPdf, type EditorMode } from "@/services/pdfBuilder";
 
 const C = colors.light;
 const PAGE_COUNT = 4;
@@ -54,33 +55,6 @@ interface TextItem {
 
 function stripExt(name: string): string {
   return name.replace(/\.[^./]+$/, "") || "document";
-}
-function sanitizeName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "_") || "output";
-}
-
-async function writeMockPdf(name: string, summary: string): Promise<string> {
-  const file = new File(Paths.cache, sanitizeName(name));
-  file.create({ overwrite: true, intermediates: true });
-  file.write(
-    `PDF Convert Master — edited PDF (sample output)\n` +
-      `${summary}\n` +
-      `Generated: ${new Date().toISOString()}\n`,
-  );
-  return file.uri;
-}
-
-/** Copies the picked PDF into the cache under the output name (real PDF). */
-async function copyPdfOutput(srcUri: string, name: string): Promise<string> {
-  const dest = new File(Paths.cache, sanitizeName(name));
-  try {
-    if (dest.exists) dest.delete();
-    const src = new File(srcUri);
-    src.copy(dest);
-    return dest.uri;
-  } catch {
-    return writeMockPdf(name, `Source: ${srcUri}`);
-  }
 }
 
 async function shareFile(uri: string): Promise<boolean> {
@@ -165,7 +139,17 @@ export default function PdfEditorScreen() {
       quality: 1,
     });
     if (res.canceled) return;
-    setImageUri(res.assets[0]?.uri ?? null);
+    const picked = res.assets[0]?.uri;
+    if (!picked) return;
+    // Normalize to JPEG so pdf-lib can always embed it (iOS may hand back
+    // HEIC/HEIF or other formats pdf-lib cannot parse).
+    try {
+      const rendered = await ImageManipulator.manipulate(picked).renderAsync();
+      const out = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.92 });
+      setImageUri(out.uri);
+    } catch {
+      setImageUri(picked);
+    }
   }, []);
 
   const toggleDeleted = useCallback((idx: number) => {
@@ -181,19 +165,28 @@ export default function PdfEditorScreen() {
     if (!tool) return;
     setError(null);
     try {
-      let summary = `Tool: ${tool.title}\nSource: ${fileName}`;
-      if (mode === "edit") summary += `\nText boxes added: ${items.length}`;
-      if (mode === "crop") summary += `\nMargins trimmed: ${Math.round(cropInset * 100)}%`;
-      if (mode === "sign") summary += `\nSignature: ${signName || "(unsigned)"}`;
-      if (mode === "watermark") summary += `\nWatermark: ${wmText} @ ${Math.round(wmOpacity * 100)}%`;
-      if (mode === "add-image") summary += `\nImage placed: ${imageUri ? "yes" : "no"}`;
-      if (mode === "delete-pages")
-        summary += `\nPages removed: ${deleted.size} of ${PAGE_COUNT}`;
-
       const name = `${stripExt(fileName)}-${mode}.pdf`;
-      const uri = params.uri
-        ? await copyPdfOutput(params.uri, name)
-        : await writeMockPdf(name, summary);
+      const uri = await buildEditedPdf({
+        mode: mode as EditorMode,
+        srcUri: params.uri,
+        outName: name,
+        fallbackPageCount: PAGE_COUNT,
+        activePage: page,
+        textItems: items.map((it) => ({
+          page: it.page,
+          text: it.text,
+          size: it.size,
+          color: it.color,
+        })),
+        cropInset,
+        signName,
+        signFont,
+        wmText,
+        wmOpacity,
+        imageUri: imageUri ?? undefined,
+        imageScale,
+        deletedPages: Array.from(deleted),
+      });
       setSaved({ uri, name });
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -210,7 +203,22 @@ export default function PdfEditorScreen() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save the PDF.");
     }
-  }, [tool, fileName, mode, items, cropInset, signName, wmText, wmOpacity, imageUri, deleted]);
+  }, [
+    tool,
+    fileName,
+    mode,
+    items,
+    cropInset,
+    signName,
+    signFont,
+    wmText,
+    wmOpacity,
+    imageUri,
+    imageScale,
+    deleted,
+    page,
+    params.uri,
+  ]);
 
   const onShare = useCallback(async () => {
     if (!saved) return;
@@ -648,7 +656,7 @@ const styles = StyleSheet.create({
     borderColor: C.primary,
     borderStyle: "dashed",
     borderRadius: 4,
-    backgroundColor: "rgba(37,99,235,0.05)",
+    backgroundColor: "rgba(247,67,61,0.05)",
   },
 
   pageNav: {

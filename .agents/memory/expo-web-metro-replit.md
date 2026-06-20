@@ -35,3 +35,20 @@ bundle fails to resolve. Install `@lottiefiles/dotlottie-react` into the Expo ar
 content at runtime (expo-file-system) instead of bundling it. PDF/PNG resolve fine by default.
 Bundled samples that ARE wanted can be loaded via `expo-asset` (`Asset.fromModule(require(...))`,
 `downloadAsync()`, then `localUri ?? uri`).
+
+## pdf-lib (and other CJS libs that `require("tslib")`) crash under Hermes via Metro package-exports
+pdf-lib's CJS does `require("tslib")`. Metro's package-exports resolution maps the bare `tslib`
+specifier to tslib's ESM build, and the default-import interop fails at runtime with
+`TypeError: Cannot destructure property '__extends' of 'tslib.default' as it is undefined`
+(blank screen / red error on the editor route). tslib's `exports` map exposes the CJS entry via
+the `"./"` subpath, so force the bare specifier to it in `metro.config.js`:
+```js
+config.resolver.resolveRequest = (context, moduleName, platform) =>
+  moduleName === "tslib"
+    ? context.resolveRequest(context, "tslib/tslib.js", platform)
+    : context.resolveRequest(context, moduleName, platform);
+```
+**Why:** took several attempts — the crash looks like an app bug but is a bundler resolution issue.
+**How to apply:** any pure-JS CJS dep that `require("tslib")` (pdf-lib, many TS-compiled libs) can
+hit this. After editing metro.config.js, restart the Expo workflow (and clear Metro cache if the old
+error persists — see top of this file).

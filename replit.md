@@ -34,7 +34,9 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Branding is CORAL `#f7433d` across both web and mobile artifacts. This is an explicit, user-required choice — never revert to blue (`#2563eb`), even if a review or validation step suggests it.
+- The mobile app (`artifacts/pdf-convert-mobile`) must keep real, working features at parity with the web app — no placeholder/"coming soon" screens.
+- Keep the `USE_MOCK_DATA` switch and the `services/api.ts` abstraction as the data layer (mock data behind the switch is acceptable).
 
 ## Gotchas
 
