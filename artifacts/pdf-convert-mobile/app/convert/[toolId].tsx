@@ -26,6 +26,7 @@ import { Button, Card, Field, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
+import { CELEBRATE_XML } from "@/constants/celebrateIcon";
 import { formatIconXml } from "@/constants/formatIcons";
 import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
@@ -1043,7 +1044,7 @@ export default function ConvertScreen() {
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <View style={styles.celebrateHeader}>
               <View style={styles.celebrateIcon}>
-                <Feather name="award" size={26} color="#fff" />
+                <SvgXml xml={CELEBRATE_XML} width={52} height={52} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.celebrateTitle}>Awesome job!</Text>
@@ -1314,10 +1315,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   celebrateIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: C.primary,
+    width: 52,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
   },
