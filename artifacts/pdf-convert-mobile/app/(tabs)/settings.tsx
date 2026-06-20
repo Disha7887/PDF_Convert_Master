@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Pressable, Share, StyleSheet, Switch, Text, View } from "react-native";
 
+import AppHeader from "@/components/AppHeader";
 import { Button, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -69,6 +70,8 @@ export default function SettingsScreen() {
 
   return (
     <ScreenScroll insetTop tabBar>
+      <AppHeader subtitle="Settings" />
+
       {/* Account */}
       <View style={[styles.accountCard, cardShadow]}>
         {isAuthenticated ? (

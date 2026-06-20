@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
+import AppHeader from "@/components/AppHeader";
 import { Field, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -97,6 +98,8 @@ export default function FilesScreen() {
 
   return (
     <ScreenScroll insetTop tabBar>
+      <AppHeader subtitle="Your files" />
+
       <Field
         icon="search"
         placeholder="Search files & scans"
