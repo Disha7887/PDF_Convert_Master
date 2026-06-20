@@ -482,9 +482,19 @@ export default function PdfEditorScreen() {
                 onChange={setSignPos}
               >
                 <Text
-                  style={[styles.signFill, { fontFamily: signFont }]}
+                  style={[
+                    styles.signFill,
+                    {
+                      fontFamily: signFont,
+                      // react-native-web ignores adjustsFontSizeToFit, so size the
+                      // text from the box height (box H = box W * signAspect).
+                      fontSize: Math.max(
+                        8,
+                        signPos.w * pageBox.width * signAspect,
+                      ),
+                    },
+                  ]}
                   numberOfLines={1}
-                  adjustsFontSizeToFit
                 >
                   {signName}
                 </Text>
@@ -1021,10 +1031,7 @@ const styles = StyleSheet.create({
   },
   signFill: {
     width: "100%",
-    height: "100%",
     textAlign: "center",
-    textAlignVertical: "center",
-    fontSize: 96,
     color: C.foreground,
   },
   resizeHandle: {
