@@ -35,7 +35,7 @@ export default function ToolsScreen() {
   }, [query]);
 
   return (
-    <ScreenScroll insetTop tabBar>
+    <ScreenScroll navInset tabBar>
       {/* Search */}
       <View style={styles.searchWrap}>
         <Feather name="search" size={16} color={C.mutedForeground} />

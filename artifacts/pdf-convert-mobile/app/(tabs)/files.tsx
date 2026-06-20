@@ -96,7 +96,7 @@ export default function FilesScreen() {
     setActiveCategory((prev) => (prev === cat ? null : cat));
 
   return (
-    <ScreenScroll insetTop tabBar>
+    <ScreenScroll navInset tabBar>
       <Field
         icon="search"
         placeholder="Search files & scans"

@@ -141,7 +141,7 @@ export default function HomeScreen() {
   const colWidth = width < 360 ? "100%" : "48%";
 
   return (
-    <ScreenScroll insetTop tabBar contentStyle={{ paddingHorizontal: 0 }}>
+    <ScreenScroll navInset tabBar contentStyle={{ paddingHorizontal: 0 }}>
       {/* ─── Hero ─────────────────────────────────────────────────────────── */}
       <LinearGradient
         colors={[C.blue900, C.primary, C.blue500]}

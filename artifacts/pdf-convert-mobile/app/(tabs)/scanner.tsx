@@ -19,6 +19,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Loader } from "@/components/Loader";
+import { NAV_BAR_HEIGHT, useNavTopInset } from "@/components/TopNav";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
 import { ROUTES } from "@/constants/routes";
@@ -67,6 +68,7 @@ async function buildPdf(imageUris: string[]): Promise<string | null> {
 export default function ScannerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const navTopInset = useNavTopInset();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [pages, setPages] = useState<string[]>([]);
@@ -149,7 +151,7 @@ export default function ScannerScreen() {
   const showCamera = !isWeb && permission?.granted && active;
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <View style={[styles.root, { paddingTop: navTopInset + NAV_BAR_HEIGHT }]}>
       <View style={styles.topBar}>
         <Text style={styles.title}>Scan Document</Text>
         {pages.length > 0 ? (
@@ -275,7 +277,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    paddingVertical: 14,
+    paddingTop: 18,
+    paddingBottom: 14,
   },
   title: { fontSize: 17, color: "#fff", fontFamily: fonts.headingSemibold },
   pagePill: {

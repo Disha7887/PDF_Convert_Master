@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Loader } from "@/components/Loader";
+import { NAV_BAR_HEIGHT } from "@/components/TopNav";
 import colors from "@/constants/colors";
 import { SCREEN_PADDING, cardShadow, fonts } from "@/constants/theme";
 
@@ -27,6 +28,8 @@ type FeatherName = keyof typeof Feather.glyphMap;
 interface ScreenScrollProps extends ScrollViewProps {
   /** Add top safe-area padding (use on tab screens without a native header). */
   insetTop?: boolean;
+  /** Reserve space for the shared blurred TopNav (use on the main tab screens). */
+  navInset?: boolean;
   /** Reserve space for the bottom tab bar (use on tab screens). */
   tabBar?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
@@ -35,13 +38,21 @@ interface ScreenScrollProps extends ScrollViewProps {
 
 export function ScreenScroll({
   insetTop = false,
+  navInset = false,
   tabBar = false,
   contentStyle,
   children,
   ...rest
 }: ScreenScrollProps) {
   const insets = useSafeAreaInsets();
-  const topPad = insetTop ? (Platform.OS === "web" ? 67 : insets.top) : 0;
+  const safeTop = Platform.OS === "web" ? 24 : insets.top;
+  const topPad = navInset
+    ? safeTop + NAV_BAR_HEIGHT
+    : insetTop
+      ? Platform.OS === "web"
+        ? 67
+        : insets.top
+      : 0;
   const bottomPad = tabBar
     ? Platform.OS === "web"
       ? 34 + 84

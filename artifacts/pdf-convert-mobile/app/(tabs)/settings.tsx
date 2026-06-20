@@ -68,7 +68,7 @@ export default function SettingsScreen() {
   ];
 
   return (
-    <ScreenScroll insetTop tabBar>
+    <ScreenScroll navInset tabBar>
       {/* Account */}
       <View style={[styles.accountCard, cardShadow]}>
         {isAuthenticated ? (
