@@ -9,6 +9,15 @@
  */
 export const USE_MOCK_DATA = true;
 
+/**
+ * The CONVERT tools always call the real api-server backend (the same API the
+ * web app uses), even while `USE_MOCK_DATA` keeps auth, dashboard and marketing
+ * on the offline mock layer. This lets anyone run real file conversions without
+ * being forced to log in. Flip to `false` to fall back to bundled sample
+ * outputs for a fully-offline demo.
+ */
+export const USE_REAL_CONVERSIONS = true;
+
 /** Simulated network latency (ms) for mock service calls. */
 export const MOCK_LATENCY_MS = 650;
 

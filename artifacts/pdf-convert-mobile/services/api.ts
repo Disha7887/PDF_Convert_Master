@@ -1,17 +1,27 @@
+import { Platform } from "react-native";
+
 import {
   API_BASE_URL,
   POLL_INTERVAL_MS,
   POLL_MAX_ATTEMPTS,
   type ConvertJob,
 } from "@/constants/api";
-import { MOCK_CONVERT_STEP_MS, USE_MOCK_DATA } from "@/constants/config";
+import {
+  MOCK_CONVERT_STEP_MS,
+  USE_MOCK_DATA,
+  USE_REAL_CONVERSIONS,
+} from "@/constants/config";
 import { resolveSampleOutput } from "@/mocks/data";
-import { getToolById } from "@/constants/tools";
+import { getToolById, type Tool } from "@/constants/tools";
 
 /**
- * Network gateway. While `USE_MOCK_DATA` is true everything resolves locally and
- * NO request leaves the device. The real-backend fetch/poll implementation is
- * fully preserved below and re-activates automatically when the flag is false.
+ * Network gateway for the CONVERT tools.
+ *
+ * Conversions hit the real api-server backend (the same API the web app uses)
+ * whenever `USE_REAL_CONVERSIONS` is true — independently of `USE_MOCK_DATA`,
+ * which only governs auth/dashboard/marketing. When real conversions are
+ * disabled the bundled-sample mock path below takes over so the app still runs
+ * fully offline.
  */
 
 export interface PickedFile {
@@ -19,6 +29,14 @@ export interface PickedFile {
   name: string;
   size?: number;
   mimeType?: string;
+}
+
+/** Per-tool conversion options mirrored from the web app. */
+export interface ConversionOptions {
+  /** Target format for "Convert Image Format" (e.g. "png", "jpg", "webp"). */
+  outputFormat?: string;
+  /** Output quality 10-100 for "Compress Images". */
+  quality?: number;
 }
 
 export interface StartConversionResult {
@@ -30,9 +48,14 @@ export interface ConversionResult {
   /** Bundled-sample key the screen resolves to a local asset (mock mode). */
   sampleKey?: "pdf" | "image" | "text";
   outputFilename?: string;
-  /** Real backend download URL (live mode). */
+  /** Origin-relative backend download URL, e.g. "/api/download/42" (live mode). */
   downloadUrl?: string;
   error?: string;
+}
+
+/** True when conversions should use the real backend instead of mock samples. */
+function realConversionsEnabled(): boolean {
+  return USE_REAL_CONVERSIONS || !USE_MOCK_DATA;
 }
 
 // ── Mock implementation ──────────────────────────────────────────────────────
@@ -66,48 +89,115 @@ async function mockGetResult(
   );
 }
 
-// ── Real backend implementation (preserved, gated) ──────────────────────────
-async function realStartConversion(
+// ── Real backend implementation ─────────────────────────────────────────────
+
+/**
+ * Appends a picked file to a FormData under `field`. Browsers (Expo web) need a
+ * real Blob fetched from the asset URI; native RN accepts the `{uri,name,type}`
+ * shape directly (which the DOM FormData typings don't model — hence the cast).
+ */
+async function appendFile(
+  form: FormData,
+  field: string,
+  f: PickedFile,
+): Promise<void> {
+  if (Platform.OS === "web") {
+    const res = await fetch(f.uri);
+    const blob = await res.blob();
+    form.append(field, blob, f.name);
+    return;
+  }
+  form.append(field, {
+    uri: f.uri,
+    name: f.name,
+    type: f.mimeType ?? "application/octet-stream",
+  } as unknown as Blob);
+}
+
+function assertBackendConfigured(): void {
+  if (!API_BASE_URL) {
+    throw new Error(
+      "The conversion backend isn't configured (EXPO_PUBLIC_DOMAIN is missing). " +
+        "Set it to your server domain and reload the app.",
+    );
+  }
+}
+
+async function realStartConvert(
   serverToolType: string,
-  files: PickedFile[],
+  file: PickedFile,
+  options: ConversionOptions,
 ): Promise<StartConversionResult> {
+  assertBackendConfigured();
   const form = new FormData();
+  await appendFile(form, "file", file);
   form.append("toolType", serverToolType);
-  files.forEach((f) => {
-    // React Native FormData accepts a { uri, name, type } file object, which the
-    // DOM `FormData` typings don't model — cast to satisfy TypeScript.
-    form.append("files", {
-      uri: f.uri,
-      name: f.name,
-      type: f.mimeType ?? "application/octet-stream",
-    } as unknown as Blob);
-  });
+  form.append("fileName", file.name);
+  if (typeof file.size === "number" && file.size > 0) {
+    form.append("fileSize", String(file.size));
+  }
+  form.append("options", JSON.stringify(options ?? {}));
+
   const res = await fetch(`${API_BASE_URL}/convert`, { method: "POST", body: form });
-  if (!res.ok) throw new Error(`Conversion request failed (${res.status})`);
-  const data = await res.json();
-  return { jobId: data.jobId ?? data.data?.jobId };
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.success || !data?.data?.jobId) {
+    throw new Error(data?.error || `Conversion request failed (${res.status})`);
+  }
+  return { jobId: String(data.data.jobId) };
+}
+
+async function realStartMerge(files: PickedFile[]): Promise<StartConversionResult> {
+  assertBackendConfigured();
+  if (files.length < 2) {
+    throw new Error("Select at least 2 PDF files to merge.");
+  }
+  const form = new FormData();
+  for (const f of files) await appendFile(form, "files", f);
+
+  const res = await fetch(`${API_BASE_URL}/merge-pdfs`, { method: "POST", body: form });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.success || !data?.data?.jobId) {
+    throw new Error(data?.error || `Merge request failed (${res.status})`);
+  }
+  return { jobId: String(data.data.jobId) };
 }
 
 async function realPollJob(jobId: string): Promise<ConvertJob> {
+  assertBackendConfigured();
   for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
     const res = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
     if (res.ok) {
-      const job: ConvertJob = await res.json();
-      if (job.status === "completed" || job.status === "failed") return job;
+      const payload = await res.json().catch(() => null);
+      const job = payload?.data;
+      if (payload?.success && job) {
+        if (job.status === "completed" || job.status === "failed") {
+          return {
+            jobId: String(job.jobId),
+            status: job.status,
+            downloadUrl: job.downloadUrl,
+            outputFilename: job.outputFilename ?? undefined,
+            error: job.errorMessage ?? undefined,
+          };
+        }
+      }
     }
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }
-  throw new Error("Conversion timed out");
+  throw new Error("Conversion timed out. Please try again.");
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
 export async function startConversion(
   toolId: string,
   files: PickedFile[],
+  options: ConversionOptions = {},
 ): Promise<StartConversionResult> {
-  if (USE_MOCK_DATA) return mockStartConversion(toolId);
-  const tool = getToolById(toolId);
-  return realStartConversion(tool?.serverToolType ?? toolId, files);
+  const tool: Tool | undefined = getToolById(toolId);
+  if (!realConversionsEnabled()) return mockStartConversion(toolId);
+
+  if (files.length === 0) throw new Error("No file selected.");
+  if (tool?.isMerge) return realStartMerge(files);
+  return realStartConvert(tool?.serverToolType ?? toolId, files[0], options);
 }
 
 export async function getConversionResult(
@@ -115,7 +205,7 @@ export async function getConversionResult(
   jobId: string,
   baseName: string,
 ): Promise<ConversionResult> {
-  if (USE_MOCK_DATA) return mockGetResult(toolId, baseName);
+  if (!realConversionsEnabled()) return mockGetResult(toolId, baseName);
   const job = await realPollJob(jobId);
   return {
     status: job.status === "completed" ? "completed" : "failed",

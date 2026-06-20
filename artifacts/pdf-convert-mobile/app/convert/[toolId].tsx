@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { Asset } from "expo-asset";
 import * as DocumentPicker from "expo-document-picker";
-import { File, Paths } from "expo-file-system";
+import { Directory, File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -12,6 +12,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import FileBrokenIcon from "@/components/FileBrokenIcon";
 import { Button, Card, ScreenScroll } from "@/components/ui";
+import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
 import { addHistory } from "@/constants/history";
@@ -22,12 +23,23 @@ import { SAMPLE_ASSETS } from "@/mocks/data";
 import {
   getConversionResult,
   startConversion,
+  type ConversionOptions,
   type ConversionResult,
   type PickedFile,
 } from "@/services/api";
 
 const C = colors.light;
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
+
+/** Output formats offered by the "Convert Image Format" tool. */
+const IMAGE_FORMAT_OPTIONS = ["png", "jpg", "webp", "gif", "avif", "tiff"] as const;
+
+/** Compression presets (label + quality 10-100) for the "Compress Images" tool. */
+const QUALITY_OPTIONS = [
+  { label: "High", value: 90 },
+  { label: "Balanced", value: 75 },
+  { label: "Small", value: 50 },
+] as const;
 
 type Stage = "select" | "converting" | "done" | "error" | "unsupported";
 
@@ -85,7 +97,40 @@ async function materializeOutput(
   return file.uri;
 }
 
-async function shareFile(uri: string): Promise<boolean> {
+function absoluteDownloadUrl(downloadUrl: string): string {
+  if (/^https?:\/\//.test(downloadUrl)) return downloadUrl;
+  return `${API_ORIGIN}${downloadUrl}`;
+}
+
+/**
+ * Fetches the converted file from the backend and returns a shareable local
+ * URI. On web we materialize a blob object-URL; on native we stream the bytes
+ * to a unique cache file via expo-file-system so Sharing can hand off a path.
+ */
+async function downloadOutput(downloadUrl: string, name: string): Promise<string> {
+  const url = absoluteDownloadUrl(downloadUrl);
+  if (Platform.OS === "web") {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  }
+  const dir = new Directory(Paths.cache, `convert-${Date.now()}`);
+  dir.create({ intermediates: true });
+  const dest = await File.downloadFileAsync(url, new File(dir, sanitizeName(name)));
+  return dest.uri;
+}
+
+async function shareFile(uri: string, name: string): Promise<boolean> {
+  if (Platform.OS === "web") {
+    const a = document.createElement("a");
+    a.href = uri;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return true;
+  }
   if (!(await Sharing.isAvailableAsync())) return false;
   await Sharing.shareAsync(uri);
   return true;
@@ -122,6 +167,8 @@ export default function ConvertScreen() {
   const [output, setOutput] = useState<{ uri: string; name: string } | null>(
     previewStage === "done" ? { uri: "", name: "converted-document.docx" } : null,
   );
+  const [outputFormat, setOutputFormat] = useState<string>("png");
+  const [quality, setQuality] = useState<number>(75);
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -216,13 +263,19 @@ export default function ConvertScreen() {
     setStage("converting");
     setError(null);
     try {
-      const { jobId } = await startConversion(tool.id, files);
+      const options: ConversionOptions = {};
+      if (tool.id === "convert-image-format") options.outputFormat = outputFormat;
+      if (tool.id === "compress-images") options.quality = quality;
+
+      const { jobId } = await startConversion(tool.id, files, options);
       const result = await getConversionResult(tool.id, jobId, files[0].name);
       if (result.status !== "completed") {
         throw new Error(result.error ?? "Conversion failed. Please try again.");
       }
       const name = result.outputFilename ?? sanitizeName(`output-${tool.id}`);
-      const uri = await materializeOutput(name, result.sampleKey, tool, files);
+      const uri = result.downloadUrl
+        ? await downloadOutput(result.downloadUrl, name)
+        : await materializeOutput(name, result.sampleKey, tool, files);
       setOutput({ uri, name });
       setStage("done");
       if (Platform.OS !== "web") {
@@ -254,7 +307,7 @@ export default function ConvertScreen() {
       setError(e instanceof Error ? e.message : "Conversion failed.");
       setStage("error");
     }
-  }, [tool, files]);
+  }, [tool, files, outputFormat, quality]);
 
   const reset = useCallback(() => {
     setFiles([]);
@@ -270,7 +323,7 @@ export default function ConvertScreen() {
   const onShare = useCallback(async () => {
     if (!output) return;
     try {
-      const ok = await shareFile(output.uri);
+      const ok = await shareFile(output.uri, output.name);
       if (!ok) setError("Sharing isn't available on this platform.");
     } catch {
       setError("Could not open the share sheet.");
@@ -362,6 +415,52 @@ export default function ConvertScreen() {
                   </View>
                 ))}
               </View>
+
+              {tool.id === "convert-image-format" && (
+                <View style={styles.optionBlock}>
+                  <Text style={styles.optionLabel}>Output format</Text>
+                  <View style={styles.chipRow}>
+                    {IMAGE_FORMAT_OPTIONS.map((fmt) => {
+                      const active = outputFormat === fmt;
+                      return (
+                        <Pressable
+                          key={fmt}
+                          onPress={() => setOutputFormat(fmt)}
+                          style={[styles.chip, active && styles.chipActive]}
+                          testID={`chip-format-${fmt}`}
+                        >
+                          <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                            {fmt.toUpperCase()}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {tool.id === "compress-images" && (
+                <View style={styles.optionBlock}>
+                  <Text style={styles.optionLabel}>Compression level</Text>
+                  <View style={styles.chipRow}>
+                    {QUALITY_OPTIONS.map((q) => {
+                      const active = quality === q.value;
+                      return (
+                        <Pressable
+                          key={q.value}
+                          onPress={() => setQuality(q.value)}
+                          style={[styles.chip, active && styles.chipActive]}
+                          testID={`chip-quality-${q.value}`}
+                        >
+                          <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                            {q.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
 
               <View style={{ gap: 10, marginTop: 16 }}>
                 <Button
@@ -630,6 +729,21 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   outputName: { flex: 1, fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
+
+  optionBlock: { marginTop: 16, gap: 8 },
+  optionLabel: { fontSize: 14, color: C.foreground, fontFamily: fonts.bodySemibold },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: C.surfaceAlt,
+  },
+  chipActive: { backgroundColor: C.primary, borderColor: C.primary },
+  chipText: { fontSize: 13, color: C.foreground, fontFamily: fonts.bodyMedium },
+  chipTextActive: { color: C.primaryForeground },
 
   errorText: { fontSize: 13, color: C.destructive, fontFamily: fonts.body, textAlign: "center", marginTop: 4 },
   acceptedText: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.bodyMedium, textAlign: "center", marginTop: 2 },
