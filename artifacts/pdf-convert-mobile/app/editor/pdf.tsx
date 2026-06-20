@@ -192,6 +192,9 @@ export default function PdfEditorScreen() {
   const [wmText, setWmText] = useState("CONFIDENTIAL");
   const [wmOpacity, setWmOpacity] = useState(0.22);
   const [wmPos, setWmPos] = useState<Placement>({ x: 0.15, y: 0.42, w: 0.7 });
+  // Measured width-per-point of the watermark text (set by a hidden measuring
+  // <Text>), so the box/font sizing fits the real glyphs instead of a guess.
+  const [wmUnit, setWmUnit] = useState(8);
 
   // add-image
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -232,12 +235,12 @@ export default function PdfEditorScreen() {
         : 0.4
       : Math.max(0.12, Math.min(0.6, 2 / Math.max(1, signName.trim().length)));
 
-  // Aspect (height/width) of the watermark box, derived so the text fits inside
-  // the box width: text width ≈ L * 0.72 * fontSize (uppercase bold) and
-  // fontSize = boxW * wmAspect, so wmAspect ≈ 1 / (L * 0.8) keeps the text inside
-  // the box edges with margin (matches the horizontal layout used by the builder).
-  const wmLen = Math.max(1, (wmText.trim() || "WATERMARK").length);
-  const wmAspect = Math.max(0.05, Math.min(0.6, 1 / (wmLen * 0.8)));
+  // Aspect (height/width) of the watermark box. `wmUnit` is the measured text
+  // width at font size 1, so font size = boxW * wmAspect makes the rendered text
+  // width = wmUnit * fontSize = 0.8 * boxW — i.e. it always fits the box width
+  // with a small margin, on both native and web (adjustsFontSizeToFit is
+  // web-unsupported, so we cannot rely on it).
+  const wmAspect = Math.max(0.04, Math.min(0.6, 0.8 / Math.max(1, wmUnit)));
 
   // Snap the watermark box to one of nine anchor positions, keeping its size.
   const placeWatermark = useCallback(
@@ -528,6 +531,29 @@ export default function PdfEditorScreen() {
                   </DragMove>
                 ))}
 
+            {/* hidden text used only to measure the real glyph width */}
+            {mode === "watermark" && (
+              <View
+                style={styles.wmMeasure}
+                pointerEvents="none"
+                aria-hidden
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.headingBold,
+                    fontSize: 100,
+                    letterSpacing: 0,
+                  }}
+                  onLayout={(e) => {
+                    const w = e.nativeEvent.layout.width;
+                    if (w > 0) setWmUnit(w / 100);
+                  }}
+                >
+                  {wmText || "WATERMARK"}
+                </Text>
+              </View>
+            )}
+
             {/* watermark overlay — drag to move, corner to resize */}
             {mode === "watermark" && pageBox.width > 0 && (
               <DraggableBox
@@ -549,8 +575,6 @@ export default function PdfEditorScreen() {
                     },
                   ]}
                   numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.4}
                 >
                   {wmText || "WATERMARK"}
                 </Text>
@@ -1351,6 +1375,13 @@ const styles = StyleSheet.create({
   dragMove: { position: "absolute", paddingHorizontal: 4, paddingVertical: 2 },
   overlayText: { fontFamily: fonts.bodySemibold },
   wmWrap: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
+  wmMeasure: {
+    position: "absolute",
+    left: -9999,
+    top: 0,
+    opacity: 0,
+    alignItems: "flex-start",
+  },
   wmText: {
     fontSize: 34,
     fontFamily: fonts.headingBold,
