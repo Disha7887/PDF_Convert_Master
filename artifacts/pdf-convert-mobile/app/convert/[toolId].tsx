@@ -35,13 +35,11 @@ const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
 /** Show a friendly "taking longer" hint once a job runs past this many seconds. */
 const LONG_RUN_THRESHOLD_S = 30;
 
-/** Server tool types expected to run noticeably longer than average. */
-const SLOW_SERVER_TYPES = ["upscale", "remove_background", "remove_bg", "bg_remove", "ocr"];
-
-/** Rough total processing estimate (seconds), used only for the long-run hint. */
-function estimatedTotalSeconds(tool: Tool): number {
-  const t = tool.serverToolType ?? "";
-  return SLOW_SERVER_TYPES.some((s) => t.includes(s)) ? 90 : 45;
+/** Formats a whole number of seconds as a human elapsed label (e.g. "1m 05s"). */
+function formatElapsed(totalSec: number): string {
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  return mins > 0 ? `${mins}m ${secs.toString().padStart(2, "0")}s` : `${secs}s`;
 }
 
 /** Output formats offered by the "Convert Image Format" tool. */
@@ -285,8 +283,8 @@ export default function ConvertScreen() {
     else router.replace(ROUTES.tools as never);
   }, [router]);
 
-  // Track elapsed processing time so we can reassure the user (and show an
-  // estimate) when a conversion runs longer than usual. Works for every tool.
+  // Track real elapsed processing time so we can show the actual waiting time
+  // (no fake estimates) and reassure the user on long runs. Works for every tool.
   const [elapsedSec, setElapsedSec] = useState(0);
   useEffect(() => {
     if (stage !== "converting") {
@@ -692,11 +690,14 @@ export default function ConvertScreen() {
           <Text style={styles.centerText}>
             Processing your file{files.length !== 1 ? "s" : ""} with {tool.title}.
           </Text>
+          <Text style={styles.elapsedText} testID="text-elapsed">
+            {`Time elapsed: ${formatElapsed(elapsedSec)}`}
+          </Text>
           {elapsedSec >= LONG_RUN_THRESHOLD_S && (
             <View style={styles.longRunBox} testID="text-taking-longer">
               <Text style={styles.longRunTitle}>This is taking longer than usual.</Text>
               <Text style={styles.longRunText}>
-                {`Estimated time remaining: about ${Math.max(estimatedTotalSeconds(tool) - elapsedSec, 5)}s`}
+                Hang tight — larger files can take a little while.
               </Text>
             </View>
           )}
@@ -1084,6 +1085,7 @@ const styles = StyleSheet.create({
   fileMeta: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 2 },
 
   centerState: { alignItems: "center", gap: 10, paddingVertical: 48 },
+  elapsedText: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.bodyMedium, textAlign: "center", marginTop: 4 },
   longRunBox: { alignItems: "center", gap: 4, marginTop: 16, paddingHorizontal: 24 },
   longRunTitle: { fontSize: 13.5, color: C.warning, fontFamily: fonts.headingSemibold, textAlign: "center" },
   longRunText: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center" },
