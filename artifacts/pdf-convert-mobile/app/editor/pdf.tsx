@@ -232,10 +232,30 @@ export default function PdfEditorScreen() {
         : 0.4
       : Math.max(0.12, Math.min(0.6, 2 / Math.max(1, signName.trim().length)));
 
-  // Aspect of the watermark box, derived from the text length (single line).
-  const wmAspect = Math.max(
-    0.12,
-    Math.min(0.5, 1.4 / Math.max(1, (wmText.trim() || "WATERMARK").length)),
+  // Aspect (height/width) of the watermark box, derived so the text fits inside
+  // the box width: text width ≈ L * 0.72 * fontSize (uppercase bold) and
+  // fontSize = boxW * wmAspect, so wmAspect ≈ 1 / (L * 0.8) keeps the text inside
+  // the box edges with margin (matches the horizontal layout used by the builder).
+  const wmLen = Math.max(1, (wmText.trim() || "WATERMARK").length);
+  const wmAspect = Math.max(0.05, Math.min(0.6, 1 / (wmLen * 0.8)));
+
+  // Snap the watermark box to one of nine anchor positions, keeping its size.
+  const placeWatermark = useCallback(
+    (cx: number, cy: number) => {
+      setWmPos((p) => {
+        const hFrac =
+          pageBox.height > 0
+            ? (p.w * pageBox.width * wmAspect) / pageBox.height
+            : 0.12;
+        const m = 0.03;
+        const maxX = Math.max(0, 1 - p.w);
+        const maxY = Math.max(0, 1 - hFrac);
+        const x = Math.min(maxX, Math.max(0, cx * (1 - p.w - m * 2) + m));
+        const y = Math.min(maxY, Math.max(0, cy * (1 - hFrac - m * 2) + m));
+        return { ...p, x, y };
+      });
+    },
+    [pageBox, wmAspect],
   );
 
   const addTextItem = useCallback(() => {
@@ -522,12 +542,15 @@ export default function PdfEditorScreen() {
                     {
                       opacity: wmOpacity,
                       transform: [{ rotate: "0deg" }],
+                      letterSpacing: 0,
                       width: "100%",
                       textAlign: "center",
                       fontSize: Math.max(8, wmPos.w * pageBox.width * wmAspect),
                     },
                   ]}
                   numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.4}
                 >
                   {wmText || "WATERMARK"}
                 </Text>
@@ -828,9 +851,28 @@ export default function PdfEditorScreen() {
                 ))}
               </View>
             </View>
+            <View>
+              <Text style={styles.controlLabel}>Position</Text>
+              <View style={styles.wmGrid}>
+                {[0, 0.5, 1].map((cy) => (
+                  <View key={cy} style={styles.wmGridRow}>
+                    {[0, 0.5, 1].map((cx) => (
+                      <Pressable
+                        key={cx}
+                        onPress={() => placeWatermark(cx, cy)}
+                        style={styles.wmGridBtn}
+                        testID={`wm-pos-${cx}-${cy}`}
+                      >
+                        <View style={styles.wmGridDot} />
+                      </Pressable>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </View>
             <Text style={styles.controlHelp}>
-              Drag the watermark to move it, and drag the corner handle to
-              resize.
+              Tap a position, or drag the watermark to move it and drag the
+              corner handle to resize.
             </Text>
           </View>
         )}
@@ -1315,6 +1357,24 @@ const styles = StyleSheet.create({
     color: C.foreground,
     transform: [{ rotate: "-32deg" }],
     letterSpacing: 2,
+  },
+  wmGrid: { gap: 6 },
+  wmGridRow: { flexDirection: "row", gap: 6 },
+  wmGridBtn: {
+    flex: 1,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.border,
+    backgroundColor: C.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  wmGridDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: C.primary,
   },
   cropFrame: {
     position: "absolute",
