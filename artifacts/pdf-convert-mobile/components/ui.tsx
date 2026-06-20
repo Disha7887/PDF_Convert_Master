@@ -274,20 +274,43 @@ interface FieldProps extends TextInputProps {
   icon?: FeatherName;
 }
 
-export function Field({ label, error, icon, style, ...rest }: FieldProps) {
+export function Field({
+  label,
+  error,
+  icon,
+  style,
+  onFocus,
+  onBlur,
+  ...rest
+}: FieldProps) {
+  const [focused, setFocused] = React.useState(false);
+  const borderColor = error
+    ? C.destructive
+    : focused
+      ? C.primary
+      : C.border;
   return (
     <View style={{ gap: 6 }}>
       {label && <Text style={styles.fieldLabel}>{label}</Text>}
       <View
         style={[
           styles.fieldWrap,
-          { borderColor: error ? C.destructive : C.border },
+          { borderColor, borderWidth: focused ? 1.5 : 1 },
         ]}
       >
         {icon && <Feather name={icon} size={18} color={C.mutedForeground} />}
         <TextInput
           placeholderTextColor={C.mutedForeground}
-          style={[styles.fieldInput, style]}
+          selectionColor={C.primary}
+          style={[styles.fieldInput, noWebOutline, style]}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
           {...rest}
         />
       </View>
@@ -295,6 +318,12 @@ export function Field({ label, error, icon, style, ...rest }: FieldProps) {
     </View>
   );
 }
+
+/** Removes the default browser focus ring on web (no-op on native). */
+const noWebOutline =
+  Platform.OS === "web"
+    ? ({ outlineStyle: "none" } as unknown as TextStyle)
+    : null;
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.background },

@@ -9,7 +9,15 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useState } from "react";
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SvgXml } from "react-native-svg";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
@@ -1024,6 +1032,10 @@ export default function ConvertScreen() {
         animationType="fade"
         onRequestClose={() => setDownloadOpen(false)}
       >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
         <Pressable
           style={styles.modalBackdrop}
           onPress={() => setDownloadOpen(false)}
@@ -1112,6 +1124,7 @@ export default function ConvertScreen() {
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
