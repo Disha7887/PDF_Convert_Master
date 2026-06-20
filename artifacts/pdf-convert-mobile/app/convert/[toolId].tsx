@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { Asset } from "expo-asset";
+import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
@@ -133,6 +134,21 @@ async function downloadOutput(downloadUrl: string, name: string): Promise<string
   return dest.uri;
 }
 
+/**
+ * Materializes a plain-text file and returns a shareable URI. Web uses a blob
+ * object-URL; native writes to the cache dir so Sharing can hand off the path.
+ */
+async function makeTextFileUri(text: string, name: string): Promise<string> {
+  if (Platform.OS === "web") {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    return URL.createObjectURL(blob);
+  }
+  const file = new File(Paths.cache, sanitizeName(name));
+  file.create({ overwrite: true, intermediates: true });
+  file.write(text);
+  return file.uri;
+}
+
 async function shareFile(uri: string, name: string): Promise<boolean> {
   if (Platform.OS === "web") {
     const a = document.createElement("a");
@@ -141,6 +157,11 @@ async function shareFile(uri: string, name: string): Promise<boolean> {
     document.body.appendChild(a);
     a.click();
     a.remove();
+    // Release blob object-URLs once the download has been kicked off so repeated
+    // exports don't leak memory across a long web session.
+    if (uri.startsWith("blob:")) {
+      setTimeout(() => URL.revokeObjectURL(uri), 4000);
+    }
     return true;
   }
   if (!(await Sharing.isAvailableAsync())) return false;
@@ -181,6 +202,9 @@ export default function ConvertScreen() {
   );
   const [outputFormat, setOutputFormat] = useState<string>("png");
   const [quality, setQuality] = useState<number>(75);
+  const [ocrPages, setOcrPages] = useState<string[] | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
+  const [copiedPage, setCopiedPage] = useState<number | null>(null);
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -305,6 +329,7 @@ export default function ConvertScreen() {
         ? await downloadOutput(result.downloadUrl, name)
         : await materializeOutput(name, result.sampleKey, tool, files);
       setOutput({ uri, name });
+      setOcrPages(result.ocrPages && result.ocrPages.length > 0 ? result.ocrPages : null);
       setStage("done");
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -340,9 +365,47 @@ export default function ConvertScreen() {
   const reset = useCallback(() => {
     setFiles([]);
     setOutput(null);
+    setOcrPages(null);
+    setCopiedAll(false);
+    setCopiedPage(null);
     setError(null);
     setStage("select");
   }, []);
+
+  const onCopyAll = useCallback(async () => {
+    if (!ocrPages) return;
+    await Clipboard.setStringAsync(ocrPages.map((t) => t.trim()).join("\n\n"));
+    setCopiedAll(true);
+    if (Platform.OS !== "web") Haptics.selectionAsync();
+    setTimeout(() => setCopiedAll(false), 1500);
+  }, [ocrPages]);
+
+  const onCopyPage = useCallback(
+    async (index: number) => {
+      if (!ocrPages) return;
+      await Clipboard.setStringAsync((ocrPages[index] ?? "").trim());
+      setCopiedPage(index);
+      if (Platform.OS !== "web") Haptics.selectionAsync();
+      setTimeout(() => setCopiedPage(null), 1500);
+    },
+    [ocrPages],
+  );
+
+  const onDownloadText = useCallback(async () => {
+    if (!ocrPages) return;
+    const body = ocrPages
+      .map((t, i) => `--- Page ${i + 1} ---\n${t.trim()}`)
+      .join("\n\n");
+    const base = (output?.name ?? "ocr").replace(/\.[^./]+$/, "") || "ocr";
+    const txtName = `${base}.txt`;
+    try {
+      const uri = await makeTextFileUri(body, txtName);
+      const ok = await shareFile(uri, txtName);
+      if (!ok) setError("Sharing isn't available on this platform.");
+    } catch {
+      setError("Could not export the text file.");
+    }
+  }, [ocrPages, output]);
 
   const removeFile = useCallback((uri: string) => {
     setFiles((prev) => prev.filter((f) => f.uri !== uri));
@@ -572,6 +635,63 @@ export default function ConvertScreen() {
         </Card>
       )}
 
+      {/* OCR recognized text panel */}
+      {stage === "done" && ocrPages && ocrPages.length > 0 && (
+        <Card style={{ marginTop: 12 }}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Recognized text</Text>
+            <Pressable onPress={onCopyAll} hitSlop={8} testID="button-copy-all">
+              <View style={styles.ocrCopyBtn}>
+                <Feather
+                  name={copiedAll ? "check" : "copy"}
+                  size={14}
+                  color={C.primary}
+                />
+                <Text style={styles.ocrCopyText}>{copiedAll ? "Copied" : "Copy all"}</Text>
+              </View>
+            </Pressable>
+          </View>
+          <Text style={styles.ocrHint}>Tap a page to copy just its text.</Text>
+
+          <View style={{ gap: 12, marginTop: 12 }}>
+            {ocrPages.map((t, i) => {
+              const text = t.trim();
+              return (
+                <Pressable
+                  key={i}
+                  onPress={() => onCopyPage(i)}
+                  style={styles.ocrPage}
+                  testID={`ocr-page-${i + 1}`}
+                >
+                  <View style={styles.ocrPageHeader}>
+                    <Text style={styles.ocrPageLabel}>Page {i + 1}</Text>
+                    <Feather
+                      name={copiedPage === i ? "check" : "copy"}
+                      size={13}
+                      color={copiedPage === i ? C.primary : C.mutedForeground}
+                    />
+                  </View>
+                  <Text style={styles.ocrPageText} selectable>
+                    {text || "No text detected on this page."}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={{ marginTop: 14 }}>
+            <Button
+              label="Download .txt"
+              icon="file-text"
+              variant="outline"
+              fullWidth
+              onPress={onDownloadText}
+              testID="button-download-txt"
+            />
+          </View>
+        </Card>
+      )}
+
       {/* Error stage */}
       {stage === "error" && (
         <Card style={{ marginTop: 4 }}>
@@ -742,6 +862,25 @@ const styles = StyleSheet.create({
   longRunText: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center" },
   centerTitle: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingSemibold, marginTop: 8 },
   centerText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center" },
+
+  ocrCopyBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
+  ocrCopyText: { fontSize: 13, color: C.primary, fontFamily: fonts.bodySemibold },
+  ocrHint: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 4 },
+  ocrPage: {
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 12,
+    backgroundColor: C.surfaceAlt,
+    padding: 12,
+  },
+  ocrPageHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  ocrPageLabel: { fontSize: 12.5, color: C.foreground, fontFamily: fonts.bodySemibold },
+  ocrPageText: { fontSize: 13.5, lineHeight: 20, color: C.foreground, fontFamily: fonts.body },
 
   successWrap: { alignItems: "center", gap: 6 },
   successIcon: {

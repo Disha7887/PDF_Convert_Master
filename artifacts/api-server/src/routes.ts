@@ -260,7 +260,7 @@ async function performActualConversion(
   toolType: string, 
   outputFilename: string,
   options: Record<string, any> = {}
-): Promise<{ success: boolean; convertedBuffer?: Buffer; mimeType?: string; error?: string }> {
+): Promise<{ success: boolean; convertedBuffer?: Buffer; mimeType?: string; error?: string; pages?: string[] }> {
   try {
     // Safety check for outputFilename
     if (!outputFilename || outputFilename === 'null' || outputFilename === 'undefined') {
@@ -835,6 +835,7 @@ async function ocrPdf(pdfBuffer: Buffer, outputFilename: string) {
     worker = await Tesseract.createWorker("eng");
 
     const pageCount = srcDoc.getPageCount();
+    const pages: string[] = [];
     let recognisedWords = 0;
 
     for (let i = 0; i < pageCount; i++) {
@@ -843,14 +844,15 @@ async function ocrPdf(pdfBuffer: Buffer, outputFilename: string) {
       const { width: pdfW, height: pdfH } = page.getSize();
 
       const img = pageImages.get(i + 1);
-      if (!img) continue;
+      if (!img) { pages.push(""); continue; }
 
       const meta = await sharp(img).metadata();
       const imgW = meta.width ?? 0;
       const imgH = meta.height ?? 0;
-      if (!imgW || !imgH) continue;
+      if (!imgW || !imgH) { pages.push(""); continue; }
 
       const result = await worker.recognize(img, {}, { blocks: true });
+      pages.push((result.data.text ?? "").trim());
       const words = collectOcrWords(result.data);
       const scaleX = pdfW / imgW;
       const scaleY = pdfH / imgH;
@@ -882,6 +884,7 @@ async function ocrPdf(pdfBuffer: Buffer, outputFilename: string) {
       success: true,
       convertedBuffer: Buffer.from(bytes),
       mimeType: "application/pdf",
+      pages,
     };
   } catch (error) {
     throw new Error(`OCR failed: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -1395,6 +1398,8 @@ const uploadMultiple = multer({
 // File storage for conversion processing
 const fileStorage = new Map<number, Buffer>();
 const convertedFileStorage = new Map<number, { buffer: Buffer; mimeType: string; filename: string }>();
+// OCR recognized text, per page, keyed by job id — surfaced via /api/ocr-text/:jobId.
+const ocrTextStorage = new Map<number, string[]>();
 // Stores images "uploaded to the server" from the in-browser Crop/Resize/Rotate
 // editors. Kept in memory with a short TTL — a lightweight upload target.
 const uploadedFileStorage = new Map<string, { buffer: Buffer; mimeType: string; filename: string; expiresAt: number }>();
@@ -1891,6 +1896,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           filename: outputFilename
         });
       }
+
+      // OCR also returns the recognized text per page so the client can display,
+      // copy, and export it alongside the searchable PDF.
+      if (conversionResult.pages) {
+        ocrTextStorage.set(jobId, conversionResult.pages);
+      }
       
       const actualProcessingTime = Date.now() - startTime;
       const outputFileSize = conversionResult.convertedBuffer?.length || file.size;
@@ -1959,6 +1970,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to fetch job status",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Get the OCR-recognized text for a completed OCR job (per page + joined).
+  app.get("/api/ocr-text/:jobId", async (req, res) => {
+    try {
+      const jobId = parseInt(req.params.jobId);
+      if (isNaN(jobId)) {
+        return res.status(400).json({ success: false, error: "Invalid job ID" });
+      }
+      const pages = ocrTextStorage.get(jobId);
+      if (!pages) {
+        return res.status(404).json({ success: false, error: "No OCR text for this job" });
+      }
+      res.json({
+        success: true,
+        data: { pages, text: pages.join("\n\n") },
+      });
+    } catch (error) {
+      console.error("Error fetching OCR text:", error);
+      res.status(500).json({ success: false, error: "Failed to fetch OCR text" });
     }
   });
 
@@ -2043,9 +2075,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send the actual converted file
       res.send(convertedBuffer);
       
-      // Clean up stored files after download
+      // Clean up stored files after download. OCR text is fetched by the client
+      // before the PDF download, so it is safe to clear here too.
       fileStorage.delete(jobId);
       convertedFileStorage.delete(jobId);
+      ocrTextStorage.delete(jobId);
 
     } catch (error) {
       console.error("Error downloading file:", error);

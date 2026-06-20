@@ -50,6 +50,8 @@ export interface ConversionResult {
   outputFilename?: string;
   /** Origin-relative backend download URL, e.g. "/api/download/42" (live mode). */
   downloadUrl?: string;
+  /** OCR-recognized text, one entry per source page (OCR PDF tool only). */
+  ocrPages?: string[];
   error?: string;
 }
 
@@ -186,6 +188,19 @@ async function realPollJob(jobId: string): Promise<ConvertJob> {
   throw new Error("Conversion timed out. Please try again.");
 }
 
+/** Fetches the per-page OCR text for a completed OCR job, if available. */
+async function realFetchOcrText(jobId: string): Promise<string[] | undefined> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/ocr-text/${jobId}`);
+    if (!res.ok) return undefined;
+    const payload = await res.json().catch(() => null);
+    const pages = payload?.data?.pages;
+    return Array.isArray(pages) ? pages : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // ── Public API ───────────────────────────────────────────────────────────────
 export async function startConversion(
   toolId: string,
@@ -207,10 +222,18 @@ export async function getConversionResult(
 ): Promise<ConversionResult> {
   if (!realConversionsEnabled()) return mockGetResult(toolId, baseName);
   const job = await realPollJob(jobId);
+
+  // The OCR PDF tool returns recognized text in addition to the searchable PDF.
+  let ocrPages: string[] | undefined;
+  if (job.status === "completed" && getToolById(toolId)?.serverToolType === "ocr_pdf") {
+    ocrPages = await realFetchOcrText(jobId);
+  }
+
   return {
     status: job.status === "completed" ? "completed" : "failed",
     downloadUrl: job.downloadUrl,
     outputFilename: job.outputFilename,
+    ocrPages,
     error: job.error,
   };
 }
