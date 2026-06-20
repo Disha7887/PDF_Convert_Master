@@ -10,6 +10,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useState } from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { SvgXml } from "react-native-svg";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import FileBrokenIcon from "@/components/FileBrokenIcon";
@@ -17,6 +18,7 @@ import { Button, Card, Field, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
+import { formatIconXml } from "@/constants/formatIcons";
 import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
@@ -1050,6 +1052,7 @@ export default function ConvertScreen() {
             <View style={styles.formatGrid}>
               {downloadFormats.map((f) => {
                 const active = selectedFormat === f.id;
+                const iconXml = formatIconXml(f.ext);
                 return (
                   <Pressable
                     key={f.id}
@@ -1062,9 +1065,13 @@ export default function ConvertScreen() {
                       size={18}
                       color={active ? C.primary : C.border}
                     />
-                    <View style={[styles.formatBadge, { backgroundColor: f.color }]}>
-                      <Feather name={f.icon} size={15} color="#fff" />
-                    </View>
+                    {iconXml ? (
+                      <SvgXml xml={iconXml} width={28} height={28} />
+                    ) : (
+                      <View style={[styles.formatBadge, { backgroundColor: f.color }]}>
+                        <Feather name={f.icon} size={15} color="#fff" />
+                      </View>
+                    )}
                     <Text style={styles.formatLabel} numberOfLines={1}>
                       {f.label}
                     </Text>
