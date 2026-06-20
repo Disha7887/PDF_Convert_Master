@@ -95,10 +95,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 50,
   },
-  blur: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(120,120,128,0.18)",
-  },
+  blur: {},
   bar: {
     flexDirection: "row",
     alignItems: "center",
