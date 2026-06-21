@@ -600,6 +600,19 @@ export function getToolById(id?: string | null): Tool | undefined {
   return id ? toolsById[id] : undefined;
 }
 
+const toolsByServerType: Record<string, Tool> = tools.reduce(
+  (acc, t) => {
+    acc[t.serverToolType] = t;
+    return acc;
+  },
+  {} as Record<string, Tool>,
+);
+
+/** Resolves a mobile tool by its backend `serverToolType` (e.g. "pdf_to_word"). */
+export function getToolByServerType(type?: string | null): Tool | undefined {
+  return type ? toolsByServerType[type] : undefined;
+}
+
 export function getToolsByCategory(category: ToolCategory): Tool[] {
   return tools.filter((t) => t.category === category);
 }

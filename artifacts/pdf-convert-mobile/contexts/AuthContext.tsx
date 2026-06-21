@@ -13,6 +13,7 @@ import { USE_MOCK_DATA } from "@/constants/config";
 import { API_BASE_URL } from "@/constants/api";
 import { DEMO_USER, type MockUser } from "@/mocks/data";
 import { mockApi } from "@/mocks/mockApi";
+import { setAuthToken } from "@/services/authToken";
 
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = await AsyncStorage.getItem(USER_KEY);
         if (storedToken) {
           setToken(storedToken);
+          setAuthToken(storedToken);
           if (storedUser) setUser(JSON.parse(storedUser));
           else if (USE_MOCK_DATA) setUser(DEMO_USER);
         }
@@ -56,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const persist = useCallback(async (nextUser: MockUser, nextToken: string) => {
     setUser(nextUser);
     setToken(nextToken);
+    setAuthToken(nextToken);
     await AsyncStorage.setItem(TOKEN_KEY, nextToken);
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(nextUser));
   }, []);
@@ -115,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signout = useCallback(() => {
     setUser(null);
     setToken(null);
+    setAuthToken(null);
     AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]).catch(() => {});
   }, []);
 

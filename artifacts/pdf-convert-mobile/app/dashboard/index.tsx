@@ -9,10 +9,9 @@ import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
-import { getToolById } from "@/constants/tools";
+import { getToolByServerType } from "@/constants/tools";
 import { useAuth } from "@/contexts/AuthContext";
-import { type DashboardStats, type Job, type UsageStats } from "@/mocks/data";
-import { mockApi } from "@/mocks/mockApi";
+import { fetchUsage, type AccountUsage } from "@/services/account";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -73,7 +72,7 @@ function StatCard({
   );
 }
 
-function statusMeta(status: Job["status"]): { icon: FeatherName; bg: string; fg: string; tone: "success" | "danger" | "warning" } {
+function statusMeta(status: string): { icon: FeatherName; bg: string; fg: string; tone: "success" | "danger" | "warning" } {
   if (status === "failed") return { icon: "x", bg: "#fee2e2", fg: "#dc2626", tone: "danger" };
   if (status === "completed") return { icon: "check", bg: "#dcfce7", fg: "#16a34a", tone: "success" };
   return { icon: "refresh-cw", bg: C.blue50, fg: C.primary, tone: "warning" };
@@ -95,19 +94,13 @@ function SignInGate() {
 
 export default function WorkspaceScreen() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const go = (r: string) => router.push(r as never);
 
-  const { data: stats } = useQuery<DashboardStats>({
-    queryKey: ["dashboard-stats"],
-    queryFn: () => mockApi.getDashboardStats(),
-    enabled: isAuthenticated,
-  });
-
-  const { data: usage } = useQuery<UsageStats>({
-    queryKey: ["usage-stats"],
-    queryFn: () => mockApi.getUsageStats(),
-    enabled: isAuthenticated,
+  const { data: usage } = useQuery<AccountUsage>({
+    queryKey: ["account-usage", token],
+    queryFn: () => fetchUsage(token!),
+    enabled: isAuthenticated && !!token,
   });
 
   if (!isAuthenticated) {
@@ -125,8 +118,14 @@ export default function WorkspaceScreen() {
     month: "long",
     day: "numeric",
   });
-  const byTool = (usage?.byTool ?? []).slice(0, 6);
-  const recent = stats?.recentJobs ?? [];
+
+  const totals = usage?.totals;
+  const thisMonthPrefix = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const conversionsThisMonth = (usage?.byDay ?? [])
+    .filter((d) => d.date.startsWith(thisMonthPrefix))
+    .reduce((sum, d) => sum + d.count, 0);
+  const byTool = (usage?.mostUsed ?? []).slice(0, 6);
+  const recent = usage?.recent ?? [];
 
   return (
     <ScreenScroll>
@@ -158,26 +157,26 @@ export default function WorkspaceScreen() {
       <View style={styles.statsGrid}>
         <StatCard
           title="Files Converted"
-          value={(stats?.totalConversions ?? 0).toLocaleString()}
-          subtitle={`${(stats?.conversionsThisMonth ?? 0).toLocaleString()} this month`}
+          value={(totals?.total ?? 0).toLocaleString()}
+          subtitle={`${conversionsThisMonth.toLocaleString()} this month`}
           icon="file-text"
         />
         <StatCard
           title="API Calls"
-          value={(stats?.apiCalls ?? 0).toLocaleString()}
+          value={(totals?.apiCalls ?? 0).toLocaleString()}
           subtitle="All-time"
           icon="activity"
         />
         <StatCard
           title="Data Processed"
-          value={formatBytes((stats?.storageUsedMB ?? 0) * 1024 * 1024)}
+          value={formatBytes(totals?.dataProcessed ?? 0)}
           subtitle="Total output size"
           icon="download"
         />
         <StatCard
           title="Active API Keys"
-          value={(stats?.activeApiKeys ?? 0).toLocaleString()}
-          subtitle={`${stats?.successRate ?? 0}% success rate`}
+          value={(totals?.activeKeys ?? 0).toLocaleString()}
+          subtitle={`${totals?.successRate ?? 0}% success rate`}
           icon="key"
           iconTone="green"
         />
@@ -196,18 +195,18 @@ export default function WorkspaceScreen() {
         ) : (
           <View style={styles.toolGrid}>
             {byTool.map((t) => {
-              const tool = getToolById(t.toolId);
+              const tool = getToolByServerType(t.type);
               return (
                 <Pressable
-                  key={t.toolId}
+                  key={t.type}
                   style={styles.toolCell}
-                  onPress={() => go(ROUTES.convert(t.toolId))}
+                  onPress={() => (tool ? go(ROUTES.convert(tool.id)) : go(ROUTES.tools))}
                 >
                   <View style={styles.toolIcon}>
                     <Feather name={tool?.feather ?? "file-text"} size={18} color={C.primary} />
                   </View>
                   <Text style={styles.toolName} numberOfLines={2}>
-                    {t.toolTitle}
+                    {tool?.title ?? t.name}
                   </Text>
                   <Text style={styles.toolCount}>
                     {t.count} {t.count === 1 ? "use" : "uses"}
@@ -240,10 +239,10 @@ export default function WorkspaceScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.activityTitle} numberOfLines={1}>
-                      {job.toolTitle}
+                      {job.toolName}
                     </Text>
                     <Text style={styles.activitySub} numberOfLines={1}>
-                      {job.fileName}
+                      {job.inputFilename}
                     </Text>
                   </View>
                   <View style={styles.activityRight}>

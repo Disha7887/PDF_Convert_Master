@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { Asset } from "expo-asset";
 import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
@@ -357,6 +358,7 @@ async function shareFile(uri: string, name: string): Promise<boolean> {
 // ── screen ───────────────────────────────────────────────────────────────────
 export default function ConvertScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { toolId, preview } = useLocalSearchParams<{ toolId: string; preview?: string }>();
   const tool = getToolById(toolId);
 
@@ -528,6 +530,10 @@ export default function ConvertScreen() {
       setOcrPages(result.ocrPages && result.ocrPages.length > 0 ? result.ocrPages : null);
       setOcrPageIndex(0);
       setStage("done");
+      // Refresh the user's real usage stats so the dashboard/usage screens
+      // reflect this conversion without waiting for a remount.
+      queryClient.invalidateQueries({ queryKey: ["account-usage"] });
+      queryClient.invalidateQueries({ queryKey: ["usage-stats-real"] });
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }

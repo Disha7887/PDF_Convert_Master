@@ -5,7 +5,6 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Button, Card, ScreenScroll } from "@/components/ui";
-import { API_BASE_URL } from "@/constants/api";
 import colors from "@/constants/colors";
 import { USE_MOCK_DATA } from "@/constants/config";
 import { ROUTES } from "@/constants/routes";
@@ -13,6 +12,7 @@ import { fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_KEYS, type UsageStats } from "@/mocks/data";
 import { mockApi } from "@/mocks/mockApi";
+import { fetchUsage } from "@/services/account";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -105,12 +105,7 @@ function dayLabel(dateKey: string): string {
 }
 
 async function fetchRealUsage(token: string): Promise<RealUsageData> {
-  const res = await fetch(`${API_BASE_URL}/usage`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`Failed to fetch usage (${res.status})`);
-  const payload = await res.json();
-  const d = payload.data;
+  const d = await fetchUsage(token);
   const t = d.totals;
   return {
     totalConversions: t.total,
@@ -121,14 +116,12 @@ async function fetchRealUsage(token: string): Promise<RealUsageData> {
     avgProcessingTimeSec: 0,
     storageUsedMB: t.dataProcessed / (1024 * 1024),
     storageLimitMB: 0,
-    byTool: (d.mostUsed as { type: string; name: string; count: number }[]).map((m) => ({
+    byTool: d.mostUsed.map((m) => ({
       toolId: m.type,
       toolTitle: m.name,
       count: m.count,
     })),
-    byDay: ((d.byDay ?? []) as { date: string; count: number }[])
-      .slice(-7)
-      .map((day) => ({ date: dayLabel(day.date), count: day.count })),
+    byDay: d.byDay.slice(-7).map((day) => ({ date: dayLabel(day.date), count: day.count })),
     byCategory: [],
     activeKeys: t.activeKeys,
     recent: d.recent as RecentJob[],

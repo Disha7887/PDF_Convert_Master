@@ -13,6 +13,7 @@ import {
 } from "@/constants/config";
 import { resolveSampleOutput } from "@/mocks/data";
 import { getToolById, type Tool } from "@/constants/tools";
+import { getAuthToken } from "@/services/authToken";
 
 /**
  * Network gateway for the CONVERT tools.
@@ -116,6 +117,16 @@ async function appendFile(
   } as unknown as Blob);
 }
 
+/**
+ * Authorization header for conversion requests, when a user is signed in. The
+ * backend's `optionalConversionAuth` attributes the job to that user so it shows
+ * up in their dashboard / usage statistics. Anonymous conversions still work.
+ */
+function authHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 function assertBackendConfigured(): void {
   if (!API_BASE_URL) {
     throw new Error(
@@ -140,7 +151,7 @@ async function realStartConvert(
   }
   form.append("options", JSON.stringify(options ?? {}));
 
-  const res = await fetch(`${API_BASE_URL}/convert`, { method: "POST", body: form });
+  const res = await fetch(`${API_BASE_URL}/convert`, { method: "POST", headers: authHeaders(), body: form });
   const data = await res.json().catch(() => null);
   if (!res.ok || !data?.success || !data?.data?.jobId) {
     throw new Error(data?.error || `Conversion request failed (${res.status})`);
@@ -156,7 +167,7 @@ async function realStartMerge(files: PickedFile[]): Promise<StartConversionResul
   const form = new FormData();
   for (const f of files) await appendFile(form, "files", f);
 
-  const res = await fetch(`${API_BASE_URL}/merge-pdfs`, { method: "POST", body: form });
+  const res = await fetch(`${API_BASE_URL}/merge-pdfs`, { method: "POST", headers: authHeaders(), body: form });
   const data = await res.json().catch(() => null);
   if (!res.ok || !data?.success || !data?.data?.jobId) {
     throw new Error(data?.error || `Merge request failed (${res.status})`);

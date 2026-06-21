@@ -17,6 +17,7 @@ import { SvgXml } from "react-native-svg";
 
 import AuthResultIcon from "@/components/AuthResultIcon";
 import colors from "@/constants/colors";
+import { USE_MOCK_DATA } from "@/constants/config";
 import { ROUTES } from "@/constants/routes";
 import { SIGN_UP_XML } from "@/constants/signUpIcon";
 import { fonts } from "@/constants/theme";
@@ -389,8 +390,8 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
               </Text>
             </Pressable>
 
-            {/* Demo hint (sign-in only) */}
-            {mode === "signin" ? (
+            {/* Demo hint (sign-in only, mock mode only — the real backend has no seeded demo user) */}
+            {USE_MOCK_DATA && mode === "signin" ? (
               <Text style={styles.demoText}>
                 Demo — email: {DEMO_CREDENTIALS.email} · password: {DEMO_CREDENTIALS.password}
               </Text>

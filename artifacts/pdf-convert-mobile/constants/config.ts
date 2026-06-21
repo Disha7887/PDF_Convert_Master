@@ -7,7 +7,7 @@
  * to bundled sample assets. The real backend code paths are preserved (see
  * `services/api.ts`) and re-activate automatically when this flag is false.
  */
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 
 /**
  * The CONVERT tools always call the real api-server backend (the same API the
