@@ -16,6 +16,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [Resize-handle touch bounds](resize-handle-touch-bounds.md) — native: corner handle must sit inside a touchable wrapper (box-none + overflow pad), not negative-offset outside the box; draw-mode gates scroll on captureActive not just interacting.
 - [RNGH zoom vs PanResponder](rngh-zoom-vs-panresponder.md) — pinch/pan zoom over JS PanResponders: gate ALL four shouldSet variants (incl. both capture) on oneFinger, bail on 2nd finger, scale-aware deltas, .onFinalize.
 - [pdfjs version singleton (server)](pdfjs-version-singleton.md) — server pdfjs-dist must match pdf-parse's EXACT version (process-global worker singleton), use legacy Node build, externalize `pdfjs-dist/*` in esbuild.
 - [Inline on-page text editing (mobile)](inline-text-editing-mobile.md) — tap text → caret on page; defer drag-wrapper capture, re-enable web user-select on input, measure-Text width, snapshot undo per session.

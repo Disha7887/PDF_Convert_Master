@@ -1287,7 +1287,7 @@ export default function PdfEditorScreen() {
   return (
     <ScreenScroll
       insetTop
-      scrollEnabled={editingText || (!interacting && !zoomed)}
+      scrollEnabled={editingText || (!captureActive && !interacting && !zoomed)}
     >
       <BackRow onPress={goBack} title={tool.title} />
 
@@ -2449,6 +2449,12 @@ function BackRow({ onPress, title }: { onPress: () => void; title?: string }) {
  * hold the latest value/container so PanResponder callbacks never read stale
  * closures. A near-zero drag is treated as a tap → select.
  */
+// Transparent padding added to the right/bottom of a resizable overlay's outer
+// wrapper so the corner resize handle (which straddles the box edge) sits INSIDE
+// a touchable ancestor. On native, touches outside a parent's bounds never reach
+// its children, so a handle hanging outside the box would be untouchable.
+const HANDLE_OVERFLOW = 22;
+
 function DraggableBox({
   container,
   value,
@@ -2563,18 +2569,28 @@ function DraggableBox({
   const moveHandlers = interactive ? move.panHandlers : {};
   return (
     <View
-      style={[
-        styles.dragBox,
-        selected ? styles.dragBoxSelected : null,
-        { left: value.x * container.width, top: value.y * container.height, width: boxW, height: boxH },
-        WEB_NO_TOUCH_SCROLL,
-      ]}
-      pointerEvents={interactive ? "auto" : "none"}
-      {...moveHandlers}
+      pointerEvents="box-none"
+      style={{
+        position: "absolute",
+        left: value.x * container.width,
+        top: value.y * container.height,
+        width: boxW + HANDLE_OVERFLOW,
+        height: boxH + HANDLE_OVERFLOW,
+      }}
     >
-      {children}
+      <View
+        style={[styles.dragBox, selected ? styles.dragBoxSelected : null, { width: boxW, height: boxH }, WEB_NO_TOUCH_SCROLL]}
+        pointerEvents={interactive ? "auto" : "none"}
+        {...moveHandlers}
+      >
+        {children}
+      </View>
       {interactive && selected ? (
-        <View style={[styles.resizeHandle, WEB_NO_TOUCH_SCROLL]} hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }} {...resize.panHandlers}>
+        <View
+          style={[styles.resizeHandle, { left: boxW - 12, top: boxH - 12, right: undefined, bottom: undefined }, WEB_NO_TOUCH_SCROLL]}
+          hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+          {...resize.panHandlers}
+        >
           <Feather name="maximize-2" size={12} color="#ffffff" />
         </View>
       ) : null}
@@ -2802,25 +2818,33 @@ function FreeBox({
     [onChange, minW, minH, scaleRef],
   );
 
+  const boxW = value.w * container.width;
+  const boxH = value.h * container.height;
   return (
     <View
-      style={[
-        styles.freeBox,
-        {
-          left: value.x * container.width,
-          top: value.y * container.height,
-          width: value.w * container.width,
-          height: value.h * container.height,
-        },
-        WEB_NO_TOUCH_SCROLL,
-      ]}
-      pointerEvents={interactive ? "auto" : "none"}
-      {...(interactive ? move.panHandlers : {})}
+      pointerEvents="box-none"
+      style={{
+        position: "absolute",
+        left: value.x * container.width,
+        top: value.y * container.height,
+        width: boxW + HANDLE_OVERFLOW,
+        height: boxH + HANDLE_OVERFLOW,
+      }}
     >
-      {children}
-      {selected ? <View pointerEvents="none" style={styles.selRing} /> : null}
+      <View
+        style={[styles.freeBox, { width: boxW, height: boxH }, WEB_NO_TOUCH_SCROLL]}
+        pointerEvents={interactive ? "auto" : "none"}
+        {...(interactive ? move.panHandlers : {})}
+      >
+        {children}
+        {selected ? <View pointerEvents="none" style={styles.selRing} /> : null}
+      </View>
       {interactive && selected ? (
-        <View style={[styles.resizeHandle, WEB_NO_TOUCH_SCROLL]} hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }} {...resize.panHandlers}>
+        <View
+          style={[styles.resizeHandle, { left: boxW - 12, top: boxH - 12, right: undefined, bottom: undefined }, WEB_NO_TOUCH_SCROLL]}
+          hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+          {...resize.panHandlers}
+        >
           <Feather name="maximize-2" size={12} color="#ffffff" />
         </View>
       ) : null}
