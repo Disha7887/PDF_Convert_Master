@@ -14,9 +14,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 
+import { GlassSurface } from "@/components/Glass";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
-import { cardShadow, fonts } from "@/constants/theme";
+import { fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 
 const C = colors.light;
@@ -125,9 +126,10 @@ export function TopNav() {
           testID="account-menu-backdrop"
         >
           <Pressable
-            style={[styles.menu, { top: topInset + NAV_BAR_HEIGHT - 4 }]}
+            style={[styles.menuPos, { top: topInset + NAV_BAR_HEIGHT - 4 }]}
             onPress={(e) => e.stopPropagation()}
           >
+            <GlassSurface radius={18} style={styles.menuGlass}>
             <View style={styles.menuHeader}>
               <View style={styles.menuAvatar}>
                 <Svg width={22} height={22} viewBox="0 0 32 32">
@@ -170,6 +172,7 @@ export function TopNav() {
               onPress={onLogout}
               testID="menu-logout"
             />
+            </GlassSurface>
           </Pressable>
         </Pressable>
       </Modal>
@@ -241,16 +244,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.18)",
   },
-  menu: {
+  menuPos: {
     position: "absolute",
     right: 12,
-    minWidth: 230,
-    backgroundColor: C.card,
-    borderRadius: 16,
+    minWidth: 240,
+  },
+  menuGlass: {
     paddingVertical: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: C.border,
-    ...cardShadow,
   },
   menuHeader: {
     flexDirection: "row",

@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
+import { LinearGradient } from "expo-linear-gradient";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
@@ -82,11 +83,20 @@ function ClassicTabLayout() {
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView
-              intensity={100}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
+            <View style={StyleSheet.absoluteFill}>
+              <BlurView
+                intensity={100}
+                tint={isDark ? "dark" : "light"}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Glossy liquid-glass sheen across the floating tab bar. */}
+              <LinearGradient
+                pointerEvents="none"
+                colors={["rgba(255,255,255,0.5)", "rgba(255,255,255,0)"]}
+                locations={[0, 0.6]}
+                style={StyleSheet.absoluteFill}
+              />
+            </View>
           ) : isWeb ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
           ) : null,

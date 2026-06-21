@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   Platform,
@@ -17,10 +18,11 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { GlassSurface } from "@/components/Glass";
 import { Loader } from "@/components/Loader";
 import { NAV_BAR_HEIGHT } from "@/components/TopNav";
 import colors from "@/constants/colors";
-import { SCREEN_PADDING, cardShadow, fonts } from "@/constants/theme";
+import { SCREEN_PADDING, fonts } from "@/constants/theme";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -81,13 +83,38 @@ export function ScreenScroll({
   // KeyboardAwareScrollView so the focused TextInput (forms AND the on-page PDF
   // text editor) automatically scrolls above the keyboard instead of being
   // hidden behind it. bottomOffset keeps a little breathing room above the keys.
-  if (Platform.OS === "web") {
-    return <ScrollView {...sharedProps}>{children}</ScrollView>;
-  }
+  //
+  // Each screen sits over a soft ambient field (a faint coral-tinted gradient
+  // plus two diffuse glows) so the frosted glass surfaces have light and colour
+  // to refract — that's what sells the "liquid glass" depth.
   return (
-    <KeyboardAwareScrollView bottomOffset={24} {...sharedProps}>
-      {children}
-    </KeyboardAwareScrollView>
+    <View style={styles.screenWrap}>
+      <ScreenAmbient />
+      {Platform.OS === "web" ? (
+        <ScrollView {...sharedProps}>{children}</ScrollView>
+      ) : (
+        <KeyboardAwareScrollView bottomOffset={24} {...sharedProps}>
+          {children}
+        </KeyboardAwareScrollView>
+      )}
+    </View>
+  );
+}
+
+/** Soft ambient backdrop rendered behind every screen's scroll content. */
+function ScreenAmbient() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <LinearGradient
+        colors={[C.background, C.surfaceAlt, C.blue50]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={styles.glowTop} />
+      <View style={styles.glowBottom} />
+    </View>
   );
 }
 
@@ -156,6 +183,17 @@ export function Button({
         style,
       ]}
     >
+      {/* Glossy top sheen on filled buttons — the "liquid glass" highlight. */}
+      {(variant === "primary" ||
+        variant === "secondary" ||
+        variant === "destructive") && (
+        <LinearGradient
+          pointerEvents="none"
+          colors={["rgba(255,255,255,0.4)", "rgba(255,255,255,0)"]}
+          locations={[0, 0.6]}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
       {loading ? (
         <Loader size={s.icon + 10} />
       ) : (
@@ -179,16 +217,9 @@ interface CardProps {
 
 export function Card({ children, style, padded = true, elevated = true }: CardProps) {
   return (
-    <View
-      style={[
-        styles.card,
-        padded && { padding: 16 },
-        elevated && cardShadow,
-        style,
-      ]}
-    >
-      {children}
-    </View>
+    <GlassSurface radius={18} flat={!elevated} style={style}>
+      <View style={padded ? styles.cardPad : undefined}>{children}</View>
+    </GlassSurface>
   );
 }
 
@@ -336,7 +367,26 @@ const noWebOutline =
     : null;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: C.background },
+  screen: { flex: 1, backgroundColor: "transparent" },
+  screenWrap: { flex: 1, backgroundColor: C.background },
+  glowTop: {
+    position: "absolute",
+    top: -120,
+    right: -80,
+    width: 320,
+    height: 320,
+    borderRadius: 999,
+    backgroundColor: "rgba(247,67,61,0.12)",
+  },
+  glowBottom: {
+    position: "absolute",
+    bottom: -140,
+    left: -90,
+    width: 340,
+    height: 340,
+    borderRadius: 999,
+    backgroundColor: "rgba(251,93,82,0.10)",
+  },
   btn: {
     flexDirection: "row",
     alignItems: "center",
@@ -344,14 +394,10 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: 12,
     borderWidth: 1,
+    overflow: "hidden",
   },
   btnLabel: { fontFamily: fonts.bodySemibold },
-  card: {
-    backgroundColor: C.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
+  cardPad: { padding: 16 },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, alignSelf: "flex-start" },
   badgeText: { fontSize: 12, fontFamily: fonts.bodySemibold },
   chip: {
