@@ -13,10 +13,12 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SvgXml } from "react-native-svg";
 
 import AuthResultIcon from "@/components/AuthResultIcon";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
+import { SIGN_UP_XML } from "@/constants/signUpIcon";
 import { fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEMO_CREDENTIALS } from "@/mocks/data";
@@ -239,12 +241,9 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
               </Pressable>
             </View>
 
-            {/* Brand */}
-            <View style={styles.brandRow}>
-              <View style={styles.brandLogo}>
-                <Feather name="file-text" size={22} color="#fff" />
-              </View>
-              <Text style={styles.brandName}>PDF Convert Master</Text>
+            {/* Illustration */}
+            <View style={styles.illustration}>
+              <SvgXml xml={SIGN_UP_XML} width={150} height={158} />
             </View>
 
             {/* Social */}
@@ -446,16 +445,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { flex: 1, textAlign: "center", fontSize: 14, color: SHEET.text, fontFamily: fonts.bodySemibold },
 
-  brandRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, marginVertical: 10 },
-  brandLogo: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: C.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandName: { fontSize: 24, color: SHEET.text, fontFamily: fonts.headingBold },
+  illustration: { alignItems: "center", justifyContent: "center", marginTop: 4, marginBottom: 14 },
 
   socialBtn: {
     flexDirection: "row",

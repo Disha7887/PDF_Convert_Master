@@ -7,6 +7,8 @@ Mobile auth (`app/auth/sign-in.tsx` + `sign-up.tsx`) both render a shared `compo
 
 **Popup, not a full page:** the auth routes are registered as `presentation: "transparentModal"` (in `app/_layout.tsx`) so the sheet floats over whatever screen launched it; the backdrop is a dim scrim (no photo) and tapping it or the X closes. Do not revert it to a full-screen page with a photo backdrop.
 
+**Header is an illustration, not the logo+name:** the brand row (coral file-text logo + "PDF Convert Master") was removed; the sheet header is now a paper-airplane "sign-up" SVG illustration (`constants/signUpIcon.ts`, rendered via `SvgXml`). The source art is black-on-transparent, so its `#000` strokes/fills are recolored to light `#f8fafc` to read on the dark sheet (pink `#FF85D2` accents kept). Same pattern as `constants/celebrateIcon.ts`.
+
 **Result animations (Lottie):** on submit outcomes the sheet swaps to a result view via `components/AuthResultIcon.tsx` (+ `.web.tsx`, paired native/web like `ConverterStatusIcon`): sign-up success = in-sheet `success` checkmark then redirect to sign-in; sign-up/sign-in failure = in-sheet `error` icon + Try Again; sign-in success = a BIG full-screen `welcome` animation (`auth-welcome.json`) then redirect to dashboard.
 **Redirect race gotcha:** `AuthContext.signin` flips `isAuthenticated` true *before its promise resolves*, so the "bounce already-signed-in visitor to dashboard" effect must also gate on `!isSubmitting && !result` — otherwise it fires first and skips the welcome animation.
 
