@@ -305,10 +305,12 @@ const styles = StyleSheet.create({
   heroTitle: { fontSize: 22, color: "#ffffff", fontFamily: fonts.headingBold },
   heroSub: { fontSize: 14, color: "rgba(255,255,255,0.92)", fontFamily: fonts.body, marginTop: 6 },
   heroDate: { fontSize: 12, color: "rgba(255,255,255,0.8)", fontFamily: fonts.body, marginTop: 4 },
-  heroBtns: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 16 },
+  heroBtns: { flexDirection: "row", gap: 10, marginTop: 16 },
   heroBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     backgroundColor: "rgba(255,255,255,0.2)",
     borderWidth: 1,
