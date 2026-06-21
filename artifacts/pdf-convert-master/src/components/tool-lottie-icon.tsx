@@ -1,4 +1,3 @@
-import { useReducedMotion } from "framer-motion";
 import { LottieIcon } from "@/components/ui/lottie-icon";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
 
@@ -85,9 +84,10 @@ export interface ToolLottieIconProps {
 }
 
 /**
- * Renders a tool's animated Lottie identity icon on its card. Falls back to the
- * tool's static lucide icon when there is no animation for the id or when the
- * user prefers reduced motion.
+ * Renders a tool's animated Lottie identity icon on its card. Always animates
+ * (full parity with the mobile app, which ignores the OS "reduce motion"
+ * setting). Falls back to the tool's static lucide icon only when there is no
+ * animation registered for the id.
  */
 export function ToolLottieIcon({
   toolId,
@@ -97,11 +97,10 @@ export function ToolLottieIcon({
   playOnHover = false,
   className,
 }: ToolLottieIconProps) {
-  const reduceMotion = useReducedMotion();
   const animation = TOOL_ANIMATIONS[toolId];
   const cfg = config ?? toolConfigs[toolId];
 
-  if (!animation || reduceMotion) {
+  if (!animation) {
     const Icon = cfg?.icon;
     if (!Icon) return null;
     return (

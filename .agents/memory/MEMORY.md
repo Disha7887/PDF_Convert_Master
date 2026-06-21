@@ -4,6 +4,7 @@
 - [Coral rebrand](color-rebrand.md) — pdf-convert app branding is CORAL `#f7433d` (user-required); never revert to blue `#2563eb`.
 - [Mobile loaders](mobile-loaders.md) — all loading/processing states in pdf-convert-mobile use the shared `Loader`/`ScreenLoader` (processing.json), not ActivityIndicator.
 - [Lottie on Expo web](lottie-expo-web.md) — lottie-react-native@7 web needs the `@lottiefiles/dotlottie-react` optional peer installed.
+- [Web tool icons always animate](web-tool-icon-always-animate.md) — ToolLottieIcon ignores OS reduce-motion by design (mobile parity); don't re-add useReducedMotion.
 - [SvgXml viewBox clipping](svgxml-viewbox.md) — raw SVGs need a viewBox before SvgXml width/height will scale (not clip); inject one from width/height when missing.
 - [OCR text side-channel](ocr-text-storage.md) — in-memory job stores are purged on /api/download; fetch OCR text (and any per-job side data) before triggering download.
 - [api-server tsc vs esbuild](api-server-typecheck.md) — tsc is pre-existingly red on dead `routes_broken.ts`; app builds via esbuild. Don't "green" it as a side task.
