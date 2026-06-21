@@ -1,6 +1,7 @@
 import { logger } from "./lib/logger";
 import app from "./app";
 import { registerRoutes } from "./routes";
+import { serveWebApp } from "./static";
 
 const rawPort = process.env["PORT"];
 
@@ -17,6 +18,9 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 registerRoutes(app).then((httpServer) => {
+  // Co-host the built web frontend on the same origin (no-op if absent).
+  serveWebApp(app);
+
   httpServer.listen(port, (err?: Error) => {
     if (err) {
       logger.error({ err }, "Error listening on port");
