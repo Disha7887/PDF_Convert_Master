@@ -108,3 +108,63 @@ export const requireConversionAuth = async (
     });
   }
 };
+
+/**
+ * OPTIONAL authentication for the first-party conversion endpoints.
+ *
+ * These endpoints power the FREE web/mobile converter UI, which is used by
+ * anonymous visitors, by the mobile app (which sends no credential at all), and
+ * by signed-in users. Authentication must therefore NEVER be required here —
+ * requiring it breaks every converter for logged-out and mobile users with
+ * "Authorization header is required".
+ *
+ * Behaviour (never blocks, always calls next()):
+ *   - No Authorization header        → proceed anonymously (req.user undefined).
+ *   - Valid JWT (Bearer <jwt>)       → attach req.user, authSource = "web".
+ *   - Valid API key (Bearer sk-…)    → attach req.user, authSource = "api",
+ *                                       record last-used for the dashboard.
+ *   - Any invalid / unparseable cred → proceed anonymously (do NOT 401).
+ *
+ * Handlers read `(req as ConversionAuthRequest).user?.id` defensively, so an
+ * absent user simply records the conversion as anonymous. Use the strict
+ * `requireConversionAuth` only for routes that must be gated.
+ */
+export const optionalConversionAuth = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    if (token.startsWith("sk-")) {
+      const apiKeyRecord = await storage.getApiKeyByKey(token);
+      if (apiKeyRecord) {
+        const user = await storage.getUserById(apiKeyRecord.userId);
+        if (user) {
+          (req as any).user = { id: user.id, email: user.email };
+          (req as any).authSource = "api";
+          storage.updateApiKeyLastUsed(apiKeyRecord.id).catch(() => {});
+        }
+      }
+    } else {
+      const payload = verifyToken(token);
+      if (payload) {
+        const user = await storage.getUserById(payload.userId);
+        if (user) {
+          (req as any).user = { id: user.id, email: user.email };
+          (req as any).authSource = "web";
+        }
+      }
+    }
+  } catch {
+    // Never block a first-party conversion on an auth hiccup — fall through
+    // and let the request proceed anonymously.
+  }
+
+  next();
+};
