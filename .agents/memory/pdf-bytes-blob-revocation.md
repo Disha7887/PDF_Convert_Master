@@ -29,3 +29,7 @@ getDocument or you'll detach it and poison every later read.
 
 Core extraction (pdf.js getTextContent) is sound — verified it parses a sample
 PDF fine in Node; failures here are blob-lifecycle/browser issues, not the logic.
+
+**NOTE:** This bytes cache is a real hardening but was NOT the cause of the
+"Could not read this document's text." error. That turned out to be a pdf.js v6
+cleanup bug — see `pdfjs-v6-doc-destroy.md`. Don't conflate the two.

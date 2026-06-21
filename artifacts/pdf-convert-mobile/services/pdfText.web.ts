@@ -51,7 +51,8 @@ export async function extractPageRuns(
   const pdfjs = await getPdfjs();
   const bytes = await readPdfBytes(uri);
   // pdf.js detaches the buffer it is given, so hand it a copy.
-  const doc = await pdfjs.getDocument({ data: bytes.slice() }).promise;
+  const loadingTask = pdfjs.getDocument({ data: bytes.slice() });
+  const doc = await loadingTask.promise;
   try {
     if (pageIndex < 0 || pageIndex >= doc.numPages) return [];
     const page = await doc.getPage(pageIndex + 1);
@@ -117,7 +118,15 @@ export async function extractPageRuns(
     page.cleanup();
     return items;
   } finally {
-    await doc.destroy();
+    // pdf.js v6 removed `PDFDocumentProxy.destroy()` — destroying must go through
+    // the loading task. Best-effort: a cleanup failure must never propagate and
+    // discard a successful extraction (that bug made "Edit Text" report
+    // "Could not read this document's text." on every real PDF).
+    try {
+      await loadingTask.destroy();
+    } catch {
+      /* cleanup is best-effort */
+    }
   }
 }
 

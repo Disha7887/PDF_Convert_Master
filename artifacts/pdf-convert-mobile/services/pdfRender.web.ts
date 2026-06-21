@@ -5,7 +5,10 @@ import { readPdfBytes } from "./pdfDoc";
  * on-screen preview/thumbnails. Mirrors the web app's pdfClient approach.
  */
 
-type PdfDoc = { numPages: number; getPage: (n: number) => Promise<any>; destroy: () => void };
+// Note: pdf.js v6 removed `PDFDocumentProxy.destroy()` (destroy via the loading
+// task instead). This rasteriser caches docs and never destroys them, so the
+// type intentionally omits `destroy` to avoid reintroducing that broken call.
+type PdfDoc = { numPages: number; getPage: (n: number) => Promise<any> };
 
 let pdfjsPromise: Promise<any> | null = null;
 
