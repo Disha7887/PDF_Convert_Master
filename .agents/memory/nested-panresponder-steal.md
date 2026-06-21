@@ -65,6 +65,23 @@ handle, move-only wrapper, crop frame, signature pad). RN's `ViewStyle` has no
 Net: native relies on capture handlers + grant-time `scrollEnabled` flip; web relies
 on static `touch-action: none`. Keep all three — they cover different platforms.
 
+### Web gotcha 2: mouse drags need `user-select: none` too (desktop web)
+
+`touch-action: none` only covers TOUCH. On desktop web (mouse), a mousedown-drag on
+a draggable box/handle — or even a click on a Pressable's Text label — starts a
+native **text selection** that hijacks the gesture. Symptoms: dragging a box "just
+selects text" instead of moving/resizing, and tapping a tool button highlights its
+label (blue selection box) instead of acting. PanResponder grants but the browser's
+selection drag fights it.
+
+**Fix:** statically set `user-select: none` on web (same cast trick as touch-action:
+`Platform.OS === "web" ? ({ userSelect: "none" } as unknown as ViewStyle) : null`)
+on every draggable element AND on tappable button rows whose labels are `Text`.
+In the pdf editor it's folded into `WEB_NO_TOUCH_SCROLL` (boxes/handles/page surface)
+plus a `WEB_NO_SELECT` applied to the toolbar buttons (toolbar keeps `touch-action`
+default so the horizontal tool ScrollView still scrolls). Inputs/TextInputs are
+unaffected — browsers still allow typing/selection inside form fields.
+
 ### Trap: don't put START-capture on the PARENT move responder
 
 Adding `onStartShouldSetPanResponderCapture:()=>true` to the PARENT (body) move

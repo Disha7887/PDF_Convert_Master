@@ -56,8 +56,18 @@ const PAGE_COUNT = 4;
 // `scrollEnabled` mid-gesture can't stop a scroll that already began. Setting
 // `touch-action: none` statically on the draggable elements stops the browser
 // from ever starting a page scroll from a touch that begins on them.
+//
+// `user-select: none` is the desktop-mouse counterpart: without it a mouse-drag
+// on a box/handle (or even a click on a button label) starts a native TEXT
+// SELECTION that hijacks the pan gesture — that is why dragging "just selected
+// text" instead of moving/resizing, and why tapping a tool highlighted its
+// label. Keep both so touch (mobile) and mouse (desktop web) are both covered.
+const WEB_NO_SELECT =
+  Platform.OS === "web" ? ({ userSelect: "none" } as unknown as ViewStyle) : null;
 const WEB_NO_TOUCH_SCROLL =
-  Platform.OS === "web" ? ({ touchAction: "none" } as unknown as ViewStyle) : null;
+  Platform.OS === "web"
+    ? ({ touchAction: "none", userSelect: "none" } as unknown as ViewStyle)
+    : null;
 
 /** Render + cache a real page image. Returns null while loading or on native. */
 function useRenderedPage(
@@ -953,7 +963,7 @@ export default function PdfEditorScreen() {
                 setActiveTool(t.id);
                 if (t.id !== "select") setSelectedId(null);
               }}
-              style={[styles.toolBtn, active && styles.toolBtnActive]}
+              style={[styles.toolBtn, active && styles.toolBtnActive, WEB_NO_SELECT]}
               testID={`tool-${t.id}`}
             >
               {t.id === "edittext" && textBusy ? (
@@ -961,7 +971,7 @@ export default function PdfEditorScreen() {
               ) : (
                 <Feather name={t.icon} size={18} color={active ? "#fff" : C.foreground} />
               )}
-              <Text style={[styles.toolLabel, active && styles.toolLabelActive]} numberOfLines={1}>
+              <Text style={[styles.toolLabel, active && styles.toolLabelActive]} numberOfLines={1} selectable={false}>
                 {t.label}
               </Text>
             </Pressable>
