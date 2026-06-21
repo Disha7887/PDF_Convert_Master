@@ -23,7 +23,7 @@ interface LinkRow {
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { isAuthenticated, user, signout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const go = (r: string) => router.push(r as never);
 
   const [askMobileData, setAskMobileData] = useState(true);
@@ -69,56 +69,6 @@ export default function SettingsScreen() {
 
   return (
     <ScreenScroll navInset tabBar>
-      {/* Account */}
-      <View style={[styles.accountCard, cardShadow]}>
-        {isAuthenticated ? (
-          <>
-            <View style={styles.accountRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{user?.avatarInitials ?? "U"}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.accountName} numberOfLines={1}>
-                  {user?.name}
-                </Text>
-                <Text style={styles.accountEmail} numberOfLines={1}>
-                  {user?.email}
-                </Text>
-              </View>
-              <View style={styles.planPill}>
-                <Text style={styles.planPillText}>{user?.plan}</Text>
-              </View>
-            </View>
-            <View style={styles.accountActions}>
-              <Button
-                label="Manage plan"
-                icon="credit-card"
-                variant="outline"
-                size="sm"
-                onPress={() => go(ROUTES.managePlans)}
-              />
-              <Button label="Sign Out" icon="log-out" variant="ghost" size="sm" onPress={signout} />
-            </View>
-          </>
-        ) : (
-          <>
-            <Text style={styles.accountTitle}>Welcome to PDF Convert Master</Text>
-            <Text style={styles.accountSub}>
-              Sign in to sync your plan, API keys and conversion history.
-            </Text>
-            <View style={styles.accountActions}>
-              <Button label="Sign In" icon="log-in" size="sm" onPress={() => go(ROUTES.signIn)} />
-              <Button
-                label="Create Account"
-                variant="outline"
-                size="sm"
-                onPress={() => go(ROUTES.signUp)}
-              />
-            </View>
-          </>
-        )}
-      </View>
-
       {/* Get Premium banner */}
       <Pressable onPress={() => go(ROUTES.pricing)} style={({ pressed }) => [{ opacity: pressed ? 0.94 : 1 }]}>
         <LinearGradient
@@ -224,32 +174,6 @@ function SettingRow({
 }
 
 const styles = StyleSheet.create({
-  accountCard: {
-    backgroundColor: C.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: C.border,
-    padding: 18,
-    marginBottom: 18,
-    gap: 14,
-  },
-  accountRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: C.accent,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontSize: 16, color: C.primary, fontFamily: fonts.bodyBold },
-  accountName: { fontSize: 16, color: C.foreground, fontFamily: fonts.headingSemibold },
-  accountEmail: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 1 },
-  planPill: { backgroundColor: C.blue50, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  planPillText: { fontSize: 12, color: C.blue700, fontFamily: fonts.bodySemibold },
-  accountTitle: { fontSize: 17, color: C.foreground, fontFamily: fonts.headingBold },
-  accountSub: { fontSize: 13, lineHeight: 19, color: C.mutedForeground, fontFamily: fonts.body },
-  accountActions: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
   premium: {
     flexDirection: "row",
     alignItems: "center",
