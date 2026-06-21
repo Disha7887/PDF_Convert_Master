@@ -10,6 +10,8 @@ import {
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
+import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -101,6 +103,12 @@ export default function RootLayout() {
     Poppins_400Regular,
     Poppins_600SemiBold,
     Poppins_700Bold,
+    // Icon glyph fonts. Loading them here (instead of relying on the lazy
+    // self-load in @expo/vector-icons) guarantees the TTFs are ready before the
+    // first render — otherwise Feather/Ionicons icons render as blank boxes on
+    // Android while JS-driven Lottie animations are unaffected.
+    ...Feather.font,
+    ...Ionicons.font,
   });
 
   useEffect(() => {
