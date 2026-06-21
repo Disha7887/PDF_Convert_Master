@@ -40,3 +40,22 @@ page and/or the exported PDF:
 Round-trip sanity: pdf.js gives a top-left `y`; stored as fraction; pdf-lib draws
 text baseline at `y = H*(1 - el.y) - el.size`. This is the same approximation the
 web editor uses (`top = pageHeight - baseline - 0.82*fontSize`).
+
+4. **Overlay page size must come from the SAME space as the raster + extraction.**
+   On web the rendered image and `pdfText` extraction use the pdf.js scale-1, rot-0
+   **viewport** — which differs from `pdf-lib getSize()` when CropBox != MediaBox.
+   Derive `pageAspect`/`pageWpts` (and the "Edit Text" fraction normalization) from
+   `getRenderPageSize()` (pdf.js viewport on web; pdf-lib fallback on native), NOT
+   pdf-lib. For the common CropBox==MediaBox case the two are numerically identical
+   (zero regression); the switch only fixes CropBox!=MediaBox ghosting.
+   **Known residual:** export (`pdfBuilder.ts`) still uses pdf-lib `getSize`, so on
+   CropBox!=MediaBox PDFs the *exported* overlays can still drift even after the
+   on-screen ghosting is fixed. Unifying export needs a shared page-coord model.
+
+5. **Don't use a layout border for selection; it shifts content.** RN borders are
+   border-box, so a persistent `borderWidth` on `dragMove`/`freeBox` insets children
+   ~1.5px down-right and misaligns absolutely-anchored glyphs/covers. Draw the
+   selection ring as a non-layout absolute overlay child (`selRing`,
+   `StyleSheet.absoluteFillObject`) instead. Also set `lineHeight == fontSize` on
+   both the static `<Text>` and `InlineTextEditor` so leading can't push the glyph
+   below its anchor (matches the web app's `lineHeight:1`).

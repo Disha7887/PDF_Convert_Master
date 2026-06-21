@@ -10,12 +10,22 @@ real page count from the user's picked PDF. Page count comes from `pdf-lib`
 (`services/pdfDoc.ts`); page rasterization comes from pdf.js.
 
 **Rule:** pdfjs-dist is imported ONLY from `services/pdfRender.web.ts`. The native
-sibling `services/pdfRender.ts` is a stub returning `null`. Always import
-`renderPdfPage` from `./pdfRender` (no extension) so Metro picks the platform file.
+sibling `services/pdfRender.ts` does NOT use pdf.js — it uploads the PDF (FormData)
+to the api-server `POST /api/pdf/render-page` rasteriser and shows the returned PNG
+data URL. Always import `renderPdfPage` from `./pdfRender` (no extension) so Metro
+picks the platform file.
 
 **Why:** pdfjs-dist + its worker cannot be bundled cleanly by Metro for native and
-would crash/bloat the native bundle. Keeping it behind the `.web.ts` extension means
-the native bundle never includes it; native falls back to a clean page frame.
+would crash/bloat the native bundle. Web uses pdf.js directly; native has no DOM
+canvas/pdf.js so it MUST rasterise server-side (a `null` stub = blank pages on iOS,
+the original bug). Keeping pdf.js behind `.web.ts` means the native bundle never
+includes it.
+
+**Native render endpoint (`/api/pdf/render-page`):** PDF-only multer, returns JSON
+`{image,height,width}` via `PDFParse.getScreenshot({partial:[n],desiredWidth,imageDataUrl:true})`.
+Hardened like the other public upload routes: per-IP rate limit + a concurrency slot
+(`acquireRenderSlot`, getScreenshot is CPU/memory heavy) + multer errors → JSON 400/413.
+Client buckets widths and LRU-caches by uri:page:width but never caches failures.
 
 **How to apply:**
 - pdf.js worker is set via CDN: `https://unpkg.com/pdfjs-dist@${version}/build/pdf.worker.min.mjs`. Vite's `?url` worker import does NOT work under Metro — use the CDN.

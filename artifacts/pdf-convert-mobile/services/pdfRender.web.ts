@@ -45,6 +45,29 @@ async function loadDoc(uri: string): Promise<PdfDoc> {
   return cached;
 }
 
+/**
+ * Page size in the SAME coordinate space the rasteriser and text extraction use:
+ * the pdf.js viewport (unrotated, scale 1). The editor normalises overlay
+ * geometry and the page aspect from this so the rendered image, the extracted
+ * text and the overlays never diverge — even on PDFs whose CropBox differs from
+ * their MediaBox (where pdf-lib's MediaBox-based size would letterbox/shift).
+ */
+export async function getRenderPageSize(
+  uri: string,
+  pageIndex: number,
+): Promise<{ width: number; height: number } | null> {
+  try {
+    const doc = await loadDoc(uri);
+    if (pageIndex < 0 || pageIndex >= doc.numPages) return null;
+    const page = await doc.getPage(pageIndex + 1);
+    const vp = page.getViewport({ scale: 1, rotation: 0 });
+    if (!(vp.width > 0 && vp.height > 0)) return null;
+    return { width: vp.width, height: vp.height };
+  } catch {
+    return null;
+  }
+}
+
 export async function renderPdfPage(
   uri: string,
   pageIndex: number,

@@ -98,6 +98,27 @@ async function acquireChromiumSlot(): Promise<() => void> {
   };
 }
 
+// Limit concurrent PDF page rasterisations. getScreenshot spins up pdf.js +
+// canvas per call, which is CPU/memory heavy; without a cap, a burst of mobile
+// render requests could exhaust the box. Mirrors acquireChromiumSlot.
+const MAX_RENDER = 2;
+let renderActive = 0;
+const renderWaiters: Array<() => void> = [];
+async function acquireRenderSlot(): Promise<() => void> {
+  while (renderActive >= MAX_RENDER) {
+    await new Promise<void>((resolve) => renderWaiters.push(resolve));
+  }
+  renderActive++;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    renderActive--;
+    const next = renderWaiters.shift();
+    if (next) next();
+  };
+}
+
 // Render HTML into a real, faithful PDF using headless Chromium.
 // Security: the HTML can be user-supplied (or derived from user uploads), so we
 // run it locked down — JavaScript disabled and ALL network/file fetches blocked
@@ -191,6 +212,24 @@ const mergeUpload = multer({
   },
 });
 
+// Dedicated upload config for the mobile native page rasteriser. PDF-only and
+// capped well below the generic uploader so a single-page render request can't
+// be used to push huge payloads.
+const pdfRenderUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+  fileFilter: (req, file, cb) => {
+    if (
+      path.extname(file.originalname).toLowerCase() === ".pdf" ||
+      file.mimetype === "application/pdf"
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error(`"${file.originalname}" is not a PDF file.`));
+    }
+  },
+});
+
 // Dedicated, hardened upload config for the in-browser image editors. Much
 // smaller size cap and image-only mimetypes to limit memory/DoS exposure.
 const imageUpload = multer({
@@ -227,6 +266,23 @@ function uploadRateLimited(ip: string): boolean {
   const entry = uploadRateWindow.get(ip);
   if (!entry || entry.resetAt < now) {
     uploadRateWindow.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > limit;
+}
+
+// Per-IP rate limit for the mobile page rasteriser. More generous than the
+// image-upload limit because legitimately paging through a multi-page document
+// fires one render per page/width bucket, but still bounds abuse.
+const renderRateWindow = new Map<string, { count: number; resetAt: number }>();
+function renderRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const limit = 120;
+  const entry = renderRateWindow.get(ip);
+  if (!entry || entry.resetAt < now) {
+    renderRateWindow.set(ip, { count: 1, resetAt: now + windowMs });
     return false;
   }
   entry.count += 1;
@@ -662,6 +718,32 @@ async function convertPdfToImages(pdfBuffer: Buffer, outputFilename: string) {
     throw new Error(`PDF to Images conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   } finally {
     // Cleanup must never mask a conversion error.
+    try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
+  }
+}
+
+// Rasterise a single PDF page to a PNG data URL. Used by the mobile native
+// editor, which has no DOM canvas / pdf.js and so can't render pages on-device.
+async function renderPdfPageToPng(
+  pdfBuffer: Buffer,
+  pageNumber: number,
+  desiredWidth: number,
+): Promise<{ dataUrl: string; width: number; height: number }> {
+  const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+  try {
+    const result = await parser.getScreenshot({
+      partial: [pageNumber],
+      desiredWidth,
+      imageDataUrl: true,
+      imageBuffer: false,
+    });
+    const pg =
+      result.pages.find((p) => p.pageNumber === pageNumber) ?? result.pages[0];
+    if (!pg?.dataUrl) {
+      throw new Error("Page could not be rendered.");
+    }
+    return { dataUrl: pg.dataUrl, width: pg.width ?? 0, height: pg.height ?? 0 };
+  } finally {
     try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
   }
 }
@@ -1526,7 +1608,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Start file conversion job
+  // Mobile native page rasteriser: render one PDF page to a PNG data URL. The
+  // native app has no pdf.js, so it uploads the PDF here and shows the returned
+  // image in the editor. Free first-party tool → optional auth.
+  app.post(
+    "/api/pdf/render-page",
+    optionalConversionAuth,
+    (req, res, next) => {
+      // Bound abuse before we accept a (potentially large) upload or spend CPU.
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (renderRateLimited(ip)) {
+        return res
+          .status(429)
+          .json({ error: "Too many render requests. Please slow down." });
+      }
+      // Translate multer's streaming errors (oversized / non-PDF) into clean
+      // JSON instead of letting them fall through to the HTML error handler.
+      pdfRenderUpload.single("file")(req, res, (err: any) => {
+        if (err) {
+          let status = 400;
+          let msg = err instanceof Error ? err.message : "Upload failed";
+          if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+            status = 413;
+            msg = "PDF must be 100MB or smaller.";
+          }
+          return res.status(status).json({ error: msg });
+        }
+        next();
+      });
+    },
+    async (req, res) => {
+      let release: (() => void) | null = null;
+      try {
+        if (!req.file) {
+          return res.status(400).json({ error: "No PDF uploaded." });
+        }
+        const pageIndex = Number.parseInt(String(req.body.pageIndex ?? ""), 10);
+        if (!Number.isFinite(pageIndex) || pageIndex < 0) {
+          return res.status(400).json({ error: "Invalid pageIndex." });
+        }
+        let targetWidth = Number.parseInt(String(req.body.targetWidth ?? ""), 10);
+        if (!Number.isFinite(targetWidth)) targetWidth = 620;
+        targetWidth = Math.min(2000, Math.max(80, targetWidth));
+
+        const doc = await PDFDocument.load(new Uint8Array(req.file.buffer), {
+          ignoreEncryption: true,
+        });
+        const pageCount = doc.getPageCount();
+        if (pageIndex >= pageCount) {
+          return res.status(400).json({ error: "pageIndex out of range." });
+        }
+
+        release = await acquireRenderSlot();
+        const { dataUrl, width, height } = await renderPdfPageToPng(
+          req.file.buffer,
+          pageIndex + 1,
+          targetWidth,
+        );
+        res.setHeader("Cache-Control", "no-store");
+        return res.json({ image: dataUrl, width, height });
+      } catch (err) {
+        console.error("PDF render-page failed:", err);
+        return res.status(500).json({ error: "Could not render this PDF page." });
+      } finally {
+        if (release) release();
+      }
+    },
+  );
+
   app.post("/api/convert", optionalConversionAuth, upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {

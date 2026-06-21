@@ -44,7 +44,7 @@ import {
   type TextEl,
   type ToolId,
 } from "@/services/pdfEditTypes";
-import { renderPdfPage } from "@/services/pdfRender";
+import { getRenderPageSize, renderPdfPage } from "@/services/pdfRender";
 import { extractPageRuns, sampleTextColors } from "@/services/pdfText";
 
 const C = colors.light;
@@ -313,6 +313,9 @@ export default function PdfEditorScreen() {
   const slotKey = slot?.key ?? "";
 
   // Match the preview box to the real page aspect ratio for accurate placement.
+  // Prefer the pdf.js viewport size (web), which is the same space the rendered
+  // image and text extraction use, so overlays never letterbox/shift. Native has
+  // no pdf.js (getRenderPageSize → null), so it falls back to pdf-lib's MediaBox.
   useEffect(() => {
     let alive = true;
     if (!params.uri || currentSrc < 0) {
@@ -320,14 +323,15 @@ export default function PdfEditorScreen() {
       setPageWpts(0);
       return;
     }
-    getPdfPageSize(params.uri, currentSrc)
-      .then((s) => {
-        if (alive && s.width > 0 && s.height > 0) {
-          setPageAspect(s.height / s.width);
-          setPageWpts(s.width);
-        }
-      })
-      .catch(() => {});
+    const uri = params.uri;
+    (async () => {
+      let s = await getRenderPageSize(uri, currentSrc).catch(() => null);
+      if (!s) s = await getPdfPageSize(uri, currentSrc).catch(() => null);
+      if (alive && s && s.width > 0 && s.height > 0) {
+        setPageAspect(s.height / s.width);
+        setPageWpts(s.width);
+      }
+    })();
     return () => {
       alive = false;
     };
@@ -508,7 +512,14 @@ export default function PdfEditorScreen() {
         );
         return;
       }
-      const { width: pageW, height: pageH } = await getPdfPageSize(params.uri, srcIndex);
+      // Normalise against the SAME viewport the runs were extracted in (pdf.js),
+      // not pdf-lib's MediaBox — otherwise covers/text drift on CropBox≠MediaBox
+      // PDFs. Falls back to pdf-lib only if the pdf.js size is unavailable.
+      const renderSize = await getRenderPageSize(params.uri, srcIndex).catch(
+        () => null,
+      );
+      const { width: pageW, height: pageH } =
+        renderSize ?? (await getPdfPageSize(params.uri, srcIndex));
       if (pageW <= 0 || pageH <= 0) {
         setError("Could not read this page's size.");
         return;
@@ -541,14 +552,17 @@ export default function PdfEditorScreen() {
         setError("This page's text is already editable — tap a block to change it.");
         return;
       }
-      // Cover boxes (points), padded a little around each run.
+      // Cover boxes (points), padded generously around each run so the white
+      // patch reliably hides the original glyphs (matching the web app's 0.35
+      // vertical pad) — under-padding is what leaves a ghost of the source text.
       const boxes = fresh.map((hit) => {
-        const pad = hit.fontSize * 0.25;
+        const padY = hit.fontSize * 0.35;
+        const padX = Math.max(1.5, hit.fontSize * 0.15);
         return {
-          x: Math.max(0, hit.x - 1),
-          y: Math.max(0, hit.y - pad),
-          width: hit.width + 2,
-          height: hit.height + pad * 2,
+          x: Math.max(0, hit.x - padX),
+          y: Math.max(0, hit.y - padY),
+          width: hit.width + padX * 2,
+          height: hit.height + padY * 2,
         };
       });
       const colors = raster
@@ -1724,6 +1738,9 @@ function InlineTextEditor({
   const textStyle = {
     color: el.color,
     fontSize,
+    // Match the static preview <Text> (lineHeight == fontSize) so the caret and
+    // glyphs sit at the same vertical spot whether or not the block is editing.
+    lineHeight: fontSize,
     fontFamily: PREVIEW_FONT[el.font],
     fontWeight: (el.bold ? "700" : "400") as "700" | "400",
     fontStyle: (el.italic ? "italic" : "normal") as "italic" | "normal",
@@ -1817,6 +1834,10 @@ function ElementOverlay({
             style={{
               color: el.color,
               fontSize: Math.max(1, el.size * ptScale),
+              // Tight line box (== font size) so leading can't push the glyph
+              // below its anchor — matches the web app's lineHeight:1 and keeps
+              // editable text sitting exactly over its whiteout cover.
+              lineHeight: Math.max(1, el.size * ptScale),
               fontFamily: PREVIEW_FONT[el.font],
               fontWeight: el.bold ? "700" : "400",
               fontStyle: el.italic ? "italic" : "normal",
@@ -2296,6 +2317,7 @@ function DragMove({
       {...(interactive ? move.panHandlers : {})}
     >
       {children}
+      {selected ? <View pointerEvents="none" style={styles.selRing} /> : null}
     </View>
   );
 }
@@ -2391,7 +2413,6 @@ function FreeBox({
     <View
       style={[
         styles.freeBox,
-        selected ? styles.freeBoxSelected : null,
         {
           left: value.x * container.width,
           top: value.y * container.height,
@@ -2404,6 +2425,7 @@ function FreeBox({
       {...(interactive ? move.panHandlers : {})}
     >
       {children}
+      {selected ? <View pointerEvents="none" style={styles.selRing} /> : null}
       {interactive && selected ? (
         <View style={[styles.resizeHandle, WEB_NO_TOUCH_SCROLL]} hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }} {...resize.panHandlers}>
           <Feather name="maximize-2" size={12} color="#ffffff" />
@@ -2599,10 +2621,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dragBoxSelected: { borderColor: C.primary, borderStyle: "dashed", backgroundColor: "rgba(247,67,61,0.04)" },
-  dragMove: { position: "absolute", paddingHorizontal: DRAG_PAD_H, paddingVertical: DRAG_PAD_V, borderWidth: 1.5, borderColor: "transparent", borderRadius: 4 },
-  dragMoveSelected: { borderColor: C.primary, borderStyle: "dashed", backgroundColor: "rgba(247,67,61,0.05)" },
-  freeBox: { position: "absolute", borderWidth: 1.5, borderColor: "transparent", borderRadius: 2 },
-  freeBoxSelected: { borderColor: C.primary, borderStyle: "dashed" },
+  // No layout border here: a (RN border-box) border would inset the content and
+  // shift glyphs/covers ~1.5px down-right off their anchor. The selection ring
+  // is drawn as an absolute, non-layout overlay (`selRing`) instead.
+  dragMove: { position: "absolute", paddingHorizontal: DRAG_PAD_H, paddingVertical: DRAG_PAD_V },
+  dragMoveSelected: { backgroundColor: "rgba(247,67,61,0.05)", borderRadius: 4 },
+  freeBox: { position: "absolute", borderRadius: 2 },
+  selRing: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 1.5,
+    borderColor: C.primary,
+    borderStyle: "dashed",
+    borderRadius: 3,
+  },
 
   stampInner: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", borderRadius: 4 },
 
