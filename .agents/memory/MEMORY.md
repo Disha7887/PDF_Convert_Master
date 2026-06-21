@@ -16,6 +16,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [Mobile auth dark sheet](auth-sheet-mobile.md) — sign-in/up share AuthSheet (dark sheet over photo); email-first progressive disclosure preserves mock password auth; Google/Apple are honest placeholders.
 - [Shared format chooser (mobile)](shared-format-chooser.md) — one DownloadFormatModal drives BOTH tool Download and scanner Save; select-then-confirm; context wording via props.
 - [Capture layer blocks editing](capture-layer-blocks-editing.md) — capture-tool overlay must render BELOW elements + keep elements interactive, or existing highlight/whiteout can't be moved while tool active; gesture machinery was a red herring.
 - [TopNav global mount](topnav-global-mount.md) — shared mobile TopNav renders once in (tabs)/_layout over all tabs; hide/adjust it per-screen via usePathname() INSIDE TopNav, not from the screen.
