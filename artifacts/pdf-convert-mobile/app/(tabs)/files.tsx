@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
+import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Field, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -154,6 +155,10 @@ export default function FilesScreen() {
             >
               {entry.thumbnailUri ? (
                 <Image source={{ uri: entry.thumbnailUri }} style={styles.thumb} contentFit="cover" />
+              ) : entry.toolId ? (
+                <View style={styles.thumbFallback}>
+                  <ToolLottieIcon toolId={entry.toolId} size={34} autoPlay={false} loop={false} />
+                </View>
               ) : (
                 <View style={styles.thumbFallback}>
                   <Feather name={KIND_ICON[entry.kind]} size={20} color={C.primary} />

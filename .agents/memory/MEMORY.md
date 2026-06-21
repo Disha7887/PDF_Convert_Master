@@ -18,6 +18,7 @@
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
 - [Capture layer blocks editing](capture-layer-blocks-editing.md) — capture-tool overlay must render BELOW elements + keep elements interactive, or existing highlight/whiteout can't be moved while tool active; gesture machinery was a red herring.
 - [TopNav global mount](topnav-global-mount.md) — shared mobile TopNav renders once in (tabs)/_layout over all tabs; hide/adjust it per-screen via usePathname() INSIDE TopNav, not from the screen.
+- [Tool-specific icon source](tool-icon-source.md) — canonical per-tool icon is ToolLottieIcon keyed by toolId (feather fallback); reuse it via entry.toolId in lists, autoPlay/loop false in non-virtualized lists.
 - [Resize-handle touch bounds](resize-handle-touch-bounds.md) — native: corner handle must sit inside a touchable wrapper (box-none + overflow pad), not negative-offset outside the box; draw-mode gates scroll on captureActive not just interacting.
 - [RNGH zoom vs PanResponder](rngh-zoom-vs-panresponder.md) — pinch/pan zoom over JS PanResponders: gate ALL four shouldSet variants (incl. both capture) on oneFinger, bail on 2nd finger, scale-aware deltas, .onFinalize.
 - [pdfjs version singleton (server)](pdfjs-version-singleton.md) — server pdfjs-dist must match pdf-parse's EXACT version (process-global worker singleton), use legacy Node build, externalize `pdfjs-dist/*` in esbuild.
