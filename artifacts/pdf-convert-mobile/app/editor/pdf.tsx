@@ -276,6 +276,11 @@ export default function PdfEditorScreen() {
   const [past, setPast] = useState<EditElement[][]>([]);
   const [future, setFuture] = useState<EditElement[][]>([]);
   const [interacting, setInteracting] = useState(false);
+  // True while an on-page text box is being edited (its inline TextInput is
+  // focused). Used to keep the page ScrollView scrollable during editing so the
+  // keyboard-aware scroll can lift the active field above the keyboard, even
+  // when the page is zoomed (which otherwise disables scrolling).
+  const [editingText, setEditingText] = useState(false);
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
@@ -482,6 +487,7 @@ export default function PdfEditorScreen() {
   const textEditSnapped = useRef(false);
   const beginTextEdit = useCallback(() => {
     textEditSnapped.current = false;
+    setEditingText(true);
   }, []);
   const updateTextLive = useCallback(
     (id: string, text: string) => {
@@ -499,6 +505,7 @@ export default function PdfEditorScreen() {
   );
   const endTextEdit = useCallback((id: string) => {
     textEditSnapped.current = false;
+    setEditingText(false);
     // Drop the just-blurred text box only if the user left it empty, so abandoned
     // taps don't litter the page with invisible zero-width boxes. Scoped to the
     // edited element so we never delete another (possibly intentional) box.
@@ -1278,7 +1285,10 @@ export default function PdfEditorScreen() {
   const ptScale = pageWpts > 0 && pageBox.width > 0 ? pageBox.width / pageWpts : 1;
 
   return (
-    <ScreenScroll insetTop scrollEnabled={!interacting && !zoomed}>
+    <ScreenScroll
+      insetTop
+      scrollEnabled={editingText || (!interacting && !zoomed)}
+    >
       <BackRow onPress={goBack} title={tool.title} />
 
       <View style={styles.headerRow}>

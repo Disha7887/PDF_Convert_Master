@@ -1,0 +1,17 @@
+Fix a keyboard-overlap bug in this React Native (Expo) app. When a user taps a text input (especially ones near the bottom of the screen, or in a PDF editor / form-filling view), the keyboard pops up and covers the input field, so the user can't see what they're typing.
+
+REQUIREMENTS:
+1. Wrap the relevant screen(s) in KeyboardAvoidingView from react-native, with:
+   - behavior="padding" on iOS, behavior="height" on Android (or use Platform.OS to set this conditionally)
+   - Make sure KeyboardAvoidingView wraps the ENTIRE screen content, not just the input
+2. If the screen has scrollable content (forms, long pages, the PDF view), wrap the content in a ScrollView (or use a library like react-native-keyboard-aware-scroll-view for more reliable auto-scroll-to-input behavior) so the focused input automatically scrolls into view above the keyboard
+3. Install and use "react-native-keyboard-controller" or "react-native-keyboard-aware-scroll-view" if KeyboardAvoidingView alone doesn't reliably push content up — these handle edge cases better, especially with nested scroll views or custom overlays (like the PDF text-edit overlay)
+4. For Android specifically, also check app.json / app.config.js and set:
+   "android": {
+     "softwareKeyboardLayoutMode": "pan"
+   }
+   (or "resize", whichever produces correct behavior — test both since this varies by Android version)
+5. If this is happening inside the PDF editor specifically (overlay text boxes on top of a rendered PDF page), make sure the overlay/edit input is positioned using onKeyboardDidShow / onKeyboardDidHide listeners (from the Keyboard API) to dynamically shift the editable text box or the whole page view upward by the keyboard height, so the active text box stays visible above the keyboard at all times.
+6. Test on both iOS and Android since keyboard behavior differs significantly between platforms — what fixes it on one may not fix it on the other.
+
+Goal: whatever text field the user is actively editing should always remain visible above the keyboard, never hidden behind it.

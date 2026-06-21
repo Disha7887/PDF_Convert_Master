@@ -1,0 +1,19 @@
+BUG 1: Page shifts/moves while drawing or signing
+When the user is in Draw mode and drags their finger to draw or sign, the page itself scrolls or shifts instead of staying still, making it impossible to draw accurately.
+FIX:
+- When Draw mode is active, disable scrolling/panning on the parent ScrollView or PDF page container entirely (set scrollEnabled={false} on the ScrollView, or pointerEvents handling so only the drawing canvas captures touch/pan gestures)
+- Make sure the drawing canvas (e.g. react-native-svg, Skia, or whatever is used to capture the draw path) sits in its own gesture layer using something like react-native-gesture-handler's PanGestureHandler, scoped ONLY to the canvas — and that this gesture has priority over any parent scroll/pan gesture so the page doesn't intercept the touch
+- Re-enable scrolling on the page as soon as the user exits Draw mode
+- Test that this also applies during signature capture, since that's the same draw mechanism
+
+BUG 2: Highlight box can't be moved or resized after placing it
+Once a highlight box is added to the page, the user should be able to drag it to reposition it, and drag its corner/edge handles to resize it. Currently it's either fixed in place or only movable, not resizable.
+FIX:
+- Render the highlight as an absolutely-positioned overlay view with its own pan gesture (drag to move) bound to PanGestureHandler or react-native-reanimated's gesture system, updating x/y state on drag
+- Add small resize handles (e.g. a draggable dot/square) at the corners (at minimum bottom-right) of the highlight box; dragging a handle should update width/height state in real time, not just on release
+- Keep resize and move gestures independent — dragging the body of the box moves it, dragging a corner handle resizes it, and these gesture handlers shouldn't conflict with each other or with the page's scroll gesture
+- Persist the final position/size to the highlight's data object/state once the user releases the gesture, so it can be correctly placed in the exported PDF later
+
+Test both fixes on a multi-page PDF, and verify gestures behave correctly whether the page is zoomed in/out (gesture coordinates should account for current zoom/scale factor).
+
+If you tell me which library you're actually using for gestures (react-native-gesture-handler, react-native-reanimated, raw PanResponder, etc.) and for drawing (Skia, SVG, Canvas), I can make the prompt more specific to your actual stack instead of generic — that'll save your agent some guesswork.

@@ -14,6 +14,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Loader } from "@/components/Loader";
@@ -61,23 +62,32 @@ export function ScreenScroll({
       ? 34 + 24
       : insets.bottom + 24;
 
+  const sharedProps = {
+    style: styles.screen,
+    contentContainerStyle: [
+      {
+        paddingTop: topPad + 16,
+        paddingBottom: bottomPad,
+        paddingHorizontal: SCREEN_PADDING,
+      },
+      contentStyle,
+    ],
+    showsVerticalScrollIndicator: false,
+    keyboardShouldPersistTaps: "handled" as const,
+    ...rest,
+  };
+
+  // Web has no soft keyboard, so a plain ScrollView is enough. On native we use
+  // KeyboardAwareScrollView so the focused TextInput (forms AND the on-page PDF
+  // text editor) automatically scrolls above the keyboard instead of being
+  // hidden behind it. bottomOffset keeps a little breathing room above the keys.
+  if (Platform.OS === "web") {
+    return <ScrollView {...sharedProps}>{children}</ScrollView>;
+  }
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        {
-          paddingTop: topPad + 16,
-          paddingBottom: bottomPad,
-          paddingHorizontal: SCREEN_PADDING,
-        },
-        contentStyle,
-      ]}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-      {...rest}
-    >
+    <KeyboardAwareScrollView bottomOffset={24} {...sharedProps}>
       {children}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
