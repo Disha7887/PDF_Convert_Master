@@ -73,12 +73,27 @@ capture phase runs parent-first, so the parent claims the touch before the child
 resize handle ever sees it — the corner then only PANS, never resizes.
 
 **Correct split for a body-move + corner-resize box:**
-- PARENT move responder: `onStartShouldSetPanResponderCapture: () => false`
-  (claim body drags via the bubble `onStartShouldSetPanResponder: () => true`
-  instead), but keep `onMoveShouldSetPanResponderCapture: () => true` and
-  `onPanResponderTerminationRequest: () => false` to block the ScrollView.
+- PARENT move responder: claim body drags ONLY at touch-start via the bubble
+  `onStartShouldSetPanResponder: () => true`. Set ALL of:
+  `onStartShouldSetPanResponderCapture: () => false` (let child win the corner),
+  `onMoveShouldSetPanResponder: () => false` AND
+  `onMoveShouldSetPanResponderCapture: () => false`. Keep
+  `onPanResponderTerminationRequest: () => false`.
 - CHILD resize handle: keep `onStartShouldSetPanResponderCapture: () => true` so it
-  wins corner touches. During the resize, the parent's move-capture asks the child
-  to terminate; the child's `onPanResponderTerminationRequest:()=>false` holds it.
-Move-only wrappers and the signature pad have no nested handle, so start-capture
-true is harmless there — only flip it on responders that contain a child handle.
+  wins corner touches.
+Move-only wrappers and the signature pad have no nested handle, so the move-claim
+settings are harmless there — only flip them on responders that contain a child handle.
+
+### Trap 2: don't let the PARENT claim on MOVE either ("resizes faster than finger")
+
+Even with start-capture fixed (Trap 1), leaving the PARENT move responder's
+`onMoveShouldSetPanResponder`/`onMoveShouldSetPanResponderCapture` at `() => true`
+makes it keep trying to grab the gesture MID-resize. On RN-web that negotiation
+steals/duplicates the child's gesture, so the box GROWS (child resize, w/h) AND
+MOVES (parent, x/y) at the same time → the corner travels ~2x the finger and the
+box "automatically moves". Fix: parent claims body drags ONLY at start; both
+move-claim handlers return `false`. The parent does not need move-claim to own a
+body drag (it already owns it from the start grant), and it does not need
+move-capture to beat the ScrollView — that is handled by
+`onPanResponderTerminationRequest:()=>false` + the `scrollEnabled` freeze
+(via `onInteract`) + static web `touch-action:none`.

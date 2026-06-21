@@ -1043,19 +1043,20 @@ function DraggableBox({
   const iRef = React.useRef(onInteract);
   iRef.current = onInteract;
 
-  // The body "move" responder must NOT capture the START — capture runs
-  // parent-first, so capturing here would steal the corner resize handle's touch
-  // and the handle would only pan instead of resizing. It still claims body drags
-  // via the bubble `onStartShouldSetPanResponder`, blocks the parent ScrollView
-  // via move-capture + refuse-termination, and toggles `onInteract` to freeze
-  // page scrolling. The resize handle keeps start-capture so it wins corner touches.
+  // The body "move" responder claims a drag ONLY at touch-start via the bubble
+  // `onStartShouldSetPanResponder` (so the child corner resize handle, which uses
+  // start-capture, still wins corner touches). It must NOT claim on move:
+  // capturing mid-gesture steals/duplicates the child's resize and makes the box
+  // grow AND move at once — feeling "faster than the finger". Page scroll during a
+  // body drag is blocked by the `scrollEnabled` freeze + static web
+  // `touch-action:none` + refuse-termination, not by move-capture.
   const move = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onStartShouldSetPanResponderCapture: () => false,
-        onMoveShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponderCapture: () => false,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
@@ -1228,16 +1229,20 @@ function CropBox({
   // pick almost any size, but large enough that the corner handle stays grabbable.
   const MIN = 0.05;
 
-  // Start-capture stays false so the corner resize handle (child) wins corner
-  // touches; the body move still claims body drags via the bubble phase and
-  // blocks the ScrollView via move-capture + refuse-termination.
+  // The body "move" responder claims a drag ONLY at touch-start via the bubble
+  // `onStartShouldSetPanResponder` (so the child corner resize handle, which uses
+  // start-capture, still wins corner touches). It must NOT claim on move:
+  // capturing mid-gesture steals/duplicates the child's resize and makes the box
+  // grow AND move at once — feeling "faster than the finger". Page scroll during a
+  // body drag is blocked by the `scrollEnabled` freeze + static web
+  // `touch-action:none` + refuse-termination, not by move-capture.
   const move = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onStartShouldSetPanResponderCapture: () => false,
-        onMoveShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponderCapture: () => false,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
