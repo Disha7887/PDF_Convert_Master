@@ -805,6 +805,9 @@ export default function PdfEditorScreen() {
       const el = buildShape(kind, { x, y, w: d.w, h: d.h });
       if (!el) return;
       addElement(el);
+      // Auto-select the new element and drop into Select mode so its move/resize
+      // handles are immediately usable (no extra tap needed).
+      setSelectedId(el.id);
       setActiveTool("select");
     },
     [buildShape, addElement],
@@ -820,6 +823,8 @@ export default function PdfEditorScreen() {
       const el = buildShape(kind, { x, y, w, h });
       if (!el) return;
       addElement(el);
+      // Auto-select so the resize handle/selection ring appear right away.
+      setSelectedId(el.id);
       setActiveTool("select");
     },
     [buildShape, addElement],
