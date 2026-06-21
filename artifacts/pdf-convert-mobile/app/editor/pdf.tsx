@@ -15,6 +15,7 @@ import {
   Text,
   TextInput,
   View,
+  type TextStyle,
   type ViewStyle,
 } from "react-native";
 import Svg, { Ellipse, Line, Path, Polygon, Rect } from "react-native-svg";
@@ -64,6 +65,10 @@ const PAGE_COUNT = 4;
 // label. Keep both so touch (mobile) and mouse (desktop web) are both covered.
 const WEB_NO_SELECT =
   Platform.OS === "web" ? ({ userSelect: "none" } as unknown as ViewStyle) : null;
+// Re-enable native text selection/caret inside the on-page inline editor, which
+// otherwise inherits `user-select: none` from its draggable wrapper on web.
+const WEB_TEXT_SELECT =
+  Platform.OS === "web" ? ({ userSelect: "text" } as unknown as TextStyle) : null;
 const WEB_NO_TOUCH_SCROLL =
   Platform.OS === "web"
     ? ({ touchAction: "none", userSelect: "none" } as unknown as ViewStyle)
@@ -396,6 +401,31 @@ export default function PdfEditorScreen() {
     },
     [commit],
   );
+
+  // Inline (on-page) text editing. Snapshot history once per edit session, then
+  // update live without committing per keystroke. Keep elementsRef in sync so a
+  // later commit (font/size/color from the panel) can't clobber typed text.
+  const textEditSnapped = useRef(false);
+  const beginTextEdit = useCallback(() => {
+    textEditSnapped.current = false;
+  }, []);
+  const updateTextLive = useCallback(
+    (id: string, text: string) => {
+      if (!textEditSnapped.current) {
+        pushHistory();
+        textEditSnapped.current = true;
+      }
+      const next = elementsRef.current.map((e) =>
+        e.id === id ? ({ ...e, text } as EditElement) : e,
+      );
+      elementsRef.current = next;
+      setElements(next);
+    },
+    [pushHistory],
+  );
+  const endTextEdit = useCallback(() => {
+    textEditSnapped.current = false;
+  }, []);
 
   const addElement = useCallback(
     (el: EditElement) => {
@@ -1089,6 +1119,9 @@ export default function PdfEditorScreen() {
                     onBeginDrag={beginDrag}
                     onEndDrag={endDrag}
                     onGeom={(partial) => dragGeom(el.id, partial)}
+                    onTextChange={(t) => updateTextLive(el.id, t)}
+                    onBeginTextEdit={beginTextEdit}
+                    onEndTextEdit={endTextEdit}
                   />
                 ))}
 
@@ -1666,6 +1699,70 @@ function ToggleRow({ label, active, onChange }: { label: string; active: boolean
 }
 
 // ── Element overlay (preview) ────────────────────────────────────────────────
+/**
+ * On-page inline text editor. Renders an auto-focused, padding-free TextInput
+ * styled identically to the static preview <Text>, so a blinking caret appears
+ * right on the PDF page at the tapped text. A hidden, absolutely-positioned
+ * measuring <Text> drives the input width so it grows as the user types — the
+ * most robust cross-platform sizing approach (RN web maps TextInput to a fixed
+ * <input> that does not auto-grow).
+ */
+function InlineTextEditor({
+  el,
+  ptScale,
+  onChangeText,
+  onBegin,
+  onEnd,
+}: {
+  el: TextEl;
+  ptScale: number;
+  onChangeText: (text: string) => void;
+  onBegin?: () => void;
+  onEnd?: () => void;
+}) {
+  const fontSize = Math.max(1, el.size * ptScale);
+  const textStyle = {
+    color: el.color,
+    fontSize,
+    fontFamily: PREVIEW_FONT[el.font],
+    fontWeight: (el.bold ? "700" : "400") as "700" | "400",
+    fontStyle: (el.italic ? "italic" : "normal") as "italic" | "normal",
+  };
+  const [measuredW, setMeasuredW] = useState(0);
+  const caretPad = Math.max(4, fontSize * 0.2) + 2;
+
+  return (
+    <View>
+      <Text
+        style={[textStyle, styles.inlineMeasure]}
+        numberOfLines={1}
+        onLayout={(e) => setMeasuredW(e.nativeEvent.layout.width)}
+      >
+        {el.text.length ? el.text : " "}
+      </Text>
+      <TextInput
+        value={el.text}
+        onChangeText={onChangeText}
+        onFocus={onBegin}
+        onBlur={onEnd}
+        autoFocus
+        multiline={false}
+        scrollEnabled={false}
+        selectTextOnFocus={false}
+        selectionColor={C.primary}
+        underlineColorAndroid="transparent"
+        style={[
+          textStyle,
+          styles.inlineInput,
+          WEB_TEXT_SELECT,
+          { width: Math.max(24, measuredW + caretPad) },
+        ]}
+        testID="inline-edit-text"
+      />
+    </View>
+  );
+}
+
 function ElementOverlay({
   el,
   container,
@@ -1676,6 +1773,9 @@ function ElementOverlay({
   onBeginDrag,
   onEndDrag,
   onGeom,
+  onTextChange,
+  onBeginTextEdit,
+  onEndTextEdit,
 }: {
   el: EditElement;
   container: { width: number; height: number };
@@ -1686,6 +1786,9 @@ function ElementOverlay({
   onBeginDrag: () => void;
   onEndDrag: () => void;
   onGeom: (partial: Partial<EditElement>) => void;
+  onTextChange?: (text: string) => void;
+  onBeginTextEdit?: () => void;
+  onEndTextEdit?: () => void;
 }) {
   const onInteract = (a: boolean) => (a ? onBeginDrag() : onEndDrag());
 
@@ -1695,23 +1798,34 @@ function ElementOverlay({
         container={container}
         value={{ x: el.x, y: el.y }}
         selected={selected}
+        editing={selected}
         interactive={interactive}
         onSelect={onSelect}
         onInteract={onInteract}
         onChange={(pos) => onGeom(pos)}
       >
-        <Text
-          style={{
-            color: el.color,
-            fontSize: Math.max(1, el.size * ptScale),
-            fontFamily: PREVIEW_FONT[el.font],
-            fontWeight: el.bold ? "700" : "400",
-            fontStyle: el.italic ? "italic" : "normal",
-          }}
-          numberOfLines={1}
-        >
-          {el.text}
-        </Text>
+        {selected ? (
+          <InlineTextEditor
+            el={el}
+            ptScale={ptScale}
+            onChangeText={(t) => onTextChange?.(t)}
+            onBegin={onBeginTextEdit}
+            onEnd={onEndTextEdit}
+          />
+        ) : (
+          <Text
+            style={{
+              color: el.color,
+              fontSize: Math.max(1, el.size * ptScale),
+              fontFamily: PREVIEW_FONT[el.font],
+              fontWeight: el.bold ? "700" : "400",
+              fontStyle: el.italic ? "italic" : "normal",
+            }}
+            numberOfLines={1}
+          >
+            {el.text}
+          </Text>
+        )}
       </DragMove>
     );
   }
@@ -2105,6 +2219,7 @@ function DragMove({
   onInteract,
   onSelect,
   selected,
+  editing = false,
   interactive = true,
   children,
 }: {
@@ -2114,6 +2229,7 @@ function DragMove({
   onInteract?: (active: boolean) => void;
   onSelect?: () => void;
   selected?: boolean;
+  editing?: boolean;
   interactive?: boolean;
   children: React.ReactNode;
 }) {
@@ -2126,14 +2242,23 @@ function DragMove({
   iRef.current = onInteract;
   const sRef = useRef(onSelect);
   sRef.current = onSelect;
+  // When editing inline, a tap must reach the child TextInput (to place the
+  // caret), so the wrapper only claims the gesture once the finger actually
+  // drags past a small threshold. Read via ref so the memoised responder stays
+  // in sync without being recreated.
+  const editingRef = useRef(editing);
+  editingRef.current = editing;
+  const DRAG_THRESHOLD = 8;
+  const movedEnough = (g: { dx: number; dy: number }) =>
+    Math.abs(g.dx) + Math.abs(g.dy) >= DRAG_THRESHOLD;
 
   const move = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponderCapture: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponderCapture: () => true,
+        onStartShouldSetPanResponder: () => !editingRef.current,
+        onStartShouldSetPanResponderCapture: () => !editingRef.current,
+        onMoveShouldSetPanResponder: (_e, g) => (editingRef.current ? movedEnough(g) : true),
+        onMoveShouldSetPanResponderCapture: (_e, g) => (editingRef.current ? movedEnough(g) : true),
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
@@ -2558,6 +2683,18 @@ const styles = StyleSheet.create({
     color: C.foreground,
     fontFamily: fonts.body,
     backgroundColor: C.background,
+  },
+  // Hidden text used only to measure the inline editor width.
+  inlineMeasure: { position: "absolute", left: 0, top: 0, opacity: 0 },
+  // On-page inline text editor: no chrome, aligned with the static preview Text.
+  inlineInput: {
+    padding: 0,
+    margin: 0,
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    ...(Platform.OS === "android"
+      ? { includeFontPadding: false, textAlignVertical: "center" as const }
+      : null),
   },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   swatch: { width: 36, height: 36, borderRadius: 999, borderWidth: 2, borderColor: "transparent" },
