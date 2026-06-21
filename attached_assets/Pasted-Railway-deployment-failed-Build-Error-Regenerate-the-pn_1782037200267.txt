@@ -1,0 +1,44 @@
+Railway deployment failed — Build Error
+
+Regenerate the pnpm lockfile by running "pnpm install --no-frozen-lockfile" locally and committing the updated pnpm-lock.yaml. The build failed because the "overrides" in pnpm-workspace.yaml do not match what is recorded in pnpm-lock.yaml, and Railpack runs pnpm install with --frozen-lockfile which requires an exact match. A previous fix attempt added "exclude-links-from-lockfile=false" to .npmrc, but that setting does not address the overrides mismatch.
+
+Repository: https://github.com/Disha7887/PDF_Convert_Master
+Branch: main · Commit: 4438853 — Ensure consistent package manager settings for builds
+
+Add `exclude-links-from-lockfile=false` to `.npmrc` to align with lockfile settings, resolving `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` errors during Railway builds.
+
+Replit-Commit-Author: Agent
+Replit-Commit-Session-Id: fcc3e910-1164-40c8-8a0f-dc7942a8569c
+Replit-Commit-Checkpoint-Type: full_checkpoint
+Replit-Commit-Event-Id: a882d23d-b8c3-4b67-ad19-2b16542a5fc7
+Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/0f3df87a-40c3-438e-9b18-d45b6613d5bf/fcc3e910-1164-40c8-8a0f-dc7942a8569c/T8SlJjj
+Replit-Helium-Checkpoint-Created: true
+Deployment ID: 8180b198-9c83-4767-9f5d-2d2580b5c1e2
+Service ID: e2b311a6-eb43-4155-ae0d-9d346f77477f
+Environment ID: 422f874c-c24c-4d5f-883f-5e1704404e43
+
+---
+
+## Problem
+The @workspace/api-server service (REPO, RAILPACK builder) fails at the BUILD_IMAGE stage. Railpack runs `pnpm install --frozen-lockfile --prefer-offline`, which exits with code 1 and the following error:
+```
+ERR_PNPM_LOCKFILE_CONFIG_MISMATCH  Cannot proceed with the frozen installation. The current "overrides" configuration doesn't match the value found in the lockfile
+Update your lockfile using "pnpm install --no-frozen-lockfile"
+```
+The start command is `pnpm --filter @workspace/api-server start` (set via dashboard). No railway.json or railway.toml config file is present.
+
+## Diagnosis
+The pnpm-workspace.yaml file contains an extensive `overrides` section that excludes platform-specific binaries for esbuild, rollup, lightningcss, and tailwindcss oxide (e.g., `esbuild>@esbuild/linux-arm64: '-'`, `rollup>@rollup/rollup-darwin-arm64: '-'`, etc.). These overrides were modified after pnpm-lock.yaml was last generated, so the lockfile no longer reflects the current workspace configuration. When Railpack runs `pnpm install --frozen-lockfile`, pnpm detects the discrepancy and refuses to proceed.
+
+The triggering commit (4438853) added `exclude-links-from-lockfile=false` to .npmrc to try to fix the error, but that setting controls a different pnpm behavior and does not resolve the overrides mismatch. The same error occurred in the previous deployment (b4579f03), confirming the lockfile has been stale across multiple deployments. No subsequent commits have been pushed to main, so the issue remains unresolved on HEAD.
+
+## Fix
+1. Locally, in the repository root, run:
+   ```
+   pnpm install --no-frozen-lockfile
+   ```
+   This regenerates pnpm-lock.yaml to match the current overrides in pnpm-workspace.yaml.
+2. Commit the updated pnpm-lock.yaml file and push to main.
+3. This ensures that when Railpack runs `pnpm install --frozen-lockfile`, the lockfile exactly matches the workspace configuration and the build succeeds.
+
+This fix cannot be performed by a code agent — it requires executing the pnpm CLI to regenerate the lockfile.
