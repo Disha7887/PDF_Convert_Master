@@ -15,10 +15,18 @@ import {
   Text,
   TextInput,
   View,
+  type GestureResponderEvent,
+  type PanResponderGestureState,
   type TextStyle,
   type ViewStyle,
 } from "react-native";
 import Svg, { Ellipse, Line, Path, Polygon, Rect } from "react-native-svg";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import { Loader } from "@/components/Loader";
@@ -155,6 +163,39 @@ const CAPTURE_TOOLS: ReadonlySet<ToolId> = new Set<ToolId>([
   "draw",
 ]);
 
+// Pinch-to-zoom limits for the page preview (no zoom-out below the fit width).
+const MIN_SCALE = 1;
+const MAX_SCALE = 4;
+// Smallest drag-to-draw shape, as page fractions, so a tiny smudge still yields
+// a usable box (tap below this threshold falls back to a default-size element).
+const DRAW_MIN_W = 0.02;
+const DRAW_MIN_H = 0.012;
+
+/** Clamp helper usable both inside reanimated worklets and on the JS thread. */
+function clampNum(v: number, min: number, max: number) {
+  "worklet";
+  return Math.min(Math.max(v, min), max);
+}
+
+/** Normalized page-fraction rect from two corner points (any drag direction). */
+function rectFromPoints(x0: number, y0: number, x1: number, y1: number): FRect {
+  return { x: Math.min(x0, x1), y: Math.min(y0, y1), w: Math.abs(x1 - x0), h: Math.abs(y1 - y0) };
+}
+
+/**
+ * True only for a single-finger touch. JS PanResponders gate on this so a
+ * 2-finger gesture falls through to the RNGH pinch/pan zoom handler instead of
+ * being captured for drawing/dragging/resizing.
+ */
+function oneFinger(e: GestureResponderEvent) {
+  return e.nativeEvent.touches.length < 2;
+}
+
+/** True once a second finger is down, so an in-progress drag should yield to zoom. */
+function isPinching(g: PanResponderGestureState) {
+  return g.numberActiveTouches > 1;
+}
+
 /** Maps the launching tool's editorMode to the initial active editor tool. */
 function initialToolFor(mode: string): ToolId {
   switch (mode) {
@@ -268,6 +309,27 @@ export default function PdfEditorScreen() {
   // Refs for gesture callbacks (avoid stale closures in PanResponders).
   const pageBoxRef = useRef(pageBox);
   pageBoxRef.current = pageBox;
+
+  // ── Pinch-to-zoom + two-finger pan ────────────────────────────────────────
+  // Reanimated shared values drive the page transform on the UI thread; the
+  // plain `zoomScaleRef` mirrors the live scale so JS-thread PanResponders can
+  // divide screen-space deltas by it (overlay math is in unscaled page px).
+  const scale = useSharedValue(1);
+  const tx = useSharedValue(0);
+  const ty = useSharedValue(0);
+  const pinchStartScale = useSharedValue(1);
+  const panStartX = useSharedValue(0);
+  const panStartY = useSharedValue(0);
+  const zoomScaleRef = useRef(1);
+  const [zoomed, setZoomed] = useState(false);
+  // Live drag-to-draw preview (capture tools): a transient element shown while
+  // the user drags out a shape, committed on release.
+  const [liveShape, setLiveShape] = useState<EditElement | null>(null);
+
+  const onZoomScaleEnd = useCallback((s: number) => {
+    zoomScaleRef.current = s;
+    setZoomed(s > 1.01);
+  }, []);
 
   // ── Load real page count ──────────────────────────────────────────────────
   useEffect(() => {
@@ -710,10 +772,25 @@ export default function PdfEditorScreen() {
     setActiveTool("select");
   }, [slotKey, draftStampLabel, draftStampColor, addElement]);
 
-  /** Tap-to-place for shapes/lines/marks. cx/cy are page fractions. */
+  /** Build a shape element from an explicit page-fraction rect (no commit). */
+  const buildShape = useCallback(
+    (kind: ElementKind, rect: FRect): EditElement | null => {
+      if (!slotKey) return null;
+      const { x, y, w, h } = rect;
+      if (kind === "rect" || kind === "ellipse")
+        return { id: uid(), slot: slotKey, kind, x, y, w, h, color: draftColor, fill: draftFill, strokeWidth: draftStroke };
+      if (kind === "highlight" || kind === "whiteout")
+        return { id: uid(), slot: slotKey, kind, x, y, w, h, color: kind === "highlight" ? draftHighlight : "#ffffff" };
+      if (kind === "line" || kind === "arrow")
+        return { id: uid(), slot: slotKey, kind, x, y, w, h, color: draftColor, strokeWidth: draftStroke };
+      return null;
+    },
+    [slotKey, draftColor, draftFill, draftStroke, draftHighlight],
+  );
+
+  /** Tap-to-place: centred default-size element at the tapped point (fractions). */
   const placeShape = useCallback(
     (kind: ElementKind, cx: number, cy: number) => {
-      if (!slotKey) return;
       const dims: Record<string, { w: number; h: number }> = {
         rect: { w: 0.34, h: 0.2 },
         ellipse: { w: 0.3, h: 0.22 },
@@ -725,50 +802,71 @@ export default function PdfEditorScreen() {
       const d = dims[kind] ?? { w: 0.3, h: 0.2 };
       const x = clampFrac(cx - d.w / 2, 0, 1 - d.w);
       const y = clampFrac(cy - d.h / 2, 0, 1 - d.h);
-      let el: EditElement;
-      if (kind === "rect" || kind === "ellipse") {
-        el = { id: uid(), slot: slotKey, kind, x, y, w: d.w, h: d.h, color: draftColor, fill: draftFill, strokeWidth: draftStroke };
-      } else if (kind === "highlight" || kind === "whiteout") {
-        el = { id: uid(), slot: slotKey, kind, x, y, w: d.w, h: d.h, color: kind === "highlight" ? draftHighlight : "#ffffff" };
-      } else if (kind === "line" || kind === "arrow") {
-        el = { id: uid(), slot: slotKey, kind, x, y, w: d.w, h: d.h, color: draftColor, strokeWidth: draftStroke };
-      } else {
-        return;
-      }
+      const el = buildShape(kind, { x, y, w: d.w, h: d.h });
+      if (!el) return;
       addElement(el);
       setActiveTool("select");
     },
-    [slotKey, draftColor, draftFill, draftStroke, draftHighlight, addElement],
+    [buildShape, addElement],
+  );
+
+  /** Drag-to-draw: commit a shape sized to the dragged rect (min size enforced). */
+  const commitDrawnShape = useCallback(
+    (kind: ElementKind, rect: FRect) => {
+      const w = Math.max(rect.w, DRAW_MIN_W);
+      const h = Math.max(rect.h, DRAW_MIN_H);
+      const x = clampFrac(rect.x, 0, 1 - w);
+      const y = clampFrac(rect.y, 0, 1 - h);
+      const el = buildShape(kind, { x, y, w, h });
+      if (!el) return;
+      addElement(el);
+      setActiveTool("select");
+    },
+    [buildShape, addElement],
   );
 
   // ── Freehand draw capture (full-page element per stroke) ───────────────────
   const drawPts = useRef<string>("");
+  // Set once a 2nd finger joins mid-stroke: the stroke is abandoned so the
+  // gesture can become a pinch-zoom rather than a stray scribble.
+  const drawMulti = useRef(false);
   const drawResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponderCapture: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponderCapture: () => true,
-        onPanResponderTerminationRequest: () => false,
+        onStartShouldSetPanResponder: oneFinger,
+        onStartShouldSetPanResponderCapture: oneFinger,
+        onMoveShouldSetPanResponder: oneFinger,
+        onMoveShouldSetPanResponderCapture: oneFinger,
+        // Yield to the RNGH pinch/pan handler when it activates.
+        onPanResponderTerminationRequest: () => true,
         onPanResponderGrant: (e) => {
           const { locationX, locationY } = e.nativeEvent;
+          drawMulti.current = false;
           drawPts.current = `M ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
           setLiveStroke(drawPts.current);
           setInteracting(true);
         },
-        onPanResponderMove: (e) => {
+        onPanResponderMove: (e, g) => {
+          if (isPinching(g)) {
+            // Second finger landed → drop the stroke and let zoom take over.
+            drawMulti.current = true;
+            drawPts.current = "";
+            setLiveStroke("");
+            return;
+          }
           const { locationX, locationY } = e.nativeEvent;
           drawPts.current += ` L ${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
           setLiveStroke(drawPts.current);
         },
         onPanResponderRelease: () => {
           const d = drawPts.current;
+          const multi = drawMulti.current;
           const box = pageBoxRef.current;
           drawPts.current = "";
+          drawMulti.current = false;
           setLiveStroke("");
           setInteracting(false);
-          if (d.includes("L") && box.width > 0 && slotKeyRef.current) {
+          if (!multi && d.includes("L") && box.width > 0 && slotKeyRef.current) {
             addElementRef.current({
               id: uid(),
               slot: slotKeyRef.current,
@@ -787,6 +885,7 @@ export default function PdfEditorScreen() {
         },
         onPanResponderTerminate: () => {
           drawPts.current = "";
+          drawMulti.current = false;
           setLiveStroke("");
           setInteracting(false);
         },
@@ -803,26 +902,73 @@ export default function PdfEditorScreen() {
   const addElementRef = useRef(addElement);
   addElementRef.current = addElement;
 
-  // ── Tap-to-place capture for shapes ───────────────────────────────────────
+  // ── Drag-to-draw (or tap-to-place) capture for shapes ─────────────────────
+  // Press-drag-release draws the shape to size (live preview); a near-zero tap
+  // falls back to a default-size element. `placeStart` is in page fractions.
   const placeStart = useRef({ x: 0, y: 0 });
+  // Set once a 2nd finger joins mid-draw: the placement is abandoned so the
+  // gesture can become a pinch-zoom rather than dropping a stray shape.
+  const placeMulti = useRef(false);
   const placeResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponderCapture: () => true,
-        onPanResponderTerminationRequest: () => false,
+        onStartShouldSetPanResponder: oneFinger,
+        onStartShouldSetPanResponderCapture: oneFinger,
+        onMoveShouldSetPanResponder: oneFinger,
+        onMoveShouldSetPanResponderCapture: oneFinger,
+        // Yield to the RNGH pinch/pan handler when it activates.
+        onPanResponderTerminationRequest: () => true,
         onPanResponderGrant: (e) => {
-          placeStart.current = { x: e.nativeEvent.locationX, y: e.nativeEvent.locationY };
-        },
-        onPanResponderRelease: (e, g) => {
-          if (Math.abs(g.dx) + Math.abs(g.dy) > 14) return;
           const box = pageBoxRef.current;
           if (box.width <= 0) return;
-          placeShapeRef.current(
-            activeToolRef.current as ElementKind,
-            placeStart.current.x / box.width,
-            placeStart.current.y / box.height,
-          );
+          placeMulti.current = false;
+          placeStart.current = {
+            x: clampFrac(e.nativeEvent.locationX / box.width, 0, 1),
+            y: clampFrac(e.nativeEvent.locationY / box.height, 0, 1),
+          };
+          setInteracting(true);
+          setLiveShape(null);
+        },
+        onPanResponderMove: (_e, g) => {
+          const box = pageBoxRef.current;
+          if (box.width <= 0) return;
+          if (isPinching(g)) {
+            // Second finger landed → drop the preview and let zoom take over.
+            placeMulti.current = true;
+            setLiveShape(null);
+            return;
+          }
+          if (Math.abs(g.dx) + Math.abs(g.dy) < 12) {
+            setLiveShape(null);
+            return;
+          }
+          const s = zoomScaleRef.current || 1;
+          const cx = clampFrac(placeStart.current.x + g.dx / (box.width * s), 0, 1);
+          const cy = clampFrac(placeStart.current.y + g.dy / (box.height * s), 0, 1);
+          const rect = rectFromPoints(placeStart.current.x, placeStart.current.y, cx, cy);
+          setLiveShape(buildShapeRef.current(activeToolRef.current as ElementKind, rect));
+        },
+        onPanResponderRelease: (_e, g) => {
+          const box = pageBoxRef.current;
+          const multi = placeMulti.current;
+          placeMulti.current = false;
+          setInteracting(false);
+          setLiveShape(null);
+          if (multi || box.width <= 0) return;
+          const kind = activeToolRef.current as ElementKind;
+          if (Math.abs(g.dx) + Math.abs(g.dy) < 12) {
+            placeShapeRef.current(kind, placeStart.current.x, placeStart.current.y);
+            return;
+          }
+          const s = zoomScaleRef.current || 1;
+          const cx = clampFrac(placeStart.current.x + g.dx / (box.width * s), 0, 1);
+          const cy = clampFrac(placeStart.current.y + g.dy / (box.height * s), 0, 1);
+          commitDrawnShapeRef.current(kind, rectFromPoints(placeStart.current.x, placeStart.current.y, cx, cy));
+        },
+        onPanResponderTerminate: () => {
+          placeMulti.current = false;
+          setInteracting(false);
+          setLiveShape(null);
         },
       }),
     [],
@@ -831,6 +977,87 @@ export default function PdfEditorScreen() {
   activeToolRef.current = activeTool;
   const placeShapeRef = useRef(placeShape);
   placeShapeRef.current = placeShape;
+  const buildShapeRef = useRef(buildShape);
+  buildShapeRef.current = buildShape;
+  const commitDrawnShapeRef = useRef(commitDrawnShape);
+  commitDrawnShapeRef.current = commitDrawnShape;
+
+  // Pinch + two-finger pan over the page. Single-finger touches fall through to
+  // the element/capture PanResponders, since these gestures require 2 pointers.
+  const zoomGesture = useMemo(() => {
+    const W = pageBox.width;
+    const H = pageBox.height;
+    const clampTx = (v: number, s: number) => {
+      "worklet";
+      const max = ((s - 1) * W) / 2;
+      return clampNum(v, -max, max);
+    };
+    const clampTy = (v: number, s: number) => {
+      "worklet";
+      const max = ((s - 1) * H) / 2;
+      return clampNum(v, -max, max);
+    };
+    const pinch = Gesture.Pinch()
+      .onStart(() => {
+        "worklet";
+        pinchStartScale.value = scale.value;
+        runOnJS(setInteracting)(true);
+      })
+      .onUpdate((e) => {
+        "worklet";
+        if (W <= 0 || H <= 0) return;
+        const next = clampNum(pinchStartScale.value * e.scale, MIN_SCALE, MAX_SCALE);
+        const cxw = W / 2;
+        const cyh = H / 2;
+        // Anchor the content point under the fingers across the zoom step.
+        const px = (e.focalX - cxw - tx.value) / scale.value;
+        const py = (e.focalY - cyh - ty.value) / scale.value;
+        scale.value = next;
+        tx.value = clampTx(e.focalX - cxw - px * next, next);
+        ty.value = clampTy(e.focalY - cyh - py * next, next);
+      })
+      // onFinalize fires on a clean end AND on cancel/interrupt, so interacting
+      // always clears and zoomScaleRef stays in sync with the live scale.
+      .onFinalize(() => {
+        "worklet";
+        runOnJS(setInteracting)(false);
+        runOnJS(onZoomScaleEnd)(scale.value);
+      });
+    const pan = Gesture.Pan()
+      .minPointers(2)
+      .maxPointers(2)
+      .onStart(() => {
+        "worklet";
+        panStartX.value = tx.value;
+        panStartY.value = ty.value;
+        runOnJS(setInteracting)(true);
+      })
+      .onUpdate((e) => {
+        "worklet";
+        tx.value = clampTx(panStartX.value + e.translationX, scale.value);
+        ty.value = clampTy(panStartY.value + e.translationY, scale.value);
+      })
+      .onFinalize(() => {
+        "worklet";
+        runOnJS(setInteracting)(false);
+      });
+    return Gesture.Simultaneous(pinch, pan);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageBox.width, pageBox.height, onZoomScaleEnd]);
+
+  const zoomAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: tx.value }, { translateY: ty.value }, { scale: scale.value }],
+  }));
+
+  // Reset zoom/pan whenever the visible page changes.
+  useEffect(() => {
+    scale.value = 1;
+    tx.value = 0;
+    ty.value = 0;
+    zoomScaleRef.current = 1;
+    setZoomed(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cur, slotKey]);
 
   // ── Page operations (Manage Pages) ────────────────────────────────────────
   const rotatePage = useCallback((i: number) => {
@@ -982,7 +1209,7 @@ export default function PdfEditorScreen() {
   const ptScale = pageWpts > 0 && pageBox.width > 0 ? pageBox.width / pageWpts : 1;
 
   return (
-    <ScreenScroll insetTop scrollEnabled={!interacting}>
+    <ScreenScroll insetTop scrollEnabled={!interacting && !zoomed}>
       <BackRow onPress={goBack} title={tool.title} />
 
       <View style={styles.headerRow}>
@@ -1115,85 +1342,113 @@ export default function PdfEditorScreen() {
                 })
               }
             >
-              {slot?.src == null ? (
-                <View style={styles.blankPage} pointerEvents="none">
-                  <Feather name="file" size={34} color={C.border} />
-                  <Text style={styles.pageFallbackText}>Blank page</Text>
-                </View>
-              ) : pageImage ? (
-                <Image source={{ uri: pageImage }} style={StyleSheet.absoluteFill} resizeMode="contain" />
-              ) : (
-                <View style={styles.pageFallback} pointerEvents="none">
-                  <Feather name="file-text" size={38} color={C.mutedForeground} />
-                  <Text style={styles.pageFallbackText}>Page {cur + 1}</Text>
-                </View>
-              )}
+              {/* Two-finger pinch/pan zoom layer. The gesture target is an
+                  untransformed fill view so pinch focal coords are page-local;
+                  page content + overlays live inside the transformed layer. */}
+              <GestureDetector gesture={zoomGesture}>
+                <View style={StyleSheet.absoluteFill} collapsable={false}>
+                  <Animated.View style={[StyleSheet.absoluteFill, zoomAnimStyle]}>
+                    {slot?.src == null ? (
+                      <View style={styles.blankPage} pointerEvents="none">
+                        <Feather name="file" size={34} color={C.border} />
+                        <Text style={styles.pageFallbackText}>Blank page</Text>
+                      </View>
+                    ) : pageImage ? (
+                      <Image source={{ uri: pageImage }} style={StyleSheet.absoluteFill} resizeMode="contain" />
+                    ) : (
+                      <View style={styles.pageFallback} pointerEvents="none">
+                        <Feather name="file-text" size={38} color={C.mutedForeground} />
+                        <Text style={styles.pageFallbackText}>Page {cur + 1}</Text>
+                      </View>
+                    )}
 
-              {/* Element overlays */}
-              {pageBox.width > 0 &&
-                pageElements.map((el) => (
-                  <ElementOverlay
-                    key={el.id}
-                    el={el}
-                    container={pageBox}
-                    ptScale={ptScale}
-                    selected={selectedId === el.id}
-                    interactive={!captureActive}
-                    onSelect={() => {
-                      setSelectedId(el.id);
-                      if (activeTool !== "select") setActiveTool("select");
-                    }}
-                    onBeginDrag={beginDrag}
-                    onEndDrag={endDrag}
-                    onGeom={(partial) => dragGeom(el.id, partial)}
-                    onTextChange={(t) => updateTextLive(el.id, t)}
-                    onBeginTextEdit={beginTextEdit}
-                    onEndTextEdit={endTextEdit}
-                  />
-                ))}
+                    {/* Element overlays */}
+                    {pageBox.width > 0 &&
+                      pageElements.map((el) => (
+                        <ElementOverlay
+                          key={el.id}
+                          el={el}
+                          container={pageBox}
+                          ptScale={ptScale}
+                          scaleRef={zoomScaleRef}
+                          selected={selectedId === el.id}
+                          interactive={!captureActive}
+                          onSelect={() => {
+                            setSelectedId(el.id);
+                            if (activeTool !== "select") setActiveTool("select");
+                          }}
+                          onBeginDrag={beginDrag}
+                          onEndDrag={endDrag}
+                          onGeom={(partial) => dragGeom(el.id, partial)}
+                          onTextChange={(t) => updateTextLive(el.id, t)}
+                          onBeginTextEdit={beginTextEdit}
+                          onEndTextEdit={endTextEdit}
+                        />
+                      ))}
 
-              {/* Document-level: watermark overlay */}
-              {activeTool === "watermark" && wmEnabled && pageBox.width > 0 && (
-                <WatermarkOverlay
-                  container={pageBox}
-                  value={wmPos}
-                  text={wmText || "WATERMARK"}
-                  opacity={wmOpacity}
-                  onChange={setWmPos}
-                  onInteract={setInteracting}
-                />
-              )}
-
-              {/* Document-level: crop overlay */}
-              {activeTool === "crop" && cropEnabled && pageBox.width > 0 && (
-                <CropBox
-                  container={pageBox}
-                  value={cropRect}
-                  onChange={setCropRect}
-                  onInteract={setInteracting}
-                />
-              )}
-
-              {/* Capture layer for shapes / freehand draw */}
-              {captureActive && pageBox.width > 0 && (
-                <View
-                  style={[StyleSheet.absoluteFill, WEB_NO_TOUCH_SCROLL]}
-                  {...(activeTool === "draw" ? drawResponder.panHandlers : placeResponder.panHandlers)}
-                >
-                  {activeTool === "draw" && liveStroke ? (
-                    <Svg width="100%" height="100%" style={{ pointerEvents: "none" }}>
-                      <Path
-                        d={liveStroke}
-                        stroke={draftColor}
-                        strokeWidth={draftStroke}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    {/* Document-level: watermark overlay */}
+                    {activeTool === "watermark" && wmEnabled && pageBox.width > 0 && (
+                      <WatermarkOverlay
+                        container={pageBox}
+                        value={wmPos}
+                        text={wmText || "WATERMARK"}
+                        opacity={wmOpacity}
+                        scaleRef={zoomScaleRef}
+                        onChange={setWmPos}
+                        onInteract={setInteracting}
                       />
-                    </Svg>
-                  ) : null}
+                    )}
+
+                    {/* Document-level: crop overlay */}
+                    {activeTool === "crop" && cropEnabled && pageBox.width > 0 && (
+                      <CropBox
+                        container={pageBox}
+                        value={cropRect}
+                        scaleRef={zoomScaleRef}
+                        onChange={setCropRect}
+                        onInteract={setInteracting}
+                      />
+                    )}
+
+                    {/* Capture layer for shapes / freehand draw */}
+                    {captureActive && pageBox.width > 0 && (
+                      <View
+                        style={[StyleSheet.absoluteFill, WEB_NO_TOUCH_SCROLL]}
+                        {...(activeTool === "draw" ? drawResponder.panHandlers : placeResponder.panHandlers)}
+                      >
+                        {activeTool === "draw" && liveStroke ? (
+                          <Svg width="100%" height="100%" style={{ pointerEvents: "none" }}>
+                            <Path
+                              d={liveStroke}
+                              stroke={draftColor}
+                              strokeWidth={draftStroke}
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </Svg>
+                        ) : null}
+
+                        {/* Live drag-to-draw shape preview */}
+                        {liveShape && "w" in liveShape && "h" in liveShape ? (
+                          <View
+                            pointerEvents="none"
+                            style={{
+                              position: "absolute",
+                              left: liveShape.x * pageBox.width,
+                              top: liveShape.y * pageBox.height,
+                              width: liveShape.w * pageBox.width,
+                              height: liveShape.h * pageBox.height,
+                            }}
+                          >
+                            <ShapeSvg el={liveShape} wpx={liveShape.w * pageBox.width} hpx={liveShape.h * pageBox.height} />
+                          </View>
+                        ) : null}
+                      </View>
+                    )}
+                  </Animated.View>
                 </View>
-              )}
+              </GestureDetector>
             </View>
 
             {/* Thumbnail rail */}
@@ -1797,6 +2052,7 @@ function ElementOverlay({
   el,
   container,
   ptScale,
+  scaleRef,
   selected,
   interactive,
   onSelect,
@@ -1810,6 +2066,7 @@ function ElementOverlay({
   el: EditElement;
   container: { width: number; height: number };
   ptScale: number;
+  scaleRef?: React.RefObject<number>;
   selected: boolean;
   interactive: boolean;
   onSelect: () => void;
@@ -1830,6 +2087,7 @@ function ElementOverlay({
         selected={selected}
         editing={selected}
         interactive={interactive}
+        scaleRef={scaleRef}
         onSelect={onSelect}
         onInteract={onInteract}
         onChange={(pos) => onGeom(pos)}
@@ -1887,6 +2145,7 @@ function ElementOverlay({
         aspect={el.aspect}
         selected={selected}
         interactive={interactive}
+        scaleRef={scaleRef}
         onSelect={onSelect}
         onInteract={onInteract}
         onChange={(pl) => onGeom(pl)}
@@ -1905,6 +2164,7 @@ function ElementOverlay({
       value={{ x: el.x, y: el.y, w: el.w, h: el.h }}
       selected={selected}
       interactive={interactive}
+      scaleRef={scaleRef}
       onSelect={onSelect}
       onInteract={onInteract}
       onChange={(r) => onGeom(r)}
@@ -2132,6 +2392,7 @@ function DraggableBox({
   interactive = true,
   children,
   minW = 0.08,
+  scaleRef,
 }: {
   container: { width: number; height: number };
   value: Placement;
@@ -2143,6 +2404,7 @@ function DraggableBox({
   interactive?: boolean;
   children: React.ReactNode;
   minW?: number;
+  scaleRef?: React.RefObject<number>;
 }) {
   const vRef = useRef(value);
   vRef.current = value;
@@ -2155,43 +2417,55 @@ function DraggableBox({
   iRef.current = onInteract;
   const sRef = useRef(onSelect);
   sRef.current = onSelect;
+  // Set when a 2nd finger joins a drag, so release won't fire a tap-select.
+  const multi = useRef(false);
 
   const move = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponder: oneFinger,
         onStartShouldSetPanResponderCapture: () => false,
         onMoveShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponderCapture: () => false,
-        onPanResponderTerminationRequest: () => false,
+        onPanResponderTerminationRequest: () => true,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          multi.current = false;
           iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
           if (!c.width || !c.height) return;
+          if (isPinching(g)) {
+            multi.current = true;
+            return;
+          }
+          const s = scaleRef?.current ?? 1;
           const hFrac = (start.current.w * c.width * aRef.current) / c.height;
-          const x = clampFrac(start.current.x + g.dx / c.width, 0, Math.max(0, 1 - start.current.w));
-          const y = clampFrac(start.current.y + g.dy / c.height, 0, Math.max(0, 1 - hFrac));
+          const x = clampFrac(start.current.x + g.dx / (c.width * s), 0, Math.max(0, 1 - start.current.w));
+          const y = clampFrac(start.current.y + g.dy / (c.height * s), 0, Math.max(0, 1 - hFrac));
           onChange({ x, y, w: start.current.w });
         },
         onPanResponderRelease: (_e, g) => {
-          if (Math.abs(g.dx) + Math.abs(g.dy) < 6) sRef.current?.();
+          if (!multi.current && Math.abs(g.dx) + Math.abs(g.dy) < 6) sRef.current?.();
+          multi.current = false;
           iRef.current?.(false);
         },
-        onPanResponderTerminate: () => iRef.current?.(false),
+        onPanResponderTerminate: () => {
+          multi.current = false;
+          iRef.current?.(false);
+        },
       }),
-    [onChange],
+    [onChange, scaleRef],
   );
 
   const resize = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponderCapture: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponderCapture: () => true,
+        onStartShouldSetPanResponder: oneFinger,
+        onStartShouldSetPanResponderCapture: oneFinger,
+        onMoveShouldSetPanResponder: oneFinger,
+        onMoveShouldSetPanResponderCapture: oneFinger,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
@@ -2200,8 +2474,10 @@ function DraggableBox({
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
           if (!c.width || !c.height) return;
+          if (isPinching(g)) return;
+          const s = scaleRef?.current ?? 1;
           const maxW = Math.max(minW, 1 - start.current.x);
-          let w = clampFrac(start.current.w + g.dx / c.width, minW, maxW);
+          let w = clampFrac(start.current.w + g.dx / (c.width * s), minW, maxW);
           const hFrac = (w * c.width * aRef.current) / c.height;
           if (start.current.y + hFrac > 1 && aRef.current > 0) {
             w = ((1 - start.current.y) * c.height) / (c.width * aRef.current);
@@ -2211,7 +2487,7 @@ function DraggableBox({
         onPanResponderRelease: () => iRef.current?.(false),
         onPanResponderTerminate: () => iRef.current?.(false),
       }),
-    [onChange, minW],
+    [onChange, minW, scaleRef],
   );
 
   const boxW = value.w * container.width;
@@ -2256,6 +2532,7 @@ function DragMove({
   editing = false,
   interactive = true,
   children,
+  scaleRef,
 }: {
   container: { width: number; height: number };
   value: { x: number; y: number };
@@ -2266,6 +2543,7 @@ function DragMove({
   editing?: boolean;
   interactive?: boolean;
   children: React.ReactNode;
+  scaleRef?: React.RefObject<number>;
 }) {
   const vRef = useRef(value);
   vRef.current = value;
@@ -2282,6 +2560,8 @@ function DragMove({
   // in sync without being recreated.
   const editingRef = useRef(editing);
   editingRef.current = editing;
+  // Set when a 2nd finger joins a drag, so release won't fire a tap-select.
+  const multi = useRef(false);
   const DRAG_THRESHOLD = 8;
   const movedEnough = (g: { dx: number; dy: number }) =>
     Math.abs(g.dx) + Math.abs(g.dy) >= DRAG_THRESHOLD;
@@ -2289,30 +2569,40 @@ function DragMove({
   const move = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => !editingRef.current,
-        onStartShouldSetPanResponderCapture: () => !editingRef.current,
-        onMoveShouldSetPanResponder: (_e, g) => (editingRef.current ? movedEnough(g) : true),
-        onMoveShouldSetPanResponderCapture: (_e, g) => (editingRef.current ? movedEnough(g) : true),
-        onPanResponderTerminationRequest: () => false,
+        onStartShouldSetPanResponder: (e) => !editingRef.current && oneFinger(e),
+        onStartShouldSetPanResponderCapture: (e) => !editingRef.current && oneFinger(e),
+        onMoveShouldSetPanResponder: (e, g) => oneFinger(e) && (editingRef.current ? movedEnough(g) : true),
+        onMoveShouldSetPanResponderCapture: (e, g) => oneFinger(e) && (editingRef.current ? movedEnough(g) : true),
+        onPanResponderTerminationRequest: () => true,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          multi.current = false;
           iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
           if (!c.width || !c.height) return;
+          if (isPinching(g)) {
+            multi.current = true;
+            return;
+          }
+          const s = scaleRef?.current ?? 1;
           onChange({
-            x: clampFrac(start.current.x + g.dx / c.width, 0, 0.95),
-            y: clampFrac(start.current.y + g.dy / c.height, 0.02, 0.97),
+            x: clampFrac(start.current.x + g.dx / (c.width * s), 0, 0.95),
+            y: clampFrac(start.current.y + g.dy / (c.height * s), 0.02, 0.97),
           });
         },
         onPanResponderRelease: (_e, g) => {
-          if (Math.abs(g.dx) + Math.abs(g.dy) < 6) sRef.current?.();
+          if (!multi.current && Math.abs(g.dx) + Math.abs(g.dy) < 6) sRef.current?.();
+          multi.current = false;
           iRef.current?.(false);
         },
-        onPanResponderTerminate: () => iRef.current?.(false),
+        onPanResponderTerminate: () => {
+          multi.current = false;
+          iRef.current?.(false);
+        },
       }),
-    [onChange],
+    [onChange, scaleRef],
   );
 
   return (
@@ -2347,6 +2637,7 @@ function FreeBox({
   children,
   minW = 0.04,
   minH = 0.02,
+  scaleRef,
 }: {
   container: { width: number; height: number };
   value: FRect;
@@ -2358,6 +2649,7 @@ function FreeBox({
   children: React.ReactNode;
   minW?: number;
   minH?: number;
+  scaleRef?: React.RefObject<number>;
 }) {
   const vRef = useRef(value);
   vRef.current = value;
@@ -2368,42 +2660,54 @@ function FreeBox({
   iRef.current = onInteract;
   const sRef = useRef(onSelect);
   sRef.current = onSelect;
+  // Set when a 2nd finger joins a drag, so release won't fire a tap-select.
+  const multi = useRef(false);
 
   const move = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponder: oneFinger,
         onStartShouldSetPanResponderCapture: () => false,
         onMoveShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponderCapture: () => false,
-        onPanResponderTerminationRequest: () => false,
+        onPanResponderTerminationRequest: () => true,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
+          multi.current = false;
           iRef.current?.(true);
         },
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
           if (!c.width || !c.height) return;
-          const x = clampFrac(start.current.x + g.dx / c.width, 0, Math.max(0, 1 - start.current.w));
-          const y = clampFrac(start.current.y + g.dy / c.height, 0, Math.max(0, 1 - start.current.h));
+          if (isPinching(g)) {
+            multi.current = true;
+            return;
+          }
+          const s = scaleRef?.current ?? 1;
+          const x = clampFrac(start.current.x + g.dx / (c.width * s), 0, Math.max(0, 1 - start.current.w));
+          const y = clampFrac(start.current.y + g.dy / (c.height * s), 0, Math.max(0, 1 - start.current.h));
           onChange({ x, y, w: start.current.w, h: start.current.h });
         },
         onPanResponderRelease: (_e, g) => {
-          if (Math.abs(g.dx) + Math.abs(g.dy) < 6) sRef.current?.();
+          if (!multi.current && Math.abs(g.dx) + Math.abs(g.dy) < 6) sRef.current?.();
+          multi.current = false;
           iRef.current?.(false);
         },
-        onPanResponderTerminate: () => iRef.current?.(false),
+        onPanResponderTerminate: () => {
+          multi.current = false;
+          iRef.current?.(false);
+        },
       }),
-    [onChange],
+    [onChange, scaleRef],
   );
 
   const resize = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponderCapture: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponderCapture: () => true,
+        onStartShouldSetPanResponder: oneFinger,
+        onStartShouldSetPanResponderCapture: oneFinger,
+        onMoveShouldSetPanResponder: oneFinger,
+        onMoveShouldSetPanResponderCapture: oneFinger,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
@@ -2412,14 +2716,16 @@ function FreeBox({
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
           if (!c.width || !c.height) return;
-          const w = clampFrac(start.current.w + g.dx / c.width, minW, 1 - start.current.x);
-          const h = clampFrac(start.current.h + g.dy / c.height, minH, 1 - start.current.y);
+          if (isPinching(g)) return;
+          const s = scaleRef?.current ?? 1;
+          const w = clampFrac(start.current.w + g.dx / (c.width * s), minW, 1 - start.current.x);
+          const h = clampFrac(start.current.h + g.dy / (c.height * s), minH, 1 - start.current.y);
           onChange({ x: start.current.x, y: start.current.y, w, h });
         },
         onPanResponderRelease: () => iRef.current?.(false),
         onPanResponderTerminate: () => iRef.current?.(false),
       }),
-    [onChange, minW, minH],
+    [onChange, minW, minH, scaleRef],
   );
 
   return (
@@ -2454,11 +2760,13 @@ function CropBox({
   value,
   onChange,
   onInteract,
+  scaleRef,
 }: {
   container: { width: number; height: number };
   value: FRect;
   onChange: (p: FRect) => void;
   onInteract?: (active: boolean) => void;
+  scaleRef?: React.RefObject<number>;
 }) {
   const vRef = useRef(value);
   vRef.current = value;
@@ -2472,11 +2780,11 @@ function CropBox({
   const move = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponder: oneFinger,
         onStartShouldSetPanResponderCapture: () => false,
         onMoveShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponderCapture: () => false,
-        onPanResponderTerminationRequest: () => false,
+        onPanResponderTerminationRequest: () => true,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
           iRef.current?.(true);
@@ -2484,23 +2792,25 @@ function CropBox({
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
           if (!c.width || !c.height) return;
-          const x = clampFrac(start.current.x + g.dx / c.width, 0, Math.max(0, 1 - start.current.w));
-          const y = clampFrac(start.current.y + g.dy / c.height, 0, Math.max(0, 1 - start.current.h));
+          if (isPinching(g)) return;
+          const s = scaleRef?.current ?? 1;
+          const x = clampFrac(start.current.x + g.dx / (c.width * s), 0, Math.max(0, 1 - start.current.w));
+          const y = clampFrac(start.current.y + g.dy / (c.height * s), 0, Math.max(0, 1 - start.current.h));
           onChange({ x, y, w: start.current.w, h: start.current.h });
         },
         onPanResponderRelease: () => iRef.current?.(false),
         onPanResponderTerminate: () => iRef.current?.(false),
       }),
-    [onChange],
+    [onChange, scaleRef],
   );
 
   const resize = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponderCapture: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponderCapture: () => true,
+        onStartShouldSetPanResponder: oneFinger,
+        onStartShouldSetPanResponderCapture: oneFinger,
+        onMoveShouldSetPanResponder: oneFinger,
+        onMoveShouldSetPanResponderCapture: oneFinger,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           start.current = { ...vRef.current };
@@ -2509,14 +2819,16 @@ function CropBox({
         onPanResponderMove: (_e, g) => {
           const c = cRef.current;
           if (!c.width || !c.height) return;
-          const w = clampFrac(start.current.w + g.dx / c.width, MIN, 1 - start.current.x);
-          const h = clampFrac(start.current.h + g.dy / c.height, MIN, 1 - start.current.y);
+          if (isPinching(g)) return;
+          const s = scaleRef?.current ?? 1;
+          const w = clampFrac(start.current.w + g.dx / (c.width * s), MIN, 1 - start.current.x);
+          const h = clampFrac(start.current.h + g.dy / (c.height * s), MIN, 1 - start.current.y);
           onChange({ x: start.current.x, y: start.current.y, w, h });
         },
         onPanResponderRelease: () => iRef.current?.(false),
         onPanResponderTerminate: () => iRef.current?.(false),
       }),
-    [onChange],
+    [onChange, scaleRef],
   );
 
   return (
@@ -2548,6 +2860,7 @@ function WatermarkOverlay({
   opacity,
   onChange,
   onInteract,
+  scaleRef,
 }: {
   container: { width: number; height: number };
   value: Placement;
@@ -2555,13 +2868,14 @@ function WatermarkOverlay({
   opacity: number;
   onChange: (p: Placement) => void;
   onInteract?: (active: boolean) => void;
+  scaleRef?: React.RefObject<number>;
 }) {
   const len = Math.max(1, text.length);
   const aspect = Math.max(0.06, Math.min(0.6, 1.45 / len));
   const boxWpx = value.w * container.width;
   const fontSize = Math.max(6, Math.min((boxWpx * 0.9) / (len * 0.78), (boxWpx * aspect) / 1.3));
   return (
-    <DraggableBox container={container} value={value} aspect={aspect} onChange={onChange} onInteract={onInteract} selected interactive>
+    <DraggableBox container={container} value={value} aspect={aspect} onChange={onChange} onInteract={onInteract} scaleRef={scaleRef} selected interactive>
       <Text style={[styles.wmText, { opacity, width: "100%", textAlign: "center", fontSize }]} numberOfLines={1}>
         {text}
       </Text>
