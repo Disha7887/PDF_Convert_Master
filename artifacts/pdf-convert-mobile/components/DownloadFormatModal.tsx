@@ -32,6 +32,12 @@ export interface FormatChoice {
 interface DownloadFormatModalProps {
   visible: boolean;
   onClose: () => void;
+  /**
+   * Fires after the modal has fully dismissed (iOS only). Use this to present a
+   * follow-up native modal such as the share sheet — presenting it while this
+   * modal is still animating out makes iOS silently drop it.
+   */
+  onDismiss?: () => void;
   /** Big celebratory heading. Defaults to "Awesome job!". */
   title?: string;
   /** One-line context under the title. */
@@ -69,6 +75,7 @@ function tickXml(color: string): string {
 export default function DownloadFormatModal({
   visible,
   onClose,
+  onDismiss,
   title = "Awesome job!",
   subtitle,
   sectionLabel = "Save as:",
@@ -91,6 +98,7 @@ export default function DownloadFormatModal({
       transparent
       animationType="fade"
       onRequestClose={onClose}
+      onDismiss={onDismiss}
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}

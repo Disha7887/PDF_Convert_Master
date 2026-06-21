@@ -9,7 +9,7 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -617,6 +617,11 @@ export default function ConvertScreen() {
     setDownloadOpen(true);
   }, [output, tool, ocrPages]);
 
+  // Holds a deferred share to run once the format modal has fully dismissed.
+  // iOS serializes modal presentation, so presenting the share sheet while the
+  // format modal is still animating out makes iOS silently drop it.
+  const pendingShareRef = useRef<(() => void | Promise<void>) | null>(null);
+
   const onConfirmDownload = useCallback(async () => {
     if (!tool || !output) return;
     const formats = getDownloadFormats(tool, {
@@ -626,30 +631,46 @@ export default function ConvertScreen() {
     const fmt = formats.find((f) => f.id === selectedFormat) ?? formats[0];
     const base = (fileName.trim() || "output").replace(/\.[^./]+$/, "") || "output";
     const fullName = `${base}.${fmt.ext}`;
-    setDownloadOpen(false);
-    try {
-      let uri: string;
-      switch (fmt.produce.kind) {
-        case "ocrText":
-          // Word/TXT/HTML/Markdown built on-device from the recognized text.
-          uri = ocrPages
-            ? await makeFileUri(buildOcrContent(fmt.produce.fmt, ocrPages, base), fullName, fmt.mime)
-            : output.uri;
-          break;
-        case "reencode":
-          // Genuine pixel re-encode of a single-image result.
-          uri = output.uri ? await reencodeImage(output.uri, fmt.produce.to) : output.uri;
-          break;
-        default:
-          // Hand back the exact file the tool produced (document / PDF / ZIP).
-          uri = output.uri;
+
+    const runShare = async () => {
+      try {
+        let uri: string;
+        switch (fmt.produce.kind) {
+          case "ocrText":
+            // Word/TXT/HTML/Markdown built on-device from the recognized text.
+            uri = ocrPages
+              ? await makeFileUri(buildOcrContent(fmt.produce.fmt, ocrPages, base), fullName, fmt.mime)
+              : output.uri;
+            break;
+          case "reencode":
+            // Genuine pixel re-encode of a single-image result.
+            uri = output.uri ? await reencodeImage(output.uri, fmt.produce.to) : output.uri;
+            break;
+          default:
+            // Hand back the exact file the tool produced (document / PDF / ZIP).
+            uri = output.uri;
+        }
+        const ok = await shareFile(uri, fullName);
+        if (!ok) setError("Sharing isn't available on this platform.");
+      } catch {
+        setError("Could not prepare the download.");
       }
-      const ok = await shareFile(uri, fullName);
-      if (!ok) setError("Sharing isn't available on this platform.");
-    } catch {
-      setError("Could not prepare the download.");
+    };
+
+    setDownloadOpen(false);
+    if (Platform.OS === "ios") {
+      // Defer until the modal's onDismiss fires (see pendingShareRef).
+      pendingShareRef.current = runShare;
+    } else {
+      await runShare();
     }
   }, [tool, output, ocrPages, selectedFormat, fileName]);
+
+  const onDownloadModalDismiss = useCallback(() => {
+    const run = pendingShareRef.current;
+    pendingShareRef.current = null;
+    void run?.();
+  }, []);
 
   const removeFile = useCallback((uri: string) => {
     setFiles((prev) => prev.filter((f) => f.uri !== uri));
@@ -1032,6 +1053,7 @@ export default function ConvertScreen() {
       <DownloadFormatModal
         visible={downloadOpen}
         onClose={() => setDownloadOpen(false)}
+        onDismiss={onDownloadModalDismiss}
         subtitle={`Your ${tool.title} file is ready to download.`}
         sectionLabel="Download as:"
         formats={downloadFormats}
