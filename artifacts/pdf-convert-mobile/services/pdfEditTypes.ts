@@ -28,6 +28,24 @@ export type FontKey = "helvetica" | "times" | "courier";
 export type RotateDeg = 0 | 90 | 180 | 270;
 
 /**
+ * A single text run extracted from an existing PDF page, expressed in PDF
+ * user-space points with a TOP-LEFT origin (so it maps onto the editor's
+ * fractional element coordinates and the pdf-lib export path). Produced by the
+ * web-only text engine (`services/pdfText`); the native stub returns none.
+ */
+export interface PageTextItem {
+  str: string;
+  x: number; // left, points
+  y: number; // top, points
+  width: number; // points
+  height: number; // points (~ font size)
+  fontSize: number; // points
+  family: FontKey;
+  bold: boolean;
+  italic: boolean;
+}
+
+/**
  * One page in the (possibly re-arranged) document. `src` is the source page
  * index, or null for an inserted blank page. `key` is a stable identity so
  * reordering/duplicating pages never desyncs the elements placed on them.
@@ -154,6 +172,7 @@ export type ElementKind = EditElement["kind"];
 export type ToolId =
   | "select"
   | "text"
+  | "edittext"
   | "image"
   | "sign"
   | "stamp"

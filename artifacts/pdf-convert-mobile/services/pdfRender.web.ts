@@ -51,9 +51,14 @@ export async function renderPdfPage(
     const doc = await loadDoc(uri);
     if (pageIndex < 0 || pageIndex >= doc.numPages) return null;
     const page = await doc.getPage(pageIndex + 1);
-    const base = page.getViewport({ scale: 1 });
+    // Render unrotated (rotation: 0) so the raster matches the coordinate space
+    // used everywhere else: pdf-lib's unrotated MediaBox (getPdfPageSize / export
+    // draw) and the text extraction in pdfText.web.ts. Without this, pages with a
+    // /Rotate entry would raster sideways while overlays + export stay unrotated,
+    // misaligning every overlay (and the page aspect) on rotated PDFs.
+    const base = page.getViewport({ scale: 1, rotation: 0 });
     const scale = Math.max(0.2, targetWidth / base.width);
-    const viewport = page.getViewport({ scale });
+    const viewport = page.getViewport({ scale, rotation: 0 });
     const canvas = document.createElement("canvas");
     canvas.width = Math.ceil(viewport.width);
     canvas.height = Math.ceil(viewport.height);

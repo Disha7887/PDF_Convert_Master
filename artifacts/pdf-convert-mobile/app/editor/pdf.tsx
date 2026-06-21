@@ -36,12 +36,15 @@ import {
   type ElementKind,
   type FontKey,
   type PageSlot,
+  type PageTextItem,
   type Placement,
   type Rect as FRect,
   type RotateDeg,
+  type TextEl,
   type ToolId,
 } from "@/services/pdfEditTypes";
 import { renderPdfPage } from "@/services/pdfRender";
+import { extractPageRuns, sampleTextColors } from "@/services/pdfText";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -110,6 +113,7 @@ const PREVIEW_FONT: Record<FontKey, string> = {
 const TOOLBAR: { id: ToolId; icon: FeatherName; label: string }[] = [
   { id: "select", icon: "navigation", label: "Select" },
   { id: "text", icon: "type", label: "Text" },
+  { id: "edittext", icon: "edit", label: "Edit Text" },
   { id: "draw", icon: "edit-2", label: "Draw" },
   { id: "highlight", icon: "pen-tool", label: "Highlight" },
   { id: "whiteout", icon: "delete", label: "Whiteout" },
@@ -194,6 +198,10 @@ export default function PdfEditorScreen() {
   const [order, setOrder] = useState<PageSlot[] | null>(null);
   const [cur, setCur] = useState(0);
   const [pageAspect, setPageAspect] = useState(1.414);
+  // Real page width in points. Lets us render text overlays to-scale with the
+  // page raster (on-screen px per point = pageBox.width / pageWpts); 0 means
+  // unknown (e.g. the placeholder demo pages), in which case el.size is used raw.
+  const [pageWpts, setPageWpts] = useState(0);
   const [pageBox, setPageBox] = useState({ width: 0, height: 0 });
 
   // ── Editor state ──────────────────────────────────────────────────────────
@@ -294,11 +302,15 @@ export default function PdfEditorScreen() {
     let alive = true;
     if (!params.uri || currentSrc < 0) {
       setPageAspect(1.414);
+      setPageWpts(0);
       return;
     }
     getPdfPageSize(params.uri, currentSrc)
       .then((s) => {
-        if (alive && s.width > 0 && s.height > 0) setPageAspect(s.height / s.width);
+        if (alive && s.width > 0 && s.height > 0) {
+          setPageAspect(s.height / s.width);
+          setPageWpts(s.width);
+        }
       })
       .catch(() => {});
     return () => {
@@ -424,6 +436,126 @@ export default function PdfEditorScreen() {
     setTextValue("");
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [textValue, slotKey, draftSize, draftColor, draftFont, draftBold, draftItalic, addElement]);
+
+  // ── Edit Text: make the current page's real text editable ─────────────────
+  // Mirrors the web editor's "Edit text": read every selectable text run on the
+  // page, cover each with white and drop an editable text box on top matching
+  // its detected colour, size and font — so the user can then tap any block and
+  // edit it character-by-character via the selection panel. Text extraction and
+  // colour sampling are web-only (pdf.js + canvas), so on native this finds no
+  // runs and reports the page as image-only.
+  const editingTextRef = useRef(false);
+  const [textBusy, setTextBusy] = useState(false);
+  const handleEditWholePage = useCallback(async () => {
+    if (editingTextRef.current) return;
+    if (!params.uri || currentSrc < 0 || !slotKey) {
+      setError("Open a PDF to edit its text.");
+      return;
+    }
+    const pageSlotKey = slotKey;
+    const srcIndex = currentSrc;
+    const raster = pageImage;
+    editingTextRef.current = true;
+    setError(null);
+    setTextBusy(true);
+    try {
+      const runs = (await extractPageRuns(params.uri, srcIndex)).filter(
+        (r) => r.str.trim().length > 0,
+      );
+      if (runs.length === 0) {
+        setError(
+          "No editable text on this page — it looks scanned or image-only. Text editing needs real, selectable PDF text.",
+        );
+        return;
+      }
+      const { width: pageW, height: pageH } = await getPdfPageSize(params.uri, srcIndex);
+      if (pageW <= 0 || pageH <= 0) {
+        setError("Could not read this page's size.");
+        return;
+      }
+      // Skip runs that already have an editable text box at that spot (preserves
+      // earlier edits) and OVERPRINTED duplicates (some PDFs fake bold by
+      // printing the same string twice a hair apart).
+      const existing = elementsRef.current.filter(
+        (e): e is TextEl => e.kind === "text" && e.slot === pageSlotKey,
+      );
+      const fresh: PageTextItem[] = [];
+      for (const run of runs) {
+        const fx = run.x / pageW;
+        const fy = run.y / pageH;
+        const alreadyEditable = existing.some(
+          (el) => Math.abs(el.x - fx) < 0.004 && Math.abs(el.y - fy) < 0.004,
+        );
+        if (alreadyEditable) continue;
+        const tol = Math.max(2, run.fontSize * 0.5);
+        const dup = fresh.some(
+          (f) =>
+            f.str.trim() === run.str.trim() &&
+            Math.abs(f.x - run.x) < tol &&
+            Math.abs(f.y - run.y) < tol,
+        );
+        if (dup) continue;
+        fresh.push(run);
+      }
+      if (fresh.length === 0) {
+        setError("This page's text is already editable — tap a block to change it.");
+        setActiveTool("select");
+        return;
+      }
+      // Cover boxes (points), padded a little around each run.
+      const boxes = fresh.map((hit) => {
+        const pad = hit.fontSize * 0.25;
+        return {
+          x: Math.max(0, hit.x - 1),
+          y: Math.max(0, hit.y - pad),
+          width: hit.width + 2,
+          height: hit.height + pad * 2,
+        };
+      });
+      const colors = raster
+        ? await sampleTextColors(raster, pageW, boxes)
+        : fresh.map(() => "#111111");
+      // All white covers first, then all text, so a later line's cover can never
+      // paint over an earlier line's editable text.
+      const covers: EditElement[] = [];
+      const texts: EditElement[] = [];
+      fresh.forEach((hit, i) => {
+        const box = boxes[i];
+        covers.push({
+          id: uid(),
+          slot: pageSlotKey,
+          kind: "whiteout",
+          x: box.x / pageW,
+          y: box.y / pageH,
+          w: box.width / pageW,
+          h: box.height / pageH,
+          color: "#ffffff",
+        });
+        texts.push({
+          id: uid(),
+          slot: pageSlotKey,
+          kind: "text",
+          x: hit.x / pageW,
+          y: hit.y / pageH,
+          text: hit.str,
+          size: hit.fontSize,
+          color: colors[i],
+          font: hit.family,
+          bold: hit.bold,
+          italic: hit.italic,
+        });
+      });
+      commit([...elementsRef.current, ...covers, ...texts]);
+      setSelectedId(null);
+      setActiveTool("select");
+      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      setError("Could not read this document's text.");
+    } finally {
+      setTextBusy(false);
+      editingTextRef.current = false;
+    }
+  }, [params.uri, currentSrc, slotKey, pageImage, commit]);
 
   const pickImage = useCallback(async () => {
     setError(null);
@@ -779,6 +911,9 @@ export default function PdfEditorScreen() {
   const selected = elements.find((e) => e.id === selectedId) ?? null;
   const captureActive = CAPTURE_TOOLS.has(activeTool);
   const pageElements = elements.filter((e) => e.slot === slotKey);
+  // On-screen pixels per PDF point, so text overlays render to-scale with the
+  // page raster (matches export). 1 when the page size is unknown (demo pages).
+  const ptScale = pageWpts > 0 && pageBox.width > 0 ? pageBox.width / pageWpts : 1;
 
   return (
     <ScreenScroll insetTop scrollEnabled={!interacting}>
@@ -810,13 +945,22 @@ export default function PdfEditorScreen() {
             <Pressable
               key={t.id}
               onPress={() => {
+                if (t.id === "edittext") {
+                  setSelectedId(null);
+                  void handleEditWholePage();
+                  return;
+                }
                 setActiveTool(t.id);
                 if (t.id !== "select") setSelectedId(null);
               }}
               style={[styles.toolBtn, active && styles.toolBtnActive]}
               testID={`tool-${t.id}`}
             >
-              <Feather name={t.icon} size={18} color={active ? "#fff" : C.foreground} />
+              {t.id === "edittext" && textBusy ? (
+                <Loader size={18} />
+              ) : (
+                <Feather name={t.icon} size={18} color={active ? "#fff" : C.foreground} />
+              )}
               <Text style={[styles.toolLabel, active && styles.toolLabelActive]} numberOfLines={1}>
                 {t.label}
               </Text>
@@ -925,6 +1069,7 @@ export default function PdfEditorScreen() {
                     key={el.id}
                     el={el}
                     container={pageBox}
+                    ptScale={ptScale}
                     selected={selectedId === el.id}
                     interactive={!captureActive}
                     onSelect={() => {
@@ -1504,6 +1649,7 @@ function ToggleRow({ label, active, onChange }: { label: string; active: boolean
 function ElementOverlay({
   el,
   container,
+  ptScale,
   selected,
   interactive,
   onSelect,
@@ -1513,6 +1659,7 @@ function ElementOverlay({
 }: {
   el: EditElement;
   container: { width: number; height: number };
+  ptScale: number;
   selected: boolean;
   interactive: boolean;
   onSelect: () => void;
@@ -1536,7 +1683,7 @@ function ElementOverlay({
         <Text
           style={{
             color: el.color,
-            fontSize: el.size,
+            fontSize: Math.max(1, el.size * ptScale),
             fontFamily: PREVIEW_FONT[el.font],
             fontWeight: el.bold ? "700" : "400",
             fontStyle: el.italic ? "italic" : "normal",
@@ -1924,6 +2071,13 @@ function DraggableBox({
 }
 
 /** Move-only draggable wrapper that auto-sizes to its content (used for text). */
+// Padding around a draggable text box (also set on styles.dragMove). The box is
+// offset by these so the text glyph renders exactly at the stored (x, y) — this
+// keeps "Edit Text" boxes aligned with the page raster — while the selection
+// border still gets breathing room around the text.
+const DRAG_PAD_H = 4;
+const DRAG_PAD_V = 2;
+
 function DragMove({
   container,
   value,
@@ -1987,7 +2141,10 @@ function DragMove({
       style={[
         styles.dragMove,
         selected ? styles.dragMoveSelected : null,
-        { left: value.x * container.width, top: value.y * container.height },
+        {
+          left: value.x * container.width - DRAG_PAD_H,
+          top: value.y * container.height - DRAG_PAD_V,
+        },
         WEB_NO_TOUCH_SCROLL,
       ]}
       pointerEvents={interactive ? "auto" : "none"}
@@ -2297,7 +2454,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dragBoxSelected: { borderColor: C.primary, borderStyle: "dashed", backgroundColor: "rgba(247,67,61,0.04)" },
-  dragMove: { position: "absolute", paddingHorizontal: 4, paddingVertical: 2, borderWidth: 1.5, borderColor: "transparent", borderRadius: 4 },
+  dragMove: { position: "absolute", paddingHorizontal: DRAG_PAD_H, paddingVertical: DRAG_PAD_V, borderWidth: 1.5, borderColor: "transparent", borderRadius: 4 },
   dragMoveSelected: { borderColor: C.primary, borderStyle: "dashed", backgroundColor: "rgba(247,67,61,0.05)" },
   freeBox: { position: "absolute", borderWidth: 1.5, borderColor: "transparent", borderRadius: 2 },
   freeBoxSelected: { borderColor: C.primary, borderStyle: "dashed" },
