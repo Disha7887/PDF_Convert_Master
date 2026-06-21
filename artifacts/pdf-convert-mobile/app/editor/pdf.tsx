@@ -1441,6 +1441,47 @@ export default function PdfEditorScreen() {
                       </View>
                     )}
 
+                    {/* Capture layer for shapes / freehand draw. Rendered BELOW the
+                        element overlays so existing annotations stay tappable/movable
+                        while a capture tool (highlight/whiteout/shape/draw) is active;
+                        touches on empty page area still fall through here to start a
+                        new shape. */}
+                    {captureActive && pageBox.width > 0 && (
+                      <View
+                        style={[StyleSheet.absoluteFill, WEB_NO_TOUCH_SCROLL]}
+                        {...(activeTool === "draw" ? drawResponder.panHandlers : placeResponder.panHandlers)}
+                      >
+                        {activeTool === "draw" && liveStroke ? (
+                          <Svg width="100%" height="100%" style={{ pointerEvents: "none" }}>
+                            <Path
+                              d={liveStroke}
+                              stroke={draftColor}
+                              strokeWidth={draftStroke}
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </Svg>
+                        ) : null}
+
+                        {/* Live drag-to-draw shape preview */}
+                        {liveShape && "w" in liveShape && "h" in liveShape ? (
+                          <View
+                            pointerEvents="none"
+                            style={{
+                              position: "absolute",
+                              left: liveShape.x * pageBox.width,
+                              top: liveShape.y * pageBox.height,
+                              width: liveShape.w * pageBox.width,
+                              height: liveShape.h * pageBox.height,
+                            }}
+                          >
+                            <ShapeSvg el={liveShape} wpx={liveShape.w * pageBox.width} hpx={liveShape.h * pageBox.height} />
+                          </View>
+                        ) : null}
+                      </View>
+                    )}
+
                     {/* Element overlays */}
                     {pageBox.width > 0 &&
                       pageElements.map((el) => (
@@ -1451,7 +1492,7 @@ export default function PdfEditorScreen() {
                           ptScale={ptScale}
                           scaleRef={zoomScaleRef}
                           selected={selectedId === el.id}
-                          interactive={!captureActive}
+                          interactive
                           onSelect={() => {
                             setSelectedId(el.id);
                             if (activeTool !== "select") setActiveTool("select");
@@ -1489,42 +1530,6 @@ export default function PdfEditorScreen() {
                       />
                     )}
 
-                    {/* Capture layer for shapes / freehand draw */}
-                    {captureActive && pageBox.width > 0 && (
-                      <View
-                        style={[StyleSheet.absoluteFill, WEB_NO_TOUCH_SCROLL]}
-                        {...(activeTool === "draw" ? drawResponder.panHandlers : placeResponder.panHandlers)}
-                      >
-                        {activeTool === "draw" && liveStroke ? (
-                          <Svg width="100%" height="100%" style={{ pointerEvents: "none" }}>
-                            <Path
-                              d={liveStroke}
-                              stroke={draftColor}
-                              strokeWidth={draftStroke}
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </Svg>
-                        ) : null}
-
-                        {/* Live drag-to-draw shape preview */}
-                        {liveShape && "w" in liveShape && "h" in liveShape ? (
-                          <View
-                            pointerEvents="none"
-                            style={{
-                              position: "absolute",
-                              left: liveShape.x * pageBox.width,
-                              top: liveShape.y * pageBox.height,
-                              width: liveShape.w * pageBox.width,
-                              height: liveShape.h * pageBox.height,
-                            }}
-                          >
-                            <ShapeSvg el={liveShape} wpx={liveShape.w * pageBox.width} hpx={liveShape.h * pageBox.height} />
-                          </View>
-                        ) : null}
-                      </View>
-                    )}
                   </Animated.View>
                 </View>
               </GestureDetector>
