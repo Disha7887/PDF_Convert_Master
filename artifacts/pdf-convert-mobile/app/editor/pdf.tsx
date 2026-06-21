@@ -557,7 +557,8 @@ export default function PdfEditorScreen() {
       commit([...elementsRef.current, ...covers, ...texts]);
       setSelectedId(null);
       if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
+    } catch (e) {
+      console.error("[edit-text] could not extract page text:", e);
       setError("Could not read this document's text.");
     } finally {
       setTextBusy(false);

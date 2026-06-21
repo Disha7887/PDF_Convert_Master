@@ -3,18 +3,40 @@ import { File } from "expo-file-system";
 import { PDFDocument } from "pdf-lib";
 
 /**
+ * Cache the most-recently read PDF's bytes. Several consumers (page count, page
+ * size, page rendering, and "Edit Text" extraction) each read the same source,
+ * and they run at different times — count/size/render on open, extraction only
+ * when the user taps "Edit Text" later. On web the source is a `blob:` /`data:`
+ * object-URL that can stop being fetchable after it's been used once (e.g. an
+ * export output URL that gets revoked). The renderer caches its *parsed*
+ * document, so without a bytes cache the editor could show a page it can no
+ * longer re-read — making "Edit Text" fail with "could not read text" on a doc
+ * that is plainly on screen. Single-entry: the editor works on one doc at a time.
+ */
+let lastBytes: { uri: string; bytes: Uint8Array } | null = null;
+
+/**
  * Read the raw bytes of a PDF (or any file) from a uri, cross-platform.
  *
  * - Web: the picked uri is a blob:/data: URL; `fetch` is the reliable reader.
  * - Native: use the expo-file-system `File` API.
+ *
+ * Always returns a fresh copy of the cached master, so a consumer that hands
+ * the bytes to an API which DETACHES the buffer (e.g. pdf.js `getDocument`)
+ * can never poison the cache for later reads.
  */
 export async function readPdfBytes(uri: string): Promise<Uint8Array> {
+  if (lastBytes && lastBytes.uri === uri) return lastBytes.bytes.slice();
+  let bytes: Uint8Array;
   if (Platform.OS === "web") {
     const res = await fetch(uri);
     if (!res.ok) throw new Error("Could not read the selected PDF.");
-    return new Uint8Array(await res.arrayBuffer());
+    bytes = new Uint8Array(await res.arrayBuffer());
+  } else {
+    bytes = await new File(uri).bytes();
   }
-  return new File(uri).bytes();
+  lastBytes = { uri, bytes };
+  return bytes.slice();
 }
 
 /**
