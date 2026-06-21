@@ -64,3 +64,21 @@ handle, move-only wrapper, crop frame, signature pad). RN's `ViewStyle` has no
 
 Net: native relies on capture handlers + grant-time `scrollEnabled` flip; web relies
 on static `touch-action: none`. Keep all three — they cover different platforms.
+
+### Trap: don't put START-capture on the PARENT move responder
+
+Adding `onStartShouldSetPanResponderCapture:()=>true` to the PARENT (body) move
+responder to fix ScrollView-steal will BREAK the child corner resize handle: RN's
+capture phase runs parent-first, so the parent claims the touch before the child
+resize handle ever sees it — the corner then only PANS, never resizes.
+
+**Correct split for a body-move + corner-resize box:**
+- PARENT move responder: `onStartShouldSetPanResponderCapture: () => false`
+  (claim body drags via the bubble `onStartShouldSetPanResponder: () => true`
+  instead), but keep `onMoveShouldSetPanResponderCapture: () => true` and
+  `onPanResponderTerminationRequest: () => false` to block the ScrollView.
+- CHILD resize handle: keep `onStartShouldSetPanResponderCapture: () => true` so it
+  wins corner touches. During the resize, the parent's move-capture asks the child
+  to terminate; the child's `onPanResponderTerminationRequest:()=>false` holds it.
+Move-only wrappers and the signature pad have no nested handle, so start-capture
+true is harmless there — only flip it on responders that contain a child handle.

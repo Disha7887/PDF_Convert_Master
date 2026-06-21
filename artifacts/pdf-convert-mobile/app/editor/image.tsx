@@ -518,16 +518,21 @@ function CropBox({
   const start = useRef(value);
   const iRef = useRef(onInteract);
   iRef.current = onInteract;
-  const MIN = 0.12;
+  // Smallest crop side (fraction of the image box). Kept small so the user can
+  // pick almost any size, but large enough that the corner handle stays grabbable.
+  const MIN = 0.05;
 
-  // Both responders fully claim the gesture (capture + refuse termination) so the
-  // parent ScrollView can't steal the drag, and toggle `onInteract` so the screen
-  // can freeze page scrolling for the duration of the drag.
+  // The body "move" responder must NOT capture the START — capture runs
+  // parent-first, so capturing here would steal the corner resize handle's touch
+  // and the handle would only pan instead of resizing. It still claims body drags
+  // via the bubble `onStartShouldSetPanResponder`, blocks the parent ScrollView
+  // via move-capture + refuse-termination, and toggles `onInteract` to freeze page
+  // scrolling. The resize handle keeps start-capture so it wins corner touches.
   const move = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponderCapture: () => true,
+        onStartShouldSetPanResponderCapture: () => false,
         onMoveShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponderCapture: () => true,
         onPanResponderTerminationRequest: () => false,
