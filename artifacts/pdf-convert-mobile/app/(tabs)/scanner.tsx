@@ -12,7 +12,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -22,6 +21,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import DownloadFormatModal, {
+  type FormatChoice,
+} from "@/components/DownloadFormatModal";
 import { Loader } from "@/components/Loader";
 import { NAV_BAR_HEIGHT, useNavTopInset } from "@/components/TopNav";
 import colors from "@/constants/colors";
@@ -34,17 +36,11 @@ const isWeb = Platform.OS === "web";
 /** Output formats the user can save a scan as. */
 type SaveFormatId = "pdf" | "jpg" | "png";
 
-interface SaveFormatOption {
-  id: SaveFormatId;
-  label: string;
-  sub: string;
-  icon: keyof typeof Feather.glyphMap;
-}
-
-const SAVE_FORMAT_OPTIONS: SaveFormatOption[] = [
-  { id: "pdf", label: "PDF Document", sub: "All pages in one file", icon: "file-text" },
-  { id: "jpg", label: "JPG Image", sub: "Compact photo format", icon: "image" },
-  { id: "png", label: "PNG Image", sub: "Lossless image quality", icon: "image" },
+/** Selectable output formats shown in the shared format chooser. */
+const SAVE_FORMAT_OPTIONS: FormatChoice[] = [
+  { id: "pdf", label: "PDF", ext: "pdf", color: "#f7433d", icon: "file-text" },
+  { id: "jpg", label: "JPG", ext: "jpg", color: "#a855f7", icon: "image" },
+  { id: "png", label: "PNG", ext: "png", color: "#a855f7", icon: "image" },
 ];
 
 /** Re-encodes an image to PNG or JPG on-device (genuine pixel conversion). */
@@ -103,6 +99,8 @@ export default function ScannerScreen() {
   const [capturing, setCapturing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formatPickerVisible, setFormatPickerVisible] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<SaveFormatId>("pdf");
+  const [fileName, setFileName] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const toastOpacity = useRef(new Animated.Value(0)).current;
 
@@ -176,6 +174,13 @@ export default function ScannerScreen() {
 
   const requestSave = useCallback(() => {
     if (pages.length === 0 || saving) return;
+    const now = new Date();
+    const defaultName = `Scan ${now.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    })} ${now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
+    setFileName(defaultName);
+    setSelectedFormat("pdf");
     setFormatPickerVisible(true);
   }, [pages.length, saving]);
 
@@ -187,10 +192,12 @@ export default function ScannerScreen() {
       try {
         const id = `s_${Date.now()}`;
         const now = new Date();
-        const baseName = `Scan ${now.toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        })} ${now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
+        const baseName =
+          fileName.trim() ||
+          `Scan ${now.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          })} ${now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
 
         if (format === "pdf") {
           const persistedImages = pages.map((uri, i) =>
@@ -251,7 +258,7 @@ export default function ScannerScreen() {
         setSaving(false);
       }
     },
-    [pages, saving, showToast],
+    [pages, saving, showToast, fileName],
   );
 
   // ── Permission states (native only) ────────────────────────────────────────
@@ -374,55 +381,24 @@ export default function ScannerScreen() {
         </Pressable>
       </View>
 
-      {/* Output-format chooser shown when "Save" is tapped */}
-      <Modal
+      {/* Output-format chooser shown when "Save" is tapped (shared with tools) */}
+      <DownloadFormatModal
         visible={formatPickerVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setFormatPickerVisible(false)}
-      >
-        <Pressable
-          style={styles.sheetBackdrop}
-          onPress={() => setFormatPickerVisible(false)}
-        >
-          <Pressable
-            style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Save as</Text>
-            <Text style={styles.sheetSub}>
-              Choose the output format for {pages.length}{" "}
-              {pages.length === 1 ? "page" : "pages"}
-            </Text>
-
-            {SAVE_FORMAT_OPTIONS.map((opt) => (
-              <Pressable
-                key={opt.id}
-                style={styles.formatRow}
-                onPress={() => saveAs(opt.id)}
-                disabled={saving}
-              >
-                <View style={styles.formatIcon}>
-                  <Feather name={opt.icon} size={20} color={C.primary} />
-                </View>
-                <View style={styles.formatText}>
-                  <Text style={styles.formatLabel}>{opt.label}</Text>
-                  <Text style={styles.formatSub}>{opt.sub}</Text>
-                </View>
-                <Feather name="chevron-right" size={20} color={C.mutedForeground} />
-              </Pressable>
-            ))}
-
-            <Pressable
-              style={styles.cancelBtn}
-              onPress={() => setFormatPickerVisible(false)}
-            >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+        onClose={() => setFormatPickerVisible(false)}
+        subtitle={`Your scan of ${pages.length} ${
+          pages.length === 1 ? "page" : "pages"
+        } is ready to save.`}
+        formats={SAVE_FORMAT_OPTIONS}
+        selectedId={selectedFormat}
+        onSelect={(id) => setSelectedFormat(id as SaveFormatId)}
+        confirmLabel="Save"
+        confirmIcon="save"
+        onConfirm={() => saveAs(selectedFormat)}
+        busy={saving}
+        fileName={fileName}
+        onChangeFileName={setFileName}
+        previewName={`${fileName.trim() || "Scan"}.${selectedFormat}`}
+      />
 
       {/* Save confirmation toast */}
       {toast ? (
@@ -551,78 +527,6 @@ const styles = StyleSheet.create({
   },
   shutterDisabled: { opacity: 0.4 },
   shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#fff" },
-  sheetBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    backgroundColor: C.background,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-  },
-  sheetHandle: {
-    alignSelf: "center",
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: C.border,
-    marginBottom: 14,
-  },
-  sheetTitle: {
-    fontSize: 18,
-    color: C.foreground,
-    fontFamily: fonts.headingSemibold,
-  },
-  sheetSub: {
-    fontSize: 13,
-    color: C.mutedForeground,
-    fontFamily: fonts.body,
-    marginTop: 2,
-    marginBottom: 12,
-  },
-  formatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: C.border,
-  },
-  formatIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: `${C.primary}1a`,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  formatText: { flex: 1 },
-  formatLabel: {
-    fontSize: 15,
-    color: C.foreground,
-    fontFamily: fonts.bodySemibold,
-  },
-  formatSub: {
-    fontSize: 12.5,
-    color: C.mutedForeground,
-    fontFamily: fonts.body,
-    marginTop: 1,
-  },
-  cancelBtn: {
-    marginTop: 14,
-    paddingVertical: 13,
-    borderRadius: 12,
-    backgroundColor: C.muted,
-    alignItems: "center",
-  },
-  cancelBtnText: {
-    fontSize: 15,
-    color: C.foreground,
-    fontFamily: fonts.bodySemibold,
-  },
   toast: {
     position: "absolute",
     left: 16,

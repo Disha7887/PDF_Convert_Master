@@ -10,24 +10,20 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { SvgXml } from "react-native-svg";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
+import DownloadFormatModal from "@/components/DownloadFormatModal";
 import FileBrokenIcon from "@/components/FileBrokenIcon";
-import { Button, Card, Field, ScreenScroll } from "@/components/ui";
+import { Button, Card, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
-import { CELEBRATE_XML } from "@/constants/celebrateIcon";
-import { formatIconXml } from "@/constants/formatIcons";
 import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
@@ -303,13 +299,6 @@ async function reencodeImage(uri: string, fmt: "png" | "jpg"): Promise<string> {
     compress: 0.92,
   });
   return result.uri;
-}
-
-/** Filled selection tick (user-provided glyph), tinted with the given colour. */
-function tickXml(color: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" id="correct">
-  <path fill="${color}" d="M32 12a20 20 0 1 0 20 20 20 20 0 0 0-20-20Zm9.41 16.41-11 11a2 2 0 0 1-2.82 0l-6-6a2 2 0 0 1 2.82-2.82L29 35.17l9.59-9.58a2 2 0 0 1 2.82 2.82Z"/>
-</svg>`;
 }
 
 function escapeHtml(s: string): string {
@@ -1033,107 +1022,22 @@ export default function ConvertScreen() {
       )}
     </ScreenScroll>
 
-      {/* Download format chooser */}
-      <Modal
+      {/* Download format chooser (shared with the camera scanner) */}
+      <DownloadFormatModal
         visible={downloadOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDownloadOpen(false)}
-      >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setDownloadOpen(false)}
-        >
-          <Pressable style={styles.modalCard} onPress={() => {}}>
-            <View style={styles.celebrateHeader}>
-              <View style={styles.celebrateIcon}>
-                <SvgXml xml={CELEBRATE_XML} width={52} height={52} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.celebrateTitle}>Awesome job!</Text>
-                <Text style={styles.celebrateSubtitle}>
-                  Your {tool.title} file is ready to download.
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => setDownloadOpen(false)}
-                hitSlop={8}
-                testID="button-download-close"
-              >
-                <Feather name="x" size={22} color={C.mutedForeground} />
-              </Pressable>
-            </View>
-
-            <Text style={styles.modalSectionLabel}>Download as:</Text>
-            <View style={styles.formatGrid}>
-              {downloadFormats.map((f) => {
-                const active = selectedFormat === f.id;
-                const iconXml = formatIconXml(f.ext);
-                return (
-                  <Pressable
-                    key={f.id}
-                    onPress={() => setSelectedFormat(f.id)}
-                    style={[styles.formatTile, active && styles.formatTileActive]}
-                    testID={`format-${f.id}`}
-                  >
-                    {active ? (
-                      <SvgXml xml={tickXml(C.primary)} width={20} height={20} />
-                    ) : (
-                      <Feather name="circle" size={18} color={C.border} />
-                    )}
-                    {iconXml ? (
-                      <SvgXml xml={iconXml} width={28} height={28} />
-                    ) : (
-                      <View style={[styles.formatBadge, { backgroundColor: f.color }]}>
-                        <Feather name={f.icon} size={15} color="#fff" />
-                      </View>
-                    )}
-                    <Text style={styles.formatLabel} numberOfLines={1}>
-                      {f.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={{ marginTop: 4 }}>
-              <Field
-                label="File name"
-                value={fileName}
-                onChangeText={setFileName}
-                autoCapitalize="none"
-                autoCorrect={false}
-                placeholder="output"
-              />
-              <Text style={styles.modalPreview} numberOfLines={1}>
-                {previewName}
-              </Text>
-            </View>
-
-            <View style={styles.modalActions}>
-              <Button
-                label="Cancel"
-                variant="outline"
-                onPress={() => setDownloadOpen(false)}
-                style={{ flex: 1 }}
-                testID="button-download-cancel"
-              />
-              <Button
-                label="Download"
-                icon="download"
-                onPress={onConfirmDownload}
-                style={{ flex: 1 }}
-                testID="button-download-confirm"
-              />
-            </View>
-          </Pressable>
-        </Pressable>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setDownloadOpen(false)}
+        subtitle={`Your ${tool.title} file is ready to download.`}
+        sectionLabel="Download as:"
+        formats={downloadFormats}
+        selectedId={selectedFormat}
+        onSelect={setSelectedFormat}
+        confirmLabel="Download"
+        confirmIcon="download"
+        onConfirm={onConfirmDownload}
+        fileName={fileName}
+        onChangeFileName={setFileName}
+        previewName={previewName}
+      />
     </>
   );
 }
@@ -1300,86 +1204,6 @@ const styles = StyleSheet.create({
   ocrNavText: { fontSize: 13, color: C.primary, fontFamily: fonts.bodySemibold },
   ocrNavTextDisabled: { color: C.mutedForeground },
   ocrNavLabel: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.bodyMedium },
-
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(15,23,42,0.45)",
-    justifyContent: "flex-end",
-  },
-  modalCard: {
-    backgroundColor: C.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingBottom: 28,
-    gap: 12,
-    ...(Platform.OS === "web" ? { maxWidth: 460, width: "100%", alignSelf: "center" } : null),
-  },
-  celebrateHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 4,
-  },
-  celebrateIcon: {
-    width: 52,
-    height: 52,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  celebrateTitle: { fontSize: 20, color: C.foreground, fontFamily: fonts.headingBold },
-  celebrateSubtitle: {
-    fontSize: 13,
-    color: C.mutedForeground,
-    fontFamily: fonts.body,
-    marginTop: 1,
-  },
-  modalSectionLabel: {
-    fontSize: 14,
-    color: C.foreground,
-    fontFamily: fonts.bodySemibold,
-    marginTop: 4,
-  },
-  formatGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 4,
-  },
-  formatTile: {
-    flexBasis: "47%",
-    flexGrow: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: C.border,
-    backgroundColor: C.background,
-  },
-  formatTileActive: { borderColor: C.primary, backgroundColor: C.surfaceAlt },
-  formatBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  formatLabel: {
-    flex: 1,
-    fontSize: 14,
-    color: C.foreground,
-    fontFamily: fonts.bodySemibold,
-  },
-  modalPreview: {
-    fontSize: 12,
-    color: C.mutedForeground,
-    fontFamily: fonts.body,
-    marginTop: 6,
-  },
-  modalActions: { flexDirection: "row", gap: 10, marginTop: 8 },
 
   successWrap: { alignItems: "center", gap: 6 },
   successIcon: {
