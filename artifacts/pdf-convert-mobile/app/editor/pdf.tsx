@@ -509,7 +509,6 @@ export default function PdfEditorScreen() {
       }
       if (fresh.length === 0) {
         setError("This page's text is already editable — tap a block to change it.");
-        setActiveTool("select");
         return;
       }
       // Cover boxes (points), padded a little around each run.
@@ -557,7 +556,6 @@ export default function PdfEditorScreen() {
       });
       commit([...elementsRef.current, ...covers, ...texts]);
       setSelectedId(null);
-      setActiveTool("select");
       if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {
       setError("Could not read this document's text.");
@@ -956,6 +954,7 @@ export default function PdfEditorScreen() {
               key={t.id}
               onPress={() => {
                 if (t.id === "edittext") {
+                  setActiveTool("edittext");
                   setSelectedId(null);
                   void handleEditWholePage();
                   return;
@@ -1294,6 +1293,16 @@ function renderPanel(p: PanelProps): React.ReactNode {
   }
 
   switch (p.activeTool) {
+    case "edittext":
+      return (
+        <View style={{ gap: 8 }}>
+          <Text style={styles.controlTitle}>Edit text</Text>
+          <Text style={styles.controlHelp}>
+            Every text block on this page is now editable. Tap any text to change
+            its words, color, size or font.
+          </Text>
+        </View>
+      );
     case "text":
       return (
         <View style={{ gap: 14 }}>

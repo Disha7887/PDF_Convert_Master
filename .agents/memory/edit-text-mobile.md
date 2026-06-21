@@ -22,3 +22,11 @@ parity with the web editor's whole-page "Edit text" (`handleEditWholePage`).
   prints). Empty/scanned pages show a friendly "no selectable text" notice.
 - Coordinate/scale correctness depends on the rules in
   `mobile-pdf-editor-coord-scale.md` (points→fraction, `ptScale`, rotation:0).
+
+UX: "Edit Text" is a real selectable tool — tapping it sets `activeTool="edittext"`
+so the button highlights like Text/Draw, and it STAYS active (does not auto-switch
+to "select") so the press gives visible feedback. It must NOT be in `CAPTURE_TOOLS`,
+so blocks stay interactive: tapping a block selects it (→ select mode) to edit,
+dragging moves it. A toolbar action that never calls `setActiveTool` can never show
+an active state and reads as "unclickable" — set the tool, don't silently jump to
+select.
