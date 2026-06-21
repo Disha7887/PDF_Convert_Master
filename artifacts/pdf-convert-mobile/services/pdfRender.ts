@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/constants/api";
+import { getExtractedPageSize } from "./pdfText";
 
 /**
  * Native PDF page rasterisation.
@@ -91,8 +92,12 @@ export async function renderPdfPage(
  * text extraction and overlays all share one coordinate space.
  */
 export async function getRenderPageSize(
-  _uri: string,
-  _pageIndex: number,
+  uri: string,
+  pageIndex: number,
 ): Promise<{ width: number; height: number } | null> {
-  return null;
+  // The native text engine (services/pdfText) caches the pdf.js viewport size it
+  // extracted a page's runs in. Reuse it so the editor normalises overlay
+  // coordinates against the same space as on web; returns null (→ pdf-lib
+  // MediaBox fallback) until "Edit Text" has run for this page.
+  return getExtractedPageSize(uri, pageIndex);
 }

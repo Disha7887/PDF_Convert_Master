@@ -748,6 +748,234 @@ async function renderPdfPageToPng(
   }
 }
 
+// ── Mobile "Edit Text": server-side text-run extraction + colour sampling ────
+// The native app has no pdf.js / DOM canvas, so it can't read a page's real text
+// runs or sample their ink colour on-device. It uploads the PDF here; we run the
+// SAME pdf.js extraction the web editor does (positions / size / font in the
+// page's unrotated viewport space) and sample each run's colour from a rendered
+// raster with sharp, returning ready-to-place editable text boxes. Mirrors the
+// web engine in pdf-convert-mobile's services/pdfText.web.ts.
+type EditFontKey = "helvetica" | "times" | "courier";
+interface ServerTextRun {
+  str: string;
+  x: number; // left, points (top-left origin)
+  y: number; // top, points
+  width: number; // points
+  height: number; // points (~ font size)
+  fontSize: number; // points
+  family: EditFontKey;
+  bold: boolean;
+  italic: boolean;
+  color?: string;
+}
+
+// Map an arbitrary PostScript / CSS font name onto the three families the editor
+// can re-embed with pdf-lib's standard fonts.
+function editFamilyFromName(name: string): EditFontKey {
+  const n = name.toLowerCase();
+  if (/(times|georgia|garamond|minion|serif)/.test(n) && !/sans/.test(n))
+    return "times";
+  if (/(courier|mono|consol|menlo|typewriter)/.test(n)) return "courier";
+  return "helvetica";
+}
+function editIsBoldName(name: string): boolean {
+  return /(bold|black|heavy|semibold|demi|[^a-z]bd[^a-z]|w[6-9]00)/i.test(name);
+}
+function editIsItalicName(name: string): boolean {
+  return /(italic|oblique|slant)/i.test(name);
+}
+
+// pdf.js is heavy and externalised in the bundle; load it lazily and once. Use
+// the Node-blessed `legacy` build (what pdf-parse uses) and pin the SAME version
+// pdf-parse resolves (see api-server's pdfjs-dist dependency). pdf.js keeps a
+// process-global worker singleton, so mixing two pdfjs versions in one process
+// throws "API version X does not match Worker version Y" — keeping both on one
+// version (and the Node build) avoids that and the "use the legacy build" warning.
+let pdfjsLibPromise: Promise<any> | null = null;
+function getPdfjsLib(): Promise<any> {
+  if (!pdfjsLibPromise)
+    pdfjsLibPromise = import("pdfjs-dist/legacy/build/pdf.mjs");
+  return pdfjsLibPromise;
+}
+
+async function extractPdfPageRuns(
+  pdfBuffer: Buffer,
+  pageIndex: number,
+): Promise<{
+  runs: ServerTextRun[];
+  pageWidth: number;
+  pageHeight: number;
+  pageCount: number;
+}> {
+  const pdfjs = await getPdfjsLib();
+  const task = pdfjs.getDocument({
+    data: new Uint8Array(pdfBuffer),
+    useSystemFonts: true,
+    isEvalSupported: false,
+  });
+  try {
+    const doc = await task.promise;
+    const pageCount: number = doc.numPages;
+    if (pageIndex < 0 || pageIndex >= pageCount) {
+      return { runs: [], pageWidth: 0, pageHeight: 0, pageCount };
+    }
+    const page = await doc.getPage(pageIndex + 1);
+    // Unrotated user space (rotation 0) so coordinates match the editor overlay.
+    const viewport = page.getViewport({ scale: 1, rotation: 0 });
+    const pageWidth: number = viewport.width;
+    const pageHeight: number = viewport.height;
+    const content = await page.getTextContent();
+    const styles: Record<string, any> = (content as any).styles ?? {};
+
+    const fontMeta = new Map<
+      string,
+      { family: EditFontKey; bold: boolean; italic: boolean }
+    >();
+    const resolveFont = (fontName: string) => {
+      const cached = fontMeta.get(fontName);
+      if (cached) return cached;
+      let psName = "";
+      try {
+        const obj: any =
+          (page as any).commonObjs?.has?.(fontName) &&
+          (page as any).commonObjs.get(fontName);
+        if (obj) psName = obj.name || obj.loadedName || "";
+      } catch {
+        /* font not resolved yet */
+      }
+      const cssName: string = styles[fontName]?.fontFamily || "";
+      const probe = `${psName} ${cssName}`;
+      const meta = {
+        family: editFamilyFromName(probe),
+        bold: editIsBoldName(probe),
+        italic: editIsItalicName(probe),
+      };
+      fontMeta.set(fontName, meta);
+      return meta;
+    };
+
+    const runs: ServerTextRun[] = [];
+    for (const raw of content.items as any[]) {
+      const str: string = raw.str ?? "";
+      if (!str || !str.trim()) continue;
+      const tr: number[] = raw.transform; // [a,b,c,d,e,f]
+      const fontSize = Math.hypot(tr[2], tr[3]) || Math.abs(tr[3]) || 12;
+      const left = tr[4];
+      const baseline = tr[5]; // distance from bottom
+      const width: number = raw.width || fontSize * 0.5 * str.length;
+      const height: number = raw.height || fontSize;
+      // Glyph box top in top-left origin (transform sits on the baseline).
+      const top = pageHeight - baseline - fontSize * 0.82;
+      const meta = resolveFont(raw.fontName ?? "");
+      runs.push({
+        str,
+        x: left,
+        y: Math.max(0, top),
+        width: Math.max(width, 1),
+        height: Math.max(height, fontSize),
+        fontSize,
+        ...meta,
+      });
+    }
+    try { page.cleanup(); } catch { /* best-effort */ }
+    return { runs, pageWidth, pageHeight, pageCount };
+  } finally {
+    // pdf.js destroys through the loading task (not the doc). Keeping the
+    // `task.promise` await inside the try guarantees a corrupt PDF that rejects
+    // before `doc` is assigned still releases the parser here. A cleanup failure
+    // must never discard a successful extraction.
+    try { await task.destroy(); } catch { /* cleanup is best-effort */ }
+  }
+}
+
+function editLum(r: number, g: number, b: number): number {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+function editToHex(r: number, g: number, b: number): string {
+  const h = (v: number) =>
+    Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+  return `#${h(r)}${h(g)}${h(b)}`;
+}
+
+// Estimate the dominant ink colour of each run by sampling the rendered page
+// raster within its bounding box: the brightest pixel is treated as the page
+// background, and pixels meaningfully darker than it (the "ink") are averaged.
+// Mirrors sampleBoxColor in services/pdfText.web.ts, but reads raw pixels with
+// sharp instead of a DOM canvas.
+async function samplePdfRunColors(
+  pdfBuffer: Buffer,
+  pageNumber: number,
+  pageWidthPts: number,
+  boxes: { x: number; y: number; width: number; height: number }[],
+): Promise<string[]> {
+  if (boxes.length === 0 || pageWidthPts <= 0) {
+    return boxes.map(() => "#111111");
+  }
+  try {
+    const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+    let pngBuffer: Buffer;
+    try {
+      const result = await parser.getScreenshot({
+        partial: [pageNumber],
+        desiredWidth: 1000,
+        imageDataUrl: false,
+        imageBuffer: true,
+      });
+      const pg =
+        result.pages.find((p) => p.pageNumber === pageNumber) ?? result.pages[0];
+      if (!pg?.data) return boxes.map(() => "#111111");
+      pngBuffer = Buffer.from(pg.data);
+    } finally {
+      try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
+    }
+    const { data, info } = await sharp(pngBuffer)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const ch = info.channels;
+    const W = info.width;
+    const H = info.height;
+    const scale = W / pageWidthPts; // px per point
+    return boxes.map((box) => {
+      const sx = Math.max(0, Math.min(W - 1, Math.floor(box.x * scale)));
+      const sy = Math.max(0, Math.min(H - 1, Math.floor(box.y * scale)));
+      const sw = Math.max(1, Math.min(W - sx, Math.ceil(box.width * scale)));
+      const sh = Math.max(1, Math.min(H - sy, Math.ceil(box.height * scale)));
+      let bgLum = 0;
+      for (let yy = 0; yy < sh; yy++) {
+        let idx = ((sy + yy) * W + sx) * ch;
+        for (let xx = 0; xx < sw; xx++) {
+          const l = editLum(data[idx], data[idx + 1], data[idx + 2]);
+          if (l > bgLum) bgLum = l;
+          idx += ch;
+        }
+      }
+      const threshold = bgLum - 60; // ink is meaningfully darker than the page
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let yy = 0; yy < sh; yy++) {
+        let idx = ((sy + yy) * W + sx) * ch;
+        for (let xx = 0; xx < sw; xx++) {
+          const a = ch >= 4 ? data[idx + 3] : 255;
+          if (a >= 128) {
+            const l = editLum(data[idx], data[idx + 1], data[idx + 2]);
+            if (l < threshold) {
+              r += data[idx];
+              g += data[idx + 1];
+              b += data[idx + 2];
+              n++;
+            }
+          }
+          idx += ch;
+        }
+      }
+      if (n < 3) return "#111111";
+      return editToHex(r / n, g / n, b / n);
+    });
+  } catch {
+    return boxes.map(() => "#111111");
+  }
+}
+
 // Image to PDF: embed the actual image into a PDF page sized to the image.
 async function convertImageToPdf(imageBuffer: Buffer, inputExt: string | undefined, outputFilename: string) {
   try {
@@ -1670,6 +1898,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (err) {
         console.error("PDF render-page failed:", err);
         return res.status(500).json({ error: "Could not render this PDF page." });
+      } finally {
+        if (release) release();
+      }
+    },
+  );
+
+  // Mobile native "Edit Text": extract a page's real, selectable text runs
+  // (position / size / font) plus each run's sampled ink colour, so the native
+  // editor can drop editable text boxes over the originals exactly like the web
+  // app does. The native client has no pdf.js, so it uploads the PDF here.
+  // Free first-party tool → optional auth.
+  app.post(
+    "/api/pdf/extract-text",
+    optionalConversionAuth,
+    (req, res, next) => {
+      // Bound abuse before we accept a (potentially large) upload or spend CPU.
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (renderRateLimited(ip)) {
+        return res
+          .status(429)
+          .json({ error: "Too many requests. Please slow down." });
+      }
+      // Translate multer's streaming errors (oversized / non-PDF) into clean
+      // JSON instead of letting them fall through to the HTML error handler.
+      pdfRenderUpload.single("file")(req, res, (err: any) => {
+        if (err) {
+          let status = 400;
+          let msg = err instanceof Error ? err.message : "Upload failed";
+          if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+            status = 413;
+            msg = "PDF must be 100MB or smaller.";
+          }
+          return res.status(status).json({ error: msg });
+        }
+        next();
+      });
+    },
+    async (req, res) => {
+      let release: (() => void) | null = null;
+      try {
+        if (!req.file) {
+          return res.status(400).json({ error: "No PDF uploaded." });
+        }
+        const pageIndex = Number.parseInt(String(req.body.pageIndex ?? ""), 10);
+        if (!Number.isFinite(pageIndex) || pageIndex < 0) {
+          return res.status(400).json({ error: "Invalid pageIndex." });
+        }
+
+        release = await acquireRenderSlot();
+        const { runs, pageWidth, pageHeight, pageCount } =
+          await extractPdfPageRuns(req.file.buffer, pageIndex);
+        if (pageIndex >= pageCount) {
+          return res.status(400).json({ error: "pageIndex out of range." });
+        }
+        res.setHeader("Cache-Control", "no-store");
+        if (runs.length === 0) {
+          // A real (but image-only / scanned) page: let the client report that
+          // there's no editable text rather than erroring.
+          return res.json({ items: [], pageWidth, pageHeight });
+        }
+        // Pad each run the way the editor builds its white cover boxes, so the
+        // sampled colour reflects the run's ink like the web path does.
+        const boxes = runs.map((run) => {
+          const padY = run.fontSize * 0.35;
+          const padX = Math.max(1.5, run.fontSize * 0.15);
+          return {
+            x: Math.max(0, run.x - padX),
+            y: Math.max(0, run.y - padY),
+            width: run.width + padX * 2,
+            height: run.height + padY * 2,
+          };
+        });
+        const colors = await samplePdfRunColors(
+          req.file.buffer,
+          pageIndex + 1,
+          pageWidth,
+          boxes,
+        );
+        const items = runs.map((run, i) => ({
+          ...run,
+          color: colors[i] ?? "#111111",
+        }));
+        return res.json({ items, pageWidth, pageHeight });
+      } catch (err) {
+        // pdf.js raises typed exceptions for bad input (corrupt, truncated, or
+        // password-protected files). Those are client errors (400) — a malformed
+        // upload, not a server fault — so report them clearly instead of a 500.
+        const name = err instanceof Error ? err.name : "";
+        const msg = err instanceof Error ? err.message : "";
+        if (name === "PasswordException") {
+          return res.status(400).json({
+            error: "This PDF is password-protected — remove its password first.",
+          });
+        }
+        if (
+          /^(InvalidPDFException|MissingPDFException|FormatError)$/.test(name) ||
+          /invalid pdf|stream must have|corrupt|may not be a pdf/i.test(msg)
+        ) {
+          return res.status(400).json({
+            error: "This PDF couldn't be read — it may be corrupted or invalid.",
+          });
+        }
+        console.error("PDF extract-text failed:", err);
+        return res
+          .status(500)
+          .json({ error: "Could not read this PDF's text." });
       } finally {
         if (release) release();
       }

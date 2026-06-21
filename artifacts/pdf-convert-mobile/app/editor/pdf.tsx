@@ -524,6 +524,15 @@ export default function PdfEditorScreen() {
         setError("Could not read this page's size.");
         return;
       }
+      // Snap the on-screen page box to the SAME space the runs live in, so the
+      // overlays we're about to add land exactly on the rendered glyphs. At load
+      // the box is sized from pdf-lib's MediaBox (native has no pdf.js then); on
+      // CropBox≠MediaBox PDFs that differs from the pdf.js viewport the runs use,
+      // and without this the covers/text would drift. No-op when they match.
+      if (renderSize && renderSize.width > 0 && renderSize.height > 0) {
+        setPageAspect(renderSize.height / renderSize.width);
+        setPageWpts(renderSize.width);
+      }
       // Skip runs that already have an editable text box at that spot (preserves
       // earlier edits) and OVERPRINTED duplicates (some PDFs fake bold by
       // printing the same string twice a hair apart).
@@ -565,9 +574,13 @@ export default function PdfEditorScreen() {
           height: hit.height + padY * 2,
         };
       });
-      const colors = raster
-        ? await sampleTextColors(raster, pageW, boxes)
-        : fresh.map(() => "#111111");
+      // Native samples each run's ink colour server-side and returns it on the
+      // run; web has no per-run colour, so it samples from the rendered raster.
+      const colors = fresh.every((r) => typeof r.color === "string" && r.color)
+        ? fresh.map((r) => r.color as string)
+        : raster
+          ? await sampleTextColors(raster, pageW, boxes)
+          : fresh.map(() => "#111111");
       // All white covers first, then all text, so a later line's cover can never
       // paint over an earlier line's editable text.
       const covers: EditElement[] = [];

@@ -43,6 +43,12 @@ export interface PageTextItem {
   family: FontKey;
   bold: boolean;
   italic: boolean;
+  /**
+   * Optional pre-sampled ink colour (hex). The native engine samples colours
+   * server-side and attaches them here; the web engine leaves this undefined and
+   * samples from the rendered raster via `sampleTextColors` instead.
+   */
+  color?: string;
 }
 
 /**

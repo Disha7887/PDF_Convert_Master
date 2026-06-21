@@ -101,6 +101,7 @@ async function buildAll() {
       "puppeteer-core",
       "electron",
       "pdfjs-dist",
+      "pdfjs-dist/*",
       "pdf-parse",
       "tesseract.js",
       "@napi-rs/canvas",
