@@ -154,6 +154,7 @@ const TOOLBAR: { id: ToolId; icon: FeatherName; label: string }[] = [
 
 /** Tools that capture taps/drags directly on the page to create elements. */
 const CAPTURE_TOOLS: ReadonlySet<ToolId> = new Set<ToolId>([
+  "text",
   "rect",
   "ellipse",
   "line",
@@ -274,7 +275,6 @@ export default function PdfEditorScreen() {
   orderRef.current = order;
 
   // ── Draft tool properties ─────────────────────────────────────────────────
-  const [textValue, setTextValue] = useState("");
   const [draftSize, setDraftSize] = useState(16);
   const [draftColor, setDraftColor] = useState(INK_COLORS[0]);
   const [draftFont, setDraftFont] = useState<FontKey>("helvetica");
@@ -489,8 +489,19 @@ export default function PdfEditorScreen() {
     },
     [pushHistory],
   );
-  const endTextEdit = useCallback(() => {
+  const endTextEdit = useCallback((id: string) => {
     textEditSnapped.current = false;
+    // Drop the just-blurred text box only if the user left it empty, so abandoned
+    // taps don't litter the page with invisible zero-width boxes. Scoped to the
+    // edited element so we never delete another (possibly intentional) box.
+    const target = elementsRef.current.find((e) => e.id === id);
+    if (!target || target.kind !== "text" || target.text.trim().length !== 0) {
+      return;
+    }
+    const next = elementsRef.current.filter((e) => e.id !== id);
+    elementsRef.current = next;
+    setElements(next);
+    setSelectedId((cur) => (cur === id ? null : cur));
   }, []);
 
   const addElement = useCallback(
@@ -520,28 +531,34 @@ export default function PdfEditorScreen() {
   }, [selectedId, addElement]);
 
   // ── Element creation ──────────────────────────────────────────────────────
-  const addText = useCallback(() => {
-    const t = textValue.trim();
-    if (!t || !slotKey) return;
-    const onPage = elementsRef.current.filter(
-      (e) => e.slot === slotKey && e.kind === "text",
-    ).length;
-    addElement({
-      id: uid(),
-      slot: slotKey,
-      kind: "text",
-      text: t,
-      size: draftSize,
-      color: draftColor,
-      font: draftFont,
-      bold: draftBold,
-      italic: draftItalic,
-      x: 0.08,
-      y: clampFrac(0.08 + onPage * 0.08, 0.02, 0.9),
-    });
-    setTextValue("");
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, [textValue, slotKey, draftSize, draftColor, draftFont, draftBold, draftItalic, addElement]);
+  /**
+   * Tap-to-place text: drop an empty text box exactly where the user tapped and
+   * select it so its inline editor auto-focuses, letting them type free text
+   * anywhere on the page (no panel input needed). Empty boxes are pruned on blur
+   * by `endTextEdit`.
+   */
+  const placeTextAt = useCallback(
+    (cx: number, cy: number) => {
+      if (!slotKey) return;
+      const el: EditElement = {
+        id: uid(),
+        slot: slotKey,
+        kind: "text",
+        text: "",
+        size: draftSize,
+        color: draftColor,
+        font: draftFont,
+        bold: draftBold,
+        italic: draftItalic,
+        x: clampFrac(cx, 0, 0.98),
+        y: clampFrac(cy, 0, 0.98),
+      };
+      addElement(el);
+      setActiveTool("select");
+      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    },
+    [slotKey, draftSize, draftColor, draftFont, draftBold, draftItalic, addElement],
+  );
 
   // ── Edit Text: make the current page's real text editable ─────────────────
   // Mirrors the web editor's "Edit text": read every selectable text run on the
@@ -943,6 +960,8 @@ export default function PdfEditorScreen() {
             setLiveShape(null);
             return;
           }
+          // Text is tap-placed (no drag-to-draw preview).
+          if (activeToolRef.current === "text") return;
           if (Math.abs(g.dx) + Math.abs(g.dy) < 12) {
             setLiveShape(null);
             return;
@@ -960,6 +979,11 @@ export default function PdfEditorScreen() {
           setInteracting(false);
           setLiveShape(null);
           if (multi || box.width <= 0) return;
+          // Text is always tap-placed at the touch point.
+          if (activeToolRef.current === "text") {
+            placeTextAtRef.current(placeStart.current.x, placeStart.current.y);
+            return;
+          }
           const kind = activeToolRef.current as ElementKind;
           if (Math.abs(g.dx) + Math.abs(g.dy) < 12) {
             placeShapeRef.current(kind, placeStart.current.x, placeStart.current.y);
@@ -986,6 +1010,8 @@ export default function PdfEditorScreen() {
   buildShapeRef.current = buildShape;
   const commitDrawnShapeRef = useRef(commitDrawnShape);
   commitDrawnShapeRef.current = commitDrawnShape;
+  const placeTextAtRef = useRef(placeTextAt);
+  placeTextAtRef.current = placeTextAt;
 
   // Pinch + two-finger pan over the page. Single-finger touches fall through to
   // the element/capture PanResponders, since these gestures require 2 pointers.
@@ -1478,9 +1504,6 @@ export default function PdfEditorScreen() {
               activeTool,
               selected,
               // text
-              textValue,
-              setTextValue,
-              addText,
               draftSize,
               setDraftSize,
               draftColor,
@@ -1549,9 +1572,6 @@ export default function PdfEditorScreen() {
 interface PanelProps {
   activeTool: ToolId;
   selected: EditElement | null;
-  textValue: string;
-  setTextValue: (v: string) => void;
-  addText: () => void;
   draftSize: number;
   setDraftSize: (v: number) => void;
   draftColor: string;
@@ -1628,19 +1648,14 @@ function renderPanel(p: PanelProps): React.ReactNode {
       return (
         <View style={{ gap: 14 }}>
           <Text style={styles.controlTitle}>Add text</Text>
-          <TextInput
-            value={p.textValue}
-            onChangeText={p.setTextValue}
-            placeholder="Type text to place…"
-            placeholderTextColor={C.mutedForeground}
-            style={styles.input}
-            testID="input-text"
-          />
+          <Text style={styles.controlHelp}>
+            Tap anywhere on the page to drop a text box, then type. Set the style
+            below first; drag to reposition and use the corner handle to resize.
+          </Text>
           <FontRow value={p.draftFont} onChange={p.setDraftFont} />
           <StyleToggles bold={p.draftBold} italic={p.draftItalic} onBold={p.setDraftBold} onItalic={p.setDraftItalic} />
           <SizeRow value={p.draftSize} onChange={p.setDraftSize} />
           <SwatchRow label="Color" colors={INK_COLORS} value={p.draftColor} onChange={p.setDraftColor} />
-          <Button label="Add to page" icon="plus" fullWidth onPress={p.addText} testID="button-add-text" />
         </View>
       );
     case "image":
@@ -2080,7 +2095,7 @@ function ElementOverlay({
   onGeom: (partial: Partial<EditElement>) => void;
   onTextChange?: (text: string) => void;
   onBeginTextEdit?: () => void;
-  onEndTextEdit?: () => void;
+  onEndTextEdit?: (id: string) => void;
 }) {
   const onInteract = (a: boolean) => (a ? onBeginDrag() : onEndDrag());
 
@@ -2103,7 +2118,7 @@ function ElementOverlay({
             ptScale={ptScale}
             onChangeText={(t) => onTextChange?.(t)}
             onBegin={onBeginTextEdit}
-            onEnd={onEndTextEdit}
+            onEnd={() => onEndTextEdit?.(el.id)}
           />
         ) : (
           <Text

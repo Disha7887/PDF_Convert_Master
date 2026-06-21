@@ -30,3 +30,30 @@ so blocks stay interactive: tapping a block selects it (→ select mode) to edit
 dragging moves it. A toolbar action that never calls `setActiveTool` can never show
 an active state and reads as "unclickable" — set the tool, don't silently jump to
 select.
+
+## Add Text tool = tap-to-place free text (distinct from Edit Text)
+
+The "Add text" (`activeTool="text"`) tool is for placing brand-new free text
+ANYWHERE the user taps — not for editing existing PDF text (that's Edit Text).
+- `"text"` IS in `CAPTURE_TOOLS` so the full-page placement layer is active.
+- The placement PanResponder skips drag-to-draw for text (no preview rect); on
+  release it calls `placeTextAt(cx,cy)` which creates an EMPTY `text` element at
+  the tapped page-fraction coords, `addElement` auto-selects it, then it switches
+  to `"select"` so the `InlineTextEditor` (autoFocus) opens for immediate typing.
+- **Prune empties scoped to the blurred element, never globally.** `endTextEdit`
+  now takes the element `id` (threaded `onEnd={() => onEndTextEdit?.(el.id)}`) and
+  removes only THAT box if its text is empty/whitespace, clearing `selectedId` if
+  it pointed at it. A global "remove all empty text" prune on blur is wrong — it
+  can delete another intentional box. Use direct `setElements` (not `commit`) so
+  pruning an abandoned tap doesn't create an undo step.
+- The Text properties panel sets style defaults (font/size/color) only — there is
+  NO panel text input / "Add to page" button; placement is tap-driven.
+
+## Auto-select on draw (fixes "can't move/resize" perception)
+
+After drawing/placing a shape (`placeShape` / `commitDrawnShape`), call
+`setSelectedId(el.id)` BEFORE `setActiveTool("select")`. Without an explicit
+selection nothing shows a resize handle/selection ring after drawing, so users
+report highlights/whiteouts "won't move and can't resize" even though the
+FreeBox/DraggableBox move+resize responders are correct. Auto-select makes the
+handle appear immediately.
