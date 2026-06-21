@@ -4,11 +4,15 @@ import { File, Paths } from "expo-file-system";
 import * as LegacyFS from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -22,11 +26,36 @@ import { Loader } from "@/components/Loader";
 import { NAV_BAR_HEIGHT, useNavTopInset } from "@/components/TopNav";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
-import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 
 const C = colors.light;
 const isWeb = Platform.OS === "web";
+
+/** Output formats the user can save a scan as. */
+type SaveFormatId = "pdf" | "jpg" | "png";
+
+interface SaveFormatOption {
+  id: SaveFormatId;
+  label: string;
+  sub: string;
+  icon: keyof typeof Feather.glyphMap;
+}
+
+const SAVE_FORMAT_OPTIONS: SaveFormatOption[] = [
+  { id: "pdf", label: "PDF Document", sub: "All pages in one file", icon: "file-text" },
+  { id: "jpg", label: "JPG Image", sub: "Compact photo format", icon: "image" },
+  { id: "png", label: "PNG Image", sub: "Lossless image quality", icon: "image" },
+];
+
+/** Re-encodes an image to PNG or JPG on-device (genuine pixel conversion). */
+async function reencodeImage(uri: string, fmt: "png" | "jpg"): Promise<string> {
+  const ref = await ImageManipulator.manipulate(uri).renderAsync();
+  const result = await ref.saveAsync({
+    format: fmt === "png" ? SaveFormat.PNG : SaveFormat.JPEG,
+    compress: 0.92,
+  });
+  return result.uri;
+}
 
 function persistToDocuments(srcUri: string, filename: string): string {
   if (isWeb) return srcUri;
@@ -66,7 +95,6 @@ async function buildPdf(imageUris: string[]): Promise<string | null> {
 }
 
 export default function ScannerScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const navTopInset = useNavTopInset();
   const cameraRef = useRef<CameraView>(null);
@@ -74,6 +102,37 @@ export default function ScannerScreen() {
   const [pages, setPages] = useState<string[]>([]);
   const [capturing, setCapturing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formatPickerVisible, setFormatPickerVisible] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+
+  const showToast = useCallback(
+    (message: string) => {
+      setToast(message);
+      toastOpacity.stopAnimation();
+      Animated.sequence([
+        Animated.timing(toastOpacity, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(2400),
+        Animated.timing(toastOpacity, {
+          toValue: 0,
+          duration: 260,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) setToast(null);
+      });
+    },
+    [toastOpacity],
+  );
+
+  // Stop any in-flight toast animation if the screen unmounts.
+  useEffect(() => () => toastOpacity.stopAnimation(), [toastOpacity]);
 
   // Release the camera when leaving the tab to free the device.
   const [active, setActive] = useState(true);
@@ -115,37 +174,85 @@ export default function ScannerScreen() {
     setPages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const save = useCallback(async () => {
+  const requestSave = useCallback(() => {
     if (pages.length === 0 || saving) return;
-    setSaving(true);
-    try {
-      const id = `s_${Date.now()}`;
-      const persistedImages = pages.map((uri, i) =>
-        persistToDocuments(uri, `${id}_page_${i}.jpg`),
-      );
-      const pdfUri = await buildPdf(persistedImages);
-      const finalPdf = pdfUri ? persistToDocuments(pdfUri, `${id}.pdf`) : undefined;
-      const now = new Date();
-      await addFile({
-        id,
-        kind: "scanned-image",
-        name: `Scan ${now.toLocaleDateString(undefined, {
+    setFormatPickerVisible(true);
+  }, [pages.length, saving]);
+
+  const saveAs = useCallback(
+    async (format: SaveFormatId) => {
+      if (pages.length === 0 || saving) return;
+      setFormatPickerVisible(false);
+      setSaving(true);
+      try {
+        const id = `s_${Date.now()}`;
+        const now = new Date();
+        const baseName = `Scan ${now.toLocaleDateString(undefined, {
           month: "short",
           day: "numeric",
-        })} ${now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`,
-        uri: finalPdf ?? persistedImages[0],
-        thumbnailUri: persistedImages[0],
-        elementCount: persistedImages.length,
-        createdAt: Date.now(),
-        outputFormat: finalPdf ? ".pdf" : ".jpg",
-      });
-      if (!isWeb) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setPages([]);
-      router.push(ROUTES.files as never);
-    } finally {
-      setSaving(false);
-    }
-  }, [pages, saving, router]);
+        })} ${now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
+
+        if (format === "pdf") {
+          const persistedImages = pages.map((uri, i) =>
+            persistToDocuments(uri, `${id}_page_${i}.jpg`),
+          );
+          const pdfUri = await buildPdf(persistedImages);
+          const finalPdf = pdfUri
+            ? persistToDocuments(pdfUri, `${id}.pdf`)
+            : undefined;
+          await addFile({
+            id,
+            kind: "scanned-image",
+            name: baseName,
+            uri: finalPdf ?? persistedImages[0],
+            thumbnailUri: persistedImages[0],
+            elementCount: persistedImages.length,
+            createdAt: Date.now(),
+            outputFormat: finalPdf ? ".pdf" : ".jpg",
+          });
+        } else {
+          // Image formats are single-image — save each scanned page as its own
+          // real file so no page is lost.
+          const ext = format === "png" ? "png" : "jpg";
+          const multi = pages.length > 1;
+          for (let i = 0; i < pages.length; i++) {
+            // Always transcode so the saved bytes truly match the chosen format
+            // (gallery imports may be PNG/HEIC even when "JPG" is selected).
+            const encoded = await reencodeImage(pages[i], ext);
+            const persisted = persistToDocuments(
+              encoded,
+              `${id}_page_${i}.${ext}`,
+            );
+            await addFile({
+              id: multi ? `${id}_${i}` : id,
+              kind: "scanned-image",
+              name: multi ? `${baseName} (${i + 1})` : baseName,
+              uri: persisted,
+              thumbnailUri: persisted,
+              elementCount: 1,
+              createdAt: Date.now() + i,
+              outputFormat: `.${ext}`,
+            });
+          }
+        }
+
+        if (!isWeb)
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        const label = format.toUpperCase();
+        const count = format === "pdf" ? 1 : pages.length;
+        showToast(
+          count > 1
+            ? `Saved ${count} pages as ${label}`
+            : `Saved as ${label}`,
+        );
+        setPages([]);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [pages, saving, showToast],
+  );
 
   // ── Permission states (native only) ────────────────────────────────────────
   const showCamera = !isWeb && permission?.granted && active;
@@ -246,7 +353,7 @@ export default function ScannerScreen() {
 
         <Pressable
           style={[styles.sideBtn, pages.length === 0 && styles.sideBtnDisabled]}
-          onPress={save}
+          onPress={requestSave}
           disabled={pages.length === 0 || saving}
         >
           {saving ? (
@@ -266,6 +373,70 @@ export default function ScannerScreen() {
           )}
         </Pressable>
       </View>
+
+      {/* Output-format chooser shown when "Save" is tapped */}
+      <Modal
+        visible={formatPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFormatPickerVisible(false)}
+      >
+        <Pressable
+          style={styles.sheetBackdrop}
+          onPress={() => setFormatPickerVisible(false)}
+        >
+          <Pressable
+            style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Save as</Text>
+            <Text style={styles.sheetSub}>
+              Choose the output format for {pages.length}{" "}
+              {pages.length === 1 ? "page" : "pages"}
+            </Text>
+
+            {SAVE_FORMAT_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.id}
+                style={styles.formatRow}
+                onPress={() => saveAs(opt.id)}
+                disabled={saving}
+              >
+                <View style={styles.formatIcon}>
+                  <Feather name={opt.icon} size={20} color={C.primary} />
+                </View>
+                <View style={styles.formatText}>
+                  <Text style={styles.formatLabel}>{opt.label}</Text>
+                  <Text style={styles.formatSub}>{opt.sub}</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={C.mutedForeground} />
+              </Pressable>
+            ))}
+
+            <Pressable
+              style={styles.cancelBtn}
+              onPress={() => setFormatPickerVisible(false)}
+            >
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Save confirmation toast */}
+      {toast ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.toast,
+            { top: navTopInset + 12, opacity: toastOpacity },
+          ]}
+        >
+          <Feather name="check-circle" size={18} color="#fff" />
+          <Text style={styles.toastText}>{toast}</Text>
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
@@ -380,4 +551,99 @@ const styles = StyleSheet.create({
   },
   shutterDisabled: { opacity: 0.4 },
   shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#fff" },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: C.background,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingHorizontal: 18,
+    paddingTop: 10,
+  },
+  sheetHandle: {
+    alignSelf: "center",
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: C.border,
+    marginBottom: 14,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    color: C.foreground,
+    fontFamily: fonts.headingSemibold,
+  },
+  sheetSub: {
+    fontSize: 13,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+    marginTop: 2,
+    marginBottom: 12,
+  },
+  formatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+  },
+  formatIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: `${C.primary}1a`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  formatText: { flex: 1 },
+  formatLabel: {
+    fontSize: 15,
+    color: C.foreground,
+    fontFamily: fonts.bodySemibold,
+  },
+  formatSub: {
+    fontSize: 12.5,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+    marginTop: 1,
+  },
+  cancelBtn: {
+    marginTop: 14,
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: C.muted,
+    alignItems: "center",
+  },
+  cancelBtnText: {
+    fontSize: 15,
+    color: C.foreground,
+    fontFamily: fonts.bodySemibold,
+  },
+  toast: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: C.primary,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  toastText: {
+    color: "#fff",
+    fontSize: 14,
+    fontFamily: fonts.bodySemibold,
+  },
 });

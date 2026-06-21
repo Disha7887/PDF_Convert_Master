@@ -17,6 +17,7 @@
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
 - [Capture layer blocks editing](capture-layer-blocks-editing.md) — capture-tool overlay must render BELOW elements + keep elements interactive, or existing highlight/whiteout can't be moved while tool active; gesture machinery was a red herring.
+- [TopNav global mount](topnav-global-mount.md) — shared mobile TopNav renders once in (tabs)/_layout over all tabs; hide/adjust it per-screen via usePathname() INSIDE TopNav, not from the screen.
 - [Resize-handle touch bounds](resize-handle-touch-bounds.md) — native: corner handle must sit inside a touchable wrapper (box-none + overflow pad), not negative-offset outside the box; draw-mode gates scroll on captureActive not just interacting.
 - [RNGH zoom vs PanResponder](rngh-zoom-vs-panresponder.md) — pinch/pan zoom over JS PanResponders: gate ALL four shouldSet variants (incl. both capture) on oneFinger, bail on 2nd finger, scale-aware deltas, .onFinalize.
 - [pdfjs version singleton (server)](pdfjs-version-singleton.md) — server pdfjs-dist must match pdf-parse's EXACT version (process-global worker singleton), use legacy Node build, externalize `pdfjs-dist/*` in esbuild.

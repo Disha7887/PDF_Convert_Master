@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import React from "react";
 import {
   Platform,
@@ -41,10 +41,18 @@ const PEOPLE_PATH =
  */
 export function TopNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { isAuthenticated } = useAuth();
   const topInset = useNavTopInset();
+
+  // The Camera/Scanner screen is a full-bleed capture surface. The home and
+  // account icons (and their blur bar) don't belong there, so hide the whole
+  // nav while that route is active. They reappear on every other screen.
+  const isCameraScreen =
+    pathname === ROUTES.scanner || pathname.startsWith(`${ROUTES.scanner}/`);
+  if (isCameraScreen) return null;
 
   return (
     <View style={[styles.wrap, { height: topInset + NAV_BAR_HEIGHT }]}>
