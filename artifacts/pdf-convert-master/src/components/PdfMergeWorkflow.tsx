@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { authedFetch } from "@/lib/authedFetch";
+import { downloadFromUrl } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -230,14 +231,17 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!downloadUrl) return;
-    const a = document.createElement("a");
-    a.href = downloadUrl;
-    a.download = outputName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    try {
+      await downloadFromUrl(downloadUrl, outputName);
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: err instanceof Error ? err.message : "Could not download the file.",
+        variant: "destructive",
+      });
+    }
   };
 
   const stageLabel =

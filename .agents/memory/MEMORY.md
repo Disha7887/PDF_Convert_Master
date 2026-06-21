@@ -17,6 +17,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [Web download in iframe](web-download-iframe-blob.md) — converted-file downloads must fetch→blob→`<a download>` (downloadFromUrl); window.open/anchor-nav is blocked in the Replit preview/canvas iframe.
 - [Mobile real-data mode](mobile-real-data-mode.md) — logged-in mobile uses real backend; token bridged via services/authToken.ts; conversions must send Bearer token; dashboard+usage share services/account.ts#fetchUsage.
 - [Liquid Glass material (mobile)](liquid-glass-mobile.md) — glossy look = custom `GlassSurface` (blur+sheen+border), works in Expo Go; needs ambient backdrop behind it; coral accent kept.
 - [Mobile auth dark sheet](auth-sheet-mobile.md) — sign-in/up share AuthSheet (dark sheet over photo); email-first progressive disclosure preserves mock password auth; Google/Apple are honest placeholders.

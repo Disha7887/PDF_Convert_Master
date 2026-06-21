@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
+import { downloadFromUrl } from "@/lib/download";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
@@ -461,14 +462,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!downloadUrl) return;
-    const a = document.createElement("a");
-    a.href = downloadUrl;
-    a.download = outputName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    try {
+      await downloadFromUrl(downloadUrl, outputName);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Download failed");
+    }
   };
 
   const reset = () => {

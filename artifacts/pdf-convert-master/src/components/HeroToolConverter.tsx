@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
+import { downloadFromUrl } from "@/lib/download";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
@@ -105,6 +106,16 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     }
   };
 
+  const handleDownload = async () => {
+    if (!downloadUrl) return;
+    try {
+      await downloadFromUrl(downloadUrl, fileName || undefined);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Download failed");
+      setStage("error");
+    }
+  };
+
   if (stage === "idle") {
     return (
       <UploadDropzone
@@ -149,14 +160,15 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
           <p className="text-gray-600 text-sm mb-6 truncate max-w-full">
             {fileName}
           </p>
-          <a
-            href={downloadUrl ?? "#"}
-            className="inline-flex items-center justify-center h-[57px] px-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold mb-4 shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] transition-colors"
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="inline-flex items-center justify-center h-[57px] px-12 rounded-full bg-[#f7433d] hover:bg-[#e23a34] text-white font-semibold mb-4 shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] transition-colors"
             data-testid={`button-hero-download-${tool.id}`}
           >
             <Download className="mr-2 h-5 w-5" />
             Download
-          </a>
+          </button>
           <button
             type="button"
             onClick={reset}

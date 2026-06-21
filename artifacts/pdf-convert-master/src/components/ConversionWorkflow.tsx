@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
+import { downloadFromUrl } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { Progress } from "@/components/ui/progress";
@@ -402,14 +403,20 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setTimeout(poll, 500);
   };
 
-  const downloadIndividualFile = (index: number) => {
+  const downloadIndividualFile = async (index: number) => {
     const file = selectedFiles[index];
-    if (file?.downloadUrl) {
-      window.open(file.downloadUrl, '_blank');
-      
+    if (!file?.downloadUrl) return;
+    try {
+      await downloadFromUrl(file.downloadUrl, file.file.name);
       toast({
         title: "Download Started",
         description: `${file.file.name} is being downloaded`,
+      });
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: err instanceof Error ? err.message : "Could not download the file.",
+        variant: "destructive",
       });
     }
   };
@@ -417,18 +424,34 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   const downloadAllFiles = () => {
     const completedFiles = selectedFiles.filter(f => f.status === 'completed' && f.downloadUrl);
     
-    completedFiles.forEach((file, index) => {
-      setTimeout(() => {
-        if (file.downloadUrl) {
-          window.open(file.downloadUrl, '_blank');
+    void (async () => {
+      let succeeded = 0;
+      let failed = 0;
+      for (const file of completedFiles) {
+        if (!file.downloadUrl) continue;
+        try {
+          await downloadFromUrl(file.downloadUrl, file.file.name);
+          succeeded += 1;
+        } catch {
+          failed += 1;
         }
-      }, index * 500);
-    });
-    
-    toast({
-      title: "Downloads Started",
-      description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} are being downloaded`,
-    });
+        // Small gap so the browser doesn't throttle/block rapid downloads.
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+
+      if (failed === 0) {
+        toast({
+          title: "Downloads Started",
+          description: `${succeeded} file${succeeded !== 1 ? 's' : ''} downloaded`,
+        });
+      } else {
+        toast({
+          title: succeeded > 0 ? "Some downloads failed" : "Download failed",
+          description: `${succeeded} succeeded, ${failed} failed`,
+          variant: "destructive",
+        });
+      }
+    })();
   };
 
   const checkBatchCompletion = (files: FileUpload[]) => {
