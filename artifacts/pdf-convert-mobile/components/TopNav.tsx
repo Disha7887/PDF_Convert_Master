@@ -1,11 +1,13 @@
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { usePathname, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
   useColorScheme,
 } from "react-native";
@@ -14,6 +16,7 @@ import Svg, { Path } from "react-native-svg";
 
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
+import { cardShadow, fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 
 const C = colors.light;
@@ -44,8 +47,9 @@ export function TopNav() {
   const pathname = usePathname();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, signout } = useAuth();
   const topInset = useNavTopInset();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // The Camera/Scanner screen is a full-bleed capture surface. The home and
   // account icons (and their blur bar) don't belong there, so hide the whole
@@ -53,6 +57,24 @@ export function TopNav() {
   const isCameraScreen =
     pathname === ROUTES.scanner || pathname.startsWith(`${ROUTES.scanner}/`);
   if (isCameraScreen) return null;
+
+  // Signed-in: the people icon opens an account menu. Signed-out: it sends the
+  // user straight to the sign-in popup.
+  const onAccountPress = () => {
+    if (isAuthenticated) setMenuOpen(true);
+    else router.push(ROUTES.signIn as never);
+  };
+
+  const go = (route: string) => {
+    setMenuOpen(false);
+    router.push(route as never);
+  };
+
+  const onLogout = () => {
+    setMenuOpen(false);
+    signout();
+    router.push(ROUTES.home as never);
+  };
 
   return (
     <View style={[styles.wrap, { height: topInset + NAV_BAR_HEIGHT }]}>
@@ -78,20 +100,109 @@ export function TopNav() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
-            isAuthenticated ? "Account" : "Sign in or create an account"
+            isAuthenticated ? "Account menu" : "Sign in or create an account"
           }
           hitSlop={8}
-          onPress={() =>
-            router.push((isAuthenticated ? ROUTES.settings : ROUTES.signIn) as never)
-          }
+          onPress={onAccountPress}
           style={styles.profileBtn}
+          testID="button-account"
         >
           <Svg width={28} height={28} viewBox="0 0 32 32">
             <Path d={PEOPLE_PATH} fill={C.primary} />
           </Svg>
         </Pressable>
       </View>
+
+      <Modal
+        visible={menuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuOpen(false)}
+      >
+        <Pressable
+          style={styles.menuBackdrop}
+          onPress={() => setMenuOpen(false)}
+          testID="account-menu-backdrop"
+        >
+          <Pressable
+            style={[styles.menu, { top: topInset + NAV_BAR_HEIGHT - 4 }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.menuHeader}>
+              <View style={styles.menuAvatar}>
+                <Svg width={22} height={22} viewBox="0 0 32 32">
+                  <Path d={PEOPLE_PATH} fill="#fff" />
+                </Svg>
+              </View>
+              <View style={styles.menuHeaderText}>
+                <Text style={styles.menuName} numberOfLines={1}>
+                  {user?.name ?? "Account"}
+                </Text>
+                {!!user?.email && (
+                  <Text style={styles.menuEmail} numberOfLines={1}>
+                    {user.email}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.menuDivider} />
+
+            <MenuItem
+              icon="user"
+              label="Profile Settings"
+              onPress={() => go(ROUTES.settings)}
+              testID="menu-profile-settings"
+            />
+            <MenuItem
+              icon="grid"
+              label="Dashboard"
+              onPress={() => go(ROUTES.dashboardHome)}
+              testID="menu-dashboard"
+            />
+
+            <View style={styles.menuDivider} />
+
+            <MenuItem
+              icon="log-out"
+              label="Log out"
+              destructive
+              onPress={onLogout}
+              testID="menu-logout"
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
+  );
+}
+
+type FeatherName = keyof typeof Feather.glyphMap;
+
+function MenuItem({
+  icon,
+  label,
+  onPress,
+  destructive,
+  testID,
+}: {
+  icon: FeatherName;
+  label: string;
+  onPress: () => void;
+  destructive?: boolean;
+  testID?: string;
+}) {
+  const tint = destructive ? "#dc2626" : C.foreground;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+      testID={testID}
+    >
+      <Feather name={icon} size={18} color={tint} />
+      <Text style={[styles.menuItemLabel, { color: tint }]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -125,6 +236,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.18)",
+  },
+  menu: {
+    position: "absolute",
+    right: 12,
+    minWidth: 230,
+    backgroundColor: C.card,
+    borderRadius: 16,
+    paddingVertical: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: C.border,
+    ...cardShadow,
+  },
+  menuHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  menuAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: C.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  menuHeaderText: { flex: 1 },
+  menuName: { fontSize: 15, color: C.foreground, fontFamily: fonts.bodySemibold },
+  menuEmail: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 1 },
+  menuDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: C.border,
+    marginVertical: 4,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  menuItemPressed: { backgroundColor: C.muted },
+  menuItemLabel: { fontSize: 15, fontFamily: fonts.bodyMedium },
 });
 
 export default TopNav;

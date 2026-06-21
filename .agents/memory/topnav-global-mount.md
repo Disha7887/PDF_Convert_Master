@@ -18,3 +18,16 @@ live INSIDE `TopNav`, gated on the active route via `usePathname()` (compare aga
 with a `usePathname()` check; do not try to override it from the screen component. Screens
 already reserve space with `paddingTop: navTopInset + NAV_BAR_HEIGHT`, so hiding the whole
 nav just leaves that screen's own header in the reserved space (fine for the dark Scanner).
+
+# Account icon behaves differently by auth state
+
+The people/account icon's press is auth-gated INSIDE `TopNav`: signed-out → routes to
+`ROUTES.signIn` (the dark AuthSheet popup); signed-in → opens an in-component account menu
+(a transparent RN `Modal`, `menuOpen` state) anchored top-right under the bar. The menu shows
+`user.name`/`user.email` and links to Profile Settings (`ROUTES.settings`), Dashboard
+(`ROUTES.dashboardHome`), and a destructive Log out (`signout()` then route to `ROUTES.home`).
+It does NOT navigate straight to Settings on tap anymore.
+
+**Why:** users need a logout affordance reachable from anywhere; the icon is the only
+persistent account entry point. **How to apply:** the menu lives in `TopNav`, not a screen.
+Dismissal uses backdrop `onPress` + inner `stopPropagation()` + `onRequestClose` (Android back).
