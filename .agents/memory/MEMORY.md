@@ -12,4 +12,5 @@
 - [pdf.js web-only split](pdfjs-mobile-web-split.md) — real PDF page rendering: pdfjs imported only from `.web.ts` (native stub), worker via unpkg CDN; draw/type signature via SignaturePad + drawSvgPath.
 - [Mobile real conversions](mobile-real-conversions.md) — Expo CONVERT tools hit real api-server; web FormData needs a real Blob; always-real via USE_REAL_CONVERSIONS; EXPO_PUBLIC_DOMAIN inlined at bundle time.
 - [Download format honesty](download-format-honesty.md) — only offer download formats the result can genuinely become; pdf_to_images is a ZIP (not a re-encodable image); gate OCR text formats on recognized-text availability.
+- [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
