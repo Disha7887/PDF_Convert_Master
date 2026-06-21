@@ -51,9 +51,25 @@ function RootLayoutNav() {
       {/* History */}
       <Stack.Screen name="history" options={{ title: "History" }} />
 
-      {/* Auth (custom in-screen headers) */}
-      <Stack.Screen name="auth/sign-in" options={{ headerShown: false }} />
-      <Stack.Screen name="auth/sign-up" options={{ headerShown: false }} />
+      {/* Auth — popup over the current screen */}
+      <Stack.Screen
+        name="auth/sign-in"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+          animation: "fade",
+          contentStyle: { backgroundColor: "transparent" },
+        }}
+      />
+      <Stack.Screen
+        name="auth/sign-up"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+          animation: "fade",
+          contentStyle: { backgroundColor: "transparent" },
+        }}
+      />
 
       {/* Marketing / legal */}
       <Stack.Screen name="marketing/pricing" options={{ title: "Pricing" }} />

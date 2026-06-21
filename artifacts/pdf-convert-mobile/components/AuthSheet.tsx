@@ -1,5 +1,4 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -32,8 +31,6 @@ const SHEET = {
   muted: "#9aa4b6",
   divider: "#2c3344",
 };
-
-const bgImage = require("../assets/images/auth-bg.png");
 
 type Mode = "signin" | "signup";
 
@@ -163,14 +160,14 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
 
   return (
     <View style={styles.root}>
-      <Image source={bgImage} style={StyleSheet.absoluteFill} contentFit="cover" />
-      <View style={styles.scrim} />
+      <Pressable style={StyleSheet.absoluteFill} onPress={close} testID="button-auth-backdrop" />
 
       <KeyboardAvoidingView
         style={styles.fill}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        pointerEvents="box-none"
       >
-        <View style={styles.spacer} />
+        <Pressable style={styles.spacer} onPress={close} />
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 22 }]}>
           <ScrollView
             keyboardShouldPersistTaps="handled"
@@ -374,10 +371,9 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#0b1220" },
+  root: { flex: 1, backgroundColor: "rgba(11,18,32,0.55)" },
   fill: { flex: 1 },
   spacer: { flex: 1 },
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(11,18,32,0.55)" },
 
   sheet: {
     backgroundColor: SHEET.bg,
