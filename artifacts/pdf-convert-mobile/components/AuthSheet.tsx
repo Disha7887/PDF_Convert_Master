@@ -2,6 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Dimensions,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import AuthResultIcon from "@/components/AuthResultIcon";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
@@ -32,6 +34,9 @@ const SHEET = {
   divider: "#2c3344",
 };
 
+// As big as the screen comfortably allows for the celebratory welcome icon.
+const WELCOME_SIZE = Math.min(Dimensions.get("window").width * 0.92, 420);
+
 type Mode = "signin" | "signup";
 
 export default function AuthSheet({ mode }: { mode: Mode }) {
@@ -48,7 +53,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [result, setResult] = useState<"signup-success" | "signin-success" | "error" | null>(null);
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -76,10 +81,15 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
   );
 
   useEffect(() => {
-    if (isAuthenticated && !loading) {
+    // Bounce an already-signed-in visitor straight to the dashboard, but never
+    // during an in-flight submit or while a result animation (e.g. the welcome
+    // celebration) is playing. signin() flips isAuthenticated before its promise
+    // resolves, so without the isSubmitting/result gate this effect would fire
+    // first and skip the welcome animation.
+    if (isAuthenticated && !loading && !isSubmitting && !result) {
       router.replace(ROUTES.dashboardHome as never);
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, isSubmitting, result, router]);
 
   const close = () => {
     if (router.canGoBack()) router.back();
@@ -133,30 +143,54 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
       return;
     }
 
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
     setIsSubmitting(true);
     try {
       if (mode === "signup") {
-        const result = await signup(email, password);
-        if (result.success) {
-          setSuccess(true);
-          redirectTimer.current = setTimeout(() => router.replace(ROUTES.signIn as never), 1800);
+        const res = await signup(email, password);
+        if (res.success) {
+          setResult("signup-success");
+          redirectTimer.current = setTimeout(() => router.replace(ROUTES.signIn as never), 2200);
         } else {
-          setError(result.error || "Sign up failed");
+          setResult("error");
+          setError(res.error || "Sign up failed");
         }
       } else {
-        const result = await signin(email, password);
-        if (result.success) {
-          router.replace(ROUTES.dashboardHome as never);
+        const res = await signin(email, password);
+        if (res.success) {
+          setResult("signin-success");
+          redirectTimer.current = setTimeout(
+            () => router.replace(ROUTES.dashboardHome as never),
+            2600,
+          );
         } else {
-          setError(result.error || "Sign in failed");
+          setResult("error");
+          setError(res.error || "Sign in failed");
         }
       }
     } catch {
+      setResult("error");
       setError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const dismissError = () => {
+    setResult(null);
+    setError(null);
+  };
+
+  // Successful login: take over the whole screen with the big welcome animation.
+  if (result === "signin-success") {
+    return (
+      <View style={styles.welcomeScreen} testID="view-welcome">
+        <AuthResultIcon kind="welcome" size={WELCOME_SIZE} loop={false} style={styles.welcomeIcon} />
+        <Text style={styles.welcomeTitle}>Welcome back!</Text>
+        <Text style={styles.welcomeSub}>Taking you to your workspace…</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
@@ -174,6 +208,29 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.sheetContent}
           >
+            {result === "signup-success" ? (
+              <View style={styles.resultBlock} testID="view-signup-success">
+                <AuthResultIcon kind="success" size={150} loop={false} />
+                <Text style={styles.resultTitle}>Account created!</Text>
+                <Text style={styles.resultSub}>Redirecting you to sign in…</Text>
+              </View>
+            ) : result === "error" ? (
+              <View style={styles.resultBlock} testID="view-auth-error">
+                <AuthResultIcon kind="error" size={150} loop={false} />
+                <Text style={styles.resultTitle}>
+                  {mode === "signup" ? "Sign up failed" : "Sign in failed"}
+                </Text>
+                {error ? <Text style={styles.resultSub}>{error}</Text> : null}
+                <Pressable
+                  style={({ pressed }) => [styles.primaryBtn, styles.resultBtn, pressed && styles.pressed]}
+                  onPress={dismissError}
+                  testID="button-try-again"
+                >
+                  <Text style={styles.primaryText}>Try Again</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
             {/* Header */}
             <View style={styles.headerRow}>
               <Text style={styles.headerTitle}>Sign up or Log in</Text>
@@ -294,21 +351,16 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
                 {info}
               </Text>
             ) : null}
-            {success ? (
-              <Text style={styles.successText} testID="text-success">
-                Account created! Redirecting to sign in...
-              </Text>
-            ) : null}
 
             {/* Primary action */}
             <Pressable
               style={({ pressed }) => [
                 styles.primaryBtn,
-                (isSubmitting || success) && styles.primaryBtnDisabled,
+                isSubmitting && styles.primaryBtnDisabled,
                 pressed && styles.pressed,
               ]}
               onPress={step === "email" ? continueWithEmail : submit}
-              disabled={isSubmitting || success}
+              disabled={isSubmitting}
               testID={step === "email" ? "button-continue" : "button-submit"}
             >
               <Text style={styles.primaryText}>
@@ -363,6 +415,8 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
               </Text>
               .
             </Text>
+              </>
+            )}
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
@@ -433,7 +487,36 @@ const styles = StyleSheet.create({
 
   errorText: { fontSize: 13, color: "#fda4a1", fontFamily: fonts.body, marginTop: 2 },
   infoText: { fontSize: 13, color: SHEET.muted, fontFamily: fonts.body, marginTop: 2 },
-  successText: { fontSize: 13, color: "#86efac", fontFamily: fonts.body, marginTop: 2 },
+
+  // Result states (success / error) shown inside the sheet
+  resultBlock: { alignItems: "center", justifyContent: "center", paddingVertical: 18, gap: 6 },
+  resultTitle: { fontSize: 20, color: SHEET.text, fontFamily: fonts.headingBold, marginTop: 4 },
+  resultSub: {
+    fontSize: 14,
+    color: SHEET.muted,
+    fontFamily: fonts.body,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  resultBtn: { alignSelf: "stretch", marginTop: 16 },
+
+  // Full-screen welcome (successful login)
+  welcomeScreen: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: C.background,
+    padding: 24,
+  },
+  welcomeIcon: { marginBottom: 8 },
+  welcomeTitle: { fontSize: 30, color: C.foreground, fontFamily: fonts.headingBold, textAlign: "center" },
+  welcomeSub: {
+    fontSize: 15,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+    textAlign: "center",
+    marginTop: 6,
+  },
 
   primaryBtn: {
     height: 54,
