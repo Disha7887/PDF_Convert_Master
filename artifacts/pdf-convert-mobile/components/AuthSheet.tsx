@@ -196,6 +196,22 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
 
   return (
     <View style={styles.root}>
+      {/* Pre-warm the heavy welcome Lottie off-screen while the user is still on
+          the sheet, so its composition is already parsed/cached by the time the
+          full-screen welcome animation mounts after a successful sign-in. Without
+          this, the welcome screen shows a blank gap until the 130KB+ animation
+          finishes loading on native. */}
+      {mode === "signin" ? (
+        <View
+          style={styles.preload}
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          <AuthResultIcon kind="welcome" size={WELCOME_SIZE} loop={false} />
+        </View>
+      ) : null}
+
       <Pressable style={StyleSheet.absoluteFill} onPress={close} testID="button-auth-backdrop" />
 
       <KeyboardAvoidingView
@@ -427,6 +443,11 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "rgba(11,18,32,0.55)" },
   fill: { flex: 1 },
   spacer: { flex: 1 },
+
+  // Off-screen, non-interactive warm-up host for the welcome Lottie. It must
+  // stay mounted (not display:none) so the animation actually parses, but is
+  // pushed off-screen with zero opacity so the user never sees it.
+  preload: { position: "absolute", top: -9999, left: -9999, opacity: 0 },
 
   sheet: {
     backgroundColor: SHEET.bg,
