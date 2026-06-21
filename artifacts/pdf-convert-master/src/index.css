@@ -267,3 +267,18 @@
     font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   }
 }
+
+/* Inline on-page PDF text editing: show ONLY a blinking caret. Strip the
+   focus outline/ring/shadow and the browser's blue ::selection band so the
+   active field reads like a native input with all chrome removed. */
+.pdf-inline-edit:focus,
+.pdf-inline-edit:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.pdf-inline-edit::selection {
+  background: transparent;
+}
+.pdf-inline-edit ::selection {
+  background: transparent;
+}

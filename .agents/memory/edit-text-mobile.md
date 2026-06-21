@@ -16,10 +16,26 @@ parity with the web editor's whole-page "Edit text" (`handleEditWholePage`).
   existing select + properties panel then handles char-level + color/size/font.
 - **Order matters:** push ALL covers first, then ALL texts, so a later line's
   cover can't paint over an earlier line's editable text.
-- **Skip duplicates:** skip runs that already have an editable text box at that
-  spot (Δfraction < ~0.004, preserves earlier edits) and overprinted dupes (same
-  trimmed string within `tol = max(2, fontSize*0.5)` points — fake-bold double
-  prints). Empty/scanned pages show a friendly "no selectable text" notice.
+- **Skip duplicates (web + mobile share this):** skip runs that already have an
+  editable box at that spot (Δfraction < ~0.004, preserves earlier edits) AND
+  duplicate runs. Dedup is TWO-pronged: (1) same trimmed string within
+  `tol = max(2, fontSize*0.5)` pts (classic fake-bold double print), OR (2)
+  **geometric overlap** — `overlapFrac > 0.6` of the smaller box's area with font
+  sizes within `0.7..1.4` ratio. Exact-string-only dedup is NOT enough: pdf.js
+  emits real-world overprints / drop-shadows / fake-bold as SPLIT fragments or
+  with a LARGER offset, so a full-line copy and its word fragments both survive →
+  stacked overlays = the "doubled / overlapping text" bug (seen on bank
+  statements, worse on big/bold/colored runs). **Process runs largest-area-first**
+  (`sort by w*h desc`) so the full line is accepted and fragments collapse INTO
+  it — never the reverse (which would silently drop text). Empty/scanned pages
+  show a friendly "no selectable text" notice.
+- **Caret-only inline editing** (user requirement): while a text block is being
+  edited show ONLY a blinking caret — no selection ring/box, no tint, no
+  `::selection` band, no focus outline. Web: `InlineTextEditor` collapses the
+  range to caret-end (not select-all), text el drops its blue ring when editing,
+  `.pdf-inline-edit` CSS strips outline/box-shadow/`::selection`. Mobile: DragMove
+  hides `selRing` + `dragMoveSelected` tint when `editing` (= selected for text),
+  and the RN-web `TextInput` gets `outlineStyle:none`.
 - Coordinate/scale correctness depends on the rules in
   `mobile-pdf-editor-coord-scale.md` (points→fraction, `ptScale`, rotation:0).
 

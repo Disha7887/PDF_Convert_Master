@@ -278,10 +278,13 @@ const InlineTextEditor: React.FC<{
     if (!node) return;
     node.textContent = initial;
     node.focus();
-    // Select the whole run so typing replaces it; click/arrows place the caret.
+    // Place a plain blinking caret at the end of the run (no selection
+    // highlight). Selecting the whole run would paint the browser's blue
+    // ::selection band; the user wants a clean caret only.
     const sel = window.getSelection();
     const range = document.createRange();
     range.selectNodeContents(node);
+    range.collapse(false);
     sel?.removeAllRanges();
     sel?.addRange(range);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -294,6 +297,7 @@ const InlineTextEditor: React.FC<{
       role="textbox"
       aria-label="Edit PDF text"
       data-testid={testId}
+      className="pdf-inline-edit"
       style={style}
       onInput={(e) => onChange(e.currentTarget.textContent ?? "")}
       onKeyDown={(e) => {
@@ -1152,19 +1156,53 @@ export const PdfEditor: React.FC = () => {
       //      stacks two text elements (and two whiteouts) at the same spot —
       //      which looks like "double text" and forces the user to delete twice.
       //      Collapsing same-string, near-coincident runs fixes both symptoms.
+      // Fraction of the SMALLER box's area covered by the intersection of two
+      // run boxes. Two runs that occupy the same area (overprint, drop-shadow,
+      // or a full-line copy that pdf.js ALSO split into word fragments) overlap
+      // heavily; genuinely distinct text (side-by-side words, stacked lines)
+      // does not.
+      const overlapFrac = (a: (typeof runs)[number], b: (typeof runs)[number]) => {
+        const ix =
+          Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+        const iy =
+          Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+        if (ix <= 0 || iy <= 0) return 0;
+        const minArea = Math.min(
+          a.width * a.height,
+          b.width * b.height,
+        );
+        return minArea > 0 ? (ix * iy) / minArea : 0;
+      };
+      // Process the largest-area runs first so that when a full-line run and a
+      // word fragment of it both exist, the FULL line is accepted and the
+      // fragment is collapsed into it (never the other way round — which would
+      // silently drop text). Makes dedup independent of pdf.js emit order.
+      const ordered = [...runs].sort(
+        (a, b) => b.width * b.height - a.width * a.height,
+      );
       const fresh: typeof runs = [];
-      for (const run of runs) {
+      for (const run of ordered) {
         const alreadyEditable = existing.some(
           (el) => Math.abs(el.x - run.x) < 3 && Math.abs(el.y - run.y) < 3,
         );
         if (alreadyEditable) continue;
         const tol = Math.max(2, run.fontSize * 0.5);
-        const dupInBatch = fresh.some(
-          (f) =>
+        const dupInBatch = fresh.some((f) => {
+          // 1. Same string, near-coincident: classic fake-bold overprint.
+          if (
             f.str.trim() === run.str.trim() &&
             Math.abs(f.x - run.x) < tol &&
-            Math.abs(f.y - run.y) < tol,
-        );
+            Math.abs(f.y - run.y) < tol
+          )
+            return true;
+          // 2. Heavy geometric overlap of similar-size runs. Catches duplicates
+          //    pdf.js reports with different strings/fragments or a larger
+          //    offset (the source of "doubled / overlapping text").
+          const ratio = run.fontSize / f.fontSize;
+          if (ratio > 0.7 && ratio < 1.4 && overlapFrac(f, run) > 0.6)
+            return true;
+          return false;
+        });
         if (dupInBatch) continue;
         fresh.push(run);
       }
@@ -2316,6 +2354,9 @@ export const PdfEditor: React.FC = () => {
                         : "";
                       if (el.type === "text") {
                         const isEditing = editingTextId === el.id;
+                        // While typing inline, show ONLY the blinking caret —
+                        // no blue focus ring around the active field.
+                        const textRing = isEditing ? "" : selRing;
                         const textStyle: React.CSSProperties = {
                           fontSize: el.fontSize * zoom,
                           color: el.color,
@@ -2340,7 +2381,7 @@ export const PdfEditor: React.FC = () => {
                                   ? "text"
                                   : common.cursor,
                             }}
-                            className={selRing}
+                            className={textRing}
                             onPointerDown={(e) => {
                               if (isEditing) return; // let caret clicks through
                               const now = Date.now();

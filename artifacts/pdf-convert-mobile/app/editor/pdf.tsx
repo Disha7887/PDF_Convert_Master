@@ -76,7 +76,15 @@ const WEB_NO_SELECT =
 // Re-enable native text selection/caret inside the on-page inline editor, which
 // otherwise inherits `user-select: none` from its draggable wrapper on web.
 const WEB_TEXT_SELECT =
-  Platform.OS === "web" ? ({ userSelect: "text" } as unknown as TextStyle) : null;
+  Platform.OS === "web"
+    ? ({
+        userSelect: "text",
+        // RN web maps TextInput to an <input>; strip its default focus outline
+        // so the active field shows ONLY a blinking caret (no focus ring/box).
+        outlineStyle: "none",
+        outlineWidth: 0,
+      } as unknown as TextStyle)
+    : null;
 const WEB_NO_TOUCH_SCROLL =
   Platform.OS === "web"
     ? ({ touchAction: "none", userSelect: "none" } as unknown as ViewStyle)
@@ -618,8 +626,28 @@ export default function PdfEditorScreen() {
       const existing = elementsRef.current.filter(
         (e): e is TextEl => e.kind === "text" && e.slot === pageSlotKey,
       );
+      // Fraction of the SMALLER box's area covered by the intersection of two
+      // run boxes. Two runs that occupy the same area (overprint, drop-shadow,
+      // or a full-line copy that pdf.js ALSO split into word fragments) overlap
+      // heavily; genuinely distinct text (side-by-side words, stacked lines)
+      // does not.
+      const overlapFrac = (a: PageTextItem, b: PageTextItem) => {
+        const ix = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+        const iy =
+          Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+        if (ix <= 0 || iy <= 0) return 0;
+        const minArea = Math.min(a.width * a.height, b.width * b.height);
+        return minArea > 0 ? (ix * iy) / minArea : 0;
+      };
+      // Process the largest-area runs first so that when a full-line run and a
+      // word fragment of it both exist, the FULL line is accepted and the
+      // fragment is collapsed into it (never the other way round — which would
+      // silently drop text). Makes dedup independent of pdf.js emit order.
+      const ordered = [...runs].sort(
+        (a, b) => b.width * b.height - a.width * a.height,
+      );
       const fresh: PageTextItem[] = [];
-      for (const run of runs) {
+      for (const run of ordered) {
         const fx = run.x / pageW;
         const fy = run.y / pageH;
         const alreadyEditable = existing.some(
@@ -627,12 +655,22 @@ export default function PdfEditorScreen() {
         );
         if (alreadyEditable) continue;
         const tol = Math.max(2, run.fontSize * 0.5);
-        const dup = fresh.some(
-          (f) =>
+        const dup = fresh.some((f) => {
+          // 1. Same string, near-coincident: classic fake-bold overprint.
+          if (
             f.str.trim() === run.str.trim() &&
             Math.abs(f.x - run.x) < tol &&
-            Math.abs(f.y - run.y) < tol,
-        );
+            Math.abs(f.y - run.y) < tol
+          )
+            return true;
+          // 2. Heavy geometric overlap of similar-size runs. Catches duplicates
+          //    pdf.js reports with different strings/fragments or a larger
+          //    offset (the source of "doubled / overlapping text").
+          const ratio = run.fontSize / f.fontSize;
+          if (ratio > 0.7 && ratio < 1.4 && overlapFrac(f, run) > 0.6)
+            return true;
+          return false;
+        });
         if (dup) continue;
         fresh.push(run);
       }
@@ -2629,7 +2667,11 @@ function DragMove({
     <View
       style={[
         styles.dragMove,
-        selected ? styles.dragMoveSelected : null,
+        // While editing text inline, show ONLY the blinking caret — no coral
+        // tint and no dashed ring (the dragMoveSelected/selRing chrome would
+        // otherwise box the active field). Non-editing selection still gets the
+        // ring so a tapped (but not yet edited) element reads as selected.
+        selected && !editing ? styles.dragMoveSelected : null,
         {
           left: value.x * container.width - DRAG_PAD_H,
           top: value.y * container.height - DRAG_PAD_V,
@@ -2640,7 +2682,9 @@ function DragMove({
       {...(interactive ? move.panHandlers : {})}
     >
       {children}
-      {selected ? <View pointerEvents="none" style={styles.selRing} /> : null}
+      {selected && !editing ? (
+        <View pointerEvents="none" style={styles.selRing} />
+      ) : null}
     </View>
   );
 }
