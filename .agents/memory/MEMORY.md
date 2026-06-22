@@ -17,8 +17,9 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [iOS file save / "download"](ios-file-save.md) — iOS Download must use the system Save sheet (expo-sharing); silent Documents copy is invisible in Expo Go; single Download button, defer sheet to modal onDismiss.
 - [Conversion stats pipeline](conversion-stats-pipeline.md) — /api/usage sums per-job output_file_size (set at completion via updateConversionJobStatus); conversions are async + anonymous-by-default; mobile attribution needs a fresh EAS APK.
-- [Mobile direct download](mobile-direct-download.md) — saveFile() in services/files.ts replaces share sheet; Android SAF picked-once, iOS Documents+infoPlist keys, web anchor; don't treat write errors as revoked perms.
+- [Mobile file save](mobile-direct-download.md) — one saveFile() entry point: Android SAF picked-once folder, iOS system Save sheet (see ios-file-save.md), web anchor; don't treat SAF write errors as revoked perms.
 - [Mobile flat surfaces](mobile-flat-surfaces.md) — pdf-convert-mobile buttons/cards are flat solid color; GlassSurface is solid (name kept, sheen/intensity now no-ops); don't reintroduce glossy sheen.
 - [Mobile keyboard resize](mobile-keyboard-resize.md) — Android needs softwareKeyboardLayoutMode "resize" (not "pan") or keyboard hides bottom inputs; native change → needs fresh EAS build.
 - [Deploy architecture](deploy-architecture.md) — prod = Railway(api-server co-hosts web build, single origin) + Supabase + Expo EAS; pin pnpm@10 in root pkg for Railpack; mobile uses EXPO_PUBLIC_DOMAIN.

@@ -1,21 +1,25 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as LegacyFS from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
 
 /**
- * Direct file download (no share sheet).
+ * Save a converted file to the device.
  *
  *  • Android — writes the file straight into a folder the user picks once
  *    (typically "Download") via the Storage Access Framework. The granted
  *    folder is remembered, so every later download is silent / one-tap.
- *  • iOS — copies the file into the app's Documents folder, which is exposed
- *    in the Files app (On My iPhone → PDF Convert Master) via the
- *    UIFileSharingEnabled / LSSupportsOpeningDocumentsInPlace Info.plist keys.
+ *  • iOS — opens the system "Save to Files / Save Image" dialog so the user
+ *    picks the destination. iOS has no app-writable Downloads folder, and a
+ *    silent copy into the app's Documents folder is invisible in Expo Go and
+ *    only shows up in a fully installed build — so the system dialog is the
+ *    only place a file is reliably findable everywhere.
  *  • Web — triggers a real browser download through a temporary <a download>.
  */
 
 export type SaveResult =
   | { status: "saved"; location: string }
+  | { status: "presented" }
   | { status: "cancelled" }
   | { status: "failed" };
 
@@ -123,19 +127,30 @@ async function saveAndroid(uri: string, name: string): Promise<SaveResult> {
   }
 }
 
-/** iOS: copy into the app's Documents folder (visible in the Files app). */
+/**
+ * iOS: open the system "Save to Files / Save Image" dialog. The share/save
+ * sheet needs a real on-disk path with the right extension, so we copy the
+ * file into the cache under its final name first, then hand that path off.
+ */
 async function saveIos(uri: string, name: string): Promise<SaveResult> {
   try {
-    const dir = LegacyFS.documentDirectory;
-    if (!dir) return { status: "failed" };
-    const to = dir + encodeURIComponent(name);
-    const info = await LegacyFS.getInfoAsync(to);
-    if (info.exists) await LegacyFS.deleteAsync(to, { idempotent: true });
-    await LegacyFS.copyAsync({ from: uri, to });
-    return {
-      status: "saved",
-      location: "Files app → On My iPhone → PDF Convert Master",
-    };
+    if (!(await Sharing.isAvailableAsync())) return { status: "failed" };
+    const cacheDir = LegacyFS.cacheDirectory;
+    let toShare = uri;
+    if (cacheDir) {
+      const to = cacheDir + encodeURIComponent(name);
+      const info = await LegacyFS.getInfoAsync(to);
+      if (info.exists) await LegacyFS.deleteAsync(to, { idempotent: true });
+      await LegacyFS.copyAsync({ from: uri, to });
+      toShare = to;
+    }
+    await Sharing.shareAsync(toShare, {
+      mimeType: mimeFor(name),
+      dialogTitle: `Save ${name}`,
+    });
+    // The system dialog reports its own success/cancel; we can't read which,
+    // so surface a neutral "presented" rather than a misleading "saved here".
+    return { status: "presented" };
   } catch {
     return { status: "failed" };
   }
@@ -156,9 +171,10 @@ function saveWeb(uri: string, name: string): SaveResult {
 }
 
 /**
- * Download a file directly to the device (no share sheet). `uri` is a local
- * file URI (file://) on native or a blob/object URL on web; `name` is the
- * desired file name including its extension.
+ * Save a converted file to the device. Android writes straight into a
+ * remembered folder, iOS opens the system "Save to Files / Save Image" dialog,
+ * and web triggers a browser download. `uri` is a local file URI (file://) on
+ * native or a blob/object URL on web; `name` includes the extension.
  */
 export async function saveFile(uri: string, name: string): Promise<SaveResult> {
   if (Platform.OS === "web") return saveWeb(uri, name);

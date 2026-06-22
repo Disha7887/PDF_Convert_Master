@@ -1,17 +1,17 @@
 ---
-name: Mobile direct download (no share sheet)
-description: How pdf-convert-mobile saves files directly to the device instead of opening the expo-sharing share sheet, and the per-platform constraints.
+name: Mobile file save (single Download button)
+description: How pdf-convert-mobile saves files per-platform from one Download button, and the constraints.
 ---
 
-# Direct download instead of share sheet
+# Single Download button, per-platform save
 
-`services/files.ts#saveFile(uri, name)` is the single download entry point for the Expo app, returning `{status:"saved",location} | {status:"cancelled"} | {status:"failed"}`. All download buttons call it; there are no longer any per-screen `shareFile` copies and `expo-sharing` is no longer used.
+`services/files.ts#saveFile(uri, name)` is the single save entry point for the Expo app, returning `{status:"saved",location} | {status:"presented"} | {status:"cancelled"} | {status:"failed"}`. All download buttons call it; there are no per-screen `shareFile` copies. Note: iOS uses `expo-sharing` internally to present the system Save sheet — see `ios-file-save.md`.
 
-**Why:** user (non-technical, Android+iOS) wants tapping "Download" to put the file on the device directly, not open a share sheet.
+**Why:** user (non-technical, Android+iOS) wants ONE "Download" button (rejected a separate Share button). On Android that means a direct folder save; on iOS the system Save sheet is the only reliably-findable path (see `ios-file-save.md`).
 
 ## Per-platform reality (the honest constraints)
 - **Android**: uses Storage Access Framework (`expo-file-system/legacy` `StorageAccessFramework`). The folder is picked ONCE via `requestDirectoryPermissionsAsync()` and persisted in AsyncStorage (`downloads.safDirectoryUri`); later saves are silent. There is no truly zero-prompt API for arbitrary documents under scoped storage — the one-time picker is expected.
-- **iOS**: copies into `documentDirectory`. The file is only visible to the user (Files app → On My iPhone → app) because `app.json` sets `ios.infoPlist.UIFileSharingEnabled` + `LSSupportsOpeningDocumentsInPlace`. Without those keys the copy is invisible.
+- **iOS**: opens the system "Save to Files / Save Image" sheet via `expo-sharing` (returns status `"presented"`, no success alert). SUPERSEDED the old silent `documentDirectory` copy — that copy is invisible in Expo Go and only surfaced in a fully installed build. See `ios-file-save.md` for the full rationale.
 - **Web**: anchor `<a download>` + `URL.revokeObjectURL` for blob URLs.
 
 ## Gotchas

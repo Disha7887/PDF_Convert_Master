@@ -638,6 +638,7 @@ export default function ConvertScreen() {
         } else if (res.status === "failed") {
           setError("Could not save the file. Please try again.");
         }
+        // "presented" → iOS Save dialog handled its own confirmation; stay silent.
         // "cancelled" → the user backed out of the folder picker; stay silent.
       } catch {
         setError("Could not prepare the download.");
@@ -864,7 +865,7 @@ export default function ConvertScreen() {
 
             <Text style={styles.downloadHint}>
               {Platform.OS === "ios"
-                ? "Saves to the Files app → On My iPhone → PDF Convert Master."
+                ? "Pick where to keep it — Save to Files, or Save Image for pictures."
                 : Platform.OS === "android"
                 ? "Saves to a folder you pick once (e.g. Downloads); reused next time."
                 : "Saves to your browser's downloads."}

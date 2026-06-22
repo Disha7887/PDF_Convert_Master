@@ -66,6 +66,7 @@
     "expo-file-system": "^19.0.23",
     "expo-image-manipulator": "~14.0.8",
     "expo-print": "~15.0.8",
+    "expo-sharing": "~14.0.8",
     "lottie-react": "^2.4.1",
     "lottie-react-native": "~7.3.8",
     "pdf-lib": "^1.17.1",
