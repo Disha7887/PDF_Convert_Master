@@ -118,9 +118,18 @@ export const SignIn: React.FC = () => {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setLocation("/forgot-password")}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input

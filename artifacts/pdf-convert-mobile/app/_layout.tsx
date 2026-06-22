@@ -72,6 +72,11 @@ function RootLayoutNav() {
           contentStyle: { backgroundColor: "transparent" },
         }}
       />
+      <Stack.Screen name="auth/forgot-password" options={{ title: "Reset Password" }} />
+      <Stack.Screen name="auth/reset-password" options={{ title: "Reset Password" }} />
+
+      {/* Account */}
+      <Stack.Screen name="account/profile" options={{ title: "Profile Settings" }} />
 
       {/* Marketing / legal */}
       <Stack.Screen name="marketing/pricing" options={{ title: "Pricing" }} />

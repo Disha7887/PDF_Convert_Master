@@ -12,6 +12,8 @@ export interface MockUser {
   apiKey: string;
   createdAt: string;
   avatarInitials: string;
+  /** URL (origin-relative) of the user's uploaded profile picture, if any. */
+  profilePictureUrl?: string | null;
 }
 
 export interface Plan {
@@ -99,6 +101,7 @@ export const DEMO_USER: MockUser = {
   apiKey: "pk_live_demo_5f3a9c2b8e1d4a6f",
   createdAt: "2025-11-02T09:30:00.000Z",
   avatarInitials: "DU",
+  profilePictureUrl: null,
 };
 
 // Accepts ANY email/password in mock mode; this is the credential shown as a hint.

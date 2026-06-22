@@ -29,6 +29,8 @@ interface AuthContextType {
     name?: string,
   ) => Promise<{ success: boolean; error?: string }>;
   signout: () => void;
+  /** Merge partial fields into the signed-in user and persist them locally. */
+  updateUser: (updates: Partial<MockUser>, newToken?: string) => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -128,6 +130,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const updateUser = useCallback(
+    async (updates: Partial<MockUser>, newToken?: string) => {
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ...updates };
+        AsyncStorage.setItem(USER_KEY, JSON.stringify(next)).catch(() => {});
+        return next;
+      });
+      // The server rotates the JWT when email changes; persist it so future
+      // authed calls don't carry a stale token.
+      if (newToken) {
+        setToken(newToken);
+        setAuthToken(newToken);
+        AsyncStorage.setItem(TOKEN_KEY, newToken).catch(() => {});
+      }
+    },
+    [],
+  );
+
   const signout = useCallback(() => {
     setUser(null);
     setToken(null);
@@ -143,9 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signin,
       signup,
       signout,
+      updateUser,
       isAuthenticated: !!user && !!token,
     }),
-    [user, token, loading, signin, signup, signout],
+    [user, token, loading, signin, signup, signout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

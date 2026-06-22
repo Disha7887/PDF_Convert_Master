@@ -14,7 +14,8 @@ import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
-import { register, signin, getCurrentUser, authenticateUser } from "./auth";
+import { register, signin, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword } from "./auth";
+import { saveAvatar, getAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
@@ -2887,6 +2888,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected route: Get user profile
   app.get("/api/user", authenticateUser, getCurrentUser);
   app.get("/api/auth/user", authenticateUser, getCurrentUser); // alias
+
+  // Profile management (protected)
+  app.patch("/api/auth/profile", authenticateUser, updateProfile);
+  app.post("/api/auth/change-password", authenticateUser, changePassword);
+
+  // Password reset via emailed code (public)
+  app.post("/api/auth/forgot-password", forgotPassword);
+  app.post("/api/auth/reset-password", resetPassword);
+
+  // Upload the signed-in user's profile picture. Stored in object storage and
+  // served back via GET /api/auth/avatar/:userId.
+  app.post(
+    "/api/auth/avatar",
+    authenticateUser,
+    imageUpload.single("avatar"),
+    async (req, res) => {
+      try {
+        const userId = req.user!.id;
+        if (!req.file) {
+          return res.status(400).json({
+            success: false,
+            error: "No image file provided (expected field 'avatar', image/* only)",
+          });
+        }
+
+        // Normalise through Sharp to strip metadata/active content and cap size.
+        const processed = await sharp(req.file.buffer)
+          .rotate()
+          .resize(512, 512, { fit: "cover" })
+          .jpeg({ quality: 88 })
+          .toBuffer();
+
+        await saveAvatar(userId, processed, "image/jpeg");
+
+        // Cache-busting query param so clients refetch the new image immediately.
+        const profilePictureUrl = `/api/auth/avatar/${userId}?v=${Date.now()}`;
+        const updated = await storage.updateUserProfilePicture(userId, profilePictureUrl);
+        if (!updated) {
+          return res.status(404).json({ success: false, error: "User not found" });
+        }
+
+        const { passwordHash: _, ...userWithoutPassword } = updated;
+        return res.status(200).json({
+          success: true,
+          data: { user: userWithoutPassword, profilePictureUrl },
+          message: "Profile picture updated",
+        });
+      } catch (error) {
+        req.log?.error?.({ err: error }, "Avatar upload failed");
+        return res.status(500).json({ success: false, error: "Failed to upload avatar" });
+      }
+    },
+  );
+
+  // Serve a user's avatar image (public read — low-sensitivity profile picture).
+  app.get("/api/auth/avatar/:userId", async (req, res) => {
+    try {
+      const stored = await getAvatar(req.params.userId);
+      if (!stored) {
+        return res.status(404).json({ success: false, error: "No avatar set" });
+      }
+      res.setHeader("Content-Type", stored.contentType);
+      res.setHeader("Cache-Control", "public, max-age=300");
+      return res.send(stored.buffer);
+    } catch (error) {
+      req.log?.error?.({ err: error }, "Avatar fetch failed");
+      return res.status(500).json({ success: false, error: "Failed to load avatar" });
+    }
+  });
 
   // API health check
   // ===========================================================================

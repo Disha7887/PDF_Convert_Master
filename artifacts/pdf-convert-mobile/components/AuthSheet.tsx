@@ -361,6 +361,22 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
                     />
                   </View>
                 ) : null}
+
+                {mode === "signin" ? (
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: ROUTES.forgotPassword,
+                        params: email.trim() ? { email: email.trim() } : {},
+                      } as never)
+                    }
+                    hitSlop={8}
+                    style={styles.forgotWrap}
+                    testID="link-forgot-password"
+                  >
+                    <Text style={styles.forgotText}>Forgot password?</Text>
+                  </Pressable>
+                ) : null}
               </>
             ) : null}
 
@@ -504,6 +520,9 @@ const styles = StyleSheet.create({
   inputIcon: { width: 18 },
   input: { flex: 1, fontSize: 15, color: SHEET.text, fontFamily: fonts.body, paddingVertical: 0 },
   editText: { fontSize: 13, color: C.primary, fontFamily: fonts.bodySemibold },
+
+  forgotWrap: { alignSelf: "flex-end", marginTop: 2 },
+  forgotText: { fontSize: 13, color: C.primary, fontFamily: fonts.bodySemibold },
 
   errorText: { fontSize: 13, color: "#fda4a1", fontFamily: fonts.body, marginTop: 2 },
   infoText: { fontSize: 13, color: SHEET.muted, fontFamily: fonts.body, marginTop: 2 },

@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -12,6 +13,7 @@ import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { avatarSrc } from "@/services/profile";
 
 const PEOPLE_PATH =
   "M26.68,23.36a11,11,0,0,0-6.91-7.7,6,6,0,1,0-7.54,0,11,11,0,0,0-6.91,7.7,2.86,2.86,0,0,0,.54,2.47A3,3,0,0,0,8.25,27h15.5a3,3,0,0,0,2.39-1.17A2.86,2.86,0,0,0,26.68,23.36ZM12,11a4,4,0,1,1,4,4A4,4,0,0,1,12,11ZM24.56,24.6a1,1,0,0,1-.81.4H8.25a1,1,0,0,1-.81-.4.85.85,0,0,1-.18-.76,9,9,0,0,1,17.48,0A.85.85,0,0,1,24.56,24.6Z";
@@ -32,6 +34,7 @@ export default function SettingsScreen() {
   const go = (r: string) => router.push(r as never);
 
   const displayName = user?.name?.trim() || user?.email?.split("@")[0] || "Your account";
+  const photo = avatarSrc(user?.profilePictureUrl);
 
   const [askMobileData, setAskMobileData] = useState(true);
 
@@ -78,11 +81,19 @@ export default function SettingsScreen() {
     <ScreenScroll navInset tabBar>
       {/* Profile header */}
       {isAuthenticated ? (
-        <View style={[styles.profileCard, cardShadow]}>
+        <Pressable
+          onPress={() => go(ROUTES.profileSettings)}
+          style={({ pressed }) => [styles.profileCard, cardShadow, { opacity: pressed ? 0.94 : 1 }]}
+          testID="button-profile-header"
+        >
           <View style={styles.profileAvatar}>
-            <Svg width={30} height={30} viewBox="0 0 32 32">
-              <Path d={PEOPLE_PATH} fill="#fff" />
-            </Svg>
+            {photo ? (
+              <Image source={{ uri: photo }} style={styles.profileAvatarImg} contentFit="cover" />
+            ) : (
+              <Svg width={30} height={30} viewBox="0 0 32 32">
+                <Path d={PEOPLE_PATH} fill="#fff" />
+              </Svg>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.profileName} numberOfLines={1}>
@@ -94,7 +105,8 @@ export default function SettingsScreen() {
               </Text>
             )}
           </View>
-        </View>
+          <Feather name="chevron-right" size={20} color={C.mutedForeground} />
+        </Pressable>
       ) : null}
 
       {/* Get Premium banner */}
@@ -115,6 +127,20 @@ export default function SettingsScreen() {
           <Feather name="chevron-right" size={20} color="#fff" />
         </LinearGradient>
       </Pressable>
+
+      {/* Account */}
+      {isAuthenticated && (
+        <>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={[styles.group, cardShadow]}>
+            <SettingRow
+              icon="user"
+              label="Profile Settings"
+              onPress={() => go(ROUTES.profileSettings)}
+            />
+          </View>
+        </>
+      )}
 
       {/* Purchases */}
       <Text style={styles.sectionTitle}>Purchases</Text>
@@ -236,7 +262,9 @@ const styles = StyleSheet.create({
     backgroundColor: C.primary,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  profileAvatarImg: { width: 52, height: 52, borderRadius: 26 },
   profileName: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingSemibold },
   profileEmail: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 2 },
   premiumTitle: { fontSize: 17, color: "#fff", fontFamily: fonts.headingBold },

@@ -1,8 +1,26 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { registerUserSchema, loginUserSchema, type User } from "@workspace/db";
+import {
+  registerUserSchema,
+  loginUserSchema,
+  updateProfileSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  type User,
+} from "@workspace/db";
+import { sendPasswordResetEmail } from "./lib/email";
+import { logger } from "./lib/logger";
+
+const RESET_CODE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+/** Hashes a reset code so the plaintext never lives in the database. */
+function hashResetCode(code: string): string {
+  return crypto.createHash("sha256").update(code).digest("hex");
+}
 
 // JWT secret - in production this should be an environment variable
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production";
@@ -237,5 +255,189 @@ export async function getCurrentUser(req: Request, res: Response) {
       success: false,
       error: "Failed to get user data"
     });
+  }
+}
+
+// Update profile (name / email) — protected
+export async function updateProfile(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Not authenticated" });
+    }
+
+    const validation = updateProfileSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: validation.error.issues,
+      });
+    }
+
+    const { name, email } = validation.data;
+
+    // If changing email, ensure it isn't already taken by someone else.
+    if (email && email !== req.user.email) {
+      const existing = await storage.getUserByEmail(email);
+      if (existing && existing.id !== req.user.id) {
+        return res.status(409).json({
+          success: false,
+          error: "That email is already in use by another account",
+        });
+      }
+    }
+
+    const updated = await storage.updateUserProfile(req.user.id, { name, email });
+    if (!updated) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    // Email is embedded in the JWT, so re-issue a token after a profile change.
+    const token = generateToken(updated);
+    const { passwordHash: _, ...userWithoutPassword } = updated;
+
+    return res.status(200).json({
+      success: true,
+      data: { user: userWithoutPassword, token },
+      message: "Profile updated",
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return res.status(500).json({ success: false, error: "Failed to update profile" });
+  }
+}
+
+// Change password — protected (requires current password)
+export async function changePassword(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Not authenticated" });
+    }
+
+    const validation = changePasswordSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: validation.error.issues,
+      });
+    }
+
+    const { currentPassword, newPassword } = validation.data;
+
+    const isValid = await comparePassword(currentPassword, req.user.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: "Current password is incorrect",
+      });
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    await storage.updateUserPassword(req.user.id, passwordHash);
+
+    return res.status(200).json({ success: true, message: "Password changed" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ success: false, error: "Failed to change password" });
+  }
+}
+
+// Forgot password — emails a one-time reset code. Always returns success so the
+// endpoint never reveals whether an email is registered.
+export async function forgotPassword(req: Request, res: Response) {
+  const genericResponse = {
+    success: true,
+    message: "If an account exists for that email, a reset code has been sent.",
+  };
+
+  try {
+    const validation = forgotPasswordSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: validation.error.issues,
+      });
+    }
+
+    const { email } = validation.data;
+    const user = await storage.getUserByEmail(email);
+
+    if (user) {
+      const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+      const expiresAt = new Date(Date.now() + RESET_CODE_TTL_MS);
+      await storage.createPasswordResetCode(user.id, hashResetCode(code), expiresAt);
+
+      try {
+        await sendPasswordResetEmail(user.email, code);
+      } catch (emailErr) {
+        // Soft failure: don't leak account existence; surface in logs only.
+        logger.error({ err: emailErr }, "Failed to send password reset email");
+      }
+    }
+
+    return res.status(200).json(genericResponse);
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    // Still return the generic response shape on unexpected errors.
+    return res.status(200).json(genericResponse);
+  }
+}
+
+// Reset password using an emailed code.
+export async function resetPassword(req: Request, res: Response) {
+  try {
+    const validation = resetPasswordSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: validation.error.issues,
+      });
+    }
+
+    const { email, code, newPassword } = validation.data;
+    const invalid = {
+      success: false,
+      error: "Invalid or expired reset code",
+    };
+
+    const user = await storage.getUserByEmail(email);
+    if (!user) {
+      return res.status(400).json(invalid);
+    }
+
+    const active = await storage.getLatestActiveResetCode(user.id);
+    if (!active) {
+      return res.status(400).json(invalid);
+    }
+
+    const matches = crypto.timingSafeEqual(
+      Buffer.from(active.codeHash),
+      Buffer.from(hashResetCode(code)),
+    );
+    if (!matches) {
+      // Throttle brute force: a 6-digit code only gets a handful of guesses
+      // before it's burned, forcing the attacker to request a fresh code.
+      const MAX_RESET_ATTEMPTS = 5;
+      const attempts = await storage.incrementResetAttempts(active.id);
+      if (attempts >= MAX_RESET_ATTEMPTS) {
+        await storage.consumeResetCode(active.id);
+      }
+      return res.status(400).json(invalid);
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    await storage.updateUserPassword(user.id, passwordHash);
+    await storage.consumeResetCode(active.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful. You can now sign in.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({ success: false, error: "Failed to reset password" });
   }
 }

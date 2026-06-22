@@ -8,6 +8,7 @@ interface AuthContextType {
   signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signout: () => void;
+  updateUser: (user: User, token?: string) => void;
   isAuthenticated: boolean;
 }
 
@@ -123,6 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("auth_token");
   };
 
+  // Merge fresh user data (and optionally a reissued token) into state after a
+  // profile/avatar update so the UI reflects changes without a full reload.
+  const updateUser = (updatedUser: User, newToken?: string) => {
+    setUser(updatedUser);
+    if (newToken) {
+      setToken(newToken);
+      localStorage.setItem("auth_token", newToken);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -130,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signin,
     signup,
     signout,
+    updateUser,
     isAuthenticated: !!user && !!token,
   };
 

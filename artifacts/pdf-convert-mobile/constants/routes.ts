@@ -29,6 +29,11 @@ export const ROUTES = {
   // Auth
   signIn: "/auth/sign-in",
   signUp: "/auth/sign-up",
+  forgotPassword: "/auth/forgot-password",
+  resetPassword: "/auth/reset-password",
+
+  // Account
+  profileSettings: "/account/profile",
 
   // Dashboard suite (reachable from Settings)
   dashboardHome: "/dashboard",

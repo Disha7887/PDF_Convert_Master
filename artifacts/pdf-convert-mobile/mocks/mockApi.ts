@@ -59,6 +59,55 @@ export const mockApi = {
     return mockDelay(DEMO_USER, 300);
   },
 
+  // ── Profile management ──────────────────────────────────────────────────────
+  async updateProfile(updates: { name?: string; email?: string }): Promise<AuthResult> {
+    await mockDelay(null, MOCK_LATENCY_MS);
+    if (updates.email !== undefined && !updates.email.includes("@")) {
+      return { success: false, error: "Please enter a valid email address." };
+    }
+    const user: MockUser = {
+      ...DEMO_USER,
+      ...(updates.name !== undefined ? { name: updates.name } : null),
+      ...(updates.email !== undefined ? { email: updates.email } : null),
+    };
+    return { success: true, user };
+  },
+
+  async changePassword(_current: string, next: string): Promise<{ success: boolean; error?: string }> {
+    await mockDelay(null, MOCK_LATENCY_MS);
+    if (next.length < 6) {
+      return { success: false, error: "New password must be at least 6 characters long." };
+    }
+    return { success: true };
+  },
+
+  async uploadAvatar(_uri: string): Promise<AuthResult & { profilePictureUrl?: string }> {
+    await mockDelay(null, MOCK_LATENCY_MS);
+    const profilePictureUrl = `mock-avatar://${Date.now()}`;
+    return { success: true, user: { ...DEMO_USER, profilePictureUrl }, profilePictureUrl };
+  },
+
+  async forgotPassword(_email: string): Promise<{ success: boolean }> {
+    await mockDelay(null, MOCK_LATENCY_MS);
+    // Always succeed (no account enumeration), mirroring the real backend.
+    return { success: true };
+  },
+
+  async resetPassword(
+    _email: string,
+    code: string,
+    next: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    await mockDelay(null, MOCK_LATENCY_MS);
+    if (!/^\d{6}$/.test(code)) {
+      return { success: false, error: "Enter the 6-digit code from your email." };
+    }
+    if (next.length < 6) {
+      return { success: false, error: "New password must be at least 6 characters long." };
+    }
+    return { success: true };
+  },
+
   // ── Dashboard / usage ─────────────────────────────────────────────────────
   async getDashboardStats(): Promise<DashboardStats> {
     return mockDelay(DASHBOARD_STATS);

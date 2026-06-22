@@ -40,3 +40,4 @@
 - [Inline on-page text editing (mobile)](inline-text-editing-mobile.md) — tap text → caret on page; defer drag-wrapper capture, re-enable web user-select on input, measure-Text width, snapshot undo per session.
 - [PDF bytes cache vs blob revocation](pdf-bytes-blob-revocation.md) — web blob: URLs die after first use; readPdfBytes caches bytes so Edit Text doesn't re-fetch a dead blob (renderer caches the parsed doc, masking it). getDocument callers must .slice().
 - [pdf.js v6 removed doc.destroy()](pdfjs-v6-doc-destroy.md) — destroy via loadingTask.destroy(); make cleanup finally best-effort so it can't discard a good result; verify the version the app resolves.
+- [Profile & password reset](profile-password-reset.md) — JWT rotates on profile update (web+mobile must persist it); forgot-password always-success; reset codes throttled (5 tries); emails via Resend connector.

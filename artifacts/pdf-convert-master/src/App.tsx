@@ -24,6 +24,9 @@ import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { Support } from "@/pages/Support";
 import { SignUp } from "@/pages/SignUp";
 import { SignIn } from "@/pages/SignIn";
+import { ForgotPassword } from "@/pages/ForgotPassword";
+import { ResetPassword } from "@/pages/ResetPassword";
+import { Profile } from "@/pages/Profile";
 import { WordToPdfUpload } from "@/pages/upload/WordToPdf";
 import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
 import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
@@ -179,6 +182,26 @@ function Router() {
         <DynamicLayout>
           <SignIn />
         </DynamicLayout>
+      </Route>
+
+      <Route path="/forgot-password">
+        <DynamicLayout>
+          <ForgotPassword />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/reset-password">
+        <DynamicLayout>
+          <ResetPassword />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/dashboard/profile">
+        <ProtectedRoute>
+          <DynamicLayout isDashboardPage={true}>
+            <Profile />
+          </DynamicLayout>
+        </ProtectedRoute>
       </Route>
 
       {/* Upload pages for tools */}

@@ -3,18 +3,20 @@ import {
   users, 
   apiKeys,
   conversionJobs,
+  passwordResetCodes,
   type User, 
   type InsertUser,
   type ApiKey,
   type InsertApiKey,
   type ConversionJob,
   type InsertConversionJob,
+  type PasswordResetCode,
   type ToolConfig,
   ToolType,
   ToolCategory
 } from "@workspace/db";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { hashApiKey } from "./utils/generateApiKey";
 
 // modify the interface with any CRUD methods
@@ -25,6 +27,15 @@ export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserProfile(id: string, updates: { name?: string; email?: string }): Promise<User | undefined>;
+  updateUserProfilePicture(id: string, profilePictureUrl: string): Promise<User | undefined>;
+  updateUserPassword(id: string, passwordHash: string): Promise<void>;
+
+  // Password reset methods
+  createPasswordResetCode(userId: string, codeHash: string, expiresAt: Date): Promise<void>;
+  getLatestActiveResetCode(userId: string): Promise<PasswordResetCode | undefined>;
+  consumeResetCode(id: string): Promise<void>;
+  incrementResetAttempts(id: string): Promise<number>;
   
   // API Key methods
   createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
@@ -50,6 +61,7 @@ export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private apiKeys: Map<string, ApiKey>;
   private conversionJobs: Map<number, ConversionJob>;
+  private resetCodes: Map<string, PasswordResetCode>;
   private tools: ToolConfig[] = [];
   private currentJobId: number;
 
@@ -57,6 +69,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.apiKeys = new Map();
     this.conversionJobs = new Map();
+    this.resetCodes = new Map();
     this.currentJobId = 1;
     this.initializeTools();
   }
@@ -322,10 +335,91 @@ export class MemStorage implements IStorage {
       name: insertUser.name ?? null,
       passwordHash: insertUser.passwordHash!,
       plan: insertUser.plan || "free",
+      profilePictureUrl: null,
       createdAt: now
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUserProfile(
+    id: string,
+    updates: { name?: string; email?: string },
+  ): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const next: User = {
+      ...user,
+      name: updates.name !== undefined ? updates.name : user.name,
+      email: updates.email !== undefined ? updates.email : user.email,
+    };
+    this.users.set(id, next);
+    return next;
+  }
+
+  async updateUserProfilePicture(
+    id: string,
+    profilePictureUrl: string,
+  ): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const next: User = { ...user, profilePictureUrl };
+    this.users.set(id, next);
+    return next;
+  }
+
+  async updateUserPassword(id: string, passwordHash: string): Promise<void> {
+    const user = this.users.get(id);
+    if (!user) return;
+    this.users.set(id, { ...user, passwordHash });
+  }
+
+  // Password reset methods
+  async createPasswordResetCode(
+    userId: string,
+    codeHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    // Invalidate any previous codes for this user so only the newest works.
+    for (const [key, code] of this.resetCodes) {
+      if (code.userId === userId) this.resetCodes.delete(key);
+    }
+    const id = crypto.randomUUID();
+    this.resetCodes.set(id, {
+      id,
+      userId,
+      codeHash,
+      expiresAt,
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+  }
+
+  async getLatestActiveResetCode(
+    userId: string,
+  ): Promise<PasswordResetCode | undefined> {
+    const now = Date.now();
+    return Array.from(this.resetCodes.values())
+      .filter(
+        (c) =>
+          c.userId === userId &&
+          !c.consumedAt &&
+          c.expiresAt.getTime() > now,
+      )
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))[0];
+  }
+
+  async consumeResetCode(id: string): Promise<void> {
+    const code = this.resetCodes.get(id);
+    if (code) this.resetCodes.set(id, { ...code, consumedAt: new Date() });
+  }
+
+  async incrementResetAttempts(id: string): Promise<number> {
+    const code = this.resetCodes.get(id);
+    if (!code) return 0;
+    const attempts = (code.attempts ?? 0) + 1;
+    this.resetCodes.set(id, { ...code, attempts });
+    return attempts;
   }
 
   // API Key methods
@@ -711,6 +805,80 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async updateUserProfile(
+    id: string,
+    updates: { name?: string; email?: string },
+  ): Promise<User | undefined> {
+    const set: Partial<typeof users.$inferInsert> = {};
+    if (updates.name !== undefined) set.name = updates.name;
+    if (updates.email !== undefined) set.email = updates.email;
+    const [user] = await db.update(users).set(set).where(eq(users.id, id)).returning();
+    return user || undefined;
+  }
+
+  async updateUserProfilePicture(
+    id: string,
+    profilePictureUrl: string,
+  ): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ profilePictureUrl })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserPassword(id: string, passwordHash: string): Promise<void> {
+    await db.update(users).set({ passwordHash }).where(eq(users.id, id));
+  }
+
+  // Password reset methods
+  async createPasswordResetCode(
+    userId: string,
+    codeHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    // Invalidate any previous codes for this user so only the newest works.
+    await db.delete(passwordResetCodes).where(eq(passwordResetCodes.userId, userId));
+    await db.insert(passwordResetCodes).values({ userId, codeHash, expiresAt });
+  }
+
+  async getLatestActiveResetCode(
+    userId: string,
+  ): Promise<PasswordResetCode | undefined> {
+    const [code] = await db
+      .select()
+      .from(passwordResetCodes)
+      .where(
+        and(
+          eq(passwordResetCodes.userId, userId),
+          isNull(passwordResetCodes.consumedAt),
+          gt(passwordResetCodes.expiresAt, new Date()),
+        ),
+      )
+      .orderBy(desc(passwordResetCodes.createdAt))
+      .limit(1);
+    return code || undefined;
+  }
+
+  async consumeResetCode(id: string): Promise<void> {
+    await db
+      .update(passwordResetCodes)
+      .set({ consumedAt: new Date() })
+      .where(eq(passwordResetCodes.id, id));
+  }
+
+  // Atomically bump the failed-attempt counter and return the new total so the
+  // caller can invalidate the code once the brute-force limit is reached.
+  async incrementResetAttempts(id: string): Promise<number> {
+    const [row] = await db
+      .update(passwordResetCodes)
+      .set({ attempts: sql`${passwordResetCodes.attempts} + 1` })
+      .where(eq(passwordResetCodes.id, id))
+      .returning({ attempts: passwordResetCodes.attempts });
+    return row?.attempts ?? 0;
   }
 
   // API Key methods

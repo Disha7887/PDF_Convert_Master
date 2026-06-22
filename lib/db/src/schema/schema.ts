@@ -10,8 +10,25 @@ export const users = pgTable("users", {
   name: text("name"),
   passwordHash: text("password_hash").notNull(),
   plan: text("plan").notNull().default("free"),
+  profilePictureUrl: text("profile_picture_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Password reset codes. A short numeric code is emailed to the user; only its
+// hash is stored here. Codes are single-use (consumedAt) and time-limited.
+export const passwordResetCodes = pgTable("password_reset_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  codeHash: text("code_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  consumedAt: timestamp("consumed_at"),
+  // Failed verification attempts. The code is invalidated once this hits the
+  // limit, so a 6-digit code can't be brute-forced within its TTL.
+  attempts: integer("attempts").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type PasswordResetCode = typeof passwordResetCodes.$inferSelect;
 
 // API Keys table
 // NOTE: `apiKey` stores a sha256 HASH of the raw key, never the plaintext.
@@ -47,6 +64,36 @@ export const loginUserSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(1, "Password is required"),
 });
+
+// Profile / account management schemas
+export const updateProfileSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required").max(120).optional(),
+    email: z.string().email("Invalid email format").optional(),
+  })
+  .refine((d) => d.name !== undefined || d.email !== undefined, {
+    message: "Nothing to update",
+  });
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email format"),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  code: z.string().trim().min(4, "Enter the code from your email").max(12),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export type UpdateProfile = z.infer<typeof updateProfileSchema>;
+export type ChangePassword = z.infer<typeof changePasswordSchema>;
+export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
+export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 
 // API Key schemas
 export const insertApiKeySchema = createInsertSchema(apiKeys).pick({
