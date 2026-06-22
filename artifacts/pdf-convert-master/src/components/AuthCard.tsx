@@ -223,13 +223,17 @@ export function AuthCard({ mode }: { mode: Mode }) {
               </button>
             </div>
 
-            {/* Illustration */}
+            {/* Illustration — different per mode */}
             <div className="flex items-center justify-center mt-1 mb-3.5">
-              <div
-                className="[&>svg]:w-full [&>svg]:h-full"
-                style={{ width: 150, height: 158 }}
-                dangerouslySetInnerHTML={{ __html: SIGN_UP_XML }}
-              />
+              {mode === "signin" ? (
+                <AuthResultIcon kind="welcome" size={150} loop />
+              ) : (
+                <div
+                  className="[&>svg]:w-full [&>svg]:h-full"
+                  style={{ width: 150, height: 158 }}
+                  dangerouslySetInnerHTML={{ __html: SIGN_UP_XML }}
+                />
+              )}
             </div>
 
             {/* Social */}

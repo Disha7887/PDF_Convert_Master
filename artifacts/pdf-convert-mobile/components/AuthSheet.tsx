@@ -266,9 +266,13 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
               </Pressable>
             </View>
 
-            {/* Illustration */}
+            {/* Illustration — different per mode */}
             <View style={styles.illustration}>
-              <SvgXml xml={SIGN_UP_XML} width={150} height={158} />
+              {mode === "signin" ? (
+                <AuthResultIcon kind="welcome" size={120} loop />
+              ) : (
+                <SvgXml xml={SIGN_UP_XML} width={150} height={158} />
+              )}
             </View>
 
             {/* Social */}
