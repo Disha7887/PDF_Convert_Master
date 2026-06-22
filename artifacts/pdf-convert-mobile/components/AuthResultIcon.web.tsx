@@ -5,10 +5,11 @@ import { View, type ViewStyle } from "react-native";
 const success = require("../assets/lottie/auth-success.json");
 const error = require("../assets/lottie/auth-error.json");
 const welcome = require("../assets/lottie/auth-welcome.json");
+const signup = require("../assets/lottie/signup.json");
 
-export type AuthResultKind = "success" | "error" | "welcome";
+export type AuthResultKind = "success" | "error" | "welcome" | "signup";
 
-const MAP: Record<AuthResultKind, unknown> = { success, error, welcome };
+const MAP: Record<AuthResultKind, unknown> = { success, error, welcome, signup };
 
 export interface AuthResultIconProps {
   kind: AuthResultKind;
