@@ -26,6 +26,19 @@ directly to see Metro's real status (e.g. 500 + JSON `UnableToResolveError`).
 **How to apply:** when a screenshot shows blank white + a 500 on `entry.bundle`, fetch the exact
 browser bundle URL on `$REPLIT_EXPO_DEV_DOMAIN` to read the real error body.
 
+## `expo start` blocks on an interactive login prompt → iOS/native bundle never serves → device "request timeout"
+On Replit the workflow runs `expo start` in a pseudo-TTY. When not logged into an Expo
+account it shows `It is recommended to log in with your Expo account before proceeding`
+(Log in / Proceed anonymously) and WAITS for arrow-key input. Metro then only builds the
+web bundle; it never serves the native bundle, so an iOS/Android device hitting the
+`exp://…expo.sisko.replit.dev` URL just times out. Fix: prepend `EXPO_OFFLINE=1` to the
+`dev` script's `expo start` command — offline mode skips the account check (and dependency
+validation), so startup is non-interactive and native bundling proceeds.
+**Why:** the timeout looks like a network/proxy problem but is really the CLI blocked on a prompt.
+**How to apply:** edit the `dev` script in the Expo artifact's `package.json`, then restart the
+workflow. The benign `Offline and no cached development certificate found, unable to sign manifest`
+line is fine — Expo Go loads unsigned dev manifests; iOS bundling starting confirms it connected.
+
 ## lottie-react-native@7 web build needs an optional peer
 Its `index.web.js` imports `@lottiefiles/dotlottie-react` (optional peerDep). Without it the web
 bundle fails to resolve. Install `@lottiefiles/dotlottie-react` into the Expo artifact for web.
