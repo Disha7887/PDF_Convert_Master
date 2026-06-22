@@ -75,7 +75,7 @@ export function AppFooter() {
         </View>
         <View style={styles.infoRow}>
           <Feather name="mail" size={15} color={C.mutedForeground} style={styles.infoIcon} />
-          <Text style={styles.infoText}>info@pdfconvertmaster.com</Text>
+          <Text style={styles.infoText}>info@pdfgenius.com</Text>
         </View>
       </View>
 

@@ -95,7 +95,7 @@ export interface DashboardStats {
 // ─── Demo user ─────────────────────────────────────────────────────────────
 export const DEMO_USER: MockUser = {
   id: "usr_demo_001",
-  email: "demo@pdfconvertmaster.com",
+  email: "demo@pdfgenius.com",
   name: "Demo User",
   plan: "Pro",
   apiKey: "pk_live_demo_5f3a9c2b8e1d4a6f",
@@ -106,7 +106,7 @@ export const DEMO_USER: MockUser = {
 
 // Accepts ANY email/password in mock mode; this is the credential shown as a hint.
 export const DEMO_CREDENTIALS = {
-  email: "demo@pdfconvertmaster.com",
+  email: "demo@pdfgenius.com",
   password: "demo1234",
 };
 

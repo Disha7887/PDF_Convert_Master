@@ -107,7 +107,7 @@ export const FooterSection = (): JSX.Element => {
 
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                <span className="text-gray-600 text-sm">info@pdfconvertmaster.com</span>
+                <span className="text-gray-600 text-sm">info@pdfgenius.com</span>
               </div>
             </div>
           </div>

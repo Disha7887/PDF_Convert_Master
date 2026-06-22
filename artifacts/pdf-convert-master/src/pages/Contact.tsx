@@ -301,12 +301,12 @@ export const Contact = (): JSX.Element => {
                       variant="ghost"
                       size="sm"
                       className="text-blue-600 text-xs hover:bg-blue-50 transition-colors"
-                      onClick={() => copyToClipboard('support@pdfconvertmaster.com', 'Email Address')}
+                      onClick={() => copyToClipboard('support@pdfgenius.com', 'Email Address')}
                     >
                       Copy
                     </Button>
                   </div>
-                  <p className="text-sm font-medium">support@pdfconvertmaster.com</p>
+                  <p className="text-sm font-medium">support@pdfgenius.com</p>
                 </div>
                 <div className="flex items-center text-sm text-gray-600 mb-4">
                   <Clock className="w-4 h-4 mr-2" />
@@ -722,7 +722,7 @@ export const Contact = (): JSX.Element => {
                         </div>
                         <div className="flex items-center">
                           <Mail className="w-4 h-4 mr-2 text-blue-500" />
-                          <span>support@pdfconvertmaster.com</span>
+                          <span>support@pdfgenius.com</span>
                         </div>
                       </div>
                     </div>

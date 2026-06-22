@@ -35,7 +35,7 @@ const METHODS: {
     icon: "mail",
     title: "Email Support",
     blurb: "Send us an email for detailed inquiries",
-    info: "support@pdfconvertmaster.com",
+    info: "support@pdfgenius.com",
     meta: "Response within 1 hour",
   },
   {
