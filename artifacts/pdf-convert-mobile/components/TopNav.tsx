@@ -13,7 +13,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, SvgXml } from "react-native-svg";
 
 import { GlassSurface } from "@/components/Glass";
 import colors from "@/constants/colors";
@@ -34,6 +34,8 @@ export function useNavTopInset() {
 
 const PEOPLE_PATH =
   "M26.68,23.36a11,11,0,0,0-6.91-7.7,6,6,0,1,0-7.54,0,11,11,0,0,0-6.91,7.7,2.86,2.86,0,0,0,.54,2.47A3,3,0,0,0,8.25,27h15.5a3,3,0,0,0,2.39-1.17A2.86,2.86,0,0,0,26.68,23.36ZM12,11a4,4,0,1,1,4,4A4,4,0,0,1,12,11ZM24.56,24.6a1,1,0,0,1-.81.4H8.25a1,1,0,0,1-.81-.4.85.85,0,0,1-.18-.76,9,9,0,0,1,17.48,0A.85.85,0,0,1,24.56,24.6Z";
+
+const VERIFIED_BADGE_XML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g><path fill="#49adf4" d="M21.187 10.007a3.457 3.457 0 0 1-.864-.712 3.378 3.378 0 0 1 .277-1.141c.291-.821.62-1.751.092-2.474s-1.525-.7-2.4-.68a3.422 3.422 0 0 1-1.155-.078 3.369 3.369 0 0 1-.425-1.063c-.248-.845-.531-1.8-1.4-2.086-.838-.27-1.614.324-2.3.846A3.285 3.285 0 0 1 12 3.25a3.285 3.285 0 0 1-1.023-.631C10.293 2.1 9.52 1.5 8.678 1.774c-.867.282-1.15 1.24-1.4 2.085a3.418 3.418 0 0 1-.421 1.061A3.482 3.482 0 0 1 5.7 5c-.878-.024-1.867-.05-2.4.68s-.2 1.653.092 2.473a3.336 3.336 0 0 1 .281 1.141 3.449 3.449 0 0 1-.863.713c-.732.5-1.563 1.069-1.563 1.993s.831 1.491 1.563 1.993a3.449 3.449 0 0 1 .863.712 3.335 3.335 0 0 1-.273 1.142c-.29.82-.618 1.75-.091 2.473s1.521.7 2.4.68a3.426 3.426 0 0 1 1.156.078 3.4 3.4 0 0 1 .424 1.063c.248.845.531 1.8 1.4 2.086a1.424 1.424 0 0 0 .431.068 3.382 3.382 0 0 0 1.868-.914A3.285 3.285 0 0 1 12 20.75a3.285 3.285 0 0 1 1.023.631c.685.523 1.461 1.12 2.3.845.867-.282 1.15-1.24 1.4-2.084a3.388 3.388 0 0 1 .424-1.062A3.425 3.425 0 0 1 18.3 19c.878.021 1.867.05 2.4-.68s.2-1.653-.092-2.474a3.38 3.38 0 0 1-.281-1.139 3.436 3.436 0 0 1 .864-.713c.732-.5 1.563-1.07 1.563-1.994s-.834-1.492-1.567-1.993Z"/><path fill="#fff" d="M11 14.75a.745.745 0 0 1-.53-.22l-2-2a.75.75 0 0 1 1.06-1.06l1.54 1.54 3.48-2.61a.75.75 0 0 1 .9 1.2l-4 3a.751.751 0 0 1-.45.15Z"/></g></svg>`;
 
 /**
  * Shared top navigation bar for the main tab screens.
@@ -142,9 +144,12 @@ export function TopNav() {
                 </Svg>
               </View>
               <View style={styles.menuHeaderText}>
-                <Text style={styles.menuName} numberOfLines={1}>
-                  {user?.name ?? "Account"}
-                </Text>
+                <View style={styles.menuNameRow}>
+                  <Text style={styles.menuName} numberOfLines={1}>
+                    {user?.name ?? "Account"}
+                  </Text>
+                  {!!user && <SvgXml xml={VERIFIED_BADGE_XML} width={16} height={16} />}
+                </View>
                 {!!user?.email && (
                   <Text style={styles.menuEmail} numberOfLines={1}>
                     {user.email}
@@ -276,7 +281,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   menuHeaderText: { flex: 1 },
-  menuName: { fontSize: 15, color: C.foreground, fontFamily: fonts.bodySemibold },
+  menuNameRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  menuName: { fontSize: 15, color: C.foreground, fontFamily: fonts.bodySemibold, flexShrink: 1 },
   menuEmail: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 1 },
   menuDivider: {
     height: StyleSheet.hairlineWidth,

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import logoIcon from "@assets/IconOnly_Transparent_NoBuffer_1782108807761.png";
+import verifiedBadge from "@assets/verified_1782122950940.svg";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -131,7 +132,12 @@ export const DashboardHeader = (): JSX.Element => {
                   <span className="text-sm font-semibold">{user?.email?.charAt(0).toUpperCase() || 'U'}</span>
                 </div>
                 <div className="text-left hidden xl:block max-w-[160px]">
-                  <p className="text-sm font-medium truncate">{user?.email || 'User'}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm font-medium truncate">{user?.email || 'User'}</p>
+                    {user ? (
+                      <img src={verifiedBadge} alt="Verified" className="w-4 h-4 shrink-0" />
+                    ) : null}
+                  </div>
                   <p className="text-xs text-blue-100">{user?.plan || 'Free Plan'}</p>
                 </div>
                 <ChevronDown className="w-4 h-4 hidden xl:block" />
