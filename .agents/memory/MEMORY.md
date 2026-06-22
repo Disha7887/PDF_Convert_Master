@@ -17,6 +17,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [Email logo hosting](email-logo-hosting.md) — email images need ABSOLUTE https URLs; serve brand logo from web app public/ (owns /), build URL in api-server from REPLIT_DOMAINS.
 - [Signup OTP verification](signup-otp-verification.md) — signup is 2-step: /register emails a code (NO token), /verify-signup creates the account + returns token; never revert register to auto-login.
 - [Password reset → Resend](password-reset-resend.md) — forgot/reset-password emails only deliver when the Resend connector is connected; otherwise they soft-fail silently (returns generic success, logs 401).
 - [Tool upload-page header](tool-upload-header.md) — ToolPageShell.showHeader; every tool's upload empty-state is headerless (header only on working state); all 3 categories share UploadDropzone.

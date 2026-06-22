@@ -11,6 +11,25 @@
  */
 import { logger } from "./logger";
 
+/**
+ * Absolute, publicly-reachable URL of the brand logo for email headers.
+ *
+ * Email clients cannot load relative paths, so we build an absolute URL from
+ * the runtime domain. `PUBLIC_APP_URL` lets you override with a custom domain;
+ * otherwise we use the first `REPLIT_DOMAINS` entry (the dev domain in
+ * development, the deployed domain in production). The logo file itself is
+ * served by the web app at `/genius-logo.png`.
+ */
+function getLogoUrl(): string {
+  const override = process.env.PUBLIC_APP_URL?.replace(/\/$/, "");
+  const base =
+    override ||
+    (process.env.REPLIT_DOMAINS
+      ? `https://${process.env.REPLIT_DOMAINS.split(",")[0].trim()}`
+      : "");
+  return `${base}/genius-logo.png`;
+}
+
 interface ResendConnectionSettings {
   api_key?: string;
   apiKey?: string;
@@ -153,11 +172,10 @@ function otpEmailHtml(opts: OtpEmailOptions): string {
       <tr>
         <td align="center">
           <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
-            <!-- Header: logo + app name -->
+            <!-- Header: brand logo only -->
             <tr>
-              <td align="center" style="padding:32px 24px 12px 24px;">
-                <img src="https://pdfgenius.app/logo.png" alt="PDF Genius" width="56" height="56" style="display:block;border:0;outline:none;text-decoration:none;border-radius:12px;" />
-                <div style="font-size:22px;font-weight:700;color:#f7433d;margin-top:12px;">PDF Genius</div>
+              <td align="center" style="padding:32px 24px 16px 24px;">
+                <img src="${getLogoUrl()}" alt="PDF Genius" width="190" style="display:block;border:0;outline:none;text-decoration:none;width:190px;max-width:190px;height:auto;margin:0 auto;" />
               </td>
             </tr>
             <!-- Heading -->
