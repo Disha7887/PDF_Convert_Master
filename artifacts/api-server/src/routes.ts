@@ -18,6 +18,7 @@ import { register, signin, getCurrentUser, authenticateUser } from "./auth";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
+import { saveConvertedFile, getConvertedFile } from "./lib/conversionStorage";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
 import { execSync } from "child_process";
@@ -2382,6 +2383,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mimeType: conversionResult.mimeType,
           filename: outputFilename
         });
+
+        // Also persist to durable object storage so the user can re-download
+        // their result anytime — even after the in-memory copy is purged or the
+        // server restarts. Best-effort: a storage failure must not fail the job
+        // (the in-memory copy still serves the immediate download).
+        try {
+          await saveConvertedFile(jobId, conversionResult.convertedBuffer, conversionResult.mimeType);
+        } catch (storageError) {
+          console.error(`Failed to persist converted file for job ${jobId} to object storage:`, storageError);
+        }
       }
 
       // OCR also returns the recognized text per page so the client can display,
@@ -2534,19 +2545,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get the converted file from storage
-      const convertedFile = convertedFileStorage.get(jobId);
-      if (!convertedFile) {
+      // Resolve the converted bytes. Prefer the fast in-memory copy; fall back to
+      // durable object storage so downloads keep working anytime — after the
+      // in-memory copy is purged or the server has restarted.
+      const safeFilename = job.outputFilename || `converted_file_${jobId}.${job.toolType.includes('pdf') ? 'pdf' : 'txt'}`;
+      let convertedBuffer: Buffer | undefined;
+      let mimeType: string | undefined;
+
+      const memoryCopy = convertedFileStorage.get(jobId);
+      if (memoryCopy) {
+        convertedBuffer = memoryCopy.buffer;
+        mimeType = memoryCopy.mimeType;
+      } else {
+        try {
+          const stored = await getConvertedFile(jobId);
+          if (stored) {
+            convertedBuffer = stored.buffer;
+            mimeType = stored.contentType;
+          }
+        } catch (storageError) {
+          console.error(`Failed to load converted file for job ${jobId} from object storage:`, storageError);
+        }
+      }
+
+      if (!convertedBuffer) {
         return res.status(404).json({
           success: false,
           error: "Converted file not found"
         });
       }
 
-      const { buffer: convertedBuffer, mimeType, filename: outputFilename } = convertedFile;
-      
       // Set headers for proper file download
-      const safeFilename = outputFilename || `converted_file_${jobId}.${job.toolType.includes('pdf') ? 'pdf' : 'txt'}`;
       const properMimeType = mimeType || getMimeType(safeFilename);
       
       res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
@@ -2558,13 +2587,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Disposition');
       
-      console.log(`Serving download for job ${jobId}: ${safeFilename} (${mimeType || 'unknown'})`);
+      console.log(`Serving download for job ${jobId}: ${safeFilename} (${properMimeType})`);
       
       // Send the actual converted file
       res.send(convertedBuffer);
       
-      // Clean up stored files after download. OCR text is fetched by the client
-      // before the PDF download, so it is safe to clear here too.
+      // Free the in-memory copies after serving. The durable object-storage copy
+      // is intentionally KEPT so the user can download this result again later.
       fileStorage.delete(jobId);
       convertedFileStorage.delete(jobId);
       ocrTextStorage.delete(jobId);
@@ -2982,6 +3011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           toolType: j.toolType,
           toolName: nameByType[j.toolType] || j.toolType,
           inputFilename: j.inputFilename,
+          outputFilename: j.outputFilename,
           status: j.status,
           source: j.source,
           createdAt: j.createdAt,

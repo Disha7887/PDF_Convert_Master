@@ -36,6 +36,8 @@ export interface UsageRecentJob {
   toolType: string;
   toolName: string;
   inputFilename: string;
+  /** Name of the converted result, used when re-downloading the file. */
+  outputFilename: string | null;
   status: string;
   source: string;
   createdAt: string | null;

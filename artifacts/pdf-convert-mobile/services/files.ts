@@ -196,3 +196,35 @@ export async function saveFile(uri: string, name: string): Promise<SaveResult> {
   if (Platform.OS === "android") return saveAndroid(uri, name);
   return shareFile(uri, name);
 }
+
+/**
+ * Download a converted result from the backend to a local URI. On native the
+ * bytes are streamed into the cache so the save flow has a real on-disk path; on
+ * web a blob object-URL is returned. Used to re-download a past conversion (e.g.
+ * from Recent Activity) — the file is fetched fresh from durable storage each
+ * time, so it works anytime, not just right after converting.
+ */
+export async function downloadRemoteFile(url: string, name: string): Promise<string> {
+  if (Platform.OS === "web") {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  }
+  const dir = LegacyFS.cacheDirectory;
+  const target = `${dir}download-${Date.now()}-${encodeURIComponent(name)}`;
+  const result = await LegacyFS.downloadAsync(url, target);
+  // Guard against saving an error body (e.g. a 404/500 JSON payload) as if it
+  // were the converted file — without this the save flow would report success.
+  if (result.status < 200 || result.status >= 300) {
+    await LegacyFS.deleteAsync(result.uri, { idempotent: true });
+    throw new Error(`Download failed (${result.status})`);
+  }
+  return result.uri;
+}
+
+/** Fetch a converted result from `url` and hand it to the device save flow. */
+export async function downloadAndSave(url: string, name: string): Promise<SaveResult> {
+  const localUri = await downloadRemoteFile(url, name);
+  return saveFile(localUri, name);
+}

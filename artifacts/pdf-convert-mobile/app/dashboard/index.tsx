@@ -3,15 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { Loader } from "@/components/Loader";
 import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
+import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { getToolByServerType } from "@/constants/tools";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchUsage, type AccountUsage } from "@/services/account";
+import { fetchUsage, type AccountUsage, type UsageRecentJob } from "@/services/account";
+import { downloadAndSave } from "@/services/files";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -96,6 +99,29 @@ export default function WorkspaceScreen() {
   const router = useRouter();
   const { user, isAuthenticated, token } = useAuth();
   const go = (r: string) => router.push(r as never);
+  const [downloadingId, setDownloadingId] = React.useState<number | null>(null);
+
+  // Re-download a past conversion straight from Recent Activity. The bytes are
+  // fetched fresh from the backend's durable storage, so this works anytime —
+  // not just immediately after the file was converted.
+  const handleDownload = async (job: UsageRecentJob) => {
+    if (downloadingId !== null) return;
+    const name =
+      job.outputFilename || `${job.toolName.replace(/\s+/g, "-").toLowerCase()}-${job.id}`;
+    setDownloadingId(job.id);
+    try {
+      const res = await downloadAndSave(`${API_ORIGIN}/api/download/${job.id}`, name);
+      if (res.status === "saved") {
+        Alert.alert("Downloaded", `${name} was saved to ${res.location}.`);
+      } else if (res.status === "failed") {
+        Alert.alert("Download failed", "We couldn't download this file. Please try again.");
+      }
+    } catch {
+      Alert.alert("Download failed", "We couldn't download this file. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const { data: usage } = useQuery<AccountUsage>({
     queryKey: ["account-usage", token],
@@ -234,10 +260,20 @@ export default function WorkspaceScreen() {
           <View style={styles.activityList}>
             {recent.slice(0, 5).map((job) => {
               const m = statusMeta(job.status);
+              const tool = getToolByServerType(job.toolType);
+              const canDownload = job.status === "completed";
+              const isDownloading = downloadingId === job.id;
               return (
-                <View key={job.id} style={styles.activityRow}>
-                  <View style={[styles.activityIcon, { backgroundColor: m.bg }]}>
-                    <Feather name={m.icon} size={16} color={m.fg} />
+                <Pressable
+                  key={job.id}
+                  style={styles.activityRow}
+                  disabled={!canDownload || downloadingId !== null}
+                  onPress={() => handleDownload(job)}
+                >
+                  {/* Converter-specific icon so each row reads at a glance as the
+                      tool that produced it, with the status shown by the badge. */}
+                  <View style={[styles.activityIcon, { backgroundColor: C.accent }]}>
+                    <Feather name={tool?.feather ?? m.icon} size={16} color={C.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.activityTitle} numberOfLines={1}>
@@ -251,7 +287,16 @@ export default function WorkspaceScreen() {
                     <Text style={styles.activityTime}>{timeAgo(job.createdAt)}</Text>
                     <Badge label={job.status} tone={m.tone} />
                   </View>
-                </View>
+                  {canDownload ? (
+                    isDownloading ? (
+                      <Loader size={22} style={styles.activityDownload} />
+                    ) : (
+                      <View style={styles.activityDownload}>
+                        <Feather name="download" size={18} color={C.primary} />
+                      </View>
+                    )
+                  ) : null}
+                </Pressable>
               );
             })}
           </View>
@@ -358,6 +403,7 @@ const styles = StyleSheet.create({
   activityTitle: { fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
   activitySub: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 1 },
   activityRight: { alignItems: "flex-end", gap: 5 },
+  activityDownload: { width: 28, alignItems: "center", justifyContent: "center" },
   activityTime: { fontSize: 11, color: C.mutedForeground, fontFamily: fonts.body },
 
   quickRow: { flexDirection: "row", gap: 12, marginTop: 14 },
