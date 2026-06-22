@@ -15,6 +15,12 @@ export interface LottieIconProps {
   autoplay?: boolean;
   /** Play only while hovered, and reset when the pointer leaves. */
   playOnHover?: boolean;
+  /**
+   * Externally controlled play state. When defined, the animation plays while
+   * `true` and resets while `false` (useful to drive it from a parent's hover,
+   * e.g. a button). Overrides `playOnHover`/`autoplay`.
+   */
+  play?: boolean;
   /** Playback speed multiplier. Defaults to 1. */
   speed?: number;
   /**
@@ -38,24 +44,35 @@ export function LottieIcon({
   loop = true,
   autoplay = true,
   playOnHover = false,
+  play,
   speed = 1,
   ariaLabel,
   className,
 }: LottieIconProps) {
   const lottieRef = useRef<LottieRefCurrentProps>(null);
+  const isControlled = play !== undefined;
 
   useEffect(() => {
     lottieRef.current?.setSpeed(speed);
   }, [speed]);
 
+  useEffect(() => {
+    if (!isControlled) return;
+    if (play) {
+      lottieRef.current?.goToAndPlay(0);
+    } else {
+      lottieRef.current?.stop();
+    }
+  }, [isControlled, play]);
+
   const handleMouseEnter = () => {
-    if (playOnHover) {
+    if (playOnHover && !isControlled) {
       lottieRef.current?.goToAndPlay(0);
     }
   };
 
   const handleMouseLeave = () => {
-    if (playOnHover) {
+    if (playOnHover && !isControlled) {
       lottieRef.current?.stop();
     }
   };
@@ -74,7 +91,7 @@ export function LottieIcon({
         lottieRef={lottieRef}
         animationData={animationData}
         loop={loop}
-        autoplay={playOnHover ? false : autoplay}
+        autoplay={playOnHover || isControlled ? false : autoplay}
         style={{ width: "100%", height: "100%" }}
       />
     </div>

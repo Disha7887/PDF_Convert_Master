@@ -17,6 +17,7 @@ import userAnim from "@/assets/lottie/user.json";
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
   const { login } = useAuth();
+  const [loginHover, setLoginHover] = React.useState(false);
 
   // Simple (non-dropdown) navigation links; the tool categories render as dropdowns
   const leadingItem = { name: "Home", href: "/" };
@@ -93,11 +94,13 @@ export const NavigationSection = (): JSX.Element => {
               variant="outline"
               className="group h-[42px] pl-[12px] pr-[17px] py-[9px] gap-1.5 rounded-lg border border-gray-300/70 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-white/40 transition-colors bg-transparent"
               onClick={() => setLocation('/signin')}
+              onMouseEnter={() => setLoginHover(true)}
+              onMouseLeave={() => setLoginHover(false)}
             >
               <LottieIcon
                 animationData={userAnim}
                 size={24}
-                playOnHover
+                play={loginHover}
                 ariaLabel="User account"
               />
               Log In
