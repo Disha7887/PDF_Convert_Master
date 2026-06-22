@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, type ViewStyle } from "react-native";
 
 import colors from "@/constants/colors";
@@ -9,23 +9,45 @@ const userAnim = require("@/assets/lottie/user.json");
 
 interface UserLottieIconProps {
   size?: number;
-  loop?: boolean;
-  autoPlay?: boolean;
   style?: ViewStyle;
+  /** Delay before the first play, in ms. Defaults to 3000 (3s). */
+  initialDelayMs?: number;
+  /** Gap between single plays, in ms. Defaults to 30000 (30s). */
+  periodMs?: number;
 }
 
 /**
  * Animated user/account Lottie icon. Mirrors the web app's navbar user icon so
- * the account control looks identical across web and mobile. Native renderer
- * (lottie-react-native); a web sibling (`.web.tsx`) uses the pure-JS player.
- * Falls back to a Feather user icon if the Lottie renderer errors.
+ * the account control looks identical across web and mobile. Instead of looping
+ * continuously, it plays a single time after `initialDelayMs`, then plays once
+ * every `periodMs`. Native renderer (lottie-react-native); a web sibling
+ * (`.web.tsx`) uses the pure-JS player. Falls back to a Feather user icon if
+ * the Lottie renderer errors.
  */
 export function UserLottieIcon({
   size = 28,
-  loop = true,
-  autoPlay = true,
   style,
+  initialDelayMs = 3000,
+  periodMs = 30000,
 }: UserLottieIconProps) {
+  const ref = useRef<React.ElementRef<typeof LottieView>>(null);
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    const playOnce = () => {
+      ref.current?.reset();
+      ref.current?.play();
+    };
+    const timeoutId = setTimeout(() => {
+      playOnce();
+      intervalId = setInterval(playOnce, periodMs);
+    }, initialDelayMs);
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [initialDelayMs, periodMs]);
+
   return (
     <View
       style={[
@@ -39,9 +61,10 @@ export function UserLottieIcon({
         }
       >
         <LottieView
+          ref={ref}
           source={userAnim as never}
-          autoPlay={autoPlay}
-          loop={loop}
+          autoPlay={false}
+          loop={false}
           style={{ width: size, height: size }}
         />
       </LottieFallbackBoundary>
