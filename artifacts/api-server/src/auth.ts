@@ -22,8 +22,28 @@ function hashResetCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-// JWT secret - in production this should be an environment variable
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production";
+// JWT secret. This MUST come from the environment. We fail closed in
+// production: if JWT_SECRET is missing there, the process refuses to start
+// rather than silently signing tokens with a publicly-known fallback (which
+// would let anyone forge valid sessions). A dev-only fallback keeps local
+// setups frictionless without weakening production.
+function resolveJwtSecret(): string {
+  const fromEnv = process.env.JWT_SECRET;
+  if (fromEnv && fromEnv.length >= 16) {
+    return fromEnv;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "JWT_SECRET is not set (or too short) in production. Refusing to start with an insecure signing key.",
+    );
+  }
+  logger.warn(
+    "JWT_SECRET is not set; using an insecure development-only fallback. Set JWT_SECRET before deploying.",
+  );
+  return "dev-only-insecure-jwt-secret-do-not-use-in-production";
+}
+
+const JWT_SECRET = resolveJwtSecret();
 const JWT_EXPIRES_IN = "7d";
 
 // Extend Express Request interface to include user

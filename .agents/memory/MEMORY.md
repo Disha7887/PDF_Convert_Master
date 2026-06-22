@@ -17,6 +17,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [Password reset → Resend](password-reset-resend.md) — forgot/reset-password emails only deliver when the Resend connector is connected; otherwise they soft-fail silently (returns generic success, logs 401).
 - [Tool upload-page header](tool-upload-header.md) — ToolPageShell.showHeader; every tool's upload empty-state is headerless (header only on working state); all 3 categories share UploadDropzone.
 - [vite.config deploy build](vite-config-deploy-build.md) — config must NOT throw on missing PORT/BASE_PATH; deploy build step runs without [services.env]; default port/base, validate only for dev/serve/preview.
 - [Web auth dark-sheet design](web-auth-dark-sheet.md) — web /signin /signup mirror mobile AuthSheet (shared AuthCard, dark #171c28, coral, progressive step, Lottie welcome/error); render standalone (no DynamicLayout); signup auto-logs in.

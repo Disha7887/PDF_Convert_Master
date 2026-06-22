@@ -291,6 +291,32 @@ function renderRateLimited(ip: string): boolean {
   return entry.count > limit;
 }
 
+// Per-IP rate limit for authentication endpoints (login, register, forgot/reset
+// password). Brute-force / credential-stuffing / email-flooding protection.
+// Fixed-window, mirrors the upload/render limiters above.
+const authRateWindow = new Map<string, { count: number; resetAt: number }>();
+function authRateLimit(maxPerMinute: number) {
+  return (req: Request, res: any, next: any) => {
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    const key = `${req.path}:${ip}`;
+    const now = Date.now();
+    const windowMs = 60 * 1000;
+    const entry = authRateWindow.get(key);
+    if (!entry || entry.resetAt < now) {
+      authRateWindow.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+    entry.count += 1;
+    if (entry.count > maxPerMinute) {
+      return res.status(429).json({
+        success: false,
+        error: "Too many attempts. Please wait a minute and try again.",
+      });
+    }
+    return next();
+  };
+}
+
 function sanitizeUploadName(name: string, ext: string): string {
   const base = name.replace(/^.*[\\/]/, "").replace(/\.[^.]+$/, "");
   const safeBase = base.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80) || "image";
@@ -2875,12 +2901,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============== AUTHENTICATION ROUTES ==============
   
   // User registration
-  app.post("/api/signup", register);
-  app.post("/api/auth/register", register); // alias used by web AuthContext
+  app.post("/api/signup", authRateLimit(10), register);
+  app.post("/api/auth/register", authRateLimit(10), register); // alias used by web AuthContext
   
   // User sign in
-  app.post("/api/signin", signin);
-  app.post("/api/auth/login", signin); // alias used by web AuthContext
+  app.post("/api/signin", authRateLimit(15), signin);
+  app.post("/api/auth/login", authRateLimit(15), signin); // alias used by web AuthContext
   
   // Protected route: Get current user (dashboard)
   app.get("/api/dashboard", authenticateUser, getCurrentUser);
@@ -2894,8 +2920,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/change-password", authenticateUser, changePassword);
 
   // Password reset via emailed code (public)
-  app.post("/api/auth/forgot-password", forgotPassword);
-  app.post("/api/auth/reset-password", resetPassword);
+  app.post("/api/auth/forgot-password", authRateLimit(5), forgotPassword);
+  app.post("/api/auth/reset-password", authRateLimit(10), resetPassword);
 
   // Upload the signed-in user's profile picture. Stored in object storage and
   // served back via GET /api/auth/avatar/:userId.
