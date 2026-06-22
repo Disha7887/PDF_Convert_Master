@@ -37,17 +37,17 @@ export const HeroSection = (): JSX.Element => {
     {
       icon: <ShieldIcon className="h-4 w-4 mr-1.5 text-gray-500" />,
       text: "100% Secure",
-      className: "w-[102.7px]",
+      className: "whitespace-nowrap",
     },
     {
       icon: <ZapIcon className="h-4 w-4 mr-1.5 text-gray-500" />,
       text: "Instant Processing",
-      className: "w-[138.88px] ml-8",
+      className: "whitespace-nowrap",
     },
     {
       icon: <SparklesIcon className="h-4 w-4 mr-1.5 text-gray-500" />,
       text: "Always Free",
-      className: "w-[97.47px] ml-8",
+      className: "whitespace-nowrap",
     },
   ];
 
@@ -58,7 +58,7 @@ export const HeroSection = (): JSX.Element => {
         <AnimatedBackground particleCount={35} />
 
         <div className="flex w-full items-center relative z-10">
-          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 w-full relative">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 w-full relative">
               <div className="flex flex-wrap w-full items-center gap-12 relative">
                 {/* Left column - Text content */}
                 <div className="flex flex-col w-full md:w-[584px] items-start relative">
@@ -113,10 +113,10 @@ export const HeroSection = (): JSX.Element => {
                         </ul>
                       </div>
                     ) : (
-                      <div className="pt-8">
-                        <div className="flex gap-4">
+                      <div className="pt-8 w-full">
+                        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                           <AnimatedSelectButton
-                            className="h-[61px] px-8 py-4 rounded-full shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
+                            className="h-[61px] px-8 py-4 rounded-full justify-center w-full sm:w-auto shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a]"
                             onClick={() => {
                               console.log('Start Converting Now button clicked');
                               setLocation('/tools');
@@ -130,7 +130,7 @@ export const HeroSection = (): JSX.Element => {
 
                           <Button
                             variant="outline"
-                            className="h-[61px] px-[34px] py-[18px] bg-white text-gray-700 rounded-lg border-2 border-solid border-gray-300 hover:bg-gray-50"
+                            className="h-[61px] px-[34px] py-[18px] justify-center w-full sm:w-auto bg-white text-gray-700 rounded-lg border-2 border-solid border-gray-300 hover:bg-gray-50"
                             onClick={() => {
                               console.log('Learn More button clicked from hero');
                               setLocation('/learn-more');
@@ -145,8 +145,8 @@ export const HeroSection = (): JSX.Element => {
                       </div>
                     )}
 
-                    <div className="pt-8">
-                      <div className="flex items-center">
+                    <div className="pt-8 w-full">
+                      <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
                         {trustIndicators.map((indicator, index) => {
                           // Different animation timing for each element
                           const animationDelay = index * 0.8; // 0s, 0.8s, 1.6s delays

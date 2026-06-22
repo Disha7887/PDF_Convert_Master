@@ -75,7 +75,7 @@ export async function renderPdfPages(
       onProgress?.(i, doc.numPages);
     }
   } finally {
-    await doc.destroy();
+    await doc.loadingTask.destroy();
   }
   return pages;
 }

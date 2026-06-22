@@ -17,6 +17,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [Web pdfjs version pin](pdfjs-web-version-pin.md) — pin web pdfjs-dist to 5.4.296 (match api-server); v6.0.227 crashes client render via getOrInsertComputed; use doc.loadingTask.destroy().
 - [Web code splitting](web-code-splitting.md) — keep pdf-convert-master routes React.lazy + isolate only non-React leaf libs in manualChunks; otherwise monolithic bundle / circular chunks.
 - [Email logo hosting](email-logo-hosting.md) — email images need ABSOLUTE https URLs; serve brand logo from web app public/ (owns /), build URL in api-server from REPLIT_DOMAINS.
 - [Signup OTP verification](signup-otp-verification.md) — signup is 2-step: /register emails a code (NO token), /verify-signup creates the account + returns token; never revert register to auto-login.

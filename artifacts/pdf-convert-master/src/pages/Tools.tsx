@@ -1043,7 +1043,7 @@ export const Tools: React.FC = () => {
       <AnimatedBackground particleCount={14} className="opacity-50" />
       {/* Filter Buttons */}
       <div className="relative z-10 w-full py-8 px-4 sm:px-8 lg:px-20">
-        <div className="max-w-screen-xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto">
           <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pb-8">
             {filterButtons.map((buttonName, index) => (
               <Button
@@ -1066,7 +1066,7 @@ export const Tools: React.FC = () => {
 
       {/* Tools Grid */}
       <div className="relative z-10 w-full px-4 sm:px-8 lg:px-20 pb-16">
-        <div className="max-w-screen-xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 place-items-start justify-items-center">
             {filteredTools.map((tool) => (
               <ToolCard key={tool.id} toolConfig={tool} />

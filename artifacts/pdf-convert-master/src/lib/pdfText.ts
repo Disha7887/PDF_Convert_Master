@@ -110,7 +110,7 @@ export async function extractPageTexts(
       page.cleanup();
     }
   } finally {
-    await doc.destroy();
+    await doc.loadingTask.destroy();
   }
   return out;
 }

@@ -112,7 +112,7 @@ export function OcrPdfUpload() {
       const b = await readFileBytes(f);
       const doc = await loadPdfDocument(b);
       setNumPages(doc.numPages);
-      await doc.destroy();
+      await doc.loadingTask.destroy();
       setBytes(b);
       setFile(f);
       setResults(null);
@@ -176,7 +176,7 @@ export function OcrPdfUpload() {
           });
         }
       } finally {
-        await doc.destroy();
+        await doc.loadingTask.destroy();
       }
 
       await worker.terminate();
