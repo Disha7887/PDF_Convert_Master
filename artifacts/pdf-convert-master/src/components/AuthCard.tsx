@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { Mail, Lock, User, Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthResultIcon from "@/components/AuthResultIcon";
+import { LottieIcon } from "@/components/ui/lottie-icon";
+import verifyEmailAnim from "@/assets/lottie/verify-email.json";
 import { SIGN_UP_XML } from "@/lib/signUpIcon";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
@@ -262,7 +264,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
           </div>
 
           <div className="flex items-center justify-center mt-1 mb-1">
-            <Mail className="w-12 h-12" style={{ color: SHEET.primary }} />
+            <LottieIcon animationData={verifyEmailAnim} size={96} loop autoplay />
           </div>
 
           <p className="text-[15px] text-center leading-6" style={{ color: SHEET.muted }}>

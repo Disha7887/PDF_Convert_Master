@@ -1,4 +1,5 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
+import LottieView from "lottie-react-native";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -25,6 +26,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DEMO_CREDENTIALS } from "@/mocks/data";
 
 const C = colors.light;
+
+const VERIFY_EMAIL_ANIM = require("../assets/lottie/verify-email.json");
 
 // Sheet palette — this auth screen is intentionally dark (matches the design),
 // independent of the otherwise light-only app theme.
@@ -315,7 +318,12 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
                 </View>
 
                 <View style={styles.otpIconWrap}>
-                  <Feather name="mail" size={44} color={C.primary} />
+                  <LottieView
+                    source={VERIFY_EMAIL_ANIM as never}
+                    autoPlay
+                    loop
+                    style={styles.otpLottie}
+                  />
                 </View>
 
                 <Text style={styles.otpPrompt}>
@@ -658,6 +666,7 @@ const styles = StyleSheet.create({
 
   // OTP verification step
   otpIconWrap: { alignItems: "center", justifyContent: "center", marginTop: 8, marginBottom: 6 },
+  otpLottie: { width: 96, height: 96 },
   otpPrompt: {
     fontSize: 15,
     color: SHEET.muted,
