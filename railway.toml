@@ -1,0 +1,18 @@
+# Railway config-as-code. Only sets which paths trigger an auto-deploy — your
+# build/start commands and other settings stay as configured in the dashboard.
+#
+# The production server (@workspace/api-server) serves the web app's prebuilt
+# output (artifacts/pdf-convert-master/dist/public), so a deploy MUST trigger
+# whenever EITHER the server OR the web app (or a shared lib / lockfile)
+# changes. Previously only the api-server folder was watched, so web-only
+# commits were skipped ("No changes to watched files").
+[build]
+watchPatterns = [
+  "artifacts/api-server/**",
+  "artifacts/pdf-convert-master/**",
+  "lib/**",
+  "pnpm-workspace.yaml",
+  "pnpm-lock.yaml",
+  "package.json",
+  "railway.toml",
+]
