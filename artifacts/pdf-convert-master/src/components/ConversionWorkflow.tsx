@@ -18,6 +18,7 @@ import { EnhancedUploadArea } from "@/components/ui/enhanced-upload-area";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { ToolPageShell } from "@/components/upload/ToolPageShell";
 import { FileItem } from "@/components/ui/file-item";
+import { toolConfigs, getToolActionLabel } from "@/lib/toolConfig";
 
 interface ConversionWorkflowProps {
   toolType: string;
@@ -65,6 +66,14 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   
   const maxFiles = 10;
   const maxSizeInBytes = parseFloat(maxFileSize) * 1024 * 1024;
+
+  // Tool-specific upload copy so the upload page clearly states the conversion
+  // (e.g. "Convert to Word") and matches every other tool's upload design.
+  // Falls back to the tool's own title prop when a toolType has no config entry,
+  // so the action button always names the tool (never a generic "Select Files").
+  const cfg = toolConfigs[toolType];
+  const uploadTitle = cfg?.dropAreaText;
+  const uploadActionLabel = cfg ? getToolActionLabel(cfg) : toolTitle;
 
   const generateFileId = () => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -516,7 +525,27 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       maxWidth="max-w-4xl"
       showHeader={stage !== "upload"}
     >
-      {/* Main Workflow Card */}
+      {/* Upload Stage — bare dropzone, identical design to every other tool */}
+      {stage === 'upload' && (
+        <EnhancedUploadArea
+          acceptedFormats={acceptedFormats}
+          maxFileSize={maxFileSize}
+          maxFiles={maxFiles}
+          onFilesSelected={handleFilesSelection}
+          isDragOver={isDragOver}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          currentFileCount={selectedFiles.length}
+          showAdvancedFeatures={true}
+          toolId={toolType}
+          title={uploadTitle}
+          actionLabel={uploadActionLabel}
+        />
+      )}
+
+      {/* Workflow Card — only after files are selected / converting / done */}
+      {stage !== 'upload' && (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         
         {/* Progress Indicator */}
@@ -546,23 +575,6 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
         {/* Content Area */}
         <div className="p-8">
-          
-          {/* Upload Stage */}
-          {stage === 'upload' && (
-            <EnhancedUploadArea
-              acceptedFormats={acceptedFormats}
-              maxFileSize={maxFileSize}
-              maxFiles={maxFiles}
-              onFilesSelected={handleFilesSelection}
-              isDragOver={isDragOver}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              currentFileCount={selectedFiles.length}
-              showAdvancedFeatures={true}
-              toolId={toolType}
-            />
-          )}
 
           {/* Files Selected Stage */}
           {stage === 'files-selected' && selectedFiles.length > 0 && (
@@ -764,6 +776,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           )}
         </div>
       </div>
+      )}
     </ToolPageShell>
   );
 };

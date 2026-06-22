@@ -16,6 +16,14 @@ interface EnhancedUploadAreaProps {
   showAdvancedFeatures?: boolean;
   /** Tool id; the upload prompt plays that tool's own Lottie animation. */
   toolId?: string;
+  /** Big heading shown in the idle state (e.g. the tool's drop-area copy). */
+  title?: string;
+  /**
+   * Action-button label for the initial (no-files) state, e.g. the tool's own
+   * "Convert to Word". Falls back to "Select Files". Once files are added the
+   * button always reads "Add More Files".
+   */
+  actionLabel?: string;
 }
 
 /**
@@ -32,6 +40,8 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
   isDisabled = false,
   currentFileCount = 0,
   toolId,
+  title,
+  actionLabel,
 }) => {
   return (
     <UploadDropzone
@@ -41,10 +51,13 @@ export const EnhancedUploadArea: React.FC<EnhancedUploadAreaProps> = ({
       maxFiles={maxFiles}
       currentFileCount={currentFileCount}
       toolId={toolId}
+      title={title}
       disabled={isDisabled}
       validate={false}
       onFiles={onFilesSelected}
-      actionLabel={currentFileCount > 0 ? "Add More Files" : "Select Files"}
+      actionLabel={
+        currentFileCount > 0 ? "Add More Files" : actionLabel ?? "Select Files"
+      }
     />
   );
 };

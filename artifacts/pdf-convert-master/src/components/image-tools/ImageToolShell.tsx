@@ -27,9 +27,13 @@ export const ImageToolShell: React.FC<ImageToolShellProps> = ({
       iconBoxClassName={iconBg}
       showHeader={!hideHeader}
     >
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 md:p-8">
-        {children}
-      </div>
+      {hideHeader ? (
+        children
+      ) : (
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 md:p-8">
+          {children}
+        </div>
+      )}
     </ToolPageShell>
   );
 };

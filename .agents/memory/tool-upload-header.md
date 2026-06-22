@@ -1,13 +1,28 @@
 ---
-name: Tool upload-page header convention
-description: Where the tool page header lives and the rule for showing it only on working states, not the upload empty state
+name: Tool upload-page design convention
+description: Every tool's upload empty-state is one identical bare dropzone (no header, no card, no progress tab) with an action button that names the tool
 ---
 
-# Tool upload-page header
+# Tool upload-page design (one shared look)
 
-All tool pages (PDF converter, PDF edit, image edit) draw their centered
-icon + title + description + trust-text header from `ToolPageShell`
-(`components/upload/ToolPageShell.tsx`) via its `showHeader` prop (default true).
+All tool upload empty-states (PDF converter, PDF edit, image edit) must look
+IDENTICAL: a single shared dashed `UploadDropzone` sitting directly on the
+animated background — NO header, NO white card wrapper, NO progress tab. The
+reference is the "Sign PDF" tool. The action button must NAME the tool/conversion
+(e.g. "Convert to Word", "Sign PDF", "Image Compressor"), never a generic
+"Select Files".
+
+**Three things make a tool's upload page diverge — keep them in check:**
+1. Header — `ToolPageShell.showHeader`.
+2. White card wrapper — `ImageToolShell` wraps children in a `bg-white` card on
+   WORKING states only; it must render bare `children` on the upload state
+   (`hideHeader`). `ConversionWorkflow` renders the card + progress tab only on
+   `stage !== 'upload'`; the `upload` stage renders a bare `EnhancedUploadArea`.
+   `PdfToolLayout` has no card (already bare).
+3. Action label — driven by `getToolActionLabel(cfg)` (toolConfig.ts).
+   `ConversionWorkflow` falls back to its `toolTitle` prop when `toolType` has
+   no `toolConfigs` entry (e.g. page uses `compress-image` but config id is
+   `compress-images`) so the button still names the tool.
 
 **Rule:** the upload/empty state of every tool is HEADER-LESS — just the
 shared dashed `UploadDropzone`. The header only appears once the user has a
