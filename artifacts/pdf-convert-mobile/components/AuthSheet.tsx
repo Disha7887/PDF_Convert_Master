@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgXml } from "react-native-svg";
 
 import AuthResultIcon from "@/components/AuthResultIcon";
+import { Loader } from "@/components/Loader";
 import colors from "@/constants/colors";
 import { USE_MOCK_DATA } from "@/constants/config";
 import { ROUTES } from "@/constants/routes";
@@ -369,9 +370,14 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
                   disabled={isSubmitting || code.length !== 6}
                   testID="button-verify-otp"
                 >
-                  <Text style={styles.primaryText}>
-                    {isSubmitting ? "Verifying..." : "Verify & Create Account"}
-                  </Text>
+                  {isSubmitting ? (
+                    <View style={styles.primaryLoadingRow}>
+                      <Loader size={20} />
+                      <Text style={styles.primaryText}>Verifying...</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.primaryText}>Verify & Create Account</Text>
+                  )}
                 </Pressable>
 
                 <View style={styles.switchRow}>
@@ -542,15 +548,18 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
               disabled={isSubmitting}
               testID={step === "email" ? "button-continue" : "button-submit"}
             >
-              <Text style={styles.primaryText}>
-                {step === "email"
-                  ? "Continue"
-                  : isSubmitting
-                    ? mode === "signup"
-                      ? "Creating account..."
-                      : "Signing in..."
-                    : copy.cta}
-              </Text>
+              {step !== "email" && isSubmitting ? (
+                <View style={styles.primaryLoadingRow}>
+                  <Loader size={20} />
+                  <Text style={styles.primaryText}>
+                    {mode === "signup" ? "Creating account..." : "Signing in..."}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.primaryText}>
+                  {step === "email" ? "Continue" : copy.cta}
+                </Text>
+              )}
             </Pressable>
 
             {/* Demo hint (sign-in only, mock mode only — the real backend has no seeded demo user) */}
@@ -693,6 +702,9 @@ const styles = StyleSheet.create({
   },
   otpBackWrap: { alignSelf: "center", marginTop: 8 },
   otpBackText: { fontSize: 13, color: SHEET.muted, fontFamily: fonts.bodySemibold },
+
+  // Inline loading row inside primary buttons (loader + label) while submitting.
+  primaryLoadingRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
 
   // Result states (success / error) shown inside the sheet
   resultBlock: { alignItems: "center", justifyContent: "center", paddingVertical: 18, gap: 6 },

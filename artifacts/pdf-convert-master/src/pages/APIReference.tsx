@@ -7,7 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 import { useLocation } from "wouter";
-import { Search, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, Copy, Check, Loader2 } from "lucide-react";
+import { Search, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, Copy, Check } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 
 interface Tool {
   type: string;
@@ -300,7 +301,7 @@ export const APIReference: React.FC = () => {
                   <div className="p-6 pt-0 space-y-3 max-h-[520px] overflow-y-auto">
                     {isLoading ? (
                       <div className="flex items-center justify-center py-8 text-gray-500" data-testid="status-tools-loading">
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        <ProcessingSpinner size={20} className="mr-2" />
                         Loading endpoints...
                       </div>
                     ) : filteredTools.length === 0 ? (

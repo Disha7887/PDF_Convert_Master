@@ -26,7 +26,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authedJson } from "@/lib/authedFetch";
 
 import { useLocation } from "wouter";
-import { Search, FileText, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Copy, Check, Trash2, Plus, Key, Loader2 } from "lucide-react";
+import { Search, FileText, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Copy, Check, Trash2, Plus, Key } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 
 interface ApiKeyItem {
   id: string;
@@ -316,7 +317,7 @@ export const APISetup: React.FC = () => {
                 <div className="p-6 pt-0">
                   {isLoading ? (
                     <div className="flex items-center justify-center py-12 text-gray-500" data-testid="status-keys-loading">
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      <ProcessingSpinner size={20} className="mr-2" />
                       Loading keys...
                     </div>
                   ) : keys.length === 0 ? (
@@ -393,7 +394,7 @@ export const APISetup: React.FC = () => {
                 disabled={createMutation.isPending}
                 data-testid="button-confirm-create-key"
               >
-                {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {createMutation.isPending && <ProcessingSpinner size={16} tone="light" className="mr-2" />}
                 Create key
               </Button>
             </DialogFooter>

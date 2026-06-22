@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Mail, Lock, User, Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthResultIcon from "@/components/AuthResultIcon";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { LottieIcon } from "@/components/ui/lottie-icon";
 import verifyEmailAnim from "@/assets/lottie/verify-email.json";
 import { SIGN_UP_XML } from "@/lib/signUpIcon";
@@ -317,7 +318,14 @@ export function AuthCard({ mode }: { mode: Mode }) {
             style={{ backgroundColor: SHEET.primary }}
             data-testid="button-verify-otp"
           >
-            {isSubmitting ? "Verifying..." : "Verify & Create Account"}
+            {isSubmitting ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <ProcessingSpinner size={18} tone="light" />
+                Verifying...
+              </span>
+            ) : (
+              "Verify & Create Account"
+            )}
           </button>
 
           <div className="flex justify-center items-center mt-1">
@@ -572,13 +580,16 @@ export function AuthCard({ mode }: { mode: Mode }) {
               style={{ backgroundColor: SHEET.primary }}
               data-testid={step === "email" ? "button-continue" : "button-submit"}
             >
-              {step === "email"
-                ? "Continue"
-                : isSubmitting
-                  ? mode === "signup"
-                    ? "Creating account..."
-                    : "Signing in..."
-                  : copy.cta}
+              {step === "email" ? (
+                "Continue"
+              ) : isSubmitting ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <ProcessingSpinner size={18} tone="light" />
+                  {mode === "signup" ? "Creating account..." : "Signing in..."}
+                </span>
+              ) : (
+                copy.cta
+              )}
             </button>
 
             {/* Switch mode */}
