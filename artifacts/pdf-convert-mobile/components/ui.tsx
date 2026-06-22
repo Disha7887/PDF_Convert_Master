@@ -85,8 +85,8 @@ export function ScreenScroll({
   // hidden behind it. bottomOffset keeps a little breathing room above the keys.
   //
   // Each screen sits over a soft ambient field (a faint coral-tinted gradient
-  // plus two diffuse glows) so the frosted glass surfaces have light and colour
-  // to refract — that's what sells the "liquid glass" depth.
+  // plus two diffuse glows) so the flat solid surfaces read with a little warmth
+  // and depth against the background.
   return (
     <View style={styles.screenWrap}>
       <ScreenAmbient />
@@ -183,17 +183,6 @@ export function Button({
         style,
       ]}
     >
-      {/* Glossy top sheen on filled buttons — the "liquid glass" highlight. */}
-      {(variant === "primary" ||
-        variant === "secondary" ||
-        variant === "destructive") && (
-        <LinearGradient
-          pointerEvents="none"
-          colors={["rgba(255,255,255,0.4)", "rgba(255,255,255,0)"]}
-          locations={[0, 0.6]}
-          style={StyleSheet.absoluteFill}
-        />
-      )}
       {loading ? (
         <Loader size={s.icon + 10} />
       ) : (
