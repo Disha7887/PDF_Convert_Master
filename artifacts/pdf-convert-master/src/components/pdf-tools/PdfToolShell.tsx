@@ -1,6 +1,7 @@
 import React from "react";
 import { UploadDropzone } from "@/components/upload/UploadDropzone";
 import { ToolPageShell } from "@/components/upload/ToolPageShell";
+import { toolConfigs, getToolActionLabel } from "@/lib/toolConfig";
 
 interface PdfToolLayoutProps {
   icon: React.ComponentType<any>;
@@ -48,15 +49,19 @@ interface PdfDropzoneProps {
   toolId?: string;
 }
 
-/** Dashed upload dropzone used as the empty state for each tool. */
+/**
+ * Dashed upload dropzone used as the empty state for each tool. Mirrors the PDF
+ * converter upload design: it pulls the tool's own drop-area copy, action label
+ * and max file size from its config so every editor tool shares the same look.
+ */
 export function PdfDropzone({
   onFile,
   loading = false,
   accept = "application/pdf,.pdf",
-  title = "Drop your PDF here",
+  title,
   subtitle = "or click to browse files",
   testId = "dropzone-pdf",
-  maxSizeMB = 200,
+  maxSizeMB,
   toolId,
 }: PdfDropzoneProps) {
   const exts = accept
@@ -65,14 +70,19 @@ export function PdfDropzone({
     .filter((s) => s.startsWith("."));
   const acceptedFormats = exts.length ? exts : [".pdf"];
 
+  const cfg = toolId ? toolConfigs[toolId] : undefined;
+  const resolvedTitle = title ?? cfg?.dropAreaText ?? "Drop your PDF here";
+  const resolvedActionLabel = cfg ? getToolActionLabel(cfg) : "Select PDF";
+  const resolvedMaxFileSize = maxSizeMB ?? cfg?.maxFileSize ?? 200;
+
   return (
     <UploadDropzone
       acceptedFormats={acceptedFormats}
-      maxFileSize={maxSizeMB}
+      maxFileSize={resolvedMaxFileSize}
       toolId={toolId}
-      title={title}
+      title={resolvedTitle}
       subtitle={subtitle}
-      actionLabel="Select PDF"
+      actionLabel={resolvedActionLabel}
       loading={loading}
       loadingText="Opening PDF…"
       onFiles={(files) => onFile(files[0])}
