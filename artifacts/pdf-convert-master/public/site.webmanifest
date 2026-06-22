@@ -1,0 +1,23 @@
+{
+  "name": "PDF Genius",
+  "short_name": "PDF Genius",
+  "description": "Convert, edit, and manage PDFs effortlessly.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#f7433d",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://pdfgenius.app/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://pdfgenius.app/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
