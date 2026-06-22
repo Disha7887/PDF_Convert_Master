@@ -57,7 +57,7 @@ export const DashboardHeader = (): JSX.Element => {
   };
 
   return (
-    <header className="relative z-50 bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+    <header className="sticky top-0 z-50 bg-white/60 backdrop-blur-xl backdrop-saturate-150 px-4 sm:px-6 py-4">
       <div className="flex items-center justify-between">
         {/* Left - Logo */}
         <div className="flex items-center">

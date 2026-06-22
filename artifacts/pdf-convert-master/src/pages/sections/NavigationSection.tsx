@@ -37,7 +37,7 @@ export const NavigationSection = (): JSX.Element => {
   };
 
   return (
-    <header className="relative z-50 w-full h-[65px] bg-white border-b border-gray-200 shadow-[0px_1px_3px_0px_#0000000d,0px_1px_2px_-1px_#0000000d]">
+    <header className="sticky top-0 z-50 w-full h-[65px] bg-white/60 backdrop-blur-xl backdrop-saturate-150">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-[65px]">
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
@@ -89,7 +89,7 @@ export const NavigationSection = (): JSX.Element => {
             <ToolSearch />
             <Button
               variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
+              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300/70 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-white/40 transition-colors bg-transparent"
               onClick={() => setLocation('/signin')}
             >
               Log In
