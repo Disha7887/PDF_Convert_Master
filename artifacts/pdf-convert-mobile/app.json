@@ -16,7 +16,11 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pdfconvertmaster.app"
+      "bundleIdentifier": "com.pdfconvertmaster.app",
+      "infoPlist": {
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true
+      }
     },
     "android": {
       "package": "com.pdfconvertmaster.app",

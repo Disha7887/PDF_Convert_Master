@@ -18,7 +18,7 @@ import {
   type StoredFileEntry,
   type StoredFileKind,
 } from "@/constants/files";
-import { shareFile } from "@/services/files";
+import { saveFile } from "@/services/files";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -72,10 +72,14 @@ export default function FilesScreen() {
       const actions: { text: string; onPress?: () => void; style?: "destructive" | "cancel" }[] = [];
       if (entry.uri) {
         actions.push({
-          text: "Share",
+          text: "Download",
           onPress: async () => {
-            const ok = await shareFile(entry.uri!);
-            if (!ok) Alert.alert("Unavailable", "Sharing isn't available on this platform.");
+            const res = await saveFile(entry.uri!, entry.name);
+            if (res.status === "saved") {
+              Alert.alert("Downloaded", `${entry.name} was saved to ${res.location}.`);
+            } else if (res.status === "failed") {
+              Alert.alert("Couldn't save", "Could not save the file. Please try again.");
+            }
           },
         });
       }

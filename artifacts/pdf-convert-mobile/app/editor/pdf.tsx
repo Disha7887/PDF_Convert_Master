@@ -3,9 +3,9 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   PanResponder,
   Platform,
@@ -37,6 +37,7 @@ import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import { getToolById } from "@/constants/tools";
+import { saveFile } from "@/services/files";
 import { buildEditedPdf } from "@/services/pdfBuilder";
 import { getPdfPageCount, getPdfPageSize } from "@/services/pdfDoc";
 import {
@@ -229,25 +230,6 @@ function clampFrac(v: number, lo: number, hi: number): number {
 
 function stripExt(name: string): string {
   return name.replace(/\.[^./]+$/, "") || "document";
-}
-
-/**
- * Saves/shares the output. On web there is no native share sheet, so we trigger
- * a real file download via an anchor element; on native we open the share sheet.
- */
-async function shareFile(uri: string, name: string): Promise<boolean> {
-  if (Platform.OS === "web") {
-    const a = document.createElement("a");
-    a.href = uri;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    return true;
-  }
-  if (!(await Sharing.isAvailableAsync())) return false;
-  await Sharing.shareAsync(uri);
-  return true;
 }
 
 export default function PdfEditorScreen() {
@@ -1229,10 +1211,14 @@ export default function PdfEditorScreen() {
   const onShare = useCallback(async () => {
     if (!saved) return;
     try {
-      const ok = await shareFile(saved.uri, saved.name);
-      if (!ok) setError("Sharing isn't available on this platform.");
+      const res = await saveFile(saved.uri, saved.name);
+      if (res.status === "saved") {
+        Alert.alert("Downloaded", `${saved.name} was saved to ${res.location}.`);
+      } else if (res.status === "failed") {
+        setError("Could not save the file. Please try again.");
+      }
     } catch {
-      setError("Could not open the share sheet.");
+      setError("Could not save the file.");
     }
   }, [saved]);
 
@@ -1267,7 +1253,7 @@ export default function PdfEditorScreen() {
               </Text>
             </View>
             <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
-              <Button label="Download / Share" icon="download" fullWidth onPress={onShare} testID="button-share" />
+              <Button label="Download" icon="download" fullWidth onPress={onShare} testID="button-share" />
               <Button label="Done" icon="check" variant="outline" fullWidth onPress={goBack} testID="button-done" />
             </View>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}

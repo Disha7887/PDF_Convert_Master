@@ -17,6 +17,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [Mobile direct download](mobile-direct-download.md) — saveFile() in services/files.ts replaces share sheet; Android SAF picked-once, iOS Documents+infoPlist keys, web anchor; don't treat write errors as revoked perms.
 - [Mobile flat surfaces](mobile-flat-surfaces.md) — pdf-convert-mobile buttons/cards are flat solid color; GlassSurface is solid (name kept, sheen/intensity now no-ops); don't reintroduce glossy sheen.
 - [Mobile keyboard resize](mobile-keyboard-resize.md) — Android needs softwareKeyboardLayoutMode "resize" (not "pan") or keyboard hides bottom inputs; native change → needs fresh EAS build.
 - [Deploy architecture](deploy-architecture.md) — prod = Railway(api-server co-hosts web build, single origin) + Supabase + Expo EAS; pin pnpm@10 in root pkg for Railpack; mobile uses EXPO_PUBLIC_DOMAIN.

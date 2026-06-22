@@ -8,9 +8,9 @@ import * as Haptics from "expo-haptics";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Platform,
   Pressable,
   StyleSheet,
@@ -37,6 +37,7 @@ import {
   type ConversionResult,
   type PickedFile,
 } from "@/services/api";
+import { saveFile } from "@/services/files";
 
 const C = colors.light;
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
@@ -335,26 +336,6 @@ function buildOcrContent(format: OcrFormat, pages: string[], title: string): str
   }
 }
 
-async function shareFile(uri: string, name: string): Promise<boolean> {
-  if (Platform.OS === "web") {
-    const a = document.createElement("a");
-    a.href = uri;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // Release blob object-URLs once the download has been kicked off so repeated
-    // exports don't leak memory across a long web session.
-    if (uri.startsWith("blob:")) {
-      setTimeout(() => URL.revokeObjectURL(uri), 4000);
-    }
-    return true;
-  }
-  if (!(await Sharing.isAvailableAsync())) return false;
-  await Sharing.shareAsync(uri);
-  return true;
-}
-
 // ── screen ───────────────────────────────────────────────────────────────────
 export default function ConvertScreen() {
   const router = useRouter();
@@ -632,7 +613,7 @@ export default function ConvertScreen() {
     const base = (fileName.trim() || "output").replace(/\.[^./]+$/, "") || "output";
     const fullName = `${base}.${fmt.ext}`;
 
-    const runShare = async () => {
+    const runSave = async () => {
       try {
         let uri: string;
         switch (fmt.produce.kind) {
@@ -650,8 +631,13 @@ export default function ConvertScreen() {
             // Hand back the exact file the tool produced (document / PDF / ZIP).
             uri = output.uri;
         }
-        const ok = await shareFile(uri, fullName);
-        if (!ok) setError("Sharing isn't available on this platform.");
+        const res = await saveFile(uri, fullName);
+        if (res.status === "saved") {
+          Alert.alert("Downloaded", `${fullName} was saved to ${res.location}.`);
+        } else if (res.status === "failed") {
+          setError("Could not save the file. Please try again.");
+        }
+        // "cancelled" → the user backed out of the folder picker; stay silent.
       } catch {
         setError("Could not prepare the download.");
       }
@@ -659,10 +645,11 @@ export default function ConvertScreen() {
 
     setDownloadOpen(false);
     if (Platform.OS === "ios") {
-      // Defer until the modal's onDismiss fires (see pendingShareRef).
-      pendingShareRef.current = runShare;
+      // Defer the save until the modal has fully dismissed (iOS serializes modal
+      // transitions, so we let the format modal finish animating out first).
+      pendingShareRef.current = runSave;
     } else {
-      await runShare();
+      await runSave();
     }
   }, [tool, output, ocrPages, selectedFormat, fileName]);
 
