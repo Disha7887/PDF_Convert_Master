@@ -4,6 +4,7 @@ import {
   apiKeys,
   conversionJobs,
   passwordResetCodes,
+  signupVerifications,
   type User, 
   type InsertUser,
   type ApiKey,
@@ -11,6 +12,7 @@ import {
   type ConversionJob,
   type InsertConversionJob,
   type PasswordResetCode,
+  type SignupVerification,
   type ToolConfig,
   ToolType,
   ToolCategory
@@ -36,6 +38,12 @@ export interface IStorage {
   getLatestActiveResetCode(userId: string): Promise<PasswordResetCode | undefined>;
   consumeResetCode(id: string): Promise<void>;
   incrementResetAttempts(id: string): Promise<number>;
+
+  // Signup OTP verification methods (pending registrations)
+  upsertSignupVerification(email: string, name: string | null, passwordHash: string, codeHash: string, expiresAt: Date): Promise<void>;
+  getSignupVerification(email: string): Promise<SignupVerification | undefined>;
+  incrementSignupAttempts(id: string): Promise<number>;
+  deleteSignupVerification(email: string): Promise<void>;
   
   // API Key methods
   createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
@@ -62,6 +70,7 @@ export class MemStorage implements IStorage {
   private apiKeys: Map<string, ApiKey>;
   private conversionJobs: Map<number, ConversionJob>;
   private resetCodes: Map<string, PasswordResetCode>;
+  private signupVerifications: Map<string, SignupVerification>;
   private tools: ToolConfig[] = [];
   private currentJobId: number;
 
@@ -70,6 +79,7 @@ export class MemStorage implements IStorage {
     this.apiKeys = new Map();
     this.conversionJobs = new Map();
     this.resetCodes = new Map();
+    this.signupVerifications = new Map();
     this.currentJobId = 1;
     this.initializeTools();
   }
@@ -420,6 +430,47 @@ export class MemStorage implements IStorage {
     const attempts = (code.attempts ?? 0) + 1;
     this.resetCodes.set(id, { ...code, attempts });
     return attempts;
+  }
+
+  // Signup OTP verification methods (keyed by lowercased email so re-requests
+  // replace the prior pending code).
+  async upsertSignupVerification(
+    email: string,
+    name: string | null,
+    passwordHash: string,
+    codeHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    const key = email.toLowerCase();
+    this.signupVerifications.set(key, {
+      id: crypto.randomUUID(),
+      email: key,
+      name,
+      passwordHash,
+      codeHash,
+      expiresAt,
+      attempts: 0,
+      createdAt: new Date(),
+    });
+  }
+
+  async getSignupVerification(email: string): Promise<SignupVerification | undefined> {
+    return this.signupVerifications.get(email.toLowerCase());
+  }
+
+  async incrementSignupAttempts(id: string): Promise<number> {
+    for (const [key, v] of this.signupVerifications) {
+      if (v.id === id) {
+        const attempts = (v.attempts ?? 0) + 1;
+        this.signupVerifications.set(key, { ...v, attempts });
+        return attempts;
+      }
+    }
+    return 0;
+  }
+
+  async deleteSignupVerification(email: string): Promise<void> {
+    this.signupVerifications.delete(email.toLowerCase());
   }
 
   // API Key methods
@@ -879,6 +930,47 @@ export class DatabaseStorage implements IStorage {
       .where(eq(passwordResetCodes.id, id))
       .returning({ attempts: passwordResetCodes.attempts });
     return row?.attempts ?? 0;
+  }
+
+  // Signup OTP verification methods. The email column is unique, so a re-request
+  // upserts (replaces the pending code) rather than stacking rows.
+  async upsertSignupVerification(
+    email: string,
+    name: string | null,
+    passwordHash: string,
+    codeHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    const key = email.toLowerCase();
+    await db
+      .insert(signupVerifications)
+      .values({ email: key, name, passwordHash, codeHash, expiresAt, attempts: 0 })
+      .onConflictDoUpdate({
+        target: signupVerifications.email,
+        set: { name, passwordHash, codeHash, expiresAt, attempts: 0, createdAt: new Date() },
+      });
+  }
+
+  async getSignupVerification(email: string): Promise<SignupVerification | undefined> {
+    const [row] = await db
+      .select()
+      .from(signupVerifications)
+      .where(eq(signupVerifications.email, email.toLowerCase()))
+      .limit(1);
+    return row || undefined;
+  }
+
+  async incrementSignupAttempts(id: string): Promise<number> {
+    const [row] = await db
+      .update(signupVerifications)
+      .set({ attempts: sql`${signupVerifications.attempts} + 1` })
+      .where(eq(signupVerifications.id, id))
+      .returning({ attempts: signupVerifications.attempts });
+    return row?.attempts ?? 0;
+  }
+
+  async deleteSignupVerification(email: string): Promise<void> {
+    await db.delete(signupVerifications).where(eq(signupVerifications.email, email.toLowerCase()));
   }
 
   // API Key methods

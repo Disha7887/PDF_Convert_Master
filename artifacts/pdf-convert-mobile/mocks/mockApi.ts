@@ -42,10 +42,22 @@ export const mockApi = {
     return { success: true, user, token: makeToken() };
   },
 
-  async signup(email: string, _password: string, name?: string): Promise<AuthResult> {
+  // Step 1: emulates emailing a verification code. No session is returned here;
+  // the account is only "created" once verifySignupOtp succeeds.
+  async signup(email: string, _password: string, _name?: string): Promise<AuthResult> {
     await mockDelay(null, MOCK_LATENCY_MS);
     if (!email || !email.includes("@")) {
       return { success: false, error: "Please enter a valid email address." };
+    }
+    return { success: true };
+  },
+
+  // Step 2: in mock mode any 6-digit code is accepted, returning a session so
+  // the verification UI stays coherent while USE_MOCK_DATA is true.
+  async verifySignupOtp(email: string, code: string, name?: string): Promise<AuthResult> {
+    await mockDelay(null, MOCK_LATENCY_MS);
+    if (!/^\d{6}$/.test(code)) {
+      return { success: false, error: "Invalid or expired code." };
     }
     const user: MockUser = {
       ...DEMO_USER,

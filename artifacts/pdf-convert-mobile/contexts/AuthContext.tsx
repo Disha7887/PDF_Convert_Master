@@ -23,10 +23,16 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  /** Step 1 of signup: emails a verification code. Does NOT log the user in. */
   signup: (
     email: string,
     password: string,
     name?: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  /** Step 2 of signup: verifies the emailed code, creates the account, logs in. */
+  verifySignupOtp: (
+    email: string,
+    code: string,
   ) => Promise<{ success: boolean; error?: string }>;
   signout: () => void;
   /** Merge partial fields into the signed-in user and persist them locally. */
@@ -99,15 +105,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  // Step 1: submit credentials. The backend stashes them and emails a code; no
+  // account is created and no session is persisted until verifySignupOtp.
   const signup = useCallback(
     async (email: string, password: string, name?: string) => {
       if (USE_MOCK_DATA) {
         const res = await mockApi.signup(email, password, name);
-        if (res.success && res.user && res.token) {
-          await persist(res.user, res.token);
-          return { success: true };
-        }
-        return { success: false, error: res.error ?? "Sign up failed" };
+        return res.success
+          ? { success: true }
+          : { success: false, error: res.error ?? "Sign up failed" };
       }
       try {
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -117,12 +123,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         const data = await response.json();
         if (data.success) {
-          // Auto sign-in: the register endpoint returns a token + user, so we
-          // persist the session immediately (no second sign-in round-trip).
-          await persist(data.data.user, data.data.token);
           return { success: true };
         }
         return { success: false, error: data.error ?? "Sign up failed" };
+      } catch {
+        return { success: false, error: "Network error. Please try again." };
+      }
+    },
+    [],
+  );
+
+  // Step 2: verify the emailed code. On success the backend creates the account
+  // and returns a token + user, which we persist (logging the user in).
+  const verifySignupOtp = useCallback(
+    async (email: string, code: string) => {
+      if (USE_MOCK_DATA) {
+        const res = await mockApi.verifySignupOtp(email, code);
+        if (res.success && res.user && res.token) {
+          await persist(res.user, res.token);
+          return { success: true };
+        }
+        return { success: false, error: res.error ?? "Invalid or expired code" };
+      }
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify-signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          await persist(data.data.user, data.data.token);
+          return { success: true };
+        }
+        return { success: false, error: data.error ?? "Invalid or expired code" };
       } catch {
         return { success: false, error: "Network error. Please try again." };
       }
@@ -163,11 +197,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signin,
       signup,
+      verifySignupOtp,
       signout,
       updateUser,
       isAuthenticated: !!user && !!token,
     }),
-    [user, token, loading, signin, signup, signout, updateUser],
+    [user, token, loading, signin, signup, verifySignupOtp, signout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

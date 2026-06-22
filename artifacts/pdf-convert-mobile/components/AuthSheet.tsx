@@ -45,13 +45,14 @@ type Mode = "signin" | "signup";
 export default function AuthSheet({ mode }: { mode: Mode }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { signin, signup, user, isAuthenticated, loading } = useAuth();
+  const { signin, signup, verifySignupOtp, user, isAuthenticated, loading } = useAuth();
 
-  const [step, setStep] = useState<"email" | "credentials">("email");
+  const [step, setStep] = useState<"email" | "credentials" | "otp">("email");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,13 +153,10 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
       if (mode === "signup") {
         const res = await signup(email, password, name);
         if (res.success) {
-          // Sign-up now auto-logs the user in, so go straight to the workspace
-          // with a personalised welcome rather than bouncing back to sign-in.
-          setResult("signup-success");
-          redirectTimer.current = setTimeout(
-            () => router.replace(ROUTES.dashboardHome as never),
-            2600,
-          );
+          // Account isn't created yet — move to the email-verification step.
+          setCode("");
+          setStep("otp");
+          setInfo("We sent a 6-digit code to your email.");
         } else {
           setResult("error");
           setError(res.error || "Sign up failed");
@@ -178,6 +176,56 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
       }
     } catch {
       setResult("error");
+      setError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Step 2 of signup: confirm the emailed code. Success creates the account and
+  // logs the user in, so we play the same welcome animation as a normal sign-up.
+  const verifyCode = async () => {
+    setError(null);
+    setInfo(null);
+    if (code.length !== 6) {
+      setError("Please enter the 6-digit code");
+      return;
+    }
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    setIsSubmitting(true);
+    try {
+      const res = await verifySignupOtp(email, code);
+      if (res.success) {
+        setResult("signup-success");
+        redirectTimer.current = setTimeout(
+          () => router.replace(ROUTES.dashboardHome as never),
+          2600,
+        );
+      } else {
+        setError(res.error || "Invalid or expired code");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Re-run step 1, which regenerates and re-emails the code (we still hold the
+  // name/password in component state).
+  const resendCode = async () => {
+    setError(null);
+    setInfo(null);
+    setIsSubmitting(true);
+    try {
+      const res = await signup(email, password, name);
+      if (res.success) {
+        setCode("");
+        setInfo("We sent you a new code.");
+      } else {
+        setError(res.error || "Could not resend the code");
+      }
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -254,6 +302,83 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
                   testID="button-try-again"
                 >
                   <Text style={styles.primaryText}>Try Again</Text>
+                </Pressable>
+              </View>
+            ) : step === "otp" ? (
+              <View testID="view-otp">
+                {/* Header */}
+                <View style={styles.headerRow}>
+                  <Text style={styles.headerTitle}>Verify your email</Text>
+                  <Pressable onPress={close} hitSlop={10} testID="button-auth-close">
+                    <Feather name="x" size={22} color={SHEET.muted} />
+                  </Pressable>
+                </View>
+
+                <View style={styles.otpIconWrap}>
+                  <Feather name="mail" size={44} color={C.primary} />
+                </View>
+
+                <Text style={styles.otpPrompt}>
+                  Enter the 6-digit code we sent to{" "}
+                  <Text style={styles.otpEmail}>{email}</Text>
+                </Text>
+
+                <TextInput
+                  style={styles.otpInput}
+                  value={code}
+                  onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="••••••"
+                  placeholderTextColor={SHEET.muted}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  autoFocus
+                  testID="input-otp"
+                />
+
+                {error ? (
+                  <Text style={styles.errorText} testID="text-error">
+                    {error}
+                  </Text>
+                ) : null}
+                {info ? (
+                  <Text style={styles.infoText} testID="text-info">
+                    {info}
+                  </Text>
+                ) : null}
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryBtn,
+                    (isSubmitting || code.length !== 6) && styles.primaryBtnDisabled,
+                    pressed && styles.pressed,
+                  ]}
+                  onPress={verifyCode}
+                  disabled={isSubmitting || code.length !== 6}
+                  testID="button-verify-otp"
+                >
+                  <Text style={styles.primaryText}>
+                    {isSubmitting ? "Verifying..." : "Verify & Create Account"}
+                  </Text>
+                </Pressable>
+
+                <View style={styles.switchRow}>
+                  <Text style={styles.switchPrompt}>Didn&apos;t get a code? </Text>
+                  <Pressable onPress={resendCode} disabled={isSubmitting} hitSlop={8} testID="button-resend-otp">
+                    <Text style={styles.switchAction}>Resend</Text>
+                  </Pressable>
+                </View>
+
+                <Pressable
+                  onPress={() => {
+                    setStep("credentials");
+                    setError(null);
+                    setInfo(null);
+                  }}
+                  hitSlop={8}
+                  style={styles.otpBackWrap}
+                  testID="button-back-to-credentials"
+                >
+                  <Text style={styles.otpBackText}>Back</Text>
                 </Pressable>
               </View>
             ) : (
@@ -530,6 +655,33 @@ const styles = StyleSheet.create({
 
   errorText: { fontSize: 13, color: "#fda4a1", fontFamily: fonts.body, marginTop: 2 },
   infoText: { fontSize: 13, color: SHEET.muted, fontFamily: fonts.body, marginTop: 2 },
+
+  // OTP verification step
+  otpIconWrap: { alignItems: "center", justifyContent: "center", marginTop: 8, marginBottom: 6 },
+  otpPrompt: {
+    fontSize: 15,
+    color: SHEET.muted,
+    fontFamily: fonts.body,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  otpEmail: { color: SHEET.text, fontFamily: fonts.bodySemibold },
+  otpInput: {
+    height: 60,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: SHEET.fieldBorder,
+    backgroundColor: SHEET.field,
+    color: SHEET.text,
+    fontFamily: fonts.bodySemibold,
+    fontSize: 26,
+    textAlign: "center",
+    letterSpacing: 10,
+    marginTop: 6,
+  },
+  otpBackWrap: { alignSelf: "center", marginTop: 8 },
+  otpBackText: { fontSize: 13, color: SHEET.muted, fontFamily: fonts.bodySemibold },
 
   // Result states (success / error) shown inside the sheet
   resultBlock: { alignItems: "center", justifyContent: "center", paddingVertical: 18, gap: 6 },

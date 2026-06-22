@@ -14,7 +14,7 @@ import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
-import { register, signin, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword } from "./auth";
+import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword } from "./auth";
 import { saveAvatar, getAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
@@ -2907,6 +2907,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User sign in
   app.post("/api/signin", authRateLimit(15), signin);
   app.post("/api/auth/login", authRateLimit(15), signin); // alias used by web AuthContext
+
+  // Step 2 of signup: verify the emailed OTP, which creates the account.
+  app.post("/api/auth/verify-signup", authRateLimit(15), verifySignupOtp);
+  app.post("/api/verify-signup", authRateLimit(15), verifySignupOtp); // alias
   
   // Protected route: Get current user (dashboard)
   app.get("/api/dashboard", authenticateUser, getCurrentUser);

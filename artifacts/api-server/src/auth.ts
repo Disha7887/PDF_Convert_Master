@@ -10,16 +10,24 @@ import {
   changePasswordSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifySignupOtpSchema,
   type User,
 } from "@workspace/db";
-import { sendPasswordResetEmail } from "./lib/email";
+import { sendPasswordResetEmail, sendSignupOtpEmail } from "./lib/email";
 import { logger } from "./lib/logger";
 
 const RESET_CODE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+const SIGNUP_OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_SIGNUP_ATTEMPTS = 5;
 
 /** Hashes a reset code so the plaintext never lives in the database. */
 function hashResetCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
+}
+
+/** Generates a zero-padded 6-digit numeric one-time code. */
+function generateOtp(): string {
+  return String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
 // JWT secret. This MUST come from the environment. We fail closed in
@@ -135,7 +143,11 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
   }
 }
 
-// Register endpoint
+// Register endpoint — step 1 of signup. We DON'T create the account here.
+// Instead we stash the pending registration (with the password already hashed)
+// and email a 6-digit verification code. The account is only created once the
+// user proves they own the email by submitting that code to /verify-signup.
+// Calling this again for the same email simply re-issues a fresh code.
 export async function register(req: Request, res: Response) {
   try {
     // Validate request body
@@ -159,28 +171,36 @@ export async function register(req: Request, res: Response) {
       });
     }
 
-    // Hash password and create user
+    // Hash password now so the plaintext never touches the pending store, then
+    // stash the pending registration + emailed code.
     const passwordHash = await hashPassword(password);
-    const newUser = await storage.createUser({
+    const code = generateOtp();
+    const expiresAt = new Date(Date.now() + SIGNUP_OTP_TTL_MS);
+    await storage.upsertSignupVerification(
       email,
-      name: name?.trim() || null,
+      name?.trim() || null,
       passwordHash,
-      plan: "free"
-    });
+      hashResetCode(code),
+      expiresAt,
+    );
 
-    // Generate token
-    const token = generateToken(newUser);
+    try {
+      await sendSignupOtpEmail(email, code);
+    } catch (emailErr) {
+      // If we can't deliver the code the user can't proceed, so surface a real
+      // error here (unlike forgot-password, this endpoint doesn't need to hide
+      // account existence — the address is the one the visitor just typed).
+      logger.error({ err: emailErr }, "Failed to send signup verification email");
+      return res.status(502).json({
+        success: false,
+        error: "We couldn't send your verification email. Please try again in a moment.",
+      });
+    }
 
-    // Return user data without password hash
-    const { passwordHash: _, ...userWithoutPassword } = newUser;
-
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      data: {
-        user: userWithoutPassword,
-        token
-      },
-      message: "User registered successfully"
+      data: { email, pendingVerification: true },
+      message: "We sent a verification code to your email.",
     });
 
   } catch (error) {
@@ -189,6 +209,87 @@ export async function register(req: Request, res: Response) {
       success: false,
       error: "Registration failed"
     });
+  }
+}
+
+// Verify signup OTP — step 2 of signup. Validates the emailed code, then
+// actually creates the account and returns an auth token (auto-login), mirroring
+// the old one-step register response shape.
+export async function verifySignupOtp(req: Request, res: Response) {
+  try {
+    const validation = verifySignupOtpSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: validation.error.issues,
+      });
+    }
+
+    const { email, code } = validation.data;
+    const invalid = { success: false, error: "Invalid or expired verification code" };
+
+    const pending = await storage.getSignupVerification(email);
+    if (!pending || pending.expiresAt.getTime() < Date.now()) {
+      return res.status(400).json(invalid);
+    }
+
+    const matches = crypto.timingSafeEqual(
+      Buffer.from(pending.codeHash),
+      Buffer.from(hashResetCode(code)),
+    );
+    if (!matches) {
+      // Throttle brute force: burn the pending code after a handful of misses so
+      // a 6-digit code can't be guessed within its TTL.
+      const attempts = await storage.incrementSignupAttempts(pending.id);
+      if (attempts >= MAX_SIGNUP_ATTEMPTS) {
+        await storage.deleteSignupVerification(email);
+      }
+      return res.status(400).json(invalid);
+    }
+
+    // Guard against a race where the email got registered between request and
+    // verify (e.g. two tabs).
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
+      await storage.deleteSignupVerification(email);
+      return res.status(409).json({
+        success: false,
+        error: "User already exists with this email",
+      });
+    }
+
+    let newUser;
+    try {
+      newUser = await storage.createUser({
+        email: pending.email,
+        name: pending.name,
+        passwordHash: pending.passwordHash,
+        plan: "free",
+      });
+    } catch (err) {
+      // Two near-simultaneous verifies can both pass the getUserByEmail check
+      // above and then race on the unique email constraint. Turn the loser's DB
+      // error into a clean 409 instead of a 500.
+      await storage.deleteSignupVerification(email);
+      return res.status(409).json({
+        success: false,
+        error: "User already exists with this email",
+      });
+    }
+    await storage.deleteSignupVerification(email);
+
+    const token = generateToken(newUser);
+    const { passwordHash: _, ...userWithoutPassword } = newUser;
+
+    return res.status(201).json({
+      success: true,
+      data: { user: userWithoutPassword, token },
+      message: "Email verified. Account created.",
+    });
+  } catch (error) {
+    console.error("Verify signup OTP error:", error);
+    return res.status(500).json({ success: false, error: "Verification failed" });
   }
 }
 

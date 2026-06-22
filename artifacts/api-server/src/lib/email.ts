@@ -92,6 +92,53 @@ export async function sendPasswordResetEmail(to: string, code: string): Promise<
   }
 }
 
+/** Sends a 6-digit signup verification code to a prospective user via Resend. */
+export async function sendSignupOtpEmail(to: string, code: string): Promise<void> {
+  const { apiKey, from } = await getResendCredentials();
+  const fromAddress = from || "PDF Genius <onboarding@resend.dev>";
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromAddress,
+      to: [to],
+      subject: "Your PDF Genius verification code",
+      html: signupOtpHtml(code),
+      text:
+        `Your PDF Genius verification code is ${code}. ` +
+        `It expires in 10 minutes. If you didn't try to sign up, you can ignore this email.`,
+    }),
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    logger.error({ status: res.status, body }, "Resend signup OTP send failed");
+    throw new Error(`Resend send failed (${res.status})`);
+  }
+}
+
+function signupOtpHtml(code: string): string {
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1f2937">
+    <h2 style="color:#f7433d;margin:0 0 8px">Verify your email</h2>
+    <p style="font-size:15px;line-height:1.5;margin:0 0 16px">
+      Welcome to PDF Genius! Enter the code below to finish creating your account. It expires in 10 minutes.
+    </p>
+    <div style="font-size:34px;font-weight:700;letter-spacing:8px;text-align:center;
+                background:#fff1f0;color:#f7433d;border-radius:12px;padding:18px 0;margin:0 0 16px">
+      ${code}
+    </div>
+    <p style="font-size:13px;color:#6b7280;line-height:1.5;margin:0">
+      If you didn't try to sign up for PDF Genius, you can safely ignore this email.
+    </p>
+  </div>`;
+}
+
 function passwordResetHtml(code: string): string {
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1f2937">

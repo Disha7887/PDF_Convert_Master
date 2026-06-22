@@ -6,7 +6,10 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  /** Step 1 of signup: emails a verification code. Does NOT log the user in. */
   signup: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  /** Step 2 of signup: verifies the emailed code, creates the account, logs in. */
+  verifySignupOtp: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
   signout: () => void;
   updateUser: (user: User, token?: string) => void;
   isAuthenticated: boolean;
@@ -94,6 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Step 1: submit credentials. The backend stashes them and emails a code; the
+  // account is NOT created and the user is NOT logged in until verifySignupOtp.
   const signup = async (
     email: string,
     password: string,
@@ -111,23 +116,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (data.success) {
-        // Sign-up auto-logs the user in (parity with mobile) so the welcome
-        // screen can greet them and they land straight in the dashboard. If the
-        // backend ever stops returning a token/user, treat it as a failure
-        // rather than showing a false "welcome" with no session.
-        const { user: userData, token: authToken } = data.data ?? {};
-        if (!userData || !authToken) {
-          return { success: false, error: "Sign up failed. Please try again." };
-        }
-        setUser(userData);
-        setToken(authToken);
-        localStorage.setItem("auth_token", authToken);
         return { success: true };
       } else {
         return { success: false, error: data.error || "Sign up failed" };
       }
     } catch (error) {
       console.error("Sign up error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  };
+
+  // Step 2: verify the emailed code. On success the backend creates the account
+  // and returns a token, so we log the user in here (parity with the old
+  // auto-login behaviour, now gated behind email verification).
+  const verifySignupOtp = async (
+    email: string,
+    code: string,
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch("/api/auth/verify-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const { user: userData, token: authToken } = data.data ?? {};
+        if (!userData || !authToken) {
+          return { success: false, error: "Verification failed. Please try again." };
+        }
+        setUser(userData);
+        setToken(authToken);
+        localStorage.setItem("auth_token", authToken);
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || "Invalid or expired code" };
+      }
+    } catch (error) {
+      console.error("Verify signup error:", error);
       return { success: false, error: "Network error. Please try again." };
     }
   };
@@ -154,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signin,
     signup,
+    verifySignupOtp,
     signout,
     updateUser,
     isAuthenticated: !!user && !!token,

@@ -4,6 +4,7 @@ import { Mail, Lock, User, Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthResultIcon from "@/components/AuthResultIcon";
 import { SIGN_UP_XML } from "@/lib/signUpIcon";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 type Mode = "signin" | "signup";
 
@@ -23,13 +24,14 @@ const REDIRECT_DELAY = 2600;
 
 export function AuthCard({ mode }: { mode: Mode }) {
   const [, setLocation] = useLocation();
-  const { signin, signup, user, isAuthenticated, loading } = useAuth();
+  const { signin, signup, verifySignupOtp, user, isAuthenticated, loading } = useAuth();
 
-  const [step, setStep] = useState<"email" | "credentials">("email");
+  const [step, setStep] = useState<"email" | "credentials" | "otp">("email");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,14 +126,68 @@ export function AuthCard({ mode }: { mode: Mode }) {
       const res =
         mode === "signup" ? await signup(email, password, name) : await signin(email, password);
       if (res.success) {
-        setResult(mode === "signup" ? "signup-success" : "signin-success");
-        redirectTimer.current = setTimeout(() => setLocation("/dashboard"), REDIRECT_DELAY);
+        if (mode === "signup") {
+          // Account isn't created yet — move to the email-verification step.
+          setCode("");
+          setStep("otp");
+          setInfo("We sent a 6-digit code to your email.");
+        } else {
+          setResult("signin-success");
+          redirectTimer.current = setTimeout(() => setLocation("/dashboard"), REDIRECT_DELAY);
+        }
       } else {
         setResult("error");
         setError(res.error || (mode === "signup" ? "Sign up failed" : "Sign in failed"));
       }
     } catch {
       setResult("error");
+      setError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Step 2 of signup: confirm the emailed code. Success creates the account and
+  // logs the user in, so we play the same welcome animation as a normal sign-up.
+  const verifyCode = async () => {
+    setError(null);
+    setInfo(null);
+    if (code.length !== 6) {
+      setError("Please enter the 6-digit code");
+      return;
+    }
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    setIsSubmitting(true);
+    try {
+      const res = await verifySignupOtp(email, code);
+      if (res.success) {
+        setResult("signup-success");
+        redirectTimer.current = setTimeout(() => setLocation("/dashboard"), REDIRECT_DELAY);
+      } else {
+        setError(res.error || "Invalid or expired code");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Re-run step 1, which regenerates and re-emails the code (we still hold the
+  // name/password in component state).
+  const resendCode = async () => {
+    setError(null);
+    setInfo(null);
+    setIsSubmitting(true);
+    try {
+      const res = await signup(email, password, name);
+      if (res.success) {
+        setCode("");
+        setInfo("We sent you a new code.");
+      } else {
+        setError(res.error || "Could not resend the code");
+      }
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -146,7 +202,10 @@ export function AuthCard({ mode }: { mode: Mode }) {
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (!isSubmitting) (step === "email" ? continueWithEmail : submit)();
+      if (isSubmitting) return;
+      if (step === "email") continueWithEmail();
+      else if (step === "otp") verifyCode();
+      else submit();
     }
   };
 
@@ -174,6 +233,119 @@ export function AuthCard({ mode }: { mode: Mode }) {
 
   const fieldClass =
     "flex items-center gap-2.5 h-[54px] px-4 rounded-[14px] border";
+
+  // Email-verification step — shown after credentials are submitted on sign-up.
+  if (step === "otp") {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(160deg,#0b1220 0%,#11172480 60%,#0b1220 100%)" }}
+      >
+        <div
+          className="w-full max-w-[460px] rounded-[26px] p-[22px] flex flex-col gap-3 shadow-2xl"
+          style={{ backgroundColor: SHEET.bg }}
+          data-testid="view-otp"
+        >
+          <div className="relative flex items-center justify-center mb-0.5">
+            <span className="text-sm font-semibold" style={{ color: SHEET.text }}>
+              Verify your email
+            </span>
+            <button
+              type="button"
+              onClick={close}
+              className="absolute right-0 p-1 transition-opacity hover:opacity-70"
+              aria-label="Close"
+              data-testid="button-auth-close"
+            >
+              <X className="w-5 h-5" style={{ color: SHEET.muted }} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center mt-1 mb-1">
+            <Mail className="w-12 h-12" style={{ color: SHEET.primary }} />
+          </div>
+
+          <p className="text-[15px] text-center leading-6" style={{ color: SHEET.muted }}>
+            Enter the 6-digit code we sent to{" "}
+            <span style={{ color: SHEET.text }}>{email}</span>
+          </p>
+
+          <div className="flex justify-center my-2">
+            <InputOTP
+              maxLength={6}
+              value={code}
+              onChange={(v) => setCode(v.replace(/\D/g, ""))}
+              containerClassName="gap-2"
+              data-testid="input-otp"
+            >
+              <InputOTPGroup className="gap-2">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <InputOTPSlot
+                    key={i}
+                    index={i}
+                    className="h-[52px] w-[44px] rounded-[12px] border-0 text-lg font-semibold"
+                    style={{ backgroundColor: SHEET.field, color: SHEET.text }}
+                  />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+
+          {error ? (
+            <p className="text-[13px] text-center" style={{ color: SHEET.error }} data-testid="text-error">
+              {error}
+            </p>
+          ) : null}
+          {info ? (
+            <p className="text-[13px] text-center" style={{ color: SHEET.muted }} data-testid="text-info">
+              {info}
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={verifyCode}
+            disabled={isSubmitting || code.length !== 6}
+            className="h-[54px] rounded-[14px] mt-1 font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60"
+            style={{ backgroundColor: SHEET.primary }}
+            data-testid="button-verify-otp"
+          >
+            {isSubmitting ? "Verifying..." : "Verify & Create Account"}
+          </button>
+
+          <div className="flex justify-center items-center mt-1">
+            <span className="text-[13px]" style={{ color: SHEET.muted }}>
+              Didn&apos;t get a code?
+            </span>
+            <button
+              type="button"
+              onClick={resendCode}
+              disabled={isSubmitting}
+              className="text-[13px] font-semibold ml-1 disabled:opacity-60"
+              style={{ color: SHEET.primary }}
+              data-testid="button-resend-otp"
+            >
+              Resend
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setStep("credentials");
+              setError(null);
+              setInfo(null);
+            }}
+            className="text-[13px] font-semibold self-center"
+            style={{ color: SHEET.muted }}
+            data-testid="button-back-to-credentials"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

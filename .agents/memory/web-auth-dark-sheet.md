@@ -22,7 +22,8 @@ independent of the otherwise light web theme — this mirrors the mobile `AuthSh
 **Why standalone:** the marketing nav broke the immersive full-screen sheet feel
 and duplicated the close affordance.
 
-**Signup auto-login:** `AuthContext.signup(email,password,name?)` consumes
-`data.data.{user,token}` and persists like signin (backend register returns both),
-so the welcome screen greets by name and lands in the dashboard. Treat a success
-response missing user/token as a failure (no false welcome).
+**Signup is now 2-step (OTP):** `AuthContext.signup()` only requests an emailed
+code (no token); there is an `otp` step in AuthCard, and `verifySignupOtp(email,code)`
+consumes `data.data.{user,token}` and persists like signin, then the welcome screen
+greets by name and lands in the dashboard. See [Signup OTP verification](signup-otp-verification.md).
+Treat a verify success missing user/token as a failure (no false welcome).

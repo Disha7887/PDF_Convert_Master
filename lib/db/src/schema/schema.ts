@@ -30,6 +30,24 @@ export const passwordResetCodes = pgTable("password_reset_codes", {
 
 export type PasswordResetCode = typeof passwordResetCodes.$inferSelect;
 
+// Pending signup verifications. When a user signs up we do NOT create their
+// account immediately — we stash the pending registration here (with the
+// password already hashed) and email them a 6-digit code. The real user row is
+// only created once they verify the code. Only the code's hash is stored, and
+// codes are time-limited + attempt-limited to resist brute force.
+export const signupVerifications = pgTable("signup_verifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  passwordHash: text("password_hash").notNull(),
+  codeHash: text("code_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type SignupVerification = typeof signupVerifications.$inferSelect;
+
 // API Keys table
 // NOTE: `apiKey` stores a sha256 HASH of the raw key, never the plaintext.
 // The raw `sk-...` key is shown to the user exactly once at creation time.
@@ -90,10 +108,22 @@ export const resetPasswordSchema = z.object({
   newPassword: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+// Verify a signup OTP. The pending registration (name/password) is already
+// stored server-side, so the client only needs to echo back the email + code.
+export const verifySignupOtpSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  // The emailed OTP is always exactly 6 digits.
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Enter the 6-digit code from your email"),
+});
+
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type ChangePassword = z.infer<typeof changePasswordSchema>;
 export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
 export type ResetPassword = z.infer<typeof resetPasswordSchema>;
+export type VerifySignupOtp = z.infer<typeof verifySignupOtpSchema>;
 
 // API Key schemas
 export const insertApiKeySchema = createInsertSchema(apiKeys).pick({
