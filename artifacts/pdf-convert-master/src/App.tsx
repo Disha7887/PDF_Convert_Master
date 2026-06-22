@@ -65,6 +65,7 @@ const WatermarkPdfUpload = named(() => import("@/pages/upload/WatermarkPdf"), "W
 const AddImagePdfUpload = named(() => import("@/pages/upload/AddImagePdf"), "AddImagePdfUpload");
 const DeletePagesPdfUpload = named(() => import("@/pages/upload/DeletePagesPdf"), "DeletePagesPdfUpload");
 const OcrPdfUpload = named(() => import("@/pages/upload/OcrPdf"), "OcrPdfUpload");
+const RestoreDocumentUpload = named(() => import("@/pages/upload/RestoreDocument"), "RestoreDocumentUpload");
 const UploadDemo = named(() => import("@/pages/UploadDemo"), "UploadDemo");
 const ResizeImageTool = named(() => import("@/pages/ImageEditTools"), "ResizeImageTool");
 const CropImageTool = named(() => import("@/pages/ImageEditTools"), "CropImageTool");
@@ -273,6 +274,12 @@ function Router() {
       <Route path="/upload/word-to-pdf">
         <DynamicLayout>
           <WordToPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/restore-document">
+        <DynamicLayout>
+          <RestoreDocumentUpload />
         </DynamicLayout>
       </Route>
 

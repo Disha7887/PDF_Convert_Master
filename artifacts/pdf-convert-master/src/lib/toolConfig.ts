@@ -334,6 +334,23 @@ export const toolConfigs: Record<string, ToolConfig> = {
     category: "Edit",
     route: "/upload/edit-pdf"
   },
+  "restore-document": {
+    id: "restore-document",
+    title: "Document Restore",
+    description: "Restore a broken or damaged PDF/photo into a clean, sharpened PDF",
+    acceptedFormats: [".pdf", ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"],
+    maxFileSize: "25MB",
+    buttonText: "Select Document",
+    dropAreaText: "Drop your damaged PDF or photo here",
+    fileTypeHint: "Supports: PDF, JPG, PNG, WEBP, BMP, TIFF up to 25MB",
+    outputFormat: "Restored PDF",
+    icon: RefreshCw,
+    iconColor: "text-[#f7433d]",
+    iconBgColor: "bg-[#f7433d]/10",
+    iconBorderColor: "border-[#f7433d]/20",
+    category: "Edit",
+    route: "/upload/restore-document"
+  },
   "merge-pdfs": {
     id: "merge-pdfs",
     title: "PDF Merger",

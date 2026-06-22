@@ -1,0 +1,153 @@
+1. Goals & principles
+
+  - Input: a phone photo of a damaged document (blurry, skewed, faded, stained, low-light, torn).
+  - Output: a clean PDF that looks like the original — real seals/signatures/handwriting preserved.
+  - Faithful, never fabricate: clean what exists; leave torn/missing regions honest. No generative redraw.
+  - Fits the existing stack: reuse the upload → job → download flow already in api-server.
+
+  2. High-level diagram
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  CLIENT  (pdf-convert-master web  +  pdf-convert-mobile)     │
+  │   • Tool card "Fix Document"  → ImageToolShell + Dropzone     │
+  │   • Upload photo, poll job, preview before/after, download PDF│
+  └───────────────┬─────────────────────────────────────────────┘
+                  │ HTTPS (multipart upload, JSON poll)
+  ┌───────────────▼─────────────────────────────────────────────┐
+  │  API SERVER  (@workspace/api-server, Express 5)              │
+  │                                                              │
+  │  POST /api/fix-document  → create job, return jobId          │
+  │  GET  /api/jobs/:id      → status (reuse existing)           │
+  │  GET  /api/download/:id  → final PDF  (reuse existing)       │
+  │                                                              │
+  │   ┌────────────────────────────────────────────────────┐   │
+  │   │  PIPELINE (deterministic, the actual "fix")         │   │
+  │   │  1. Edge detect + perspective correct  (OpenCV)     │   │
+  │   │  2. De-shadow / lighting / contrast    (sharp)      │   │
+  │   │  3. Denoise + gentle sharpen           (sharp)      │   │
+  │   │  4. Color preserved (B&W mode optional)             │   │
+  │   │  5. Assemble → PDF                      (pdf-lib)    │   │
+  │   └───────────────┬────────────────────────────────────┘   │
+  │                   │ optional assists                        │
+  │   ┌───────────────▼────────────────────────────────────┐   │
+  │   │  AI LAYER  → OpenRouter (vision models)             │   │
+  │   │  a. Fallback: locate document if OpenCV fails       │   │
+  │   │  b. Classify damage / pick pipeline params          │   │
+  │   │  c. OCR → searchable text layer in the PDF          │   │
+  │   │  d. Legibility / quality score (warn if poor)       │   │
+  │   └────────────────────────────────────────────────────┘   │
+  │                                                              │
+  │  Storage: object storage (GCS already wired) + Postgres job │
+  └──────────────────────────────────────────────────────────────┘
+
+  3. Components
+
+  Frontend (artifacts/pdf-convert-master/src + mobile mirror)
+  - New tool entry in the tools list/grid; new page reusing ImageToolShell, the image dropzone, and OutputActions.
+  - States: upload → uploading → processing (poll /api/jobs/:id) → done (before/after preview + download).
+  - Keeps the USE_MOCK_DATA switch and services/api.ts abstraction (per your project rules).
+
+  API server (@workspace/api-server)
+  - New ToolType.FIX_DOCUMENT + registry entry in storage.ts initializeTools().
+  - New route POST /api/fix-document (modeled on /api/convert): accepts multipart image(s), creates a job, runs the pipeline async, stores the PDF, marks job done.
+  - Reuses existing /api/jobs/:id, /api/download/:id, object storage, and auth middleware (optionalConversionAuth).
+
+  Processing pipeline (new module, e.g. src/lib/fixDocument/)
+  - Pure functions per stage so each is testable and skippable.
+
+  AI layer (new module, e.g. src/lib/ai/openrouter.ts)
+  - Thin OpenRouter client; used only for the assist roles above.
+
+  4. Data flow (sequence)
+
+  1. Client uploads photo → POST /api/fix-document → server stores original, creates job (status: processing), returns jobId.
+  2. Worker runs pipeline stages 1–5. AI assists called only where needed (e.g. OpenCV found no document edges → ask vision model for the quad; OCR for text layer).
+  3. Result PDF saved to object storage, job → done with download URL.
+  4. Client polls /api/jobs/:id, then shows before/after and downloads via /api/download/:id.
+
+  5. The pipeline in detail
+
+  ┌────────────────────────┬─────────────────────────────────────────┬───────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
+  │         Stage          │                 Library                 │           Fixes           │                                          Notes                                          │
+  ├────────────────────────┼─────────────────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 1. Perspective correct │ jscanify (OpenCV-wasm) or opencv4nodejs │ skew/angle                │ Detect 4 corners → warp to flat rectangle. AI fallback if detection fails.              │
+  ├────────────────────────┼─────────────────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 2. Lighting/contrast   │ sharp                                   │ faded, low-light, shadows │ normalize, brightness/linear, CLAHE-style local contrast                                │
+  ├────────────────────────┼─────────────────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 3. Denoise + sharpen   │ sharp                                   │ grain, mild blur          │ median blur + unsharp mask; conservative to avoid artifacts                             │
+  ├────────────────────────┼─────────────────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 4. Color policy        │ sharp                                   │ —                         │ Default: keep color (seals/stamps). Optional B&W/adaptive-threshold mode for plain text │
+  ├────────────────────────┼─────────────────────────────────────────┼───────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 5. Assemble PDF        │ pdf-lib                                 │ output format             │ One page per photo; optional invisible OCR text layer for searchability                 │
+  └────────────────────────┴─────────────────────────────────────────┴───────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
+
+  Torn/missing regions: cleaned cosmetically, never reconstructed.
+
+  6. AI layer via OpenRouter
+
+  - Client: single POST https://openrouter.ai/api/v1/chat/completions, Authorization: Bearer $OPENROUTER_API_KEY, plus HTTP-Referer/X-Title headers OpenRouter recommends.
+  - Model: any vision-capable model, referenced as vendor/model (e.g. a current Claude or Gemini vision model). Make it an env-configurable string (OPENROUTER_MODEL) so you can swap models without code
+  changes. Pick the model in the OpenRouter dashboard against current pricing — don't hard-code one.
+  - Roles (all optional, all "understand-only"):
+    - a. Corner/quad detection fallback when OpenCV fails — return 4 points as JSON.
+    - b. Damage classification → choose pipeline params (e.g. "very faded" → stronger contrast).
+    - c. OCR → text for the searchable layer (and to return extracted text if you want).
+    - d. Legibility score → if low, warn the user "best effort, parts unreadable" instead of silently faking.
+  - Important: never ask the model to output a "fixed image" — it can't do so faithfully. Image bytes always come from the deterministic pipeline.
+
+  7. New/changed API endpoints
+
+  - POST /api/fix-document — multipart file (or files[]), optional body { mode: "color" | "bw", ocr: boolean }. Returns { jobId }.
+  - GET /api/jobs/:jobId — existing, returns status/progress.
+  - GET /api/download/:jobId — existing, returns the PDF.
+  - (Optional) GET /api/fix-document/:jobId/preview — before/after thumbnails.
+
+  8. Data model
+
+  - Tool registry (storage.ts): { id, name: "Fix Document", type: FIX_DOCUMENT, category: IMAGE_TOOLS, inputFormats: ["jpg","jpeg","png","heic","webp"], outputFormat: "pdf", maxFileSize: 25, 
+  processingTimeEstimate: 30 }.
+  - Job (existing jobs table/Drizzle): reuse toolType, status, input/output refs; add optional meta JSON for { damageReport, legibilityScore, mode, ocr }.
+
+  9. Dependencies (api-server)
+
+  - sharp (image ops), jscanify or opencv4nodejs (perspective), pdf-lib (already present).
+  - HEIC/iPhone photos: add heic-convert (iPhones shoot HEIC).
+  - No new SDK for AI — OpenRouter is a plain HTTPS fetch.
+
+  10. Config / env vars
+
+  - OPENROUTER_API_KEY — secret (Replit Secrets).
+  - OPENROUTER_MODEL — e.g. a current vision model id.
+  - AI_ASSIST_ENABLED — feature flag; pipeline works without AI (graceful degradation).
+  - Existing: DATABASE_URL, object-storage creds.
+
+  11. Security & privacy (matters here — IDs!)
+
+  - These are highly sensitive documents (IDs, official papers). Be explicit with users that images are uploaded for processing.
+  - Delete originals + outputs after a short TTL (you already TTL uploads — extend it here).
+  - Don't log image bytes; scrub PII from logs.
+  - Be aware OpenRouter forwards images to a third-party model provider — disclose this in your privacy policy, and consider an on-device/AI-off mode for sensitive docs (pipeline alone, no OpenRouter
+  call).
+  - Rate-limit the endpoint (you already have rate-limit windows in routes.ts).
+  - Add a clear disclaimer: "Restored for legibility; not a certified/legal reproduction." Important for IDs and official documents.
+
+  12. Edge cases
+
+  - No document detected → AI fallback → else return original cropped + warning.
+  - HEIC/rotated EXIF → normalize orientation first.
+  - Multi-page (several photos) → one PDF, ordered.
+  - Huge images → downscale to a max dimension before processing.
+  - AI/OpenRouter down or over budget → pipeline still produces a PDF (AI is optional).
+
+  13. Build order
+
+  1. Pipeline core (stages 1–5) + POST /api/fix-document + reuse jobs/download. Validate on real sample photos.
+  2. Frontend tool card + upload/preview/download UI (web, then mobile parity).
+  3. AI assists via OpenRouter (edge fallback, damage classify, OCR layer, legibility score) behind AI_ASSIST_ENABLED.
+  4. Privacy hardening (TTL delete, disclaimers, AI-off mode).
+
+  14. Cost notes
+
+  - The deterministic pipeline is essentially free (CPU only).
+  - OpenRouter cost is per-image-per-call; vision models are billed by input image tokens + output. Keep it cheap by: only calling AI when needed (e.g. edge fallback), downscaling images sent to the
+  model, and making OCR opt-in. Set a spend cap in OpenRouter

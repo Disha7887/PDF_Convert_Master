@@ -173,7 +173,8 @@ export enum ToolType {
   SPLIT_PDF = "split_pdf",
   COMPRESS_PDF = "compress_pdf",
   ROTATE_PDF = "rotate_pdf",
-  OCR_PDF = "ocr_pdf"
+  OCR_PDF = "ocr_pdf",
+  RESTORE_DOCUMENT = "restore_document"
 }
 
 // Conversion jobs table  

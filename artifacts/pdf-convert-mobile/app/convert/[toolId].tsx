@@ -297,6 +297,40 @@ export default function ConvertScreen() {
     }
   }, [tool, router]);
 
+  const takePhoto = useCallback(async () => {
+    if (!tool) return;
+    setError(null);
+    try {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        setError("Camera access is required to take a photo.");
+        return;
+      }
+      const res = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        quality: 1,
+      });
+      if (res.canceled) return;
+      const a = res.assets[0];
+      const file: PickedFile = {
+        uri: a.uri,
+        name: a.fileName ?? `photo-${Date.now()}.jpg`,
+        size: a.fileSize,
+        mimeType: a.mimeType,
+      };
+      if (file.size && file.size > tool.maxFileSizeMB * 1024 * 1024) {
+        setError(`The photo exceeds the ${tool.maxFileSize} limit.`);
+        return;
+      }
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setFiles((prev) => (tool.multiFile ? [...prev, file] : [file]));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not capture a photo.");
+    }
+  }, [tool]);
+
   const convert = useCallback(async () => {
     if (!tool || files.length === 0) return;
     setStage("converting");
@@ -545,6 +579,17 @@ export default function ConvertScreen() {
               </Text>
             )}
           </Pressable>
+
+          {tool.allowCamera && (
+            <Button
+              label="Take Photo"
+              icon="camera"
+              variant="secondary"
+              fullWidth
+              onPress={takePhoto}
+              testID="button-take-photo"
+            />
+          )}
 
           {error ? (
             <Text style={styles.errorText} testID="text-error">

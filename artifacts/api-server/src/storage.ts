@@ -321,6 +321,17 @@ export class MemStorage implements IStorage {
         outputFormat: "pdf",
         maxFileSize: 100,
         processingTimeEstimate: 60
+      },
+      {
+        id: 22,
+        name: "Document Restore",
+        type: ToolType.RESTORE_DOCUMENT,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Restore a broken or damaged PDF/image (deskew, de-fade, denoise, sharpen) into a clean PDF",
+        inputFormats: ["pdf", "jpg", "jpeg", "png", "webp", "bmp", "tiff"],
+        outputFormat: "pdf",
+        maxFileSize: 25,
+        processingTimeEstimate: 30
       }
     ];
   }
@@ -835,6 +846,17 @@ export class DatabaseStorage implements IStorage {
         outputFormat: "pdf",
         maxFileSize: 100,
         processingTimeEstimate: 60
+      },
+      {
+        id: 22,
+        name: "Document Restore",
+        type: ToolType.RESTORE_DOCUMENT,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Restore a broken or damaged PDF/image (deskew, de-fade, denoise, sharpen) into a clean PDF",
+        inputFormats: ["pdf", "jpg", "jpeg", "png", "webp", "bmp", "tiff"],
+        outputFormat: "pdf",
+        maxFileSize: 25,
+        processingTimeEstimate: 30
       }
     ];
   }

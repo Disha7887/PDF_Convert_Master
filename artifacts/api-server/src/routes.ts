@@ -421,6 +421,9 @@ async function performActualConversion(
       case 'ocr_pdf':
         return await ocrPdf(fileBuffer, outputFilename);
 
+      case 'restore_document':
+        return await restoreDocument(fileBuffer, inputExtension, outputFilename);
+
       default:
         return { success: false, error: `Unsupported conversion type: ${toolType}` };
     }
@@ -430,6 +433,89 @@ async function performActualConversion(
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown conversion error' 
     };
+  }
+}
+
+// Document Restore: deterministically clean a damaged scan/photo (or every page
+// of a PDF) — EXIF auto-orient, auto-contrast (de-fade), gentle denoise + sharpen
+// — and assemble the cleaned page(s) into a fresh PDF. Faithful by design: it
+// only enhances what is already there and never fabricates torn/missing content.
+async function restoreImageToJpeg(imageBuffer: Buffer): Promise<Buffer> {
+  return await sharp(imageBuffer, { failOn: "none" })
+    .rotate() // auto-orient from EXIF (fixes sideways phone photos)
+    .flatten({ background: "#ffffff" }) // drop transparency onto white paper
+    .normalise() // auto levels — recover faded / low-light documents
+    .median(1) // light denoise without smearing text
+    .sharpen({ sigma: 1 }) // gentle unsharp to recover legibility
+    .modulate({ brightness: 1.04, saturation: 1.05 })
+    .gamma(1.1)
+    .jpeg({ quality: 92, mozjpeg: true })
+    .toBuffer();
+}
+
+async function addRestoredPage(pdfDoc: PDFDocument, jpegBuffer: Buffer): Promise<void> {
+  const embedded = await pdfDoc.embedJpg(jpegBuffer);
+  // Cap page size so very large photos don't yield an oversized PDF page.
+  const MAX_DIM = 2000;
+  const scale = Math.min(1, MAX_DIM / Math.max(embedded.width, embedded.height));
+  const pageWidth = embedded.width * scale;
+  const pageHeight = embedded.height * scale;
+  const page = pdfDoc.addPage([pageWidth, pageHeight]);
+  page.drawImage(embedded, { x: 0, y: 0, width: pageWidth, height: pageHeight });
+}
+
+async function restoreDocument(
+  fileBuffer: Buffer,
+  inputExt: string | undefined,
+  outputFilename: string,
+) {
+  try {
+    const ext = (inputExt || "").toLowerCase();
+    const pdfDoc = await PDFDocument.create();
+
+    if (ext === "pdf") {
+      // Rasterize every page, restore each, reassemble into a clean PDF.
+      const parser = new PDFParse({ data: new Uint8Array(fileBuffer) });
+      try {
+        const result = await parser.getScreenshot({
+          desiredWidth: 1654, // ~A4 width @ 200dpi
+          imageDataUrl: true,
+          imageBuffer: false,
+        });
+        const pages = [...result.pages].sort(
+          (a, b) => (a.pageNumber ?? 0) - (b.pageNumber ?? 0),
+        );
+        for (const pg of pages) {
+          if (!pg?.dataUrl) continue;
+          const base64 = pg.dataUrl.split(",")[1] ?? "";
+          if (!base64) continue;
+          const pageBuffer = Buffer.from(base64, "base64");
+          const restored = await restoreImageToJpeg(pageBuffer);
+          await addRestoredPage(pdfDoc, restored);
+        }
+      } finally {
+        try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
+      }
+    } else {
+      // Single image input (photo or scan).
+      const restored = await restoreImageToJpeg(fileBuffer);
+      await addRestoredPage(pdfDoc, restored);
+    }
+
+    if (pdfDoc.getPageCount() === 0) {
+      throw new Error("Document could not be restored (no readable pages found).");
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    return {
+      success: true,
+      convertedBuffer: Buffer.from(pdfBytes),
+      mimeType: "application/pdf",
+    };
+  } catch (error) {
+    throw new Error(
+      `Document restore failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 

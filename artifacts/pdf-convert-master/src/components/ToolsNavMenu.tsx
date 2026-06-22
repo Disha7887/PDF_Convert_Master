@@ -27,6 +27,7 @@ const PDF_FROM = ["pdf-to-word", "pdf-to-excel", "pdf-to-powerpoint", "pdf-to-im
 const PDF_TO = ["word-to-pdf", "excel-to-pdf", "powerpoint-to-pdf", "images-to-pdf", "html-to-pdf"];
 const PDF_EDITOR_COL1 = ["edit-pdf", "sign-pdf", "rotate-pdf", "merge-pdfs", "split-pdf", "crop-pdf"];
 const PDF_EDITOR_COL2 = [
+  "restore-document",
   "watermark-pdf",
   "add-image-pdf",
   "compress-images",

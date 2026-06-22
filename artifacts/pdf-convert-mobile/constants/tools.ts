@@ -46,6 +46,8 @@ export interface Tool {
   editorMode?: string;
   /** True while the tool is temporarily offline ("Under maintenance"). */
   maintenance?: boolean;
+  /** True when the tool offers a "Take Photo" (camera) capture option. */
+  allowCamera?: boolean;
 }
 
 function mb(size: string): number {
@@ -449,6 +451,26 @@ export const tools: Tool[] = [
   },
 
   // ─── Edit ──────────────────────────────────────────────────────────────
+  {
+    id: "restore-document",
+    title: "Document Restore",
+    description: "Turn a broken or damaged PDF, scan, or photo into a clean, sharpened PDF",
+    acceptedFormats: [".pdf", ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"],
+    maxFileSize: "25MB",
+    maxFileSizeMB: 25,
+    buttonText: "Select Document",
+    dropAreaText: "Drop your damaged PDF or photo here",
+    fileTypeHint: "Supports: PDF, JPG, PNG, WEBP, BMP, TIFF up to 25MB",
+    outputFormat: "Restored PDF",
+    category: "Edit",
+    feather: "refresh-cw",
+    route: "/upload/restore-document",
+    serverToolType: "restore_document",
+    multiFile: false,
+    isMerge: false,
+    editor: null,
+    allowCamera: true,
+  },
   {
     id: "edit-pdf",
     title: "Edit PDF",
