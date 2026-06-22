@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DynamicLayout } from "@/components/DynamicLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PageLoader } from "@/components/page-loader";
 
 // Pages are lazy-loaded so each route ships as its own chunk. This keeps the
 // initial bundle small and prevents heavy, tool-only libraries (pdf-lib,
@@ -71,16 +72,11 @@ const RotateImageTool = named(() => import("@/pages/ImageEditTools"), "RotateIma
 const Features = named(() => import("@/pages/Features"), "Features");
 const LearnMore = named(() => import("@/pages/LearnMore"), "LearnMore");
 
+// Route-loading fallback. Uses the single global PageLoader (the shared
+// "processing" Lottie) so every loading state across the app looks identical —
+// new tools/routes inherit it automatically with no extra code.
 function PageFallback() {
-  return (
-    <div className="flex min-h-[60vh] w-full items-center justify-center">
-      <div
-        className="h-10 w-10 animate-spin rounded-full border-4 border-[#f7433d]/20 border-t-[#f7433d]"
-        role="status"
-        aria-label="Loading"
-      />
-    </div>
-  );
+  return <PageLoader />;
 }
 
 // Guards lazy routes against dynamic-import failures (e.g. a user on a stale tab
