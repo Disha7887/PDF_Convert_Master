@@ -1,3 +1,4 @@
+import { Component, lazy, Suspense, type ReactNode } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,58 +7,128 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DynamicLayout } from "@/components/DynamicLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import NotFound from "@/pages/not-found";
 
-import { Body } from "@/pages/Body";
-import { Contact } from "@/pages/Contact";
-import { Pricing } from "@/pages/Pricing";
-import { About } from "@/pages/About";
-import { Tools } from "@/pages/Tools";
-import { Dashboard } from "@/pages/Dashboard";
-import { UsageStatistics } from "@/pages/UsageStatistics";
-import { APISetup } from "@/pages/APISetup";
-import { APIReference } from "@/pages/APIReference";
-import { ManagePlans } from "@/pages/ManagePlans";
-import { LiveTools } from "@/pages/LiveTools";
-import { TermsOfService } from "@/pages/TermsOfService";
-import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
-import { Support } from "@/pages/Support";
-import { SignUp } from "@/pages/SignUp";
-import { SignIn } from "@/pages/SignIn";
-import { ForgotPassword } from "@/pages/ForgotPassword";
-import { ResetPassword } from "@/pages/ResetPassword";
-import { Profile } from "@/pages/Profile";
-import { WordToPdfUpload } from "@/pages/upload/WordToPdf";
-import { PdfToWordUpload } from "@/pages/upload/PdfToWord";
-import { PdfToExcelUpload } from "@/pages/upload/PdfToExcel";
-import { ExcelToPdfUpload } from "@/pages/upload/ExcelToPdf";
-import { PowerPointToPdfUpload } from "@/pages/upload/PowerPointToPdf";
-import { PdfToPowerPointUpload } from "@/pages/upload/PdfToPowerPoint";
-import { PdfToImagesUpload } from "@/pages/upload/PdfToImages";
-import { ImagesToPdfUpload } from "@/pages/upload/ImagesToPdf";
-import { HtmlToPdfUpload } from "@/pages/upload/HtmlToPdf";
-import { SplitPdfUpload } from "@/pages/upload/SplitPdf";
-import { CompressPdfUpload } from "@/pages/upload/CompressPdf";
-import { RotatePdfUpload } from "@/pages/upload/RotatePdf";
-import { ResizeImageUpload } from "@/pages/upload/ResizeImage";
-import { CropImageUpload } from "@/pages/upload/CropImage";
-import { RotateImageUpload } from "@/pages/upload/RotateImage";
-import { ConvertImageFormatUpload } from "@/pages/upload/ConvertImageFormat";
-import { CompressImageUpload } from "@/pages/upload/CompressImage";
-import { UpscaleImageUpload } from "@/pages/upload/UpscaleImage";
-import { RemoveBackgroundUpload } from "@/pages/upload/RemoveBackground";
-import { MergePdfsUpload } from "@/pages/upload/MergePdfs";
-import { EditPdfUpload } from "@/pages/upload/EditPdf";
-import { CropPdfUpload } from "@/pages/upload/CropPdf";
-import { SignPdfUpload } from "@/pages/upload/SignPdf";
-import { WatermarkPdfUpload } from "@/pages/upload/WatermarkPdf";
-import { AddImagePdfUpload } from "@/pages/upload/AddImagePdf";
-import { DeletePagesPdfUpload } from "@/pages/upload/DeletePagesPdf";
-import { OcrPdfUpload } from "@/pages/upload/OcrPdf";
-import { UploadDemo } from "@/pages/UploadDemo";
-import { ResizeImageTool, CropImageTool, RotateImageTool } from "@/pages/ImageEditTools";
-import { Features } from "@/pages/Features";
-import { LearnMore } from "@/pages/LearnMore";
+// Pages are lazy-loaded so each route ships as its own chunk. This keeps the
+// initial bundle small and prevents heavy, tool-only libraries (pdf-lib,
+// pdfjs-dist, tesseract.js, recharts) from being downloaded on first paint —
+// they are only pulled in when the user actually opens the tool that uses them.
+const NotFound = lazy(() => import("@/pages/not-found"));
+const named = <K extends string, M extends Record<K, React.ComponentType<any>>>(
+  loader: () => Promise<M>,
+  key: K,
+) => lazy(() => loader().then((m) => ({ default: m[key] })));
+
+const Body = named(() => import("@/pages/Body"), "Body");
+const Contact = named(() => import("@/pages/Contact"), "Contact");
+const Pricing = named(() => import("@/pages/Pricing"), "Pricing");
+const About = named(() => import("@/pages/About"), "About");
+const Tools = named(() => import("@/pages/Tools"), "Tools");
+const Dashboard = named(() => import("@/pages/Dashboard"), "Dashboard");
+const UsageStatistics = named(() => import("@/pages/UsageStatistics"), "UsageStatistics");
+const APISetup = named(() => import("@/pages/APISetup"), "APISetup");
+const APIReference = named(() => import("@/pages/APIReference"), "APIReference");
+const ManagePlans = named(() => import("@/pages/ManagePlans"), "ManagePlans");
+const LiveTools = named(() => import("@/pages/LiveTools"), "LiveTools");
+const TermsOfService = named(() => import("@/pages/TermsOfService"), "TermsOfService");
+const PrivacyPolicy = named(() => import("@/pages/PrivacyPolicy"), "PrivacyPolicy");
+const Support = named(() => import("@/pages/Support"), "Support");
+const SignUp = named(() => import("@/pages/SignUp"), "SignUp");
+const SignIn = named(() => import("@/pages/SignIn"), "SignIn");
+const ForgotPassword = named(() => import("@/pages/ForgotPassword"), "ForgotPassword");
+const ResetPassword = named(() => import("@/pages/ResetPassword"), "ResetPassword");
+const Profile = named(() => import("@/pages/Profile"), "Profile");
+const WordToPdfUpload = named(() => import("@/pages/upload/WordToPdf"), "WordToPdfUpload");
+const PdfToWordUpload = named(() => import("@/pages/upload/PdfToWord"), "PdfToWordUpload");
+const PdfToExcelUpload = named(() => import("@/pages/upload/PdfToExcel"), "PdfToExcelUpload");
+const ExcelToPdfUpload = named(() => import("@/pages/upload/ExcelToPdf"), "ExcelToPdfUpload");
+const PowerPointToPdfUpload = named(() => import("@/pages/upload/PowerPointToPdf"), "PowerPointToPdfUpload");
+const PdfToPowerPointUpload = named(() => import("@/pages/upload/PdfToPowerPoint"), "PdfToPowerPointUpload");
+const PdfToImagesUpload = named(() => import("@/pages/upload/PdfToImages"), "PdfToImagesUpload");
+const ImagesToPdfUpload = named(() => import("@/pages/upload/ImagesToPdf"), "ImagesToPdfUpload");
+const HtmlToPdfUpload = named(() => import("@/pages/upload/HtmlToPdf"), "HtmlToPdfUpload");
+const SplitPdfUpload = named(() => import("@/pages/upload/SplitPdf"), "SplitPdfUpload");
+const CompressPdfUpload = named(() => import("@/pages/upload/CompressPdf"), "CompressPdfUpload");
+const RotatePdfUpload = named(() => import("@/pages/upload/RotatePdf"), "RotatePdfUpload");
+const ResizeImageUpload = named(() => import("@/pages/upload/ResizeImage"), "ResizeImageUpload");
+const CropImageUpload = named(() => import("@/pages/upload/CropImage"), "CropImageUpload");
+const RotateImageUpload = named(() => import("@/pages/upload/RotateImage"), "RotateImageUpload");
+const ConvertImageFormatUpload = named(() => import("@/pages/upload/ConvertImageFormat"), "ConvertImageFormatUpload");
+const CompressImageUpload = named(() => import("@/pages/upload/CompressImage"), "CompressImageUpload");
+const UpscaleImageUpload = named(() => import("@/pages/upload/UpscaleImage"), "UpscaleImageUpload");
+const RemoveBackgroundUpload = named(() => import("@/pages/upload/RemoveBackground"), "RemoveBackgroundUpload");
+const MergePdfsUpload = named(() => import("@/pages/upload/MergePdfs"), "MergePdfsUpload");
+const EditPdfUpload = named(() => import("@/pages/upload/EditPdf"), "EditPdfUpload");
+const CropPdfUpload = named(() => import("@/pages/upload/CropPdf"), "CropPdfUpload");
+const SignPdfUpload = named(() => import("@/pages/upload/SignPdf"), "SignPdfUpload");
+const WatermarkPdfUpload = named(() => import("@/pages/upload/WatermarkPdf"), "WatermarkPdfUpload");
+const AddImagePdfUpload = named(() => import("@/pages/upload/AddImagePdf"), "AddImagePdfUpload");
+const DeletePagesPdfUpload = named(() => import("@/pages/upload/DeletePagesPdf"), "DeletePagesPdfUpload");
+const OcrPdfUpload = named(() => import("@/pages/upload/OcrPdf"), "OcrPdfUpload");
+const UploadDemo = named(() => import("@/pages/UploadDemo"), "UploadDemo");
+const ResizeImageTool = named(() => import("@/pages/ImageEditTools"), "ResizeImageTool");
+const CropImageTool = named(() => import("@/pages/ImageEditTools"), "CropImageTool");
+const RotateImageTool = named(() => import("@/pages/ImageEditTools"), "RotateImageTool");
+const Features = named(() => import("@/pages/Features"), "Features");
+const LearnMore = named(() => import("@/pages/LearnMore"), "LearnMore");
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-[60vh] w-full items-center justify-center">
+      <div
+        className="h-10 w-10 animate-spin rounded-full border-4 border-[#f7433d]/20 border-t-[#f7433d]"
+        role="status"
+        aria-label="Loading"
+      />
+    </div>
+  );
+}
+
+// Guards lazy routes against dynamic-import failures (e.g. a user on a stale tab
+// after a new deploy, or a flaky network). On a chunk-load error we reload once
+// to fetch the fresh asset manifest; otherwise we show a friendly retry instead
+// of a blank white screen.
+class LazyErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    const isChunkError =
+      /dynamically imported module|Importing a module script failed|Failed to fetch/i.test(
+        message,
+      );
+    if (isChunkError && !sessionStorage.getItem("chunk-reloaded")) {
+      sessionStorage.setItem("chunk-reloaded", "1");
+      window.location.reload();
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-[60vh] w-full flex-col items-center justify-center gap-4 px-6 text-center">
+          <p className="text-lg font-semibold text-gray-900">
+            Something went wrong loading this page.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="rounded-full bg-[#f7433d] px-6 py-3 font-medium text-white"
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function Router() {
   return (
@@ -410,7 +481,11 @@ function App() {
         <AuthProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Toaster />
-            <Router />
+            <LazyErrorBoundary>
+              <Suspense fallback={<PageFallback />}>
+                <Router />
+              </Suspense>
+            </LazyErrorBoundary>
           </WouterRouter>
         </AuthProvider>
       </TooltipProvider>

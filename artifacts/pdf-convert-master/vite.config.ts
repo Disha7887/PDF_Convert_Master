@@ -61,6 +61,30 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        // Split large third-party libraries into their own cacheable chunks.
+        // Tool-only libs (pdfjs, pdf-lib, tesseract, recharts) are referenced
+        // exclusively from lazy-loaded routes, so these chunks are fetched on
+        // demand and stay out of the initial page load.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          // Only isolate heavy, non-React leaf libraries. These are pulled in
+          // exclusively by lazy-loaded routes, so they never load on first
+          // paint, and because nothing in the React vendor graph imports them
+          // back, they cannot create circular chunks.
+          if (id.includes("pdfjs-dist")) return "pdfjs";
+          if (id.includes("pdf-lib")) return "pdf-lib";
+          if (id.includes("tesseract")) return "tesseract";
+          if (id.includes("lottie")) return "lottie";
+          if (id.includes("recharts") || id.includes("/d3-")) return "charts";
+          // Everything else (react, react-dom, radix, framer-motion, tanstack,
+          // wouter, etc.) stays together in one cacheable vendor chunk.
+          return "vendor";
+        },
+      },
+    },
   },
   server: {
     port,
