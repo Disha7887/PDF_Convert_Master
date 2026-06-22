@@ -23,7 +23,11 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (
+    email: string,
+    password: string,
+    name?: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   signout: () => void;
   isAuthenticated: boolean;
 }
@@ -93,27 +97,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
-  const signup = useCallback(async (email: string, password: string) => {
-    if (USE_MOCK_DATA) {
-      const res = await mockApi.signup(email, password);
-      return res.success
-        ? { success: true }
-        : { success: false, error: res.error ?? "Sign up failed" };
-    }
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      return data.success
-        ? { success: true }
-        : { success: false, error: data.error ?? "Sign up failed" };
-    } catch {
-      return { success: false, error: "Network error. Please try again." };
-    }
-  }, []);
+  const signup = useCallback(
+    async (email: string, password: string, name?: string) => {
+      if (USE_MOCK_DATA) {
+        const res = await mockApi.signup(email, password, name);
+        if (res.success && res.user && res.token) {
+          await persist(res.user, res.token);
+          return { success: true };
+        }
+        return { success: false, error: res.error ?? "Sign up failed" };
+      }
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, name }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Auto sign-in: the register endpoint returns a token + user, so we
+          // persist the session immediately (no second sign-in round-trip).
+          await persist(data.data.user, data.data.token);
+          return { success: true };
+        }
+        return { success: false, error: data.error ?? "Sign up failed" };
+      } catch {
+        return { success: false, error: "Network error. Please try again." };
+      }
+    },
+    [persist],
+  );
 
   const signout = useCallback(() => {
     setUser(null);

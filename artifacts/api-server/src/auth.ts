@@ -110,7 +110,7 @@ export async function register(req: Request, res: Response) {
       });
     }
 
-    const { email, password } = validation.data;
+    const { email, password, name } = validation.data;
 
     // Check if user already exists
     const existingUser = await storage.getUserByEmail(email);
@@ -125,6 +125,7 @@ export async function register(req: Request, res: Response) {
     const passwordHash = await hashPassword(password);
     const newUser = await storage.createUser({
       email,
+      name: name?.trim() || null,
       passwordHash,
       plan: "free"
     });

@@ -319,6 +319,7 @@ export class MemStorage implements IStorage {
     const user: User = { 
       id,
       email: insertUser.email!,
+      name: insertUser.name ?? null,
       passwordHash: insertUser.passwordHash!,
       plan: insertUser.plan || "free",
       createdAt: now

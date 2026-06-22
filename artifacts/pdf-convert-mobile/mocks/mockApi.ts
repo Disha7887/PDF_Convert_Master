@@ -42,12 +42,17 @@ export const mockApi = {
     return { success: true, user, token: makeToken() };
   },
 
-  async signup(email: string, _password: string): Promise<AuthResult> {
+  async signup(email: string, _password: string, name?: string): Promise<AuthResult> {
     await mockDelay(null, MOCK_LATENCY_MS);
     if (!email || !email.includes("@")) {
       return { success: false, error: "Please enter a valid email address." };
     }
-    return { success: true };
+    const user: MockUser = {
+      ...DEMO_USER,
+      email,
+      name: name?.trim() || email.split("@")[0] || DEMO_USER.name,
+    };
+    return { success: true, user, token: makeToken() };
   },
 
   async getCurrentUser(): Promise<MockUser> {

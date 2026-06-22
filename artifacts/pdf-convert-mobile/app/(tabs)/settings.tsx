@@ -5,11 +5,16 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Pressable, Share, StyleSheet, Switch, Text, View } from "react-native";
 
+import Svg, { Path } from "react-native-svg";
+
 import { Button, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+
+const PEOPLE_PATH =
+  "M26.68,23.36a11,11,0,0,0-6.91-7.7,6,6,0,1,0-7.54,0,11,11,0,0,0-6.91,7.7,2.86,2.86,0,0,0,.54,2.47A3,3,0,0,0,8.25,27h15.5a3,3,0,0,0,2.39-1.17A2.86,2.86,0,0,0,26.68,23.36ZM12,11a4,4,0,1,1,4,4A4,4,0,0,1,12,11ZM24.56,24.6a1,1,0,0,1-.81.4H8.25a1,1,0,0,1-.81-.4.85.85,0,0,1-.18-.76,9,9,0,0,1,17.48,0A.85.85,0,0,1,24.56,24.6Z";
 
 const C = colors.light;
 const MOBILE_DATA_KEY = "pref_ask_mobile_data";
@@ -23,8 +28,10 @@ interface LinkRow {
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const go = (r: string) => router.push(r as never);
+
+  const displayName = user?.name?.trim() || user?.email?.split("@")[0] || "Your account";
 
   const [askMobileData, setAskMobileData] = useState(true);
 
@@ -69,6 +76,27 @@ export default function SettingsScreen() {
 
   return (
     <ScreenScroll navInset tabBar>
+      {/* Profile header */}
+      {isAuthenticated ? (
+        <View style={[styles.profileCard, cardShadow]}>
+          <View style={styles.profileAvatar}>
+            <Svg width={30} height={30} viewBox="0 0 32 32">
+              <Path d={PEOPLE_PATH} fill="#fff" />
+            </Svg>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.profileName} numberOfLines={1}>
+              {displayName}
+            </Text>
+            {!!user?.email && (
+              <Text style={styles.profileEmail} numberOfLines={1}>
+                {user.email}
+              </Text>
+            )}
+          </View>
+        </View>
+      ) : null}
+
       {/* Get Premium banner */}
       <Pressable onPress={() => go(ROUTES.pricing)} style={({ pressed }) => [{ opacity: pressed ? 0.94 : 1 }]}>
         <LinearGradient
@@ -190,6 +218,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  profileCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: C.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: C.border,
+    padding: 16,
+    marginBottom: 22,
+  },
+  profileAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: C.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileName: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingSemibold },
+  profileEmail: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 2 },
   premiumTitle: { fontSize: 17, color: "#fff", fontFamily: fonts.headingBold },
   premiumSub: { fontSize: 12.5, color: "rgba(255,255,255,0.85)", fontFamily: fonts.body, marginTop: 2 },
   sectionTitle: {

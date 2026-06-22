@@ -45,7 +45,7 @@ type Mode = "signin" | "signup";
 export default function AuthSheet({ mode }: { mode: Mode }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { signin, signup, isAuthenticated, loading } = useAuth();
+  const { signin, signup, user, isAuthenticated, loading } = useAuth();
 
   const [step, setStep] = useState<"email" | "credentials">("email");
   const [name, setName] = useState("");
@@ -150,10 +150,15 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
     setIsSubmitting(true);
     try {
       if (mode === "signup") {
-        const res = await signup(email, password);
+        const res = await signup(email, password, name);
         if (res.success) {
+          // Sign-up now auto-logs the user in, so go straight to the workspace
+          // with a personalised welcome rather than bouncing back to sign-in.
           setResult("signup-success");
-          redirectTimer.current = setTimeout(() => router.replace(ROUTES.signIn as never), 2200);
+          redirectTimer.current = setTimeout(
+            () => router.replace(ROUTES.dashboardHome as never),
+            2600,
+          );
         } else {
           setResult("error");
           setError(res.error || "Sign up failed");
@@ -184,12 +189,23 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
     setError(null);
   };
 
-  // Successful login: take over the whole screen with the big welcome animation.
-  if (result === "signin-success") {
+  // Successful auth (sign-in OR sign-up, since sign-up auto-logs in): take over
+  // the whole screen with the big welcome animation, greeting the user by name.
+  if (result === "signin-success" || result === "signup-success") {
+    const firstName =
+      user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "";
+    const title =
+      result === "signup-success"
+        ? firstName
+          ? `Welcome, ${firstName}!`
+          : "Welcome!"
+        : firstName
+          ? `Welcome back, ${firstName}!`
+          : "Welcome back!";
     return (
       <View style={styles.welcomeScreen} testID="view-welcome">
         <AuthResultIcon kind="welcome" size={WELCOME_SIZE} loop={false} style={styles.welcomeIcon} />
-        <Text style={styles.welcomeTitle}>Welcome back!</Text>
+        <Text style={styles.welcomeTitle}>{title}</Text>
         <Text style={styles.welcomeSub}>Taking you to your workspace…</Text>
       </View>
     );
@@ -202,16 +218,14 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
           full-screen welcome animation mounts after a successful sign-in. Without
           this, the welcome screen shows a blank gap until the 130KB+ animation
           finishes loading on native. */}
-      {mode === "signin" ? (
-        <View
-          style={styles.preload}
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          <AuthResultIcon kind="welcome" size={WELCOME_SIZE} loop={false} />
-        </View>
-      ) : null}
+      <View
+        style={styles.preload}
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <AuthResultIcon kind="welcome" size={WELCOME_SIZE} loop={false} />
+      </View>
 
       <Pressable style={StyleSheet.absoluteFill} onPress={close} testID="button-auth-backdrop" />
 
@@ -227,13 +241,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.sheetContent}
           >
-            {result === "signup-success" ? (
-              <View style={styles.resultBlock} testID="view-signup-success">
-                <AuthResultIcon kind="success" size={150} loop={false} />
-                <Text style={styles.resultTitle}>Account created!</Text>
-                <Text style={styles.resultSub}>Redirecting you to sign in…</Text>
-              </View>
-            ) : result === "error" ? (
+            {result === "error" ? (
               <View style={styles.resultBlock} testID="view-auth-error">
                 <AuthResultIcon kind="error" size={150} loop={false} />
                 <Text style={styles.resultTitle}>
