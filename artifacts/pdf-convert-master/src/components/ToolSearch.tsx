@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Search } from "lucide-react";
 import {
@@ -43,6 +43,7 @@ export const ToolSearch = ({
 }: ToolSearchProps): JSX.Element => {
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const groups = groupedTools();
 
   useEffect(() => {
@@ -55,6 +56,15 @@ export const ToolSearch = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  // Drop the text cursor into the search box as soon as the dialog opens so the
+  // user can start typing immediately. The timeout runs after the dialog's own
+  // focus management settles, otherwise focus can land on the close button.
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 50);
+    return () => clearTimeout(t);
+  }, [open]);
 
   const handleSelect = (tool: ToolConfig) => {
     const target = isHeroTool(tool.id) ? `/?tool=${tool.id}` : tool.route;
@@ -91,6 +101,8 @@ export const ToolSearch = ({
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
+          ref={inputRef}
+          autoFocus
           placeholder="Search tools…"
           data-testid="input-tool-search"
         />
