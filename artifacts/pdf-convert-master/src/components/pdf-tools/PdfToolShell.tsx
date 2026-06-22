@@ -10,6 +10,8 @@ interface PdfToolLayoutProps {
   iconBorderColor: string;
   title: string;
   description: string;
+  /** Hide the title/description header (used on the upload empty state). */
+  hideHeader?: boolean;
   children: React.ReactNode;
 }
 
@@ -21,6 +23,7 @@ export function PdfToolLayout({
   iconBorderColor,
   title,
   description,
+  hideHeader = false,
   children,
 }: PdfToolLayoutProps) {
   return (
@@ -30,6 +33,7 @@ export function PdfToolLayout({
       icon={<Icon className={`w-7 h-7 ${iconColor}`} />}
       iconBoxClassName={`${iconBorderColor} ${iconBgColor}`}
       trustText="Processed entirely in your browser — your file never leaves your device."
+      showHeader={!hideHeader}
     >
       {children}
     </ToolPageShell>

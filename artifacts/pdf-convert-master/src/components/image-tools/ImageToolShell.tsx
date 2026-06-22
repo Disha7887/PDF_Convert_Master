@@ -6,6 +6,8 @@ interface ImageToolShellProps {
   description: string;
   icon: React.ReactNode;
   iconBg: string;
+  /** Hide the title/description header (used on the upload empty state). */
+  hideHeader?: boolean;
   children: React.ReactNode;
 }
 
@@ -14,6 +16,7 @@ export const ImageToolShell: React.FC<ImageToolShellProps> = ({
   description,
   icon,
   iconBg,
+  hideHeader = false,
   children,
 }) => {
   return (
@@ -22,6 +25,7 @@ export const ImageToolShell: React.FC<ImageToolShellProps> = ({
       description={description}
       icon={icon}
       iconBoxClassName={iconBg}
+      showHeader={!hideHeader}
     >
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 md:p-8">
         {children}

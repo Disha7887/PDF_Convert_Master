@@ -158,6 +158,7 @@ export const UpscaleImageUpload = () => {
       description="Enhance image resolution with real AI (Real-ESRGAN). Increase size 2× or 4× while keeping detail sharp, compare before and after, then download."
       icon={<TrendingUp className="w-8 h-8 text-blue-500" />}
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+      hideHeader={!file}
     >
       {!file ? (
         <ImageDropzone

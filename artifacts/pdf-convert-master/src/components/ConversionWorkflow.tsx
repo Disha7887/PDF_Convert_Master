@@ -514,6 +514,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       icon={toolIcon}
       iconBoxClassName={iconBg}
       maxWidth="max-w-4xl"
+      showHeader={stage !== "upload"}
     >
       {/* Main Workflow Card */}
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">

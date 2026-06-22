@@ -115,6 +115,7 @@ export const ResizeImageUpload = () => {
       description="Resize images to exact dimensions or scale by percentage. Lock the aspect ratio to avoid distortion, then download or save to the server."
       icon={<Maximize2 className="w-8 h-8 text-blue-500" />}
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+      hideHeader={!file}
     >
       {!file ? (
         <ImageDropzone

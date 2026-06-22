@@ -276,6 +276,7 @@ export function OcrPdfUpload() {
       iconBorderColor={cfg.iconBorderColor}
       title={cfg.title}
       description={cfg.description}
+      hideHeader={!file}
     >
       {!file ? (
         <PdfDropzone

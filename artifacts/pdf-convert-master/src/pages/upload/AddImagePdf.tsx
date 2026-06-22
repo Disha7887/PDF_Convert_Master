@@ -153,6 +153,7 @@ export function AddImagePdfUpload() {
       iconBorderColor={cfg.iconBorderColor}
       title={cfg.title}
       description={cfg.description}
+      hideHeader={pages.length === 0}
     >
       {pages.length === 0 ? (
         <PdfDropzone

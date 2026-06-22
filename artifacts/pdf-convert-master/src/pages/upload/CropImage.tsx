@@ -154,6 +154,7 @@ export const CropImageUpload = () => {
       description="Crop images with an interactive selection. Lock to preset aspect ratios or crop freely, then download or save to the server."
       icon={<CropIcon className="w-8 h-8 text-blue-500" />}
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+      hideHeader={!file}
     >
       {!file ? (
         <ImageDropzone

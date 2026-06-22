@@ -125,6 +125,7 @@ export const RotateImageUpload = () => {
       description="Rotate by 90° steps or any custom angle, flip horizontally or vertically, and preview live before you download or save to the server."
       icon={<RotateCw className="w-8 h-8 text-blue-500" />}
       iconBg="bg-blue-50 border-blue-200 dark:bg-blue-900 dark:border-blue-800"
+      hideHeader={!file}
     >
       {!file ? (
         <ImageDropzone
