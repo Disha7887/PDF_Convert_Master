@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useLocation } from "wouter";
 import { resetPassword, requestPasswordReset } from "@/lib/profile";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck } from "lucide-react";
+import AuthResultIcon from "@/components/AuthResultIcon";
 
 export const ResetPassword: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -17,6 +18,7 @@ export const ResetPassword: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,7 @@ export const ResetPassword: React.FC = () => {
     setIsSubmitting(true);
     try {
       await resetPassword({ email, code: code.trim(), newPassword });
-      setLocation("/signin?reset=1");
+      setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not reset password");
     } finally {
@@ -61,6 +63,31 @@ export const ResetPassword: React.FC = () => {
       setError("Could not resend the code. Please try again.");
     }
   };
+
+  if (done) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center text-center space-y-4">
+            <AuthResultIcon kind="password-reset" size={180} loop={false} />
+            <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "Poppins, sans-serif" }}>
+              Password updated
+            </h1>
+            <p className="text-sm text-gray-600">
+              Your password has been changed. You can now sign in with your new password.
+            </p>
+            <Button
+              onClick={() => setLocation("/signin")}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg"
+              data-testid="button-go-signin"
+            >
+              Go to sign in
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">

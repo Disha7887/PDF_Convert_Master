@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import AuthResultIcon from "@/components/AuthResultIcon";
 import { Button, Field, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -56,6 +57,9 @@ export default function ResetPasswordScreen() {
   if (done) {
     return (
       <ScreenScroll contentStyle={{ gap: 18 }}>
+        <View style={{ alignItems: "center" }}>
+          <AuthResultIcon kind="password-reset" size={180} loop={false} />
+        </View>
         <View style={{ gap: 8 }}>
           <Text style={styles.title}>Password updated</Text>
           <Text style={styles.subtitle}>

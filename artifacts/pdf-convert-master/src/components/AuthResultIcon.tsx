@@ -3,14 +3,16 @@ import successAnim from "@/assets/lottie/auth-success.json";
 import errorAnim from "@/assets/lottie/auth-error.json";
 import welcomeAnim from "@/assets/lottie/auth-welcome.json";
 import signupAnim from "@/assets/lottie/signup.json";
+import passwordResetAnim from "@/assets/lottie/password-reset.json";
 
-export type AuthResultKind = "success" | "error" | "welcome" | "signup";
+export type AuthResultKind = "success" | "error" | "welcome" | "signup" | "password-reset";
 
 const MAP: Record<AuthResultKind, unknown> = {
   success: successAnim,
   error: errorAnim,
   welcome: welcomeAnim,
   signup: signupAnim,
+  "password-reset": passwordResetAnim,
 };
 
 export interface AuthResultIconProps {
