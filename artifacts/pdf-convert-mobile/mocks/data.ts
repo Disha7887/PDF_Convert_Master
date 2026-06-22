@@ -323,7 +323,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: "Sarah Mitchell",
     role: "Operations Manager",
     quote:
-      "PDF Convert Master replaced three separate tools we used to pay for. The conversions are flawless and lightning fast.",
+      "PDF Genius replaced three separate tools we used to pay for. The conversions are flawless and lightning fast.",
     initials: "SM",
   },
   {

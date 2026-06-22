@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/pdf-convert-mobile/"
-title = "PDF Convert Master"
+title = "PDF Genius"
 version = "1.0.0"
 id = "artifacts/pdf-convert-mobile"
 router = "expo-domain"

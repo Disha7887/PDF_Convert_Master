@@ -1188,7 +1188,7 @@ async function ocrPdf(pdfBuffer: Buffer, outputFilename: string) {
     }
 
     outDoc.setTitle("Searchable PDF (OCR)");
-    outDoc.setProducer("PDF Convert Master OCR");
+    outDoc.setProducer("PDF Genius OCR");
     const bytes = await outDoc.save();
 
     console.log(`OCR complete: ${pageCount} pages, ${recognisedWords} words recognised`);

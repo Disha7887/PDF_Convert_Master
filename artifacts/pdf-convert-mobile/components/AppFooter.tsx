@@ -135,7 +135,7 @@ export function AppFooter() {
 
       {/* Bottom bar */}
       <Text style={styles.copyright}>
-        © {new Date().getFullYear()} PDF Convert Master by Mizan Store Ltd. All rights reserved.
+        © {new Date().getFullYear()} PDF Genius by Mizan Store Ltd. All rights reserved.
       </Text>
       <View style={styles.badgeRow}>
         {SECURITY_BADGES.map((b) => (

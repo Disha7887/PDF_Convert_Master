@@ -65,10 +65,7 @@ export const DashboardHeader = (): JSX.Element => {
             onClick={handleLogoClick}
             className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <img src={logoIcon} alt="PDF Convert Master" className="h-9 w-auto" />
-            <h1 className="[font-family:'Poppins',Helvetica] font-bold text-gray-900 text-base sm:text-xl leading-7 whitespace-nowrap">
-              PDF Convert Master
-            </h1>
+            <img src={logoIcon} alt="PDF Genius" className="h-9 w-auto" />
           </div>
         </div>
 

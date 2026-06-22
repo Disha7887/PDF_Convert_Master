@@ -210,7 +210,7 @@ export const FooterSection = (): JSX.Element => {
 
             {/* Copyright */}
             <div className="text-gray-600 text-sm">
-              © {new Date().getFullYear()} PDF Convert Master by Mizan Store Ltd. All rights reserved.
+              © {new Date().getFullYear()} PDF Genius by Mizan Store Ltd. All rights reserved.
             </div>
 
             {/* Security Features */}

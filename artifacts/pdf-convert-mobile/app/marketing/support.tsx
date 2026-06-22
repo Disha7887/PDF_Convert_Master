@@ -147,7 +147,7 @@ export default function Screen() {
       >
         <Text style={styles.heroTitle}>How Can We Help You?</Text>
         <Text style={styles.heroSubtitle}>
-          Get help with PDF Convert Master services with comprehensive support for all your PDF
+          Get help with PDF Genius services with comprehensive support for all your PDF
           conversion needs
         </Text>
 
@@ -233,7 +233,7 @@ export default function Screen() {
       <View style={{ marginTop: 32 }}>
         <SectionHeading
           title="Getting Started"
-          subtitle="New to PDF Convert Master? Start here with our most popular getting started topics."
+          subtitle="New to PDF Genius? Start here with our most popular getting started topics."
           style={{ marginBottom: 18 }}
         />
         <Card style={{ gap: 4 }}>

@@ -710,7 +710,7 @@ export const Contact = (): JSX.Element => {
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex items-center">
                           <MapPin className="w-4 h-4 mr-2 text-blue-500" />
-                          <span>PDF Convert Master</span>
+                          <span>PDF Genius</span>
                         </div>
                         <div className="flex items-center">
                           <MapPin className="w-4 h-4 mr-2 text-blue-500" />

@@ -38,7 +38,7 @@ const ARTICLES: Article[] = [
       "Master the art of PDF conversion with our comprehensive guide covering all major file formats, best practices, and professional tips.",
     category: "Conversion",
     readTime: "8 min",
-    author: "PDF Convert Master Team",
+    author: "PDF Genius Team",
     date: "December 15, 2024",
     featured: true,
   },
@@ -283,8 +283,8 @@ export default function Screen() {
       <View style={{ marginTop: 32 }}>
         <SectionHeading
           align="center"
-          title="About PDF Convert Master"
-          subtitle="Developed by Mizan Store Ltd in London, UK, PDF Convert Master provides professional-grade PDF tools trusted by millions worldwide. Our mission is to make document management simple, secure, and accessible for everyone."
+          title="About PDF Genius"
+          subtitle="Developed by Mizan Store Ltd in London, UK, PDF Genius provides professional-grade PDF tools trusted by millions worldwide. Our mission is to make document management simple, secure, and accessible for everyone."
           style={{ marginBottom: 18 }}
         />
         <View style={{ gap: 16 }}>

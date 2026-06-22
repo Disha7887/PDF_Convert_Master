@@ -57,7 +57,7 @@ const TEAM: { name: string; position: string; description: string }[] = [
     name: "Sarah Johnson",
     position: "Chief Executive Officer",
     description:
-      "Leading PDF Convert Master with 15+ years of experience in tech innovation and digital transformation.",
+      "Leading PDF Genius with 15+ years of experience in tech innovation and digital transformation.",
   },
   {
     name: "Michael Chen",
@@ -107,7 +107,7 @@ export default function Screen() {
         style={[styles.hero, heroShadow]}
       >
         <Text style={styles.heroTitle}>
-          About <Text style={styles.heroTitleAccent}>PDF Convert Master</Text>
+          About <Text style={styles.heroTitleAccent}>PDF Genius</Text>
         </Text>
         <Text style={styles.heroSubtitle}>
           Empowering businesses and individuals with professional PDF solutions since our founding
@@ -128,7 +128,7 @@ export default function Screen() {
         {/* Our Story */}
         <Text style={styles.h2}>Our Story</Text>
         <Text style={styles.paragraph}>
-          Founded with a vision to simplify document management, PDF Convert Master has become the
+          Founded with a vision to simplify document management, PDF Genius has become the
           trusted solution for millions of users worldwide. Our journey began when we recognized the
           growing need for reliable, secure, and user-friendly PDF tools.
         </Text>
@@ -152,7 +152,7 @@ export default function Screen() {
         <View style={styles.sectionHeadCenter}>
           <Text style={styles.h2Center}>Our Core Values</Text>
           <Text style={styles.leadCenter}>
-            These principles guide everything we do at PDF Convert Master
+            These principles guide everything we do at PDF Genius
           </Text>
         </View>
         <View style={styles.stack}>
@@ -170,7 +170,7 @@ export default function Screen() {
         {/* Meet Our Team */}
         <View style={styles.sectionHeadCenter}>
           <Text style={styles.h2Center}>Meet Our Team</Text>
-          <Text style={styles.leadCenter}>The passionate professionals behind PDF Convert Master</Text>
+          <Text style={styles.leadCenter}>The passionate professionals behind PDF Genius</Text>
         </View>
         <View style={styles.stack}>
           {TEAM.map((member) => (

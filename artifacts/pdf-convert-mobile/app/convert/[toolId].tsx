@@ -111,7 +111,7 @@ async function materializeOutput(
   const file = new File(Paths.cache, sanitizeName(name));
   file.create({ overwrite: true, intermediates: true });
   file.write(
-    `PDF Convert Master — sample output\n` +
+    `PDF Genius — sample output\n` +
       `Tool: ${tool.title}\n` +
       `Output: ${name}\n` +
       `Source: ${files.map((f) => f.name).join(", ")}\n` +

@@ -101,7 +101,7 @@ export const PrivacyPolicy = (): JSX.Element => {
     {
       id: "contact-for-privacy-concerns",
       title: "Contact for Privacy Concerns",
-      content: "If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us: Company: Mizan Store Ltd, Service: PDF Convert Master, Phone: +447429919748, Location: London, United Kingdom, Privacy Inquiries: Please contact us through our website contact form. Response Time: We aim to respond to privacy inquiries within 30 days of receipt. Regulatory Contact: You also have the right to contact the Information Commissioner's Office (ICO) in the UK regarding privacy concerns.",
+      content: "If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us: Company: Mizan Store Ltd, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Privacy Inquiries: Please contact us through our website contact form. Response Time: We aim to respond to privacy inquiries within 30 days of receipt. Regulatory Contact: You also have the right to contact the Information Commissioner's Office (ICO) in the UK regarding privacy concerns.",
       category: "Contact"
     },
     {
@@ -208,7 +208,7 @@ export const PrivacyPolicy = (): JSX.Element => {
           {/* Subtitle */}
           <div className="max-w-4xl mx-auto mb-12">
             <p className="text-lg text-gray-600 leading-relaxed mb-1">
-              Your privacy is important to us. This Privacy Policy explains how PDF Convert Master
+              Your privacy is important to us. This Privacy Policy explains how PDF Genius
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
               (operated by Mizan Store Ltd) collects, uses, and protects your personal information.
@@ -492,7 +492,7 @@ export const PrivacyPolicy = (): JSX.Element => {
                     <p>If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p><strong>Company:</strong> Mizan Store Ltd</p>
-                      <p><strong>Service:</strong> PDF Convert Master</p>
+                      <p><strong>Service:</strong> PDF Genius</p>
                       <p><strong>Phone:</strong> +447429919748</p>
                       <p><strong>Location:</strong> London, United Kingdom</p>
                       <p><strong>Privacy Inquiries:</strong> Please contact us through our website contact form</p>

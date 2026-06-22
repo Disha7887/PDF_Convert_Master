@@ -184,7 +184,7 @@ const SECTIONS: Section[] = [
         type: "contact",
         rows: [
           ["Company:", "Mizan Store Ltd"],
-          ["Service:", "PDF Convert Master"],
+          ["Service:", "PDF Genius"],
           ["Phone:", "+447429919748"],
           ["Location:", "London, United Kingdom"],
           ["Privacy Inquiries:", "Please contact us through our website contact form"],
@@ -255,7 +255,7 @@ export default function Screen() {
       <View style={styles.header}>
         <Text style={styles.title}>Privacy Policy</Text>
         <Text style={styles.subtitle}>
-          Your privacy is important to us. This Privacy Policy explains how PDF Convert Master
+          Your privacy is important to us. This Privacy Policy explains how PDF Genius
           (operated by Mizan Store Ltd) collects, uses, and protects your personal information.
         </Text>
         <Card style={styles.dateCard}>

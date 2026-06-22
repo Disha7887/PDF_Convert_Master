@@ -54,7 +54,7 @@ export const About = (): JSX.Element => {
     {
       name: "Sarah Johnson",
       position: "Chief Executive Officer",
-      description: "Leading PDF Convert Master with 15+ years of experience in tech innovation and digital transformation.",
+      description: "Leading PDF Genius with 15+ years of experience in tech innovation and digital transformation.",
       image: "https://api.builder.io/api/v1/image/assets/TEMP/e57646e20adf34f0f3b39ea49f9a6ca981e0f8df?width=504"
     },
     {
@@ -89,7 +89,7 @@ export const About = (): JSX.Element => {
       >
         <div className="text-center text-white max-w-4xl px-6">
           <h1 className="text-6xl font-bold mb-6 leading-tight">
-            About <span className="text-blue-300">PDF Convert Master</span>
+            About <span className="text-blue-300">PDF Genius</span>
           </h1>
           <p className="text-2xl mb-8 leading-relaxed max-w-3xl mx-auto">
             Empowering businesses and individuals with professional PDF solutions since our founding
@@ -116,7 +116,7 @@ export const About = (): JSX.Element => {
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
               <div className="space-y-6 text-lg text-gray-600">
                 <p>
-                  Founded with a vision to simplify document management, PDF Convert Master has become the trusted solution for millions of users worldwide. Our journey began when we recognized the growing need for reliable, secure, and user-friendly PDF tools.
+                  Founded with a vision to simplify document management, PDF Genius has become the trusted solution for millions of users worldwide. Our journey began when we recognized the growing need for reliable, secure, and user-friendly PDF tools.
                 </p>
                 <p>
                   Under the umbrella of Mizan Store Ltd, we've built a platform that combines cutting-edge technology with intuitive design, making professional PDF conversion accessible to everyone.
@@ -152,7 +152,7 @@ export const About = (): JSX.Element => {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Core Values</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              These principles guide everything we do at PDF Convert Master
+              These principles guide everything we do at PDF Genius
             </p>
           </div>
           
@@ -176,7 +176,7 @@ export const About = (): JSX.Element => {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              The passionate professionals behind PDF Convert Master
+              The passionate professionals behind PDF Genius
             </p>
           </div>
           

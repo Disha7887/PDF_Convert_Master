@@ -148,7 +148,7 @@ export const Support = (): JSX.Element => {
   // Video tutorials
   const videoTutorials = [
     {
-      title: "Getting Started with PDF Convert Master",
+      title: "Getting Started with PDF Genius",
       duration: "5:32",
       views: "12.5K",
       thumbnail: "/api/placeholder/320/180"
@@ -264,7 +264,7 @@ export const Support = (): JSX.Element => {
             How Can We Help You?
           </h1>
           <p className="text-xl text-blue-100 mb-12 max-w-3xl mx-auto">
-            Get help with PDF Convert Master services with comprehensive support for all your PDF conversion needs
+            Get help with PDF Genius services with comprehensive support for all your PDF conversion needs
           </p>
           
           {/* Search Bar */}
@@ -368,7 +368,7 @@ export const Support = (): JSX.Element => {
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Getting Started</h2>
               <p className="text-lg text-gray-600 mb-8">
-                New to PDF Convert Master? Start here with our most popular getting started topics.
+                New to PDF Genius? Start here with our most popular getting started topics.
               </p>
               <div className="space-y-4">
                 {gettingStartedTopics.map((topic, index) => (

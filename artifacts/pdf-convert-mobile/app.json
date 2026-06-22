@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PDF Convert Master",
+    "name": "PDF Genius",
     "slug": "pdf-convert-mobile",
     "version": "1.0.0",
     "versionCode": 1,
@@ -54,7 +54,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow PDF Convert Master to use the camera to scan documents."
+          "cameraPermission": "Allow PDF Genius to use the camera to scan documents."
         }
       ],
       "expo-asset"

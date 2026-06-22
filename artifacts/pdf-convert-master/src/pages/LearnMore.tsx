@@ -83,7 +83,7 @@ export const LearnMore: React.FC = () => {
       `,
       category: "Conversion",
       readTime: "8 min",
-      author: "PDF Convert Master Team",
+      author: "PDF Genius Team",
       date: "December 15, 2024",
       tags: ["PDF", "Conversion", "Best Practices", "Tutorial"],
       featured: true
@@ -1353,9 +1353,9 @@ export const LearnMore: React.FC = () => {
         {/* Company Info */}
         <section className="mt-16 pt-12 border-t bg-white rounded-lg p-8">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold mb-4">About PDF Convert Master</h3>
+            <h3 className="text-2xl font-bold mb-4">About PDF Genius</h3>
             <p className="text-gray-600 max-w-3xl mx-auto">
-              Developed by Mizan Store Ltd in London, UK, PDF Convert Master provides professional-grade 
+              Developed by Mizan Store Ltd in London, UK, PDF Genius provides professional-grade 
               PDF tools trusted by millions worldwide. Our mission is to make document management 
               simple, secure, and accessible for everyone.
             </p>

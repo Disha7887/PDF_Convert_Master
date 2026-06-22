@@ -31,7 +31,7 @@ const SECTIONS: Section[] = [
       {
         type: "p",
         text:
-          'By accessing and using PDF Convert Master (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.',
+          'By accessing and using PDF Genius (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.',
       },
       {
         type: "p",
@@ -45,7 +45,7 @@ const SECTIONS: Section[] = [
     icon: "book",
     title: "Definitions",
     blocks: [
-      { type: "def", label: '"Service"', text: "refers to PDF Convert Master, our web-based platform and all related tools and features." },
+      { type: "def", label: '"Service"', text: "refers to PDF Genius, our web-based platform and all related tools and features." },
       { type: "def", label: '"User," "you," or "your"', text: "refers to any individual or entity using our Service." },
       { type: "def", label: '"Company," "we," "us," or "our"', text: "refers to Mizan Store Ltd, a company incorporated in England and Wales." },
       { type: "def", label: '"Content"', text: "refers to any files, documents, data, or information uploaded to or processed through our Service." },
@@ -60,7 +60,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         type: "p",
-        text: "PDF Convert Master provides online document conversion and processing services, including but not limited to:",
+        text: "PDF Genius provides online document conversion and processing services, including but not limited to:",
       },
       {
         type: "bullets",
@@ -251,10 +251,10 @@ const SECTIONS: Section[] = [
         type: "contact",
         rows: [
           ["Company:", "Mizan Store Ltd"],
-          ["Service:", "PDF Convert Master"],
+          ["Service:", "PDF Genius"],
           ["Phone:", "+447429919748"],
           ["Location:", "London, United Kingdom"],
-          ["Website:", "PDF Convert Master"],
+          ["Website:", "PDF Genius"],
         ],
       },
     ],
@@ -306,7 +306,7 @@ export default function Screen() {
       <View style={styles.header}>
         <Text style={styles.title}>Terms of Service</Text>
         <Text style={styles.subtitle}>
-          Please read these Terms of Service carefully before using PDF Convert Master services
+          Please read these Terms of Service carefully before using PDF Genius services
           provided by Mizan Store Ltd.
         </Text>
         <Card style={styles.dateCard}>

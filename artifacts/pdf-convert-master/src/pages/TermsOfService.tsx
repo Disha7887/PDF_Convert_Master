@@ -31,19 +31,19 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "acceptance-of-terms",
       title: "Acceptance of Terms",
-      content: "By accessing and using PDF Convert Master (the \"Service\"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, please do not use our Service. These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.",
+      content: "By accessing and using PDF Genius (the \"Service\"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, please do not use our Service. These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.",
       category: "Legal"
     },
     {
       id: "definitions",
       title: "Definitions",
-      content: "\"Service\" refers to PDF Convert Master, our web-based platform and all related tools and features. \"User,\" \"you,\" or \"your\" refers to any individual or entity using our Service. \"Company,\" \"we,\" \"us,\" or \"our\" refers to Mizan Store Ltd, a company incorporated in England and Wales. \"Content\" refers to any files, documents, data, or information uploaded to or processed through our Service. \"Account\" refers to your registered user account on our platform. \"Personal Data\" has the meaning set out in the UK General Data Protection Regulation (UK GDPR).",
+      content: "\"Service\" refers to PDF Genius, our web-based platform and all related tools and features. \"User,\" \"you,\" or \"your\" refers to any individual or entity using our Service. \"Company,\" \"we,\" \"us,\" or \"our\" refers to Mizan Store Ltd, a company incorporated in England and Wales. \"Content\" refers to any files, documents, data, or information uploaded to or processed through our Service. \"Account\" refers to your registered user account on our platform. \"Personal Data\" has the meaning set out in the UK General Data Protection Regulation (UK GDPR).",
       category: "Legal"
     },
     {
       id: "description-of-services",
       title: "Description of Services",
-      content: "PDF Convert Master provides online document conversion and processing services, including but not limited to PDF to various format conversions (Word, Excel, PowerPoint, images, etc.), Multiple format to PDF conversions, PDF merging, splitting, and editing tools, Document compression and optimization, Password protection and security features, Batch processing capabilities. We reserve the right to modify, suspend, or discontinue any aspect of our Service at any time with reasonable notice to users.",
+      content: "PDF Genius provides online document conversion and processing services, including but not limited to PDF to various format conversions (Word, Excel, PowerPoint, images, etc.), Multiple format to PDF conversions, PDF merging, splitting, and editing tools, Document compression and optimization, Password protection and security features, Batch processing capabilities. We reserve the right to modify, suspend, or discontinue any aspect of our Service at any time with reasonable notice to users.",
       category: "Services"
     },
     {
@@ -127,7 +127,7 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "contact-information",
       title: "Contact Information",
-      content: "For questions about these Terms of Service or our Service, please contact us: Company: Mizan Store Ltd, Service: PDF Convert Master, Phone: +447429919748, Location: London, United Kingdom, Website: PDF Convert Master",
+      content: "For questions about these Terms of Service or our Service, please contact us: Company: Mizan Store Ltd, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Website: PDF Genius",
       category: "Contact"
     }
   ], []);
@@ -222,7 +222,7 @@ export const TermsOfService = (): JSX.Element => {
           {/* Subtitle */}
           <div className="max-w-4xl mx-auto mb-12">
             <p className="text-lg text-gray-600 leading-relaxed mb-1">
-              Please read these Terms of Service carefully before using PDF Convert Master services provided
+              Please read these Terms of Service carefully before using PDF Genius services provided
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
               by Mizan Store Ltd.
@@ -307,7 +307,7 @@ export const TermsOfService = (): JSX.Element => {
                     1. Acceptance of Terms
                   </h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    By accessing and using PDF Convert Master (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.
+                    By accessing and using PDF Genius (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.
                   </p>
                   <p className="text-gray-700 leading-relaxed">
                     These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.
@@ -323,7 +323,7 @@ export const TermsOfService = (): JSX.Element => {
                     2. Definitions
                   </h2>
                   <div className="text-gray-700 leading-relaxed space-y-2">
-                    <p><strong>"Service"</strong> refers to PDF Convert Master, our web-based platform and all related tools and features.</p>
+                    <p><strong>"Service"</strong> refers to PDF Genius, our web-based platform and all related tools and features.</p>
                     <p><strong>"User," "you," or "your"</strong> refers to any individual or entity using our Service.</p>
                     <p><strong>"Company," "we," "us," or "our"</strong> refers to Mizan Store Ltd, a company incorporated in England and Wales.</p>
                     <p><strong>"Content"</strong> refers to any files, documents, data, or information uploaded to or processed through our Service.</p>
@@ -339,7 +339,7 @@ export const TermsOfService = (): JSX.Element => {
                     3. Description of Services
                   </h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    PDF Convert Master provides online document conversion and processing services, including but not limited to:
+                    PDF Genius provides online document conversion and processing services, including but not limited to:
                   </p>
                   <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
                     <li>PDF to various format conversions (Word, Excel, PowerPoint, images, etc.)</li>
@@ -561,10 +561,10 @@ export const TermsOfService = (): JSX.Element => {
                     <p>For questions about these Terms of Service or our Service, please contact us:</p>
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p><strong>Company:</strong> Mizan Store Ltd</p>
-                      <p><strong>Service:</strong> PDF Convert Master</p>
+                      <p><strong>Service:</strong> PDF Genius</p>
                       <p><strong>Phone:</strong> +447429919748</p>
                       <p><strong>Location:</strong> London, United Kingdom</p>
-                      <p><strong>Website:</strong> PDF Convert Master</p>
+                      <p><strong>Website:</strong> PDF Genius</p>
                     </div>
                   </div>
                 </section>

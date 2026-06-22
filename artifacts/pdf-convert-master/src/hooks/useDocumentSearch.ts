@@ -273,7 +273,7 @@ export const printSearchResults = (query: string, results: SearchResult[], pageT
         </style>
       </head>
       <body>
-        <h1>PDF Convert Master - Search Results</h1>
+        <h1>PDF Genius - Search Results</h1>
         <div class="query">
           <strong>Search Query:</strong> "${query}"<br>
           <strong>Page:</strong> ${pageType}<br>

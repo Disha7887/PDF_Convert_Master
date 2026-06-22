@@ -47,11 +47,11 @@ export const NavigationSection = (): JSX.Element => {
           >
             <img
               src={logoIcon}
-              alt="PDF Convert Master"
+              alt="PDF Genius"
               className="h-9 w-auto"
             />
             <h1 className="hidden 2xl:block font-['Poppins'] font-bold text-gray-900 text-xl leading-7 whitespace-nowrap">
-              PDF Convert Master
+              PDF Genius
             </h1>
           </div>
 

@@ -91,7 +91,7 @@ export function TopNav() {
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="PDF Convert Master home"
+          accessibilityLabel="PDF Genius home"
           hitSlop={8}
           onPress={() => router.push(ROUTES.home as never)}
           style={styles.logoMark}

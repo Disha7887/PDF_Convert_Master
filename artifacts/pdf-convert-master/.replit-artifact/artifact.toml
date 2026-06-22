@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "PDF Convert Master"
+title = "PDF Genius"
 version = "1.0.0"
 id = "artifacts/pdf-convert-master"
 router = "path"

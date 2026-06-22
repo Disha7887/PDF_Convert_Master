@@ -55,7 +55,7 @@ export default function SettingsScreen() {
   const shareApp = async () => {
     try {
       await Share.share({
-        message: "Convert, scan and organize PDFs on the go with PDF Convert Master.",
+        message: "Convert, scan and organize PDFs on the go with PDF Genius.",
       });
     } catch {
       // user dismissed
@@ -65,7 +65,7 @@ export default function SettingsScreen() {
   const showCredits = () =>
     Alert.alert(
       "Credits",
-      "PDF Convert Master\nBuilt with Expo & React Native.\nIcons by Feather.\nFonts: Poppins & Inter.",
+      "PDF Genius\nBuilt with Expo & React Native.\nIcons by Feather.\nFonts: Poppins & Inter.",
     );
 
   const moreLinks: LinkRow[] = [
@@ -193,7 +193,7 @@ export default function SettingsScreen() {
         ))}
       </View>
 
-      <Text style={styles.version}>PDF Convert Master · Mobile · v1.0.0</Text>
+      <Text style={styles.version}>PDF Genius · Mobile · v1.0.0</Text>
     </ScreenScroll>
   );
 }

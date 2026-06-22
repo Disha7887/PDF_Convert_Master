@@ -65,7 +65,7 @@ export async function sendPasswordResetEmail(to: string, code: string): Promise<
   const { apiKey, from } = await getResendCredentials();
   // `onboarding@resend.dev` is Resend's shared sender; works before a domain is
   // verified (in test mode it only delivers to the account owner's address).
-  const fromAddress = from || "PDF Convert Master <onboarding@resend.dev>";
+  const fromAddress = from || "PDF Genius <onboarding@resend.dev>";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -76,10 +76,10 @@ export async function sendPasswordResetEmail(to: string, code: string): Promise<
     body: JSON.stringify({
       from: fromAddress,
       to: [to],
-      subject: "Your PDF Convert Master password reset code",
+      subject: "Your PDF Genius password reset code",
       html: passwordResetHtml(code),
       text:
-        `Your PDF Convert Master password reset code is ${code}. ` +
+        `Your PDF Genius password reset code is ${code}. ` +
         `It expires in 15 minutes. If you didn't request this, you can ignore this email.`,
     }),
     signal: AbortSignal.timeout(20_000),
@@ -97,7 +97,7 @@ function passwordResetHtml(code: string): string {
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1f2937">
     <h2 style="color:#f7433d;margin:0 0 8px">Password reset</h2>
     <p style="font-size:15px;line-height:1.5;margin:0 0 16px">
-      Use the code below to reset your PDF Convert Master password. It expires in 15 minutes.
+      Use the code below to reset your PDF Genius password. It expires in 15 minutes.
     </p>
     <div style="font-size:34px;font-weight:700;letter-spacing:8px;text-align:center;
                 background:#fff1f0;color:#f7433d;border-radius:12px;padding:18px 0;margin:0 0 16px">
