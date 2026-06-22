@@ -1,17 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Search } from "lucide-react";
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Search, X } from "lucide-react";
+import { Command as CommandPrimitive } from "cmdk";
 import { toolConfigs, isHeroTool, type ToolConfig } from "@/lib/toolConfig";
+import { cn } from "@/lib/utils";
 
-// Display order for the category groups inside the search dialog.
+// Display order for the category groups inside the search dropdown.
 const CATEGORY_ORDER = ["Convert", "Image Tools", "Edit", "Organize"];
 
 const groupedTools = (): { category: string; tools: ToolConfig[] }[] => {
@@ -43,9 +37,12 @@ export const ToolSearch = ({
 }: ToolSearchProps): JSX.Element => {
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const groups = groupedTools();
 
+  // ⌘K / Ctrl+K toggles the inline search and focuses it.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -57,89 +54,170 @@ export const ToolSearch = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Drop the text cursor into the search box as soon as the dialog opens so the
-  // user can start typing immediately. The timeout runs after the dialog's own
-  // focus management settles, otherwise focus can land on the close button.
+  // Drop the blinking text cursor into the box the moment results open.
   useEffect(() => {
     if (!open) return;
-    const t = setTimeout(() => inputRef.current?.focus(), 50);
+    const t = setTimeout(() => inputRef.current?.focus(), 30);
     return () => clearTimeout(t);
+  }, [open]);
+
+  // Close the dropdown when clicking anywhere outside the search.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
   const handleSelect = (tool: ToolConfig) => {
     const target = isHeroTool(tool.id) ? `/?tool=${tool.id}` : tool.route;
     setOpen(false);
+    setQuery("");
     if (target) setLocation(target);
   };
 
-  return (
-    <>
-      {variant === "full" ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 ${className}`}
-          data-testid="button-tool-search"
+  const results = (
+    <CommandPrimitive.List className="max-h-[320px] overflow-y-auto overflow-x-hidden p-1">
+      <CommandPrimitive.Empty className="py-6 text-center text-sm text-gray-500">
+        No tools found.
+      </CommandPrimitive.Empty>
+      {groups.map(({ category, tools }) => (
+        <CommandPrimitive.Group
+          key={category}
+          heading={category}
+          className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-gray-400"
         >
-          <Search className="h-4 w-4" />
-          <span className="hidden xl:inline">Search tools</span>
-          <kbd className="hidden xl:inline rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] text-gray-400">
-            ⌘K
-          </kbd>
-        </button>
-      ) : (
-        <button
-          type="button"
-          aria-label="Search tools"
-          onClick={() => setOpen(true)}
-          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 ${className}`}
-          data-testid="button-tool-search"
-        >
-          <Search className="h-5 w-5" />
-        </button>
-      )}
+          {tools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <CommandPrimitive.Item
+                key={tool.id}
+                value={`${tool.title} ${tool.description} ${tool.id}`}
+                onSelect={() => handleSelect(tool)}
+                className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2.5 text-sm outline-none data-[selected=true]:bg-gray-100"
+                data-testid={`search-tool-${tool.id}`}
+              >
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tool.iconBgColor}`}
+                >
+                  <Icon className={`h-4 w-4 ${tool.iconColor}`} />
+                </span>
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-sm font-medium text-gray-800">
+                    {tool.title}
+                  </span>
+                  <span className="truncate text-xs text-gray-500">
+                    {tool.description}
+                  </span>
+                </div>
+              </CommandPrimitive.Item>
+            );
+          })}
+        </CommandPrimitive.Group>
+      ))}
+    </CommandPrimitive.List>
+  );
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput
-          ref={inputRef}
-          autoFocus
-          placeholder="Search tools…"
-          data-testid="input-tool-search"
-        />
-        <CommandList>
-          <CommandEmpty>No tools found.</CommandEmpty>
-          {groups.map(({ category, tools }) => (
-            <CommandGroup key={category} heading={category}>
-              {tools.map((tool) => {
-                const Icon = tool.icon;
-                return (
-                  <CommandItem
-                    key={tool.id}
-                    value={`${tool.title} ${tool.description} ${tool.id}`}
-                    onSelect={() => handleSelect(tool)}
-                    className="gap-3"
-                    data-testid={`search-tool-${tool.id}`}
-                  >
-                    <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tool.iconBgColor}`}
-                    >
-                      <Icon className={`h-4 w-4 ${tool.iconColor}`} />
-                    </span>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="text-sm font-medium text-gray-800">
-                        {tool.title}
-                      </span>
-                      <span className="truncate text-xs text-gray-500">
-                        {tool.description}
-                      </span>
-                    </div>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          ))}
-        </CommandList>
-      </CommandDialog>
-    </>
+  return (
+    <div
+      ref={containerRef}
+      className={cn("relative", variant === "full" ? "w-56 xl:w-64" : "")}
+    >
+      <CommandPrimitive
+        shouldFilter
+        className="overflow-visible bg-transparent"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setOpen(false);
+            inputRef.current?.blur();
+          }
+        }}
+      >
+        {variant === "full" ? (
+          <div
+            onClick={() => {
+              setOpen(true);
+              inputRef.current?.focus();
+            }}
+            className={cn(
+              "flex h-[42px] cursor-text items-center gap-2 rounded-lg border bg-white/80 px-3 transition-colors",
+              open ? "border-gray-400" : "border-gray-300",
+              className,
+            )}
+          >
+            <Search className="h-4 w-4 shrink-0 text-gray-500" />
+            <CommandPrimitive.Input
+              ref={inputRef}
+              value={query}
+              onValueChange={setQuery}
+              onFocus={() => setOpen(true)}
+              placeholder="Search tools…"
+              className="w-full bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400"
+              data-testid="input-tool-search"
+            />
+            {!open && (
+              <kbd className="hidden xl:inline rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] text-gray-400">
+                ⌘K
+              </kbd>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-label="Search tools"
+            onClick={() => setOpen((prev) => !prev)}
+            className={cn(
+              "inline-flex h-10 w-10 items-center justify-center rounded-lg border text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900",
+              open ? "border-gray-400 bg-gray-50" : "border-gray-300",
+              className,
+            )}
+            data-testid="button-tool-search"
+          >
+            <Search className="h-5 w-5" />
+          </button>
+        )}
+
+        {open && (
+          <div
+            className={cn(
+              "absolute z-50 mt-2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl",
+              variant === "full"
+                ? "left-0 w-[min(380px,90vw)]"
+                : "right-0 w-[min(320px,90vw)]",
+            )}
+          >
+            {variant === "icon" && (
+              <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2.5">
+                <Search className="h-4 w-4 shrink-0 text-gray-500" />
+                <CommandPrimitive.Input
+                  ref={inputRef}
+                  value={query}
+                  onValueChange={setQuery}
+                  placeholder="Search tools…"
+                  className="w-full bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400"
+                  data-testid="input-tool-search"
+                />
+                <button
+                  type="button"
+                  aria-label="Close search"
+                  onClick={() => setOpen(false)}
+                  className="text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            {results}
+          </div>
+        )}
+      </CommandPrimitive>
+    </div>
   );
 };
