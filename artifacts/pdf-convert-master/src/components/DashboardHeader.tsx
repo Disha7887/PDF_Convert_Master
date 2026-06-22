@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import logoIcon from "@assets/IconOnly_Transparent_NoBuffer_1782108807761.png";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -62,8 +63,9 @@ export const DashboardHeader = (): JSX.Element => {
         <div className="flex items-center">
           <div 
             onClick={handleLogoClick}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
           >
+            <img src={logoIcon} alt="PDF Convert Master" className="h-9 w-auto" />
             <h1 className="[font-family:'Poppins',Helvetica] font-bold text-gray-900 text-base sm:text-xl leading-7 whitespace-nowrap">
               PDF Convert Master
             </h1>

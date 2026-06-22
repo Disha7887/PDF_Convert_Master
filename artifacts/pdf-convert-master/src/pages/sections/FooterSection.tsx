@@ -1,5 +1,6 @@
 import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon, MapPin, Mail, Facebook, Instagram, Linkedin } from "lucide-react";
 import React from "react";
+import logoFull from "@assets/FullLogo_Transparent_NoBuffer_1782108807761.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
@@ -76,9 +77,11 @@ export const FooterSection = (): JSX.Element => {
           {/* Company Info Column */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 font-['Poppins']">
-                PDF Convert Master
-              </h3>
+              <img
+                src={logoFull}
+                alt="PDF Genius"
+                className="h-20 w-auto mb-4"
+              />
               <p className="text-gray-600 text-sm leading-relaxed">
                 Your trusted partner for professional PDF conversion and document management solutions.
               </p>

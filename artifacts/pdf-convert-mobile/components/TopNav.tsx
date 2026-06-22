@@ -3,6 +3,7 @@ import { BlurView } from "expo-blur";
 import { usePathname, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -95,7 +96,11 @@ export function TopNav() {
           onPress={() => router.push(ROUTES.home as never)}
           style={styles.logoMark}
         >
-          <Feather name="file-text" size={18} color="#fff" />
+          <Image
+            source={require("@/assets/images/logo-icon.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </Pressable>
 
         <Pressable
@@ -225,12 +230,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   logoMark: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: C.primary,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  logoImage: {
+    width: 36,
+    height: 36,
   },
   profileBtn: {
     width: 40,

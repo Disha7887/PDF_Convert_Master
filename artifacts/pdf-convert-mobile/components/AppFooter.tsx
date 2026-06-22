@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -50,12 +50,11 @@ export function AppFooter() {
   return (
     <View style={styles.footer}>
       {/* Company info */}
-      <View style={styles.brandRow}>
-        <View style={styles.logoMark}>
-          <Feather name="file-text" size={16} color="#fff" />
-        </View>
-        <Text style={styles.brandName}>PDF Convert Master</Text>
-      </View>
+      <Image
+        source={require("@/assets/images/logo-full.png")}
+        style={styles.brandLogo}
+        resizeMode="contain"
+      />
       <Text style={styles.tagline}>
         Your trusted partner for professional PDF conversion and document management solutions.
       </Text>
@@ -157,16 +156,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: C.border,
   },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
-  logoMark: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    backgroundColor: C.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandName: { fontSize: 16, color: C.foreground, fontFamily: fonts.headingBold },
+  brandLogo: { width: 132, height: 120, marginBottom: 10, marginLeft: -6 },
   tagline: { fontSize: 13, lineHeight: 20, color: C.mutedForeground, fontFamily: fonts.body },
 
   companyBlock: { marginTop: 18, gap: 10 },

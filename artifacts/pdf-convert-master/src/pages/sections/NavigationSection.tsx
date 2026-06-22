@@ -1,4 +1,5 @@
 import React from "react";
+import logoIcon from "@assets/IconOnly_Transparent_NoBuffer_1782108807761.png";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -40,8 +41,16 @@ export const NavigationSection = (): JSX.Element => {
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-[65px]">
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
-          <div className="flex items-center h-7">
-            <h1 className="font-['Poppins'] font-bold text-gray-900 text-xl leading-7 whitespace-nowrap">
+          <div
+            className="flex items-center gap-2 h-9 cursor-pointer flex-shrink-0"
+            onClick={() => handleNavClick("/")}
+          >
+            <img
+              src={logoIcon}
+              alt="PDF Convert Master"
+              className="h-9 w-auto"
+            />
+            <h1 className="hidden 2xl:block font-['Poppins'] font-bold text-gray-900 text-xl leading-7 whitespace-nowrap">
               PDF Convert Master
             </h1>
           </div>
