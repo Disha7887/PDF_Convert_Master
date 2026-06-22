@@ -21,7 +21,10 @@ interface ToolCardProps {
 export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
   const router = useRouter();
 
+  const offline = !!tool.maintenance;
+
   function handlePress() {
+    if (offline) return;
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -33,12 +36,17 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
       <GlassSurface radius={18} style={styles.gridWrap}>
         <Pressable
           onPress={handlePress}
-          style={({ pressed }) => [styles.grid, { opacity: pressed ? 0.85 : 1 }]}
+          disabled={offline}
+          style={({ pressed }) => [
+            styles.grid,
+            { opacity: offline ? 0.55 : pressed ? 0.85 : 1 },
+          ]}
         >
           <ToolLottieIcon toolId={tool.id} size={48} />
           <Text style={styles.gridTitle} numberOfLines={2}>
             {tool.title}
           </Text>
+          {offline && <MaintenanceBadge />}
         </Pressable>
       </GlassSurface>
     );
@@ -48,7 +56,11 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
     <GlassSurface radius={18} style={styles.rowWrap}>
       <Pressable
         onPress={handlePress}
-        style={({ pressed }) => [styles.row, { opacity: pressed ? 0.85 : 1 }]}
+        disabled={offline}
+        style={({ pressed }) => [
+          styles.row,
+          { opacity: offline ? 0.6 : pressed ? 0.85 : 1 },
+        ]}
       >
         <View style={styles.iconWrap}>
           <ToolLottieIcon toolId={tool.id} size={40} />
@@ -61,12 +73,25 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
             {tool.description}
           </Text>
           <View style={styles.badgeRow}>
-            <Text style={styles.badgeText}>→ {tool.outputFormat}</Text>
+            {offline ? (
+              <MaintenanceBadge />
+            ) : (
+              <Text style={styles.badgeText}>→ {tool.outputFormat}</Text>
+            )}
           </View>
         </View>
-        <Feather name="chevron-right" size={20} color={C.mutedForeground} />
+        {!offline && <Feather name="chevron-right" size={20} color={C.mutedForeground} />}
       </Pressable>
     </GlassSurface>
+  );
+}
+
+function MaintenanceBadge() {
+  return (
+    <View style={styles.maintBadge}>
+      <Feather name="tool" size={11} color={C.mutedForeground} />
+      <Text style={styles.maintText}>Under maintenance</Text>
+    </View>
   );
 }
 
@@ -95,6 +120,24 @@ const styles = StyleSheet.create({
   desc: { fontSize: 12.5, lineHeight: 17, color: C.mutedForeground, fontFamily: fonts.body },
   badgeRow: { marginTop: 4 },
   badgeText: { fontSize: 11, color: C.primary, fontFamily: fonts.bodySemibold },
+  maintBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: C.muted,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  maintText: {
+    fontSize: 10.5,
+    color: C.mutedForeground,
+    fontFamily: fonts.bodySemibold,
+  },
   gridWrap: {
     width: "100%",
   },
