@@ -6,7 +6,6 @@ import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Upload, 
   CheckCircle, 
   AlertCircle, 
   FileCheck,
@@ -552,8 +551,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         <div className="px-6 py-4 bg-gray-50 border-b">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-4">
-              <div className={`flex items-center space-x-2 ${stage === 'upload' || stage === 'files-selected' ? 'text-blue-600' : stage === 'converting' ? 'text-blue-600' : stage === 'completed' ? 'text-green-600' : 'text-red-600'}`}>
-                {stage === 'upload' && <Upload className="w-4 h-4" />}
+              <div className={`flex items-center space-x-2 ${stage === 'files-selected' ? 'text-blue-600' : stage === 'converting' ? 'text-blue-600' : stage === 'completed' ? 'text-green-600' : 'text-red-600'}`}>
                 {stage === 'files-selected' && <FileCheck className="w-4 h-4" />}
                 {stage === 'converting' && <ConverterStatusIcon status="processing" size={16} />}
                 {stage === 'completed' && <CheckCircle className="w-4 h-4" />}

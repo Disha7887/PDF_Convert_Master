@@ -16,9 +16,13 @@ reference is the "Sign PDF" tool. The action button must NAME the tool/conversio
 1. Header — `ToolPageShell.showHeader`.
 2. White card wrapper — `ImageToolShell` wraps children in a `bg-white` card on
    WORKING states only; it must render bare `children` on the upload state
-   (`hideHeader`). `ConversionWorkflow` renders the card + progress tab only on
-   `stage !== 'upload'`; the `upload` stage renders a bare `EnhancedUploadArea`.
-   `PdfToolLayout` has no card (already bare).
+   (`hideHeader`). `ConversionWorkflow` AND `PdfMergeWorkflow` render the card +
+   progress tab only on `stage !== 'upload'`; the `upload` stage renders a bare
+   `EnhancedUploadArea`. `PdfToolLayout` has no card (already bare).
+   NOTE: `PdfMergeWorkflow` is a SEPARATE component (not ConversionWorkflow) and
+   must use `ToolPageShell` too — it previously had its own header + wrapper and
+   no animated background. After gating the card on `stage !== 'upload'`, delete
+   any dead `stage === 'upload'` branch in the progress indicator or tsc errors.
 3. Action label — driven by `getToolActionLabel(cfg)` (toolConfig.ts).
    `ConversionWorkflow` falls back to its `toolTitle` prop when `toolType` has
    no `toolConfigs` entry (e.g. page uses `compress-image` but config id is

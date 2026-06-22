@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Upload,
   FileCheck,
   CheckCircle,
   AlertCircle,
@@ -16,6 +15,8 @@ import {
 import { EnhancedUploadArea } from "@/components/ui/enhanced-upload-area";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { OrderedFileList } from "@/components/OrderedFileList";
+import { ToolPageShell } from "@/components/upload/ToolPageShell";
+import { toolConfigs, getToolActionLabel } from "@/lib/toolConfig";
 
 interface PdfMergeWorkflowProps {
   toolTitle: string;
@@ -247,20 +248,42 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
   const stageLabel =
     stage === "files-selected" ? "files selected" : stage === "merging" ? "merging" : stage;
 
-  return (
-    <div className="w-full max-w-4xl mx-auto p-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-4">
-          <div className={`w-16 h-16 rounded-2xl border-2 ${iconBg} flex items-center justify-center shadow-lg`}>
-            {toolIcon}
-          </div>
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{toolTitle}</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">{toolDescription}</p>
-      </div>
+  // Tool-specific upload copy so the merger's upload page matches every other
+  // tool: bare dropzone with a button that names the tool ("Merge PDFs").
+  const cfg = toolConfigs["merge-pdfs"];
+  const uploadTitle = cfg?.dropAreaText;
+  const uploadActionLabel = cfg ? getToolActionLabel(cfg) : toolTitle;
 
-      {/* Main Workflow Card */}
+  return (
+    <ToolPageShell
+      title={toolTitle}
+      description={toolDescription}
+      icon={toolIcon}
+      iconBoxClassName={iconBg}
+      maxWidth="max-w-4xl"
+      showHeader={stage !== "upload"}
+    >
+      {/* Upload Stage — bare dropzone, identical design to every other tool */}
+      {stage === "upload" && (
+        <EnhancedUploadArea
+          acceptedFormats={acceptedFormats}
+          maxFileSize={maxFileSize}
+          maxFiles={MAX_FILES}
+          onFilesSelected={handleFilesSelection}
+          isDragOver={isDragOver}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          currentFileCount={files.length}
+          showAdvancedFeatures={true}
+          toolId="merge-pdfs"
+          title={uploadTitle}
+          actionLabel={uploadActionLabel}
+        />
+      )}
+
+      {/* Workflow Card — only after files are selected / merging / done */}
+      {stage !== "upload" && (
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Progress Indicator */}
         <div className="px-6 py-4 bg-gray-50 border-b">
@@ -274,7 +297,6 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
                     : "text-blue-600"
               }`}
             >
-              {stage === "upload" && <Upload className="w-4 h-4" />}
               {stage === "files-selected" && <FileCheck className="w-4 h-4" />}
               {stage === "merging" && <ConverterStatusIcon status="processing" size={16} />}
               {stage === "completed" && <CheckCircle className="w-4 h-4" />}
@@ -292,23 +314,6 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
 
         {/* Content Area */}
         <div className="p-8">
-          {/* Upload Stage */}
-          {stage === "upload" && (
-            <EnhancedUploadArea
-              acceptedFormats={acceptedFormats}
-              maxFileSize={maxFileSize}
-              maxFiles={MAX_FILES}
-              onFilesSelected={handleFilesSelection}
-              isDragOver={isDragOver}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              currentFileCount={files.length}
-              showAdvancedFeatures={true}
-              toolId="merge-pdfs"
-            />
-          )}
-
           {/* Files Selected Stage */}
           {stage === "files-selected" && files.length > 0 && (
             <div className="space-y-6">
@@ -448,6 +453,7 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
           )}
         </div>
       </div>
-    </div>
+      )}
+    </ToolPageShell>
   );
 };
