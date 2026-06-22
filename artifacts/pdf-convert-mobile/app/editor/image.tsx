@@ -18,12 +18,14 @@ import {
 } from "react-native";
 
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
+import DownloadFormatModal from "@/components/DownloadFormatModal";
 import { Badge, Button, Card, Chip, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import { getToolById } from "@/constants/tools";
+import { getDownloadFormats, prepareDownloadUri } from "@/services/downloadFormats";
 import { saveFile } from "@/services/files";
 
 const C = colors.light;
@@ -126,6 +128,11 @@ export default function ImageEditorScreen() {
 
   const [saved, setSaved] = useState<{ uri: string; name: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [dlFormat, setDlFormat] = useState<string>("");
+  const [dlName, setDlName] = useState("");
+  const [dlBusy, setDlBusy] = useState(false);
+  const pendingActionRef = useRef<(() => void | Promise<void>) | null>(null);
 
   // The displayed (contained) image box inside the square preview surface, so the
   // crop rectangle maps directly onto image pixels despite letterboxing.
@@ -265,19 +272,55 @@ export default function ImageEditorScreen() {
     }
   }, [tool, uri, fileName, mode, origW, origH, width, height, angle, cropRect]);
 
-  const onShare = useCallback(async () => {
-    if (!saved) return;
-    try {
-      const res = await saveFile(saved.uri, saved.name);
-      if (res.status === "saved") {
-        Alert.alert("Downloaded", `${saved.name} was saved to ${res.location}.`);
-      } else if (res.status === "failed") {
-        setError("Could not save the file. Please try again.");
+  const openDownload = useCallback(() => {
+    if (!tool || !saved) return;
+    const base = saved.name.replace(/\.[^./]+$/, "") || "output";
+    setDlName(base);
+    const fmts = getDownloadFormats(tool, { outputName: saved.name, hasOcrText: false });
+    setDlFormat(fmts[0].id);
+    setDownloadOpen(true);
+  }, [tool, saved]);
+
+  const onConfirmDownload = useCallback(async () => {
+    if (!tool || !saved) return;
+    const fmts = getDownloadFormats(tool, { outputName: saved.name, hasOcrText: false });
+    const fmt = fmts.find((f) => f.id === dlFormat) ?? fmts[0];
+    const base = (dlName.trim() || "output").replace(/\.[^./]+$/, "") || "output";
+    const fullName = `${base}.${fmt.ext}`;
+
+    const runSave = async () => {
+      setDlBusy(true);
+      try {
+        const out = await prepareDownloadUri(fmt, { sourceUri: saved.uri, baseName: base, fullName });
+        const res = await saveFile(out, fullName);
+        if (res.status === "saved") {
+          Alert.alert("Downloaded", `${fullName} was saved to ${res.location}.`);
+        } else if (res.status === "failed") {
+          setError("Could not save the file. Please try again.");
+        }
+        // "presented"/"cancelled" → the system dialog handled its own outcome.
+      } catch {
+        setError("Could not prepare the download.");
+      } finally {
+        setDlBusy(false);
       }
-    } catch {
-      setError("Could not save the file.");
+    };
+
+    setDownloadOpen(false);
+    // iOS serializes modal presentation, so defer the save sheet until the
+    // format modal has fully dismissed; Android can run it immediately.
+    if (Platform.OS === "ios") {
+      pendingActionRef.current = runSave;
+    } else {
+      await runSave();
     }
-  }, [saved]);
+  }, [tool, saved, dlFormat, dlName]);
+
+  const onDownloadModalDismiss = useCallback(() => {
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+    if (action) action();
+  }, []);
 
   if (!tool || !uri) {
     return (
@@ -293,6 +336,8 @@ export default function ImageEditorScreen() {
   }
 
   if (saved) {
+    const dlFormats = getDownloadFormats(tool, { outputName: saved.name, hasOcrText: false });
+    const dlExt = (dlFormats.find((f) => f.id === dlFormat) ?? dlFormats[0]).ext;
     return (
       <ScreenScroll insetTop>
         <BackRow onPress={goBack} title={meta.title} />
@@ -307,12 +352,26 @@ export default function ImageEditorScreen() {
               {saved.name}
             </Text>
             <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
-              <Button label="Download" icon="download" fullWidth onPress={onShare} testID="button-share" />
+              <Button label="Download" icon="download" fullWidth onPress={openDownload} testID="button-share" />
               <Button label="Done" icon="check" variant="outline" fullWidth onPress={goBack} testID="button-done" />
             </View>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
         </Card>
+        <DownloadFormatModal
+          visible={downloadOpen}
+          onClose={() => setDownloadOpen(false)}
+          onDismiss={onDownloadModalDismiss}
+          subtitle={`Your ${meta.title.toLowerCase()} is ready`}
+          formats={dlFormats}
+          selectedId={dlFormat}
+          onSelect={setDlFormat}
+          onConfirm={onConfirmDownload}
+          busy={dlBusy}
+          fileName={dlName}
+          onChangeFileName={setDlName}
+          previewName={`${dlName.trim() || "output"}.${dlExt}`}
+        />
       </ScreenScroll>
     );
   }

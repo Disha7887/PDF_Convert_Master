@@ -17,6 +17,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [iOS modal-defer share sheet](ios-modal-defer-share-sheet.md) — present OS Save/Share only from a closing RN modal's onDismiss on iOS (pendingActionRef); Android runs inline. Android SAF failures fall back to shareFile.
 - [iOS file save / "download"](ios-file-save.md) — iOS Download must use the system Save sheet (expo-sharing); silent Documents copy is invisible in Expo Go; single Download button, defer sheet to modal onDismiss.
 - [Conversion stats pipeline](conversion-stats-pipeline.md) — /api/usage sums per-job output_file_size (set at completion via updateConversionJobStatus); conversions are async + anonymous-by-default; mobile attribution needs a fresh EAS APK.
 - [Mobile file save](mobile-direct-download.md) — one saveFile() entry point: Android SAF picked-once folder, iOS system Save sheet (see ios-file-save.md), web anchor; don't treat SAF write errors as revoked perms.

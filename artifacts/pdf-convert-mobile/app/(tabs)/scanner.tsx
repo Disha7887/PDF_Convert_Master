@@ -4,7 +4,6 @@ import { File, Paths } from "expo-file-system";
 import * as LegacyFS from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
 import { useFocusEffect } from "expo-router";
@@ -24,6 +23,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DownloadFormatModal, {
   type FormatChoice,
 } from "@/components/DownloadFormatModal";
+import { reencodeImage } from "@/services/downloadFormats";
 import { Loader } from "@/components/Loader";
 import { NAV_BAR_HEIGHT, useNavTopInset } from "@/components/TopNav";
 import colors from "@/constants/colors";
@@ -43,15 +43,6 @@ const SAVE_FORMAT_OPTIONS: FormatChoice[] = [
   { id: "png", label: "PNG", ext: "png", color: "#a855f7", icon: "image" },
 ];
 
-/** Re-encodes an image to PNG or JPG on-device (genuine pixel conversion). */
-async function reencodeImage(uri: string, fmt: "png" | "jpg"): Promise<string> {
-  const ref = await ImageManipulator.manipulate(uri).renderAsync();
-  const result = await ref.saveAsync({
-    format: fmt === "png" ? SaveFormat.PNG : SaveFormat.JPEG,
-    compress: 0.92,
-  });
-  return result.uri;
-}
 
 function persistToDocuments(srcUri: string, filename: string): string {
   if (isWeb) return srcUri;
