@@ -224,7 +224,12 @@ export function AuthCard({ mode }: { mode: Mode }) {
           : "Welcome back!";
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6" data-testid="view-welcome">
-        <AuthResultIcon kind="welcome" size={360} loop={false} className="mb-2" />
+        <AuthResultIcon
+          kind={result === "signup-success" ? "signup" : "welcome"}
+          size={360}
+          loop={false}
+          className="mb-2"
+        />
         <h1 className="text-3xl font-bold text-gray-900 text-center" style={{ fontFamily: "Poppins, sans-serif" }}>
           {title}
         </h1>

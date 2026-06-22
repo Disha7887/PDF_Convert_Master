@@ -2,13 +2,15 @@ import { LottieIcon } from "@/components/ui/lottie-icon";
 import successAnim from "@/assets/lottie/auth-success.json";
 import errorAnim from "@/assets/lottie/auth-error.json";
 import welcomeAnim from "@/assets/lottie/auth-welcome.json";
+import signupAnim from "@/assets/lottie/signup.json";
 
-export type AuthResultKind = "success" | "error" | "welcome";
+export type AuthResultKind = "success" | "error" | "welcome" | "signup";
 
 const MAP: Record<AuthResultKind, unknown> = {
   success: successAnim,
   error: errorAnim,
   welcome: welcomeAnim,
+  signup: signupAnim,
 };
 
 export interface AuthResultIconProps {

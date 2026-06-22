@@ -255,7 +255,12 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
           : "Welcome back!";
     return (
       <View style={styles.welcomeScreen} testID="view-welcome">
-        <AuthResultIcon kind="welcome" size={WELCOME_SIZE} loop={false} style={styles.welcomeIcon} />
+        <AuthResultIcon
+          kind={result === "signup-success" ? "signup" : "welcome"}
+          size={WELCOME_SIZE}
+          loop={false}
+          style={styles.welcomeIcon}
+        />
         <Text style={styles.welcomeTitle}>{title}</Text>
         <Text style={styles.welcomeSub}>Taking you to your workspace…</Text>
       </View>
