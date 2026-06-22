@@ -11,6 +11,8 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { ToolsNavDropdowns, MobileNav } from "@/components/ToolsNavMenu";
 import { ToolSearch } from "@/components/ToolSearch";
+import { LottieIcon } from "@/components/ui/lottie-icon";
+import userAnim from "@/assets/lottie/user.json";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
@@ -89,9 +91,15 @@ export const NavigationSection = (): JSX.Element => {
             <ToolSearch />
             <Button
               variant="outline"
-              className="h-[42px] px-[17px] py-[9px] rounded-lg border border-gray-300/70 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-white/40 transition-colors bg-transparent"
+              className="group h-[42px] pl-[12px] pr-[17px] py-[9px] gap-1.5 rounded-lg border border-gray-300/70 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-white/40 transition-colors bg-transparent"
               onClick={() => setLocation('/signin')}
             >
+              <LottieIcon
+                animationData={userAnim}
+                size={24}
+                playOnHover
+                ariaLabel="User account"
+              />
               Log In
             </Button>
             <Button
@@ -112,13 +120,18 @@ export const NavigationSection = (): JSX.Element => {
                 <div className="flex flex-col gap-3">
                   <Button
                     variant="outline"
-                    className="w-full h-[42px] rounded-lg border border-gray-300 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
+                    className="w-full h-[42px] gap-1.5 rounded-lg border border-gray-300 font-medium !text-gray-700 text-base hover:!text-gray-900 hover:bg-gray-50 transition-colors bg-white"
                     onClick={() => {
                       setLocation('/signin');
                       close();
                     }}
                     data-testid="mobile-button-login"
                   >
+                    <LottieIcon
+                      animationData={userAnim}
+                      size={24}
+                      ariaLabel="User account"
+                    />
                     Log In
                   </Button>
                   <Button
