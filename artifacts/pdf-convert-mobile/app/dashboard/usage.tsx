@@ -147,6 +147,8 @@ export default function UsageScreen() {
         }
       : () => fetchRealUsage(token!),
     enabled: isAuthenticated && (USE_MOCK_DATA || !!token),
+    refetchInterval: USE_MOCK_DATA ? false : 5000,
+    refetchOnWindowFocus: true,
   });
 
   if (!isAuthenticated) {

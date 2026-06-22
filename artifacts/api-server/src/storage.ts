@@ -38,7 +38,7 @@ export interface IStorage {
   createConversionJob(job: InsertConversionJob): Promise<ConversionJob>;
   getConversionJob(id: number): Promise<ConversionJob | undefined>;
   getUserConversionJobs(userId: string): Promise<ConversionJob[]>;
-  updateConversionJobStatus(id: number, status: string, outputFilename?: string, errorMessage?: string, processingTime?: number): Promise<ConversionJob | undefined>;
+  updateConversionJobStatus(id: number, status: string, outputFilename?: string, errorMessage?: string, processingTime?: number, outputFileSize?: number): Promise<ConversionJob | undefined>;
   
   // Tool configuration methods
   getAllTools(): Promise<ToolConfig[]>;
@@ -411,7 +411,8 @@ export class MemStorage implements IStorage {
     status: string, 
     outputFilename?: string, 
     errorMessage?: string,
-    processingTime?: number
+    processingTime?: number,
+    outputFileSize?: number
   ): Promise<ConversionJob | undefined> {
     const job = this.conversionJobs.get(id);
     if (!job) return undefined;
@@ -422,6 +423,7 @@ export class MemStorage implements IStorage {
       outputFilename: outputFilename || job.outputFilename,
       errorMessage: errorMessage || job.errorMessage,
       processingTime: processingTime || job.processingTime,
+      outputFileSize: outputFileSize ?? job.outputFileSize,
       updatedAt: new Date()
     };
 
@@ -765,13 +767,15 @@ export class DatabaseStorage implements IStorage {
     status: string, 
     outputFilename?: string, 
     errorMessage?: string,
-    processingTime?: number
+    processingTime?: number,
+    outputFileSize?: number
   ): Promise<ConversionJob | undefined> {
     const updateData: any = { status, updatedAt: new Date() };
     
     if (outputFilename !== undefined) updateData.outputFilename = outputFilename;
     if (errorMessage !== undefined) updateData.errorMessage = errorMessage;
     if (processingTime !== undefined) updateData.processingTime = processingTime;
+    if (outputFileSize !== undefined) updateData.outputFileSize = outputFileSize;
 
     const [job] = await db
       .update(conversionJobs)

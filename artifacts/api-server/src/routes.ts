@@ -2173,7 +2173,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "completed",
           outputFilename,
           undefined,
-          Date.now() - startTime
+          Date.now() - startTime,
+          result.convertedBuffer.length
         );
       } catch (err) {
         await storage.updateConversionJobStatus(
@@ -2398,7 +2399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "completed",
         outputFilename,
         undefined,
-        actualProcessingTime
+        actualProcessingTime,
+        outputFileSize
       );
       
       console.log(`Job ${jobId} completed successfully: ${outputFilename}`);

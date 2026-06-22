@@ -101,6 +101,8 @@ export default function WorkspaceScreen() {
     queryKey: ["account-usage", token],
     queryFn: () => fetchUsage(token!),
     enabled: isAuthenticated && !!token,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 
   if (!isAuthenticated) {
