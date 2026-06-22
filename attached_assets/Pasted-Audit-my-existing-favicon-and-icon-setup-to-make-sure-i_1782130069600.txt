@@ -1,0 +1,42 @@
+Audit my existing favicon and icon setup to make sure it meets Google's requirements for displaying in search results, browser tabs, and social previews. Do NOT recreate files from scratch — check what already exists and fix only what's wrong or missing.
+
+Please verify and report on each of the following:
+
+1. FAVICON FILES
+- Confirm favicon.ico exists at the root (https://pdfgenius.app/favicon.ico) and is accessible (not 404)
+- Confirm it is square (equal width and height), not rectangular
+- Confirm it is at least 48x48px actual pixel dimensions (Google's minimum requirement)
+- Confirm favicon-16x16.png and favicon-32x32.png exist and are properly square
+- Confirm apple-touch-icon.png (180x180) exists for iOS
+- Confirm android-chrome-192x192.png and android-chrome-512x512.png exist
+
+2. HTML HEAD TAGS
+- Confirm all favicon link tags are present in the HTML head and use absolute URLs (https://pdfgenius.app/...), not relative paths
+- Confirm there are no duplicate or conflicting favicon link tags
+- Confirm the manifest.json or site.webmanifest is correctly linked
+
+3. ROBOTS.TXT AND CRAWLABILITY
+- Check robots.txt at https://pdfgenius.app/robots.txt
+- Confirm it does NOT block /favicon.ico or any icon file paths
+- Confirm there's no disallow rule blocking the root directory or image assets
+
+4. SITEMAP
+- Confirm sitemap.xml exists at https://pdfgenius.app/sitemap.xml
+- Confirm it includes the homepage URL
+- If missing, generate a basic sitemap.xml including all main pages
+
+5. STRUCTURED DATA
+- Confirm Organization JSON-LD schema is present with a valid "logo" field
+- Confirm the logo URL in the schema is a working absolute URL, square, and at least 112x112px (ideally 512x512px)
+
+6. SOCIAL PREVIEW TAGS
+- Confirm Open Graph tags (og:image, og:title, og:description, og:url) are present and use absolute URLs
+- Confirm og:image is at least 1200x630px and the file actually loads
+
+7. FINAL REPORT
+- List every file checked with pass/fail status
+- List the exact HTML head section as it currently exists
+- Flag any 404s, broken links, or missing files clearly
+- Do not change anything that already passes — only fix actual problems found
+
+After the audit, give me a clear summary of what was already correct vs what you fixed.
