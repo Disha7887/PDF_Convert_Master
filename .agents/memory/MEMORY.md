@@ -18,6 +18,7 @@
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
 - [Mobile flat surfaces](mobile-flat-surfaces.md) — pdf-convert-mobile buttons/cards are flat solid color; GlassSurface is solid (name kept, sheen/intensity now no-ops); don't reintroduce glossy sheen.
+- [Mobile keyboard resize](mobile-keyboard-resize.md) — Android needs softwareKeyboardLayoutMode "resize" (not "pan") or keyboard hides bottom inputs; native change → needs fresh EAS build.
 - [Deploy architecture](deploy-architecture.md) — prod = Railway(api-server co-hosts web build, single origin) + Supabase + Expo EAS; pin pnpm@10 in root pkg for Railpack; mobile uses EXPO_PUBLIC_DOMAIN.
 - [iOS modal-share race](ios-modal-share-race.md) — closing an RN Modal then immediately Sharing.shareAsync silently fails on iOS; defer the share to the Modal's onDismiss.
 - [Web download in iframe](web-download-iframe-blob.md) — converted-file downloads must fetch→blob→`<a download>` (downloadFromUrl); window.open/anchor-nav is blocked in the Replit preview/canvas iframe.
