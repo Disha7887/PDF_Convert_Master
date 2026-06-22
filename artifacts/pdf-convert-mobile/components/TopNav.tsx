@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, SvgXml } from "react-native-svg";
 
 import { GlassSurface } from "@/components/Glass";
+import { UserLottieIcon } from "@/components/UserLottieIcon";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
@@ -115,9 +116,7 @@ export function TopNav() {
           style={styles.profileBtn}
           testID="button-account"
         >
-          <Svg width={28} height={28} viewBox="0 0 32 32">
-            <Path d={PEOPLE_PATH} fill={C.primary} />
-          </Svg>
+          <UserLottieIcon size={30} />
         </Pressable>
       </View>
 
