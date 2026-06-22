@@ -47,7 +47,7 @@ export const ToolPageShell: React.FC<ToolPageShellProps> = ({
     <div className="relative min-h-screen overflow-hidden bg-white">
       <AnimatedBackground particleCount={particleCount} className="opacity-60" />
       <div className={`relative z-10 w-full ${maxWidth} mx-auto px-4 sm:px-6 py-10`}>
-        {showHeader && (
+        {showHeader ? (
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div
@@ -69,6 +69,17 @@ export const ToolPageShell: React.FC<ToolPageShellProps> = ({
                 {trustText}
               </p>
             )}
+          </div>
+        ) : (
+          // Upload (empty) state: show only the tool name as a headline above
+          // the bare dropzone, so every upload page is clearly labelled.
+          <div className="text-center mb-8">
+            <h1
+              className="text-3xl font-bold text-gray-900"
+              data-testid="text-tool-title"
+            >
+              {title}
+            </h1>
           </div>
         )}
         {children}

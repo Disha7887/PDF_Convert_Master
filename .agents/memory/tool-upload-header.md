@@ -28,9 +28,12 @@ reference is the "Sign PDF" tool. The action button must NAME the tool/conversio
    no `toolConfigs` entry (e.g. page uses `compress-image` but config id is
    `compress-images`) so the button still names the tool.
 
-**Rule:** the upload/empty state of every tool is HEADER-LESS — just the
-shared dashed `UploadDropzone`. The header only appears once the user has a
-file/selection (working state).
+**Rule:** the upload/empty state shows ONLY a tool-name headline (the `title`,
+no icon/description/trust line) above the shared dashed `UploadDropzone`. The
+FULL header (icon + title + description + trust) only appears once the user has
+a file/selection (working state). This headline lives in `ToolPageShell`'s
+`!showHeader` branch, so every tool that funnels through the shell gets it
+automatically — do not add per-tool headlines.
 
 **Why:** user explicitly asked to remove the header from upload pages so all
 three tool categories share one clean upload design.
