@@ -172,16 +172,14 @@ function Router() {
         </DynamicLayout>
       </Route>
 
+      {/* Auth pages render standalone (no marketing nav) to match the mobile
+          full-screen sheet design; AuthCard has its own close button. */}
       <Route path="/signup">
-        <DynamicLayout>
-          <SignUp />
-        </DynamicLayout>
+        <SignUp />
       </Route>
 
       <Route path="/signin">
-        <DynamicLayout>
-          <SignIn />
-        </DynamicLayout>
+        <SignIn />
       </Route>
 
       <Route path="/forgot-password">

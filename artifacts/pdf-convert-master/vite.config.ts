@@ -3,27 +3,25 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
+// PORT/BASE_PATH are injected by the workflow for `dev`/`serve`. They are NOT
+// needed to produce a static build, and the production *build* step may run
+// without them — so we must never throw at config-load time, or the deploy
+// build fails before it starts. Fall back to safe defaults instead.
+const isServing =
+  process.argv.includes("dev") ||
+  process.argv.includes("serve") ||
+  process.argv.includes("preview");
+
 const rawPort = process.env.PORT;
+const port = rawPort ? Number(rawPort) : 5173;
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
+if (isServing && (Number.isNaN(port) || port <= 0)) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+// Default to "/" so the static bundle builds with root-relative asset URLs,
+// which is correct for the production domain served at its root.
+const basePath = process.env.BASE_PATH || "/";
 
 export default defineConfig({
   base: basePath,

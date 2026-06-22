@@ -6,7 +6,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
   signout: () => void;
   updateUser: (user: User, token?: string) => void;
   isAuthenticated: boolean;
@@ -94,20 +94,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const signup = async (
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, ...(name ? { name } : {}) }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // After successful signup, don't auto-login, redirect to signin
+        // Sign-up auto-logs the user in (parity with mobile) so the welcome
+        // screen can greet them and they land straight in the dashboard. If the
+        // backend ever stops returning a token/user, treat it as a failure
+        // rather than showing a false "welcome" with no session.
+        const { user: userData, token: authToken } = data.data ?? {};
+        if (!userData || !authToken) {
+          return { success: false, error: "Sign up failed. Please try again." };
+        }
+        setUser(userData);
+        setToken(authToken);
+        localStorage.setItem("auth_token", authToken);
         return { success: true };
       } else {
         return { success: false, error: data.error || "Sign up failed" };
