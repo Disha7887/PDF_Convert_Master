@@ -1,0 +1,31 @@
+Set up complete branding and icon configuration for my production website so it displays properly in browser tabs, Google search results, and social media link previews.
+
+Please implement the following:
+
+1. FAVICON (browser tab icon)
+- Add favicon files in multiple sizes: favicon.ico (32x32), favicon-16x16.png, favicon-32x32.png
+- Add apple-touch-icon.png (180x180) for iOS devices
+- Add android-chrome-192x192.png and android-chrome-512x512.png for Android
+- Place all files in the public/root directory
+- Add proper link tags in the HTML head for all favicon sizes
+
+2. WEB APP MANIFEST (for PWA-style icon support and Android/Chrome)
+- Create a site.webmanifest file with: app name "PDF Genius", short_name, icons array referencing the android-chrome icons, theme_color, background_color, and display mode
+- Link the manifest in the HTML head
+
+3. GOOGLE SEARCH RESULTS ICON
+- Ensure the favicon is at least 48x48px minimum (Google requirement), square, and accessible at the root domain (e.g. https://pdfgenius.app/favicon.ico)
+- Confirm the site has a valid robots.txt that does not block crawling of the favicon file
+- Add structured data (JSON-LD) for Organization schema including: name, url, logo (pointing to a high-res square logo, minimum 112x112px, ideally 512x512px)
+
+4. SOCIAL SHARE PREVIEWS (Open Graph + Twitter Card)
+- Add Open Graph meta tags in the HTML head: og:title, og:description, og:image (1200x630px recommended), og:url, og:type, og:site_name
+- Add Twitter Card meta tags: twitter:card (summary_large_image), twitter:title, twitter:description, twitter:image
+- Use a dedicated social-preview image (not the logo) sized 1200x630px showing app branding clearly
+
+5. GENERAL REQUIREMENTS
+- All icon/image files should be referenced with absolute URLs (https://pdfgenius.app/...) not relative paths, since social crawlers and Google need absolute paths
+- Confirm all image files actually exist in the public directory and are not 404ing
+- Show me the final HTML head section with all tags added, and list every new file created with its path and required dimensions
+
+Note: I will provide the actual logo/icon image files. For now, use placeholder colored squares with "PDF Genius" text so the structure and code are correct, and I will swap in final assets afterward.
