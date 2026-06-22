@@ -38,7 +38,6 @@ import {
   type PickedFile,
 } from "@/services/api";
 import { saveFile } from "@/services/files";
-import * as Sharing from "expo-sharing";
 
 const C = colors.light;
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
@@ -91,7 +90,7 @@ function formatBytes(size?: number): string {
 }
 
 /**
- * Produces a real, shareable output file for the mock conversion. No network is
+ * Produces a real, downloadable output file for the mock conversion. No network is
  * involved while `USE_MOCK_DATA` is true. PDF/image results resolve to the
  * bundled sample asset matching the tool's output format; text results are
  * generated on-device.
@@ -125,9 +124,9 @@ function absoluteDownloadUrl(downloadUrl: string): string {
 }
 
 /**
- * Fetches the converted file from the backend and returns a shareable local
- * URI. On web we materialize a blob object-URL; on native we stream the bytes
- * to a unique cache file via expo-file-system so Sharing can hand off a path.
+ * Fetches the converted file from the backend and returns a local file URI.
+ * On web we materialize a blob object-URL; on native we stream the bytes to a
+ * unique cache file via expo-file-system so the save flow has a path to copy.
  */
 async function downloadOutput(downloadUrl: string, name: string): Promise<string> {
   const url = absoluteDownloadUrl(downloadUrl);
@@ -144,8 +143,8 @@ async function downloadOutput(downloadUrl: string, name: string): Promise<string
 }
 
 /**
- * Materializes a text-based file and returns a shareable URI. Web uses a blob
- * object-URL; native writes to the cache dir so Sharing can hand off the path.
+ * Materializes a text-based file and returns a local file URI. Web uses a blob
+ * object-URL; native writes to the cache dir so the save flow has a path to copy.
  */
 async function makeFileUri(
   content: string,
@@ -383,7 +382,6 @@ export default function ConvertScreen() {
   const [copiedPage, setCopiedPage] = useState<number | null>(null);
   const [ocrPageIndex, setOcrPageIndex] = useState(0);
   const [downloadOpen, setDownloadOpen] = useState(preview === "download");
-  const [resultAction, setResultAction] = useState<"download" | "share">("download");
   const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
   const [fileName, setFileName] = useState("");
 
@@ -589,9 +587,8 @@ export default function ConvertScreen() {
     );
   }, [ocrPages]);
 
-  const openResult = useCallback((action: "download" | "share") => {
+  const openResult = useCallback(() => {
     if (!tool) return;
-    setResultAction(action);
     const base =
       (output?.name ?? "output").replace(/\.[^./]+$/, "") || "output";
     setFileName(base);
@@ -601,10 +598,10 @@ export default function ConvertScreen() {
     setDownloadOpen(true);
   }, [output, tool, ocrPages]);
 
-  // Holds a deferred share to run once the format modal has fully dismissed.
-  // iOS serializes modal presentation, so presenting the share sheet while the
-  // format modal is still animating out makes iOS silently drop it.
-  const pendingShareRef = useRef<(() => void | Promise<void>) | null>(null);
+  // Holds the deferred save to run once the format modal has fully dismissed.
+  // iOS serializes modal presentation, so showing the save alert / folder picker
+  // while the format modal is still animating out makes iOS silently drop it.
+  const pendingActionRef = useRef<(() => void | Promise<void>) | null>(null);
 
   const onConfirmDownload = useCallback(async () => {
     if (!tool || !output) return;
@@ -615,8 +612,6 @@ export default function ConvertScreen() {
     const fmt = formats.find((f) => f.id === selectedFormat) ?? formats[0];
     const base = (fileName.trim() || "output").replace(/\.[^./]+$/, "") || "output";
     const fullName = `${base}.${fmt.ext}`;
-
-    const action = resultAction;
 
     const prepareUri = async (): Promise<string> => {
       switch (fmt.produce.kind) {
@@ -634,54 +629,35 @@ export default function ConvertScreen() {
       }
     };
 
-    const saveUri = async (uri: string) => {
-      const res = await saveFile(uri, fullName);
-      if (res.status === "saved") {
-        Alert.alert("Downloaded", `${fullName} was saved to ${res.location}.`);
-      } else if (res.status === "failed") {
-        setError("Could not save the file. Please try again.");
-      }
-      // "cancelled" → the user backed out of the folder picker; stay silent.
-    };
-
     const runSave = async () => {
       try {
-        await saveUri(await prepareUri());
+        const uri = await prepareUri();
+        const res = await saveFile(uri, fullName);
+        if (res.status === "saved") {
+          Alert.alert("Downloaded", `${fullName} was saved to ${res.location}.`);
+        } else if (res.status === "failed") {
+          setError("Could not save the file. Please try again.");
+        }
+        // "cancelled" → the user backed out of the folder picker; stay silent.
       } catch {
         setError("Could not prepare the download.");
       }
     };
 
-    const runShare = async () => {
-      try {
-        const uri = await prepareUri();
-        // expo-sharing isn't available on web — fall back to a direct download.
-        if (Platform.OS === "web" || !(await Sharing.isAvailableAsync())) {
-          await saveUri(uri);
-          return;
-        }
-        await Sharing.shareAsync(uri, { mimeType: fmt.mime, dialogTitle: fullName });
-      } catch {
-        setError("Could not share the file. Please try again.");
-      }
-    };
-
-    const run = action === "share" ? runShare : runSave;
-
     setDownloadOpen(false);
     if (Platform.OS === "ios") {
-      // Defer the action until the modal has fully dismissed (iOS serializes modal
-      // transitions, so presenting the share sheet / folder picker while the
+      // Defer the save until the format modal has fully dismissed (iOS serializes
+      // modal transitions, so showing the save alert / folder picker while the
       // format modal is still animating out makes iOS silently drop it).
-      pendingShareRef.current = run;
+      pendingActionRef.current = runSave;
     } else {
-      await run();
+      await runSave();
     }
-  }, [tool, output, ocrPages, selectedFormat, fileName, resultAction]);
+  }, [tool, output, ocrPages, selectedFormat, fileName]);
 
   const onDownloadModalDismiss = useCallback(() => {
-    const run = pendingShareRef.current;
-    pendingShareRef.current = null;
+    const run = pendingActionRef.current;
+    pendingActionRef.current = null;
     void run?.();
   }, []);
 
@@ -886,6 +862,14 @@ export default function ConvertScreen() {
             </Text>
             <Text style={styles.successText}>Your file is ready to download.</Text>
 
+            <Text style={styles.downloadHint}>
+              {Platform.OS === "ios"
+                ? "Saves to the Files app → On My iPhone → PDF Convert Master."
+                : Platform.OS === "android"
+                ? "Saves to a folder you pick once (e.g. Downloads); reused next time."
+                : "Saves to your browser's downloads."}
+            </Text>
+
             <View style={styles.outputRow}>
               <Feather name="file-text" size={18} color={C.primary} />
               <Text style={styles.outputName} numberOfLines={1} testID="text-output-name">
@@ -895,18 +879,10 @@ export default function ConvertScreen() {
 
             <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
               <Button
-                label="Share"
-                icon="share-2"
-                fullWidth
-                onPress={() => openResult("share")}
-                testID="button-share"
-              />
-              <Button
                 label="Download"
                 icon="download"
-                variant="outline"
                 fullWidth
-                onPress={() => openResult("download")}
+                onPress={openResult}
                 testID="button-download"
               />
               <Button
@@ -1075,17 +1051,13 @@ export default function ConvertScreen() {
         visible={downloadOpen}
         onClose={() => setDownloadOpen(false)}
         onDismiss={onDownloadModalDismiss}
-        subtitle={
-          resultAction === "share"
-            ? `Pick a format to share your ${tool.title} file.`
-            : `Your ${tool.title} file is ready to download.`
-        }
-        sectionLabel={resultAction === "share" ? "Share as:" : "Download as:"}
+        subtitle={`Your ${tool.title} file is ready to download.`}
+        sectionLabel="Download as:"
         formats={downloadFormats}
         selectedId={selectedFormat}
         onSelect={setSelectedFormat}
-        confirmLabel={resultAction === "share" ? "Share" : "Download"}
-        confirmIcon={resultAction === "share" ? "share-2" : "download"}
+        confirmLabel="Download"
+        confirmIcon="download"
         onConfirm={onConfirmDownload}
         fileName={fileName}
         onChangeFileName={setFileName}
@@ -1270,6 +1242,7 @@ const styles = StyleSheet.create({
   },
   successTitle: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingSemibold },
   successText: { fontSize: 14, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center" },
+  downloadHint: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, textAlign: "center", marginTop: 4, paddingHorizontal: 8 },
   outputRow: {
     flexDirection: "row",
     alignItems: "center",
