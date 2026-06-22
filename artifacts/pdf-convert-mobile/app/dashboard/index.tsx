@@ -6,6 +6,7 @@ import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Loader } from "@/components/Loader";
+import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
@@ -270,10 +271,15 @@ export default function WorkspaceScreen() {
                   disabled={!canDownload || downloadingId !== null}
                   onPress={() => handleDownload(job)}
                 >
-                  {/* Converter-specific icon so each row reads at a glance as the
-                      tool that produced it, with the status shown by the badge. */}
+                  {/* Same animated tool identity icon used on the All Tools page,
+                      so each row reads at a glance as the tool that produced it
+                      (status is shown by the badge on the right). */}
                   <View style={[styles.activityIcon, { backgroundColor: C.accent }]}>
-                    <Feather name={tool?.feather ?? m.icon} size={16} color={C.primary} />
+                    {tool ? (
+                      <ToolLottieIcon toolId={tool.id} size={28} />
+                    ) : (
+                      <Feather name={m.icon} size={16} color={C.primary} />
+                    )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.activityTitle} numberOfLines={1}>
