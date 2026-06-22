@@ -404,13 +404,10 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
               </Pressable>
             </View>
 
-            {/* Illustration — different per mode */}
+            {/* Illustration — one consistent icon for both modes. The animated
+                welcome/signup icons are reserved for the success screen only. */}
             <View style={styles.illustration}>
-              {mode === "signin" ? (
-                <AuthResultIcon kind="welcome" size={120} loop />
-              ) : (
-                <SvgXml xml={SIGN_UP_XML} width={150} height={158} />
-              )}
+              <SvgXml xml={SIGN_UP_XML} width={150} height={158} />
             </View>
 
             {/* Social */}

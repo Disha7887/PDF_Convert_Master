@@ -122,32 +122,31 @@ export async function sendSignupOtpEmail(to: string, code: string): Promise<void
   }
 }
 
-function signupOtpHtml(code: string): string {
-  return `
-  <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1f2937">
-    <h2 style="color:#f7433d;margin:0 0 8px">Verify your email</h2>
-    <p style="font-size:15px;line-height:1.5;margin:0 0 16px">
-      Welcome to PDF Genius! Enter the code below to finish creating your account. It expires in 10 minutes.
-    </p>
-    <div style="font-size:34px;font-weight:700;letter-spacing:8px;text-align:center;
-                background:#fff1f0;color:#f7433d;border-radius:12px;padding:18px 0;margin:0 0 16px">
-      ${code}
-    </div>
-    <p style="font-size:13px;color:#6b7280;line-height:1.5;margin:0">
-      If you didn't try to sign up for PDF Genius, you can safely ignore this email.
-    </p>
-  </div>`;
+/**
+ * Shared, polished, email-client-safe OTP email template. Table-based 600px
+ * layout with a max-width fallback for mobile, inline CSS only (most clients
+ * strip <style> blocks), logo + app-name header, a prominent OTP box, and the
+ * PDF Genius coral brand accent (#f7433d).
+ *
+ * Both the signup verification email and the password reset email render from
+ * this single builder so their designs never drift apart.
+ */
+interface OtpEmailOptions {
+  /** Big heading under the logo, e.g. "Password Reset Request". */
+  heading: string;
+  /** Friendly intro paragraph explaining what the code is for. */
+  intro: string;
+  /** Small uppercase label above the code, e.g. "Your reset code". */
+  codeLabel: string;
+  /** The 6-digit one-time code. */
+  code: string;
+  /** Human expiry duration shown in bold, e.g. "15 minutes". */
+  expiry: string;
+  /** Reassurance line shown at the bottom of the body. */
+  footnote: string;
 }
 
-/**
- * Polished, email-client-safe password reset template. Table-based 600px layout
- * with a max-width fallback for mobile, inline CSS only (most clients strip
- * <style> blocks), and the PDF Genius coral brand accent (#f7433d).
- *
- * Takes the plaintext OTP and returns a single HTML string, so it can be reused
- * anywhere the password reset code needs to be emailed.
- */
-function passwordResetHtml(otpCode: string): string {
+function otpEmailHtml(opts: OtpEmailOptions): string {
   return `
   <div style="margin:0;padding:0;background-color:#f4f4f5;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:24px 0;">
@@ -164,14 +163,14 @@ function passwordResetHtml(otpCode: string): string {
             <!-- Heading -->
             <tr>
               <td style="padding:8px 32px 0 32px;">
-                <h1 style="margin:0;font-size:24px;line-height:1.3;color:#1f2937;text-align:center;font-weight:700;">Password Reset Request</h1>
+                <h1 style="margin:0;font-size:24px;line-height:1.3;color:#1f2937;text-align:center;font-weight:700;">${opts.heading}</h1>
               </td>
             </tr>
             <!-- Greeting -->
             <tr>
               <td style="padding:16px 32px 0 32px;">
                 <p style="margin:0;font-size:15px;line-height:1.6;color:#4b5563;text-align:center;">
-                  We received a request to reset your PDF Genius password. Use the one-time code below to continue. For your security, it's only valid for a short time.
+                  ${opts.intro}
                 </p>
               </td>
             </tr>
@@ -179,8 +178,8 @@ function passwordResetHtml(otpCode: string): string {
             <tr>
               <td style="padding:24px 32px 0 32px;">
                 <div style="background-color:#fff1f0;border:1px solid #ffd9d6;border-radius:12px;padding:24px;text-align:center;">
-                  <div style="font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">Your reset code</div>
-                  <div style="font-size:40px;font-weight:700;letter-spacing:10px;color:#f7433d;">${otpCode}</div>
+                  <div style="font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:8px;">${opts.codeLabel}</div>
+                  <div style="font-size:40px;font-weight:700;letter-spacing:10px;color:#f7433d;">${opts.code}</div>
                 </div>
               </td>
             </tr>
@@ -188,7 +187,7 @@ function passwordResetHtml(otpCode: string): string {
             <tr>
               <td style="padding:16px 32px 0 32px;">
                 <p style="margin:0;font-size:14px;line-height:1.5;color:#6b7280;text-align:center;">
-                  This code expires in <strong style="color:#1f2937;">15 minutes</strong>.
+                  This code expires in <strong style="color:#1f2937;">${opts.expiry}</strong>.
                 </p>
               </td>
             </tr>
@@ -196,7 +195,7 @@ function passwordResetHtml(otpCode: string): string {
             <tr>
               <td style="padding:16px 32px 24px 32px;">
                 <p style="margin:0;font-size:13px;line-height:1.6;color:#9ca3af;text-align:center;">
-                  If you didn't request this, you can safely ignore this email — your password will remain unchanged.
+                  ${opts.footnote}
                 </p>
               </td>
             </tr>
@@ -217,4 +216,32 @@ function passwordResetHtml(otpCode: string): string {
       </tr>
     </table>
   </div>`;
+}
+
+/** Signup email verification template — shares the polished OTP design. */
+function signupOtpHtml(code: string): string {
+  return otpEmailHtml({
+    heading: "Verify your email",
+    intro:
+      "Welcome to PDF Genius! Use the one-time code below to finish creating your account.",
+    codeLabel: "Your verification code",
+    code,
+    expiry: "10 minutes",
+    footnote:
+      "If you didn't try to sign up for PDF Genius, you can safely ignore this email.",
+  });
+}
+
+/** Password reset template — shares the polished OTP design. */
+function passwordResetHtml(otpCode: string): string {
+  return otpEmailHtml({
+    heading: "Password Reset Request",
+    intro:
+      "We received a request to reset your PDF Genius password. Use the one-time code below to continue. For your security, it's only valid for a short time.",
+    codeLabel: "Your reset code",
+    code: otpCode,
+    expiry: "15 minutes",
+    footnote:
+      "If you didn't request this, you can safely ignore this email — your password will remain unchanged.",
+  });
 }
