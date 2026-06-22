@@ -445,7 +445,6 @@ export const tools: Tool[] = [
     multiFile: false,
     isMerge: false,
     editor: "pdf",
-    maintenance: true,
     editorMode: "delete-pages",
   },
 
@@ -508,7 +507,6 @@ export const tools: Tool[] = [
     multiFile: false,
     isMerge: false,
     editor: "pdf",
-    maintenance: true,
     editorMode: "crop",
   },
   {
@@ -529,7 +527,6 @@ export const tools: Tool[] = [
     multiFile: false,
     isMerge: false,
     editor: "pdf",
-    maintenance: true,
     editorMode: "sign",
   },
   {
@@ -550,7 +547,6 @@ export const tools: Tool[] = [
     multiFile: false,
     isMerge: false,
     editor: "pdf",
-    maintenance: true,
     editorMode: "watermark",
   },
   {
@@ -571,7 +567,6 @@ export const tools: Tool[] = [
     multiFile: false,
     isMerge: false,
     editor: "pdf",
-    maintenance: true,
     editorMode: "add-image",
   },
   {
