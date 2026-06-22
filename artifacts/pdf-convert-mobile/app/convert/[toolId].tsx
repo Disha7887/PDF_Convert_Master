@@ -38,6 +38,7 @@ import {
   type PickedFile,
 } from "@/services/api";
 import { saveFile } from "@/services/files";
+import * as Sharing from "expo-sharing";
 
 const C = colors.light;
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
@@ -382,6 +383,7 @@ export default function ConvertScreen() {
   const [copiedPage, setCopiedPage] = useState<number | null>(null);
   const [ocrPageIndex, setOcrPageIndex] = useState(0);
   const [downloadOpen, setDownloadOpen] = useState(preview === "download");
+  const [resultAction, setResultAction] = useState<"download" | "share">("download");
   const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
   const [fileName, setFileName] = useState("");
 
@@ -587,8 +589,9 @@ export default function ConvertScreen() {
     );
   }, [ocrPages]);
 
-  const openDownload = useCallback(() => {
+  const openResult = useCallback((action: "download" | "share") => {
     if (!tool) return;
+    setResultAction(action);
     const base =
       (output?.name ?? "output").replace(/\.[^./]+$/, "") || "output";
     setFileName(base);
@@ -613,45 +616,68 @@ export default function ConvertScreen() {
     const base = (fileName.trim() || "output").replace(/\.[^./]+$/, "") || "output";
     const fullName = `${base}.${fmt.ext}`;
 
+    const action = resultAction;
+
+    const prepareUri = async (): Promise<string> => {
+      switch (fmt.produce.kind) {
+        case "ocrText":
+          // Word/TXT/HTML/Markdown built on-device from the recognized text.
+          return ocrPages
+            ? await makeFileUri(buildOcrContent(fmt.produce.fmt, ocrPages, base), fullName, fmt.mime)
+            : output.uri;
+        case "reencode":
+          // Genuine pixel re-encode of a single-image result.
+          return output.uri ? await reencodeImage(output.uri, fmt.produce.to) : output.uri;
+        default:
+          // Hand back the exact file the tool produced (document / PDF / ZIP).
+          return output.uri;
+      }
+    };
+
+    const saveUri = async (uri: string) => {
+      const res = await saveFile(uri, fullName);
+      if (res.status === "saved") {
+        Alert.alert("Downloaded", `${fullName} was saved to ${res.location}.`);
+      } else if (res.status === "failed") {
+        setError("Could not save the file. Please try again.");
+      }
+      // "cancelled" → the user backed out of the folder picker; stay silent.
+    };
+
     const runSave = async () => {
       try {
-        let uri: string;
-        switch (fmt.produce.kind) {
-          case "ocrText":
-            // Word/TXT/HTML/Markdown built on-device from the recognized text.
-            uri = ocrPages
-              ? await makeFileUri(buildOcrContent(fmt.produce.fmt, ocrPages, base), fullName, fmt.mime)
-              : output.uri;
-            break;
-          case "reencode":
-            // Genuine pixel re-encode of a single-image result.
-            uri = output.uri ? await reencodeImage(output.uri, fmt.produce.to) : output.uri;
-            break;
-          default:
-            // Hand back the exact file the tool produced (document / PDF / ZIP).
-            uri = output.uri;
-        }
-        const res = await saveFile(uri, fullName);
-        if (res.status === "saved") {
-          Alert.alert("Downloaded", `${fullName} was saved to ${res.location}.`);
-        } else if (res.status === "failed") {
-          setError("Could not save the file. Please try again.");
-        }
-        // "cancelled" → the user backed out of the folder picker; stay silent.
+        await saveUri(await prepareUri());
       } catch {
         setError("Could not prepare the download.");
       }
     };
 
+    const runShare = async () => {
+      try {
+        const uri = await prepareUri();
+        // expo-sharing isn't available on web — fall back to a direct download.
+        if (Platform.OS === "web" || !(await Sharing.isAvailableAsync())) {
+          await saveUri(uri);
+          return;
+        }
+        await Sharing.shareAsync(uri, { mimeType: fmt.mime, dialogTitle: fullName });
+      } catch {
+        setError("Could not share the file. Please try again.");
+      }
+    };
+
+    const run = action === "share" ? runShare : runSave;
+
     setDownloadOpen(false);
     if (Platform.OS === "ios") {
-      // Defer the save until the modal has fully dismissed (iOS serializes modal
-      // transitions, so we let the format modal finish animating out first).
-      pendingShareRef.current = runSave;
+      // Defer the action until the modal has fully dismissed (iOS serializes modal
+      // transitions, so presenting the share sheet / folder picker while the
+      // format modal is still animating out makes iOS silently drop it).
+      pendingShareRef.current = run;
     } else {
-      await runSave();
+      await run();
     }
-  }, [tool, output, ocrPages, selectedFormat, fileName]);
+  }, [tool, output, ocrPages, selectedFormat, fileName, resultAction]);
 
   const onDownloadModalDismiss = useCallback(() => {
     const run = pendingShareRef.current;
@@ -869,16 +895,24 @@ export default function ConvertScreen() {
 
             <View style={{ gap: 10, width: "100%", marginTop: 16 }}>
               <Button
+                label="Share"
+                icon="share-2"
+                fullWidth
+                onPress={() => openResult("share")}
+                testID="button-share"
+              />
+              <Button
                 label="Download"
                 icon="download"
+                variant="outline"
                 fullWidth
-                onPress={openDownload}
-                testID="button-share"
+                onPress={() => openResult("download")}
+                testID="button-download"
               />
               <Button
                 label="Convert another"
                 icon="refresh-cw"
-                variant="outline"
+                variant="ghost"
                 fullWidth
                 onPress={reset}
                 testID="button-convert-another"
@@ -1041,13 +1075,17 @@ export default function ConvertScreen() {
         visible={downloadOpen}
         onClose={() => setDownloadOpen(false)}
         onDismiss={onDownloadModalDismiss}
-        subtitle={`Your ${tool.title} file is ready to download.`}
-        sectionLabel="Download as:"
+        subtitle={
+          resultAction === "share"
+            ? `Pick a format to share your ${tool.title} file.`
+            : `Your ${tool.title} file is ready to download.`
+        }
+        sectionLabel={resultAction === "share" ? "Share as:" : "Download as:"}
         formats={downloadFormats}
         selectedId={selectedFormat}
         onSelect={setSelectedFormat}
-        confirmLabel="Download"
-        confirmIcon="download"
+        confirmLabel={resultAction === "share" ? "Share" : "Download"}
+        confirmIcon={resultAction === "share" ? "share-2" : "download"}
         onConfirm={onConfirmDownload}
         fileName={fileName}
         onChangeFileName={setFileName}
