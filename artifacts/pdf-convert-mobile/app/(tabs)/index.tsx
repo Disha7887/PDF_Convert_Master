@@ -12,7 +12,6 @@ import {
   View,
 } from "react-native";
 
-import { GlassSurface } from "@/components/Glass";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
@@ -206,7 +205,7 @@ export default function HomeScreen() {
         onSeeAll={recent.length > 0 ? () => router.push(ROUTES.files as never) : undefined}
       />
       {recent.length === 0 ? (
-        <GlassSurface radius={18} style={styles.recentEmpty}>
+        <View style={[styles.recentEmpty, cardShadow]}>
           <View style={styles.recentEmptyIcon}>
             <Feather name="folder" size={22} color={C.primary} />
           </View>
@@ -214,7 +213,7 @@ export default function HomeScreen() {
           <Text style={styles.recentEmptySub}>
             Scanned and converted files will show up here.
           </Text>
-        </GlassSurface>
+        </View>
       ) : (
         <View style={[styles.recentList, cardShadow]}>
           {recent.map((entry, i) => (
@@ -429,9 +428,14 @@ const styles = StyleSheet.create({
   recentMeta: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 3 },
 
   recentEmpty: {
+    width: "100%",
+    backgroundColor: C.background,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: C.border,
     alignItems: "center",
-    paddingVertical: 28,
-    paddingHorizontal: 20,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
     gap: 6,
   },
   recentEmptyIcon: {
