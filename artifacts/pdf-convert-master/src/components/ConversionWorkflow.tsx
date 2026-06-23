@@ -18,6 +18,7 @@ import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { ToolPageShell } from "@/components/upload/ToolPageShell";
 import { FileItem } from "@/components/ui/file-item";
 import { toolConfigs, getToolActionLabel } from "@/lib/toolConfig";
+import { getToolActionLabels } from "@/lib/toolActionLabels";
 
 interface ConversionWorkflowProps {
   toolType: string;
@@ -79,6 +80,10 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   const cfg = toolConfigs[toolType];
   const uploadTitle = cfg?.dropAreaText;
   const uploadActionLabel = cfg ? getToolActionLabel(cfg) : toolTitle;
+
+  // Tool-specific action wording (e.g. "Locking" / "Unlocking") so the progress
+  // and completion copy names the actual action instead of a generic "Convert".
+  const actionLabels = getToolActionLabels(toolType);
 
   const generateFileId = () => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -142,7 +147,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
       // File is valid
       fileUpload.status = 'valid';
-      fileUpload.validationMessage = 'Ready for conversion';
+      fileUpload.validationMessage = `Ready to ${actionLabels.base}`;
       return fileUpload;
     });
 
@@ -157,7 +162,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       title: `${validCount} file${validCount !== 1 ? 's' : ''} added`,
       description: invalidCount > 0 
         ? `${invalidCount} file${invalidCount !== 1 ? 's' : ''} had validation errors`
-        : "Files are ready for conversion",
+        : `Files are ready to ${actionLabels.base}`,
       variant: invalidCount > 0 ? "destructive" : "default"
     });
   }, [selectedFiles, maxFiles, acceptedFormats, maxSizeInBytes, maxFileSize, toast]);
@@ -614,6 +619,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                     key={fileUpload.id}
                     file={fileUpload.file}
                     index={index}
+                    progressLabel={actionLabels.progress}
+                    doneLabel={actionLabels.done}
                     status={fileUpload.status}
                     progress={fileUpload.progress}
                     errorMessage={fileUpload.errorMessage}
@@ -698,7 +705,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                 <ConverterStatusIcon status="processing" size={88} />
               </div>
               <div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Converting Files...</h3>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">{actionLabels.progress} Files...</h3>
                 <p className="text-gray-600">Please wait while we process your files</p>
               </div>
               
@@ -709,6 +716,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                     key={fileUpload.id}
                     file={fileUpload.file}
                     index={index}
+                    progressLabel={actionLabels.progress}
+                    doneLabel={actionLabels.done}
                     status={fileUpload.status}
                     progress={fileUpload.progress}
                     errorMessage={fileUpload.errorMessage}
@@ -729,8 +738,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                 <ConverterStatusIcon status="success" size={88} />
               </div>
               <div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Conversion Complete!</h3>
-                <p className="text-gray-600">Your files have been successfully converted</p>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Files {actionLabels.done}!</h3>
+                <p className="text-gray-600">Your files have been successfully {actionLabels.done.toLowerCase()}</p>
               </div>
               
               {/* File List After Completion */}
@@ -740,6 +749,8 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                     key={fileUpload.id}
                     file={fileUpload.file}
                     index={index}
+                    progressLabel={actionLabels.progress}
+                    doneLabel={actionLabels.done}
                     status={fileUpload.status}
                     progress={fileUpload.progress}
                     errorMessage={fileUpload.errorMessage}

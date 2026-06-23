@@ -25,6 +25,10 @@ interface FileItemProps {
   onDownload?: (index: number) => void;
   isDragging?: boolean;
   validationMessage?: string;
+  /** Tool-specific progress verb, e.g. "Locking". Defaults to "Converting". */
+  progressLabel?: string;
+  /** Tool-specific completion verb, e.g. "Locked". Defaults to "Completed". */
+  doneLabel?: string;
 }
 
 export const FileItem: React.FC<FileItemProps> = ({
@@ -37,8 +41,16 @@ export const FileItem: React.FC<FileItemProps> = ({
   onRemove,
   onDownload,
   isDragging = false,
-  validationMessage
+  validationMessage,
+  progressLabel = "Converting",
+  doneLabel = "Completed"
 }) => {
+  const statusLabel =
+    status === "converting"
+      ? progressLabel
+      : status === "completed"
+      ? doneLabel
+      : status;
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -141,7 +153,7 @@ export const FileItem: React.FC<FileItemProps> = ({
                 <div className="flex items-center space-x-1">
                   {getStatusIcon()}
                   <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                    {status}
+                    {statusLabel}
                   </span>
                 </div>
               </div>
@@ -187,7 +199,7 @@ export const FileItem: React.FC<FileItemProps> = ({
           {status === 'converting' && (
             <div className="mt-3">
               <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                <span>Converting...</span>
+                <span>{progressLabel}...</span>
                 <span>{progress}%</span>
               </div>
               <Progress value={progress} className="h-2" />

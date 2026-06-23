@@ -28,6 +28,7 @@ import { addFile } from "@/constants/files";
 import { addHistory } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
+import { getToolActionLabels } from "@/constants/toolActionLabels";
 import { getToolActionLabel, getToolById, type Tool } from "@/constants/tools";
 import { SAMPLE_ASSETS } from "@/mocks/data";
 import {
@@ -527,6 +528,10 @@ export default function ConvertScreen() {
     );
   }
 
+  // Tool-specific action wording (e.g. "Locking" / "Unlocking") so the progress
+  // and completion copy names the actual action instead of a generic "Convert".
+  const actionLabels = getToolActionLabels(tool.id);
+
   if (tool.maintenance) {
     return (
       <ScreenScroll insetTop>
@@ -737,7 +742,7 @@ export default function ConvertScreen() {
       {stage === "converting" && (
         <View style={styles.centerState} testID="status-converting">
           <ConverterStatusIcon status="processing" size={96} />
-          <Text style={styles.centerTitle}>Converting…</Text>
+          <Text style={styles.centerTitle}>{actionLabels.progress}…</Text>
           <Text style={styles.centerText}>
             Processing your file{files.length !== 1 ? "s" : ""} with {tool.title}.
           </Text>
@@ -761,7 +766,7 @@ export default function ConvertScreen() {
           <View style={styles.successWrap}>
             <ConverterStatusIcon status="success" size={88} />
             <Text style={styles.successTitle} testID="text-success">
-              Conversion complete
+              {actionLabels.done}!
             </Text>
             <Text style={styles.successText}>Your file is ready to download.</Text>
 
