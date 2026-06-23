@@ -19,8 +19,8 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { ToolsNavDropdowns, MobileNav } from "@/components/ToolsNavMenu";
 import { ToolSearch } from "@/components/ToolSearch";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import {
-  Bell,
   ChevronDown,
   User,
   Settings,
@@ -118,12 +118,7 @@ export const DashboardHeader = (): JSX.Element => {
           <ToolSearch variant="icon" className="hidden sm:inline-flex" />
 
           {/* Notifications */}
-          <Button variant="outline" size="icon" className="hidden sm:inline-flex relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#f7433d] text-white text-xs rounded-full flex items-center justify-center">
-              2
-            </span>
-          </Button>
+          <NotificationsBell />
 
           {/* User Profile Dropdown */}
           <DropdownMenu>

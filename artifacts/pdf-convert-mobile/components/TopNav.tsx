@@ -1,12 +1,14 @@
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { usePathname, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -21,6 +23,13 @@ import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchNotifications,
+  fetchUnreadCount,
+  markAllNotificationsRead,
+  markNotificationRead,
+  type NotificationItem,
+} from "@/services/notifications";
 
 const C = colors.light;
 
@@ -55,6 +64,70 @@ export function TopNav() {
   const { isAuthenticated, user, signout } = useAuth();
   const topInset = useNavTopInset();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const refreshUnread = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      setUnreadCount(await fetchUnreadCount());
+    } catch {
+      // Best-effort badge; ignore transient failures.
+    }
+  }, [isAuthenticated]);
+
+  const loadNotifications = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setNotifLoading(true);
+    try {
+      const items = await fetchNotifications();
+      setNotifications(items);
+      setUnreadCount(items.filter((n) => !n.read).length);
+    } catch {
+      // Surface an empty list rather than crashing the nav bar.
+      setNotifications([]);
+    } finally {
+      setNotifLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  // Keep the unread badge in sync on mount, auth change, and on a light poll.
+  useEffect(() => {
+    refreshUnread();
+    if (!isAuthenticated) return;
+    const id = setInterval(refreshUnread, 60000);
+    return () => clearInterval(id);
+  }, [isAuthenticated, refreshUnread]);
+
+  const openNotifications = () => {
+    setNotifOpen(true);
+    loadNotifications();
+  };
+
+  const onNotificationPress = (n: NotificationItem) => {
+    if (!n.read) {
+      setNotifications((prev) =>
+        prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)),
+      );
+      setUnreadCount((c) => Math.max(0, c - 1));
+      markNotificationRead(n.id).catch(() => {});
+    }
+    if (n.link && n.link.startsWith("/dashboard")) {
+      setNotifOpen(false);
+      router.push(ROUTES.dashboardHome as never);
+    }
+  };
+
+  const onMarkAllRead = () => {
+    setNotifications((prev) => prev.map((x) => ({ ...x, read: true })));
+    setUnreadCount(0);
+    markAllNotificationsRead().catch(() => {});
+  };
 
   // The Camera/Scanner screen is a full-bleed capture surface. The home and
   // account icons (and their blur bar) don't belong there, so hide the whole
@@ -106,18 +179,40 @@ export function TopNav() {
           />
         </Pressable>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            isAuthenticated ? "Account menu" : "Sign in or create an account"
-          }
-          hitSlop={8}
-          onPress={onAccountPress}
-          style={styles.profileBtn}
-          testID="button-account"
-        >
-          <UserLottieIcon size={30} />
-        </Pressable>
+        <View style={styles.rightGroup}>
+          {isAuthenticated && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Notifications"
+              hitSlop={8}
+              onPress={openNotifications}
+              style={styles.bellBtn}
+              testID="button-notifications"
+            >
+              <Feather name="bell" size={22} color={C.foreground} />
+              {unreadCount > 0 && (
+                <View style={styles.badge} testID="badge-notifications-count">
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          )}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              isAuthenticated ? "Account menu" : "Sign in or create an account"
+            }
+            hitSlop={8}
+            onPress={onAccountPress}
+            style={styles.profileBtn}
+            testID="button-account"
+          >
+            <UserLottieIcon size={30} />
+          </Pressable>
+        </View>
       </View>
 
       <Modal
@@ -185,8 +280,113 @@ export function TopNav() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal
+        visible={notifOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNotifOpen(false)}
+      >
+        <Pressable
+          style={styles.menuBackdrop}
+          onPress={() => setNotifOpen(false)}
+          testID="notifications-backdrop"
+        >
+          <Pressable
+            style={[styles.notifPos, { top: topInset + NAV_BAR_HEIGHT - 4 }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <GlassSurface radius={18} style={styles.menuGlass}>
+              <View style={styles.notifHeader}>
+                <Text style={styles.notifTitle}>Notifications</Text>
+                {unreadCount > 0 && (
+                  <Pressable
+                    onPress={onMarkAllRead}
+                    hitSlop={8}
+                    testID="button-mark-all-read"
+                  >
+                    <Text style={styles.notifMarkAll}>Mark all read</Text>
+                  </Pressable>
+                )}
+              </View>
+
+              <View style={styles.menuDivider} />
+
+              {notifLoading ? (
+                <View style={styles.notifEmpty}>
+                  <ActivityIndicator color={C.primary} />
+                </View>
+              ) : notifications.length === 0 ? (
+                <View style={styles.notifEmpty}>
+                  <Feather name="bell" size={26} color={C.mutedForeground} />
+                  <Text style={styles.notifEmptyText}>No notifications yet</Text>
+                </View>
+              ) : (
+                <ScrollView style={styles.notifList} bounces={false}>
+                  {notifications.map((n) => (
+                    <Pressable
+                      key={n.id}
+                      onPress={() => onNotificationPress(n)}
+                      style={({ pressed }) => [
+                        styles.notifItem,
+                        !n.read && styles.notifItemUnread,
+                        pressed && styles.menuItemPressed,
+                      ]}
+                      testID={`notification-item-${n.id}`}
+                    >
+                      <View style={styles.notifIcon}>
+                        <Feather
+                          name={
+                            n.type === "security"
+                              ? "shield"
+                              : n.type === "welcome"
+                                ? "star"
+                                : "info"
+                          }
+                          size={16}
+                          color={C.primary}
+                        />
+                      </View>
+                      <View style={styles.notifBody}>
+                        <View style={styles.notifRow}>
+                          <Text style={styles.notifItemTitle} numberOfLines={1}>
+                            {n.title}
+                          </Text>
+                          {!n.read && <View style={styles.notifDot} />}
+                        </View>
+                        {!!n.body && (
+                          <Text style={styles.notifItemBody} numberOfLines={2}>
+                            {n.body}
+                          </Text>
+                        )}
+                        <Text style={styles.notifTime}>
+                          {timeAgo(n.createdAt)}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
+            </GlassSurface>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
+}
+
+function timeAgo(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const diff = Date.now() - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
 }
 
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -243,12 +443,128 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
   },
+  rightGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  bellBtn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: C.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontFamily: fonts.bodySemibold,
+  },
   profileBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+  },
+  notifPos: {
+    position: "absolute",
+    right: 12,
+    left: 12,
+    maxWidth: 380,
+    alignSelf: "flex-end",
+  },
+  notifHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  notifTitle: {
+    fontSize: 15,
+    color: C.foreground,
+    fontFamily: fonts.bodySemibold,
+  },
+  notifMarkAll: {
+    fontSize: 13,
+    color: C.primary,
+    fontFamily: fonts.bodyMedium,
+  },
+  notifList: {
+    maxHeight: 360,
+  },
+  notifEmpty: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+    gap: 8,
+  },
+  notifEmptyText: {
+    fontSize: 13,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+  },
+  notifItem: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  notifItemUnread: {
+    backgroundColor: "rgba(247,67,61,0.06)",
+  },
+  notifIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(247,67,61,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  notifBody: { flex: 1 },
+  notifRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+  },
+  notifItemTitle: {
+    fontSize: 14,
+    color: C.foreground,
+    fontFamily: fonts.bodySemibold,
+    flexShrink: 1,
+  },
+  notifDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: C.primary,
+  },
+  notifItemBody: {
+    fontSize: 12,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+    marginTop: 2,
+  },
+  notifTime: {
+    fontSize: 11,
+    color: C.mutedForeground,
+    fontFamily: fonts.body,
+    marginTop: 4,
   },
 
   menuBackdrop: {

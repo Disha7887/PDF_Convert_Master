@@ -15,6 +15,7 @@ import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
 import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword, googleAuth, googleConfig } from "./auth";
+import { notifyUser, ensureWelcomeNotification } from "./notify";
 import { saveAvatar, getAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
@@ -3222,6 +3223,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         keyLast4: rawKey.slice(-4),
       });
 
+      await notifyUser(userId, {
+        type: "security",
+        title: "New API key created",
+        body: name
+          ? `Your API key "${name}" is ready. Keep it secret — it grants access to your account.`
+          : "A new API key is ready. Keep it secret — it grants access to your account.",
+        link: "/dashboard/api-setup",
+      });
+
       return res.status(201).json({
         success: true,
         data: {
@@ -3273,6 +3283,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error revoking API key:", error);
       return res.status(500).json({ success: false, error: "Failed to revoke API key" });
+    }
+  });
+
+  // --- Notifications (dashboard, JWT-authenticated) --------------------------
+
+  // List the signed-in user's notifications (most recent first). The one-time
+  // welcome notification is ensured lazily so existing accounts also see a real
+  // message without any seeded/mock data.
+  app.get("/api/notifications", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      await ensureWelcomeNotification(userId);
+      const items = await storage.getUserNotifications(userId, 30);
+      return res.json({ success: true, data: items });
+    } catch (error) {
+      console.error("Error listing notifications:", error);
+      return res.status(500).json({ success: false, error: "Failed to load notifications" });
+    }
+  });
+
+  // Unread badge count.
+  app.get("/api/notifications/unread-count", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      await ensureWelcomeNotification(userId);
+      const count = await storage.getUnreadNotificationCount(userId);
+      return res.json({ success: true, data: { count } });
+    } catch (error) {
+      console.error("Error counting notifications:", error);
+      return res.status(500).json({ success: false, error: "Failed to load notifications" });
+    }
+  });
+
+  // Mark a single notification read. Ownership is enforced.
+  app.post("/api/notifications/:id/read", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const ok = await storage.markNotificationRead(String(req.params.id), userId);
+      if (!ok) {
+        return res.status(404).json({ success: false, error: "Notification not found" });
+      }
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification read:", error);
+      return res.status(500).json({ success: false, error: "Failed to update notification" });
+    }
+  });
+
+  // Mark all of the user's notifications read.
+  app.post("/api/notifications/read-all", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      await storage.markAllNotificationsRead(userId);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking all notifications read:", error);
+      return res.status(500).json({ success: false, error: "Failed to update notifications" });
     }
   });
 

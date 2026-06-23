@@ -16,6 +16,7 @@ import {
 } from "@workspace/db";
 import { sendPasswordResetEmail, sendSignupOtpEmail } from "./lib/email";
 import { logger } from "./lib/logger";
+import { ensureWelcomeNotification } from "./notify";
 
 const RESET_CODE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const SIGNUP_OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -279,6 +280,8 @@ export async function verifySignupOtp(req: Request, res: Response) {
       });
     }
     await storage.deleteSignupVerification(email);
+
+    await ensureWelcomeNotification(newUser.id);
 
     const token = generateToken(newUser);
     const { passwordHash: _, ...userWithoutPassword } = newUser;
@@ -676,6 +679,10 @@ export async function googleAuth(req: Request, res: Response) {
           logger.warn({ err }, "Failed to set Google profile picture");
         }
       }
+    }
+
+    if (isNewUser) {
+      await ensureWelcomeNotification(user.id);
     }
 
     const token = generateToken(user);

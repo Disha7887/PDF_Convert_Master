@@ -62,6 +62,33 @@ export const apiKeys = pgTable("api_keys", {
 });
 
 
+// Notifications table. Per-user, in-app notifications generated from real
+// account events (welcome on signup, API key created, etc.). `read` flips when
+// the user opens / acknowledges the notification.
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  // info | success | security | welcome — drives the icon/accent in the UI.
+  type: text("type").notNull().default("info"),
+  title: text("title").notNull(),
+  body: text("body"),
+  // Optional in-app destination (e.g. "/dashboard/api-setup").
+  link: text("link"),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  userId: true,
+  type: true,
+  title: true,
+  body: true,
+  link: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
 // User schemas
 export const insertUserSchema = createInsertSchema(users, {
   email: z.string().email("Invalid email format")
@@ -241,6 +268,14 @@ export type FileConversionResponse = z.infer<typeof fileConversionResponseSchema
 export const usersRelations = relations(users, ({ many }) => ({
   apiKeys: many(apiKeys),
   conversionJobs: many(conversionJobs),
+  notifications: many(notifications),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({

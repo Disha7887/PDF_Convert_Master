@@ -3,6 +3,7 @@ import {
   users, 
   apiKeys,
   conversionJobs,
+  notifications,
   passwordResetCodes,
   signupVerifications,
   type User, 
@@ -11,6 +12,8 @@ import {
   type InsertApiKey,
   type ConversionJob,
   type InsertConversionJob,
+  type Notification,
+  type InsertNotification,
   type PasswordResetCode,
   type SignupVerification,
   type ToolConfig,
@@ -58,6 +61,14 @@ export interface IStorage {
   getConversionJob(id: number): Promise<ConversionJob | undefined>;
   getUserConversionJobs(userId: string): Promise<ConversionJob[]>;
   updateConversionJobStatus(id: number, status: string, outputFilename?: string, errorMessage?: string, processingTime?: number, outputFileSize?: number): Promise<ConversionJob | undefined>;
+
+  // Notification methods
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getUserNotifications(userId: string, limit?: number): Promise<Notification[]>;
+  getUnreadNotificationCount(userId: string): Promise<number>;
+  hasNotificationType(userId: string, type: string): Promise<boolean>;
+  markNotificationRead(id: string, userId: string): Promise<boolean>;
+  markAllNotificationsRead(userId: string): Promise<void>;
   
   // Tool configuration methods
   getAllTools(): Promise<ToolConfig[]>;
@@ -71,6 +82,7 @@ export class MemStorage implements IStorage {
   private conversionJobs: Map<number, ConversionJob>;
   private resetCodes: Map<string, PasswordResetCode>;
   private signupVerifications: Map<string, SignupVerification>;
+  private notifications: Map<string, Notification>;
   private tools: ToolConfig[] = [];
   private currentJobId: number;
 
@@ -80,6 +92,7 @@ export class MemStorage implements IStorage {
     this.conversionJobs = new Map();
     this.resetCodes = new Map();
     this.signupVerifications = new Map();
+    this.notifications = new Map();
     this.currentJobId = 1;
     this.initializeTools();
   }
@@ -610,6 +623,61 @@ export class MemStorage implements IStorage {
     return updatedJob;
   }
 
+  // Notification methods
+  async createNotification(insert: InsertNotification): Promise<Notification> {
+    const id = crypto.randomUUID();
+    const notification: Notification = {
+      id,
+      userId: insert.userId,
+      type: insert.type ?? "info",
+      title: insert.title,
+      body: insert.body ?? null,
+      link: insert.link ?? null,
+      read: false,
+      createdAt: new Date(),
+    };
+    this.notifications.set(id, notification);
+    return notification;
+  }
+
+  async getUserNotifications(userId: string, limit = 30): Promise<Notification[]> {
+    return Array.from(this.notifications.values())
+      .filter((n) => n.userId === userId)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt as any).getTime() -
+          new Date(a.createdAt as any).getTime(),
+      )
+      .slice(0, limit);
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    return Array.from(this.notifications.values()).filter(
+      (n) => n.userId === userId && !n.read,
+    ).length;
+  }
+
+  async hasNotificationType(userId: string, type: string): Promise<boolean> {
+    return Array.from(this.notifications.values()).some(
+      (n) => n.userId === userId && n.type === type,
+    );
+  }
+
+  async markNotificationRead(id: string, userId: string): Promise<boolean> {
+    const n = this.notifications.get(id);
+    if (!n || n.userId !== userId) return false;
+    this.notifications.set(id, { ...n, read: true });
+    return true;
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<void> {
+    for (const [key, n] of this.notifications) {
+      if (n.userId === userId && !n.read) {
+        this.notifications.set(key, { ...n, read: true });
+      }
+    }
+  }
+
   // Tool configuration methods
   async getAllTools(): Promise<ToolConfig[]> {
     return [...this.tools];
@@ -1111,6 +1179,57 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return job || undefined;
+  }
+
+  // Notification methods
+  async createNotification(insert: InsertNotification): Promise<Notification> {
+    const [notification] = await db
+      .insert(notifications)
+      .values(insert)
+      .returning();
+    return notification;
+  }
+
+  async getUserNotifications(userId: string, limit = 30): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const [row] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+    return row?.count ?? 0;
+  }
+
+  async hasNotificationType(userId: string, type: string): Promise<boolean> {
+    const [row] = await db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.type, type)))
+      .limit(1);
+    return !!row;
+  }
+
+  async markNotificationRead(id: string, userId: string): Promise<boolean> {
+    const updated = await db
+      .update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.id, id), eq(notifications.userId, userId)))
+      .returning();
+    return updated.length > 0;
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
   }
 
   // Tool configuration methods
