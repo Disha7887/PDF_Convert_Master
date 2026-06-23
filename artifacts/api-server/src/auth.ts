@@ -644,7 +644,7 @@ export async function googleAuth(req: Request, res: Response) {
     }
 
     const email = payload?.email?.toLowerCase().trim();
-    if (!email || payload?.email_verified === false) {
+    if (!email || payload?.email_verified !== true) {
       return res.status(401).json({
         success: false,
         error: "Your Google account doesn't have a verified email.",
