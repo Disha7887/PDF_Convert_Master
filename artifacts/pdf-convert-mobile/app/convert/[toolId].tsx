@@ -14,6 +14,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -178,6 +179,7 @@ export default function ConvertScreen() {
   );
   const [outputFormat, setOutputFormat] = useState<string>("png");
   const [quality, setQuality] = useState<number>(75);
+  const [password, setPassword] = useState<string>("");
   const [ocrPages, setOcrPages] = useState<string[] | null>(
     previewStage === "done" && tool?.serverToolType === "ocr_pdf"
       ? [
@@ -339,6 +341,7 @@ export default function ConvertScreen() {
       const options: ConversionOptions = {};
       if (tool.id === "convert-image-format") options.outputFormat = outputFormat;
       if (tool.id === "compress-images") options.quality = quality;
+      if (needsPassword) options.password = password.trim();
 
       const { jobId } = await startConversion(tool.id, files, options);
       const result = await getConversionResult(tool.id, jobId, files[0].name);
@@ -542,6 +545,8 @@ export default function ConvertScreen() {
   }
 
   const isEditorTool = tool.editor === "pdf" || tool.editor === "image";
+  // Lock PDF / Unlock PDF are the only tools that take a password.
+  const needsPassword = tool.id === "lock-pdf" || tool.id === "unlock-pdf";
 
   const downloadFormats = getDownloadFormats(tool, {
     outputName: output?.name,
@@ -677,12 +682,39 @@ export default function ConvertScreen() {
                 </View>
               )}
 
+              {needsPassword && (
+                <View style={styles.optionBlock}>
+                  <Text style={styles.optionLabel}>
+                    {tool.id === "lock-pdf" ? "Set a password" : "Enter the PDF password"}
+                  </Text>
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder={
+                      tool.id === "lock-pdf" ? "Choose a strong password" : "Current PDF password"
+                    }
+                    placeholderTextColor={C.mutedForeground}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    style={styles.passwordInput}
+                    testID="input-pdf-password"
+                  />
+                  <Text style={styles.passwordHint}>
+                    {tool.id === "lock-pdf"
+                      ? "Anyone opening this PDF will need this password. Keep it safe — it cannot be recovered."
+                      : "We need the current password to remove protection from this PDF."}
+                  </Text>
+                </View>
+              )}
+
               <View style={{ gap: 10, marginTop: 16 }}>
                 <Button
                   label={getToolActionLabel(tool)}
                   icon="zap"
                   fullWidth
                   onPress={convert}
+                  disabled={needsPassword && password.trim().length === 0}
                   testID="button-convert"
                 />
                 {tool.multiFile && (
@@ -1130,6 +1162,18 @@ const styles = StyleSheet.create({
 
   optionBlock: { marginTop: 16, gap: 8 },
   optionLabel: { fontSize: 14, color: C.foreground, fontFamily: fonts.bodySemibold },
+  passwordInput: {
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: C.foreground,
+    fontFamily: fonts.body,
+    backgroundColor: C.background,
+  },
+  passwordHint: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     paddingHorizontal: 14,

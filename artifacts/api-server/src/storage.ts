@@ -332,6 +332,28 @@ export class MemStorage implements IStorage {
         outputFormat: "pdf",
         maxFileSize: 25,
         processingTimeEstimate: 30
+      },
+      {
+        id: 23,
+        name: "Lock PDF",
+        type: ToolType.LOCK_PDF,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Password-protect a PDF with strong AES-256 encryption",
+        inputFormats: ["pdf"],
+        outputFormat: "pdf",
+        maxFileSize: 100,
+        processingTimeEstimate: 15
+      },
+      {
+        id: 24,
+        name: "Unlock PDF",
+        type: ToolType.UNLOCK_PDF,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Remove password protection from a PDF you can open",
+        inputFormats: ["pdf"],
+        outputFormat: "pdf",
+        maxFileSize: 100,
+        processingTimeEstimate: 15
       }
     ];
   }
@@ -857,6 +879,28 @@ export class DatabaseStorage implements IStorage {
         outputFormat: "pdf",
         maxFileSize: 25,
         processingTimeEstimate: 30
+      },
+      {
+        id: 23,
+        name: "Lock PDF",
+        type: ToolType.LOCK_PDF,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Password-protect a PDF with strong AES-256 encryption",
+        inputFormats: ["pdf"],
+        outputFormat: "pdf",
+        maxFileSize: 100,
+        processingTimeEstimate: 15
+      },
+      {
+        id: 24,
+        name: "Unlock PDF",
+        type: ToolType.UNLOCK_PDF,
+        category: ToolCategory.PDF_MANAGEMENT,
+        description: "Remove password protection from a PDF you can open",
+        inputFormats: ["pdf"],
+        outputFormat: "pdf",
+        maxFileSize: 100,
+        processingTimeEstimate: 15
       }
     ];
   }

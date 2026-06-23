@@ -18,7 +18,9 @@ import {
   Stamp,
   ImagePlus,
   FileMinus,
-  ScanText
+  ScanText,
+  Lock,
+  Unlock
 } from "lucide-react";
 
 export interface ToolConfig {
@@ -350,6 +352,40 @@ export const toolConfigs: Record<string, ToolConfig> = {
     iconBorderColor: "border-[#f7433d]/20",
     category: "Edit",
     route: "/upload/restore-document"
+  },
+  "lock-pdf": {
+    id: "lock-pdf",
+    title: "Lock PDF",
+    description: "Password-protect a PDF with strong AES-256 encryption",
+    acceptedFormats: [".pdf"],
+    maxFileSize: "100MB",
+    buttonText: "Select PDF",
+    dropAreaText: "Drop your PDF here to lock it",
+    fileTypeHint: "Supports: PDF up to 100MB",
+    outputFormat: "Password-protected PDF",
+    icon: Lock,
+    iconColor: "text-[#f7433d]",
+    iconBgColor: "bg-[#f7433d]/10",
+    iconBorderColor: "border-[#f7433d]/20",
+    category: "Edit",
+    route: "/upload/lock-pdf"
+  },
+  "unlock-pdf": {
+    id: "unlock-pdf",
+    title: "Unlock PDF",
+    description: "Remove password protection from a PDF you can open",
+    acceptedFormats: [".pdf"],
+    maxFileSize: "100MB",
+    buttonText: "Select PDF",
+    dropAreaText: "Drop your password-protected PDF here",
+    fileTypeHint: "Supports: PDF up to 100MB",
+    outputFormat: "Unlocked PDF",
+    icon: Unlock,
+    iconColor: "text-[#f7433d]",
+    iconBgColor: "bg-[#f7433d]/10",
+    iconBorderColor: "border-[#f7433d]/20",
+    category: "Edit",
+    route: "/upload/unlock-pdf"
   },
   "merge-pdfs": {
     id: "merge-pdfs",

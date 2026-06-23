@@ -60,9 +60,15 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   const [isConverting, setIsConverting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<AuthError | null>(null);
+  const [password, setPassword] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  
+
+  // Lock PDF / Unlock PDF are the only tools that take a password. Show a
+  // password field for them and ship it through as options.password.
+  const needsPassword = toolType === 'lock-pdf' || toolType === 'unlock-pdf';
+  const passwordReady = !needsPassword || password.trim().length > 0;
+
   const maxFiles = 10;
   const maxSizeInBytes = parseFloat(maxFileSize) * 1024 * 1024;
 
@@ -247,7 +253,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           formData.append('toolType', toolType.replace(/-/g, '_'));
           formData.append('fileName', fileUpload.file.name);
           formData.append('fileSize', fileUpload.file.size.toString());
-          formData.append('options', JSON.stringify({}));
+          formData.append('options', JSON.stringify(needsPassword ? { password: password.trim() } : {}));
 
           // Start conversion job with file upload
           const response = await authedFetch('/api/convert', {
@@ -636,13 +642,37 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
                 />
               </div>
 
+              {/* Password field — Lock PDF / Unlock PDF only */}
+              {needsPassword && (
+                <div className="max-w-md mx-auto space-y-2">
+                  <label htmlFor="pdf-password" className="block text-sm font-medium text-gray-900">
+                    {toolType === 'lock-pdf' ? 'Set a password' : 'Enter the PDF password'}
+                  </label>
+                  <input
+                    id="pdf-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={toolType === 'lock-pdf' ? 'Choose a strong password' : 'Current PDF password'}
+                    autoComplete={toolType === 'lock-pdf' ? 'new-password' : 'current-password'}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-[#f7433d] focus:outline-none focus:ring-2 focus:ring-[#f7433d]/20"
+                    data-testid="input-pdf-password"
+                  />
+                  <p className="text-xs text-gray-500">
+                    {toolType === 'lock-pdf'
+                      ? 'Anyone who opens this PDF will need this password. Keep it safe — it cannot be recovered.'
+                      : 'We need the current password to remove protection from this PDF.'}
+                  </p>
+                </div>
+              )}
+
               {/* Action Buttons */}
               {hasValidFiles && (
                 <div className="flex justify-center space-x-4 pt-4">
                   <Button
                     onClick={startBatchConversion}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
-                    disabled={isConverting}
+                    className="bg-[#f7433d] hover:bg-[#e03a35] text-white px-8 py-3"
+                    disabled={isConverting || !passwordReady}
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Convert {validFilesCount} File{validFilesCount !== 1 ? 's' : ''} to {outputFormat.toUpperCase()}

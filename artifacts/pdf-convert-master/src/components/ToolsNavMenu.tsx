@@ -28,6 +28,8 @@ const PDF_TO = ["word-to-pdf", "excel-to-pdf", "powerpoint-to-pdf", "images-to-p
 const PDF_EDITOR_COL1 = ["edit-pdf", "sign-pdf", "rotate-pdf", "merge-pdfs", "split-pdf", "crop-pdf"];
 const PDF_EDITOR_COL2 = [
   "restore-document",
+  "lock-pdf",
+  "unlock-pdf",
   "watermark-pdf",
   "add-image-pdf",
   "compress-images",

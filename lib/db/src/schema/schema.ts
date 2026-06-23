@@ -174,7 +174,9 @@ export enum ToolType {
   COMPRESS_PDF = "compress_pdf",
   ROTATE_PDF = "rotate_pdf",
   OCR_PDF = "ocr_pdf",
-  RESTORE_DOCUMENT = "restore_document"
+  RESTORE_DOCUMENT = "restore_document",
+  LOCK_PDF = "lock_pdf",
+  UNLOCK_PDF = "unlock_pdf"
 }
 
 // Conversion jobs table  

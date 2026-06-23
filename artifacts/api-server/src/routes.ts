@@ -29,6 +29,8 @@ import { Document, Packer, Paragraph, TextRun, PageBreak } from "docx";
 import pptxgen from "pptxgenjs";
 import JSZip from "jszip";
 import * as Tesseract from "tesseract.js";
+import os from "os";
+import { encrypt as qpdfEncrypt, decrypt as qpdfDecrypt } from "node-qpdf2";
 
 // pptxgenjs is published as CommonJS; depending on the bundler/runtime the
 // default import can resolve to either the class or a namespace wrapper.
@@ -424,6 +426,12 @@ async function performActualConversion(
       case 'restore_document':
         return await restoreDocument(fileBuffer, inputExtension, outputFilename);
 
+      case 'lock_pdf':
+        return await lockPdf(fileBuffer, outputFilename, options);
+
+      case 'unlock_pdf':
+        return await unlockPdf(fileBuffer, outputFilename, options);
+
       default:
         return { success: false, error: `Unsupported conversion type: ${toolType}` };
     }
@@ -433,6 +441,106 @@ async function performActualConversion(
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown conversion error' 
     };
+  }
+}
+
+// Turn a qpdf/node-qpdf2 failure into a friendly, non-crashing message.
+// node-qpdf2 rejects with the stderr *string* on a non-zero exit, and with an
+// Error (e.g. ENOENT) when the `qpdf` binary itself can't be spawned.
+function describeQpdfError(error: unknown, mode: 'lock' | 'unlock'): string {
+  const raw = typeof error === 'string'
+    ? error
+    : error instanceof Error
+      ? error.message
+      : String(error);
+  const lower = raw.toLowerCase();
+
+  // The qpdf system binary is missing or not runnable.
+  if (
+    lower.includes('enoent') ||
+    lower.includes('spawn qpdf') ||
+    lower.includes('command not found') ||
+    lower.includes('not recognized')
+  ) {
+    return 'PDF encryption engine unavailable. Please try again later.';
+  }
+
+  // Wrong / missing password (qpdf prints "invalid password").
+  if (lower.includes('invalid password') || lower.includes('incorrect password') || lower.includes('password')) {
+    return mode === 'unlock'
+      ? 'The password you entered is incorrect, or this PDF is not password-protected.'
+      : 'Could not lock this PDF. Please check the password and try again.';
+  }
+
+  return mode === 'unlock'
+    ? 'Could not unlock this PDF. It may be corrupted or use unsupported encryption.'
+    : 'Could not lock this PDF. It may be corrupted or already encrypted.';
+}
+
+// Lock PDF: password-protect a PDF with AES-256 encryption via qpdf.
+// We round-trip through temp files because node-qpdf2's returned Buffer is built
+// from `stdout.join("")` (string-joined), which corrupts binary PDF data — the
+// only safe output is qpdf's own `output` file, which we then read back.
+async function lockPdf(
+  fileBuffer: Buffer,
+  outputFilename: string,
+  options: Record<string, any> = {}
+): Promise<{ success: boolean; convertedBuffer?: Buffer; mimeType?: string; error?: string }> {
+  const password = typeof options?.password === 'string' ? options.password.trim() : '';
+  if (!password) {
+    return { success: false, error: 'Please enter a password to lock this PDF.' };
+  }
+
+  const inputPath = path.join(os.tmpdir(), `lock-in-${randomUUID()}.pdf`);
+  const outputPath = path.join(os.tmpdir(), `lock-out-${randomUUID()}.pdf`);
+  try {
+    await fs.writeFile(inputPath, fileBuffer);
+    await qpdfEncrypt({
+      input: inputPath,
+      output: outputPath,
+      password,
+      keyLength: 256,
+    });
+    const convertedBuffer = await fs.readFile(outputPath);
+    return { success: true, convertedBuffer, mimeType: 'application/pdf' };
+  } catch (error) {
+    console.error('Lock PDF error:', error);
+    return { success: false, error: describeQpdfError(error, 'lock') };
+  } finally {
+    await fs.rm(inputPath, { force: true }).catch(() => {});
+    await fs.rm(outputPath, { force: true }).catch(() => {});
+  }
+}
+
+// Unlock PDF: remove password protection via qpdf --decrypt. Requires the
+// current open password; a wrong password fails cleanly (no crash).
+async function unlockPdf(
+  fileBuffer: Buffer,
+  outputFilename: string,
+  options: Record<string, any> = {}
+): Promise<{ success: boolean; convertedBuffer?: Buffer; mimeType?: string; error?: string }> {
+  const password = typeof options?.password === 'string' ? options.password.trim() : '';
+  if (!password) {
+    return { success: false, error: "Please enter the PDF's current password to unlock it." };
+  }
+
+  const inputPath = path.join(os.tmpdir(), `unlock-in-${randomUUID()}.pdf`);
+  const outputPath = path.join(os.tmpdir(), `unlock-out-${randomUUID()}.pdf`);
+  try {
+    await fs.writeFile(inputPath, fileBuffer);
+    await qpdfDecrypt({
+      input: inputPath,
+      output: outputPath,
+      password,
+    });
+    const convertedBuffer = await fs.readFile(outputPath);
+    return { success: true, convertedBuffer, mimeType: 'application/pdf' };
+  } catch (error) {
+    console.error('Unlock PDF error:', error);
+    return { success: false, error: describeQpdfError(error, 'unlock') };
+  } finally {
+    await fs.rm(inputPath, { force: true }).catch(() => {});
+    await fs.rm(outputPath, { force: true }).catch(() => {});
   }
 }
 

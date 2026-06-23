@@ -1,0 +1,106 @@
+Add two new conversion tools to the PDF toolkit, following the EXACT same architecture
+  as the existing "Document Restore" tool (git commit 3078a71). Do not invent a new
+  pattern — mirror how Document Restore is wired across all layers.
+
+  - **Lock PDF**: user uploads a PDF + a password → returns a password-protected
+    (AES-256 encrypted) PDF.
+  - **Unlock PDF**: user uploads an encrypted PDF + its password → returns a
+    decrypted, openable PDF. (PDF only — images have no password to remove.)
+
+  ## Engine (IMPORTANT — pdf-lib cannot encrypt/decrypt)
+  The codebase only has `pdf-lib`, which CANNOT password-protect or decrypt PDFs.
+  Use **qpdf** for both operations:
+  1. Add the `node-qpdf2` npm package to `artifacts/api-server/package.json`.
+  2. Add the **`qpdf` system binary** to `replit.nix` so the package can run
+     (and to the Railway/nixpacks build if applicable).
+  - Lock: qpdf AES-256 encrypt using the user's password as both user & owner password.
+  - Unlock: qpdf decrypt using the supplied password; if the password is wrong or
+    missing, return a clean error message (not a crash).
+
+  ## New requirement vs. Document Restore: a password input
+  Document Restore took no parameters. These tools need a **password field** from the
+  user, sent to the backend as `options.password`. You must add a password input to:
+  - the web upload flow (the shared `ConversionWorkflow` component), shown only for
+    these two tools, and
+  - the mobile convert screen (`app/convert/[toolId].tsx`), shown only for these tools.
+  Pass the value through to `/api/convert` in the `options` object.
+
+  ## Files to change (mirror Document Restore exactly)
+
+  ### 1. Shared schema — `lib/db/src/schema/schema.ts`
+  Add to the `ToolType` enum:
+  ```
+  LOCK_PDF = "lock_pdf",
+  UNLOCK_PDF = "unlock_pdf"
+  ```
+  ⚠️  After editing this enum you MUST RESTART the "artifacts/api-server: API Server"
+  workflow. The api-server caches the compiled enum at boot, so `/api/convert` will
+  return `{"success":false,"error":"Invalid request data"}` for the new types until
+  it reloads. (This is documented in `.agents/memory/shared-enum-restart.md`.)
+
+  ### 2. Backend registration — `artifacts/api-server/src/storage.ts`
+  Register BOTH tools in BOTH `MemStorage` and `DatabaseStorage` (two places each),
+  using `id: 23` (Lock PDF) and `id: 24` (Unlock PDF), category `PDF_MANAGEMENT`:
+  - Lock PDF: inputFormats ["pdf"], outputFormat "pdf".
+  - Unlock PDF: inputFormats ["pdf"], outputFormat "pdf".
+  Use sensible maxFileSize (e.g. 50) and processingTimeEstimate.
+
+  ### 3. Backend processing — `artifacts/api-server/src/routes.ts`
+  - Add two switch arms in `performActualConversion` (next to `case 'restore_document'`):
+    ```
+    case 'lock_pdf':   return await lockPdf(fileBuffer, options, outputFilename);
+    case 'unlock_pdf': return await unlockPdf(fileBuffer, options, outputFilename);
+    ```
+  - Implement `lockPdf` and `unlockPdf` using node-qpdf2. They must read
+    `options.password`, validate it's present, run qpdf via a temp file, and return
+    `{ success, convertedBuffer, mimeType: "application/pdf" }` — same return shape as
+  - Ensure `options` (with the password) actually reaches `performActualConversion` —
+    trace the existing `options` flow from `/api/convert` → `processFile` →
+    `performActualConversion` and pass it through.
+    
+  ### 4. Web frontend — `artifacts/pdf-convert-master/src/`
+  - `lib/toolConfig.ts`: add `lock-pdf` and `unlock-pdf` config entries (title,
+    description, acceptedFormats `[".pdf"]`, maxFileSize, buttonText, icons — use
+    lucide `Lock` and `Unlock`, route `/upload/lock-pdf` and `/upload/unlock-pdf`,
+    category "Edit").
+  - `App.tsx`: add lazy imports and two `<Route>` blocks (mirror RestoreDocument).
+  - `components/ToolsNavMenu.tsx`: add `"lock-pdf"` and `"unlock-pdf"` to a nav column.
+  - Create `pages/upload/LockPdf.tsx` and `pages/upload/UnlockPdf.tsx` wrapping
+    `<ConversionWorkflow>` (mirror RestoreDocument.tsx), each surfacing a password input.
+    
+  ### 5. Mobile — `artifacts/pdf-convert-mobile/`
+  - `constants/tools.ts`: add two `Tool` entries with
+    `serverToolType: "lock_pdf"` / `"unlock_pdf"`, acceptedFormats `[".pdf"]`,
+    `multiFile: false`, `allowCamera: false`, route matching the web ids, feather icons.
+  - `app/convert/[toolId].tsx`: render a password field for these tools and include it
+    in the upload `options`.
+    
+  ## Theme / styling
+  Match the existing website's design system and color theme — reuse the same card,
+  icon, and button styling the other tools use so these two look native to the site.
+  Pick whatever accent colors keep them visually consistent with the current toolkit.
+
+  ## Acceptance criteria
+  - Lock PDF: upload a normal PDF + password → downloaded PDF requires that password to open.
+  - Unlock PDF: upload that locked PDF + correct password → downloaded PDF opens with no password.
+  - Wrong/missing password on Unlock → friendly error, no server crash.
+  - Both tools appear in the web nav menu, web tool grid, and mobile app, styled
+    consistently with existing tools.
+  - API server restarted after the enum change.
+
+  ---
+  Two things to confirm before you hand it off:
+  - I set input = PDF only for both (per your earlier "remove password from a PDF only" choice). The mobile allowCamera is off since there's no photo use case here.
+  - I left icons as lucide Lock/Unlock and colors up to Replit to match the site, as you asked.
+
+
+
+  ## Deploy note — verify qpdf binary
+  The trickiest part is the `qpdf` system binary, not the npm package. After adding it
+  to `replit.nix`, confirm `qpdf --version` actually runs in BOTH environments:
+  - **Replit**: run `qpdf --version` in the shell after the nix rebuild.
+  - **Railway**: qpdf must be in the nixpacks/Docker build (apt `qpdf` or a nix pkg),
+    not just installed locally — otherwise lock/unlock will 500 in production with a
+    "command not found" / spawn error even though it works on Replit.
+  If the binary is missing at runtime, `lockPdf`/`unlockPdf` should fail with a clear
+  "PDF encryption engine unavailable" message rather than crashing.

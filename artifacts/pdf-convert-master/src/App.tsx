@@ -66,6 +66,8 @@ const AddImagePdfUpload = named(() => import("@/pages/upload/AddImagePdf"), "Add
 const DeletePagesPdfUpload = named(() => import("@/pages/upload/DeletePagesPdf"), "DeletePagesPdfUpload");
 const OcrPdfUpload = named(() => import("@/pages/upload/OcrPdf"), "OcrPdfUpload");
 const RestoreDocumentUpload = named(() => import("@/pages/upload/RestoreDocument"), "RestoreDocumentUpload");
+const LockPdfUpload = named(() => import("@/pages/upload/LockPdf"), "LockPdfUpload");
+const UnlockPdfUpload = named(() => import("@/pages/upload/UnlockPdf"), "UnlockPdfUpload");
 const UploadDemo = named(() => import("@/pages/UploadDemo"), "UploadDemo");
 const ResizeImageTool = named(() => import("@/pages/ImageEditTools"), "ResizeImageTool");
 const CropImageTool = named(() => import("@/pages/ImageEditTools"), "CropImageTool");
@@ -280,6 +282,18 @@ function Router() {
       <Route path="/upload/restore-document">
         <DynamicLayout>
           <RestoreDocumentUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/lock-pdf">
+        <DynamicLayout>
+          <LockPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/unlock-pdf">
+        <DynamicLayout>
+          <UnlockPdfUpload />
         </DynamicLayout>
       </Route>
 

@@ -38,6 +38,8 @@ export interface ConversionOptions {
   outputFormat?: string;
   /** Output quality 10-100 for "Compress Images". */
   quality?: number;
+  /** Password for "Lock PDF" (new password) and "Unlock PDF" (current password). */
+  password?: string;
 }
 
 export interface StartConversionResult {

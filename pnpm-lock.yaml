@@ -223,6 +223,9 @@ importers:
       multer:
         specifier: ^2.2.0
         version: 2.2.0
+      node-qpdf2:
+        specifier: ^6.0.0
+        version: 6.0.0
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
@@ -5575,6 +5578,10 @@ packages:
 
   node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
+
+  node-qpdf2@6.0.0:
+    resolution: {integrity: sha512-ys8KADQ7xx7K6cgtjDjfvsjRQA0gUWxiynTvvzSxTpRnUpA0KADPx/HRt67dJGIj69t76rz4aQl8OEd67yTX/g==}
+    engines: {node: '>=16'}
 
   node-releases@2.0.38:
     resolution: {integrity: sha512-3qT/88Y3FbH/Kx4szpQQ4HzUbVrHPKTLVpVocKiLfoYvw9XSGOX2FmD2d6DrXbVYyAQTF2HeF6My8jmzx7/CRw==}
@@ -12736,6 +12743,8 @@ snapshots:
   node-gyp-build@4.8.4: {}
 
   node-int64@0.4.0: {}
+
+  node-qpdf2@6.0.0: {}
 
   node-releases@2.0.38: {}
 
