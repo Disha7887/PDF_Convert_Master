@@ -27,7 +27,8 @@ import {
   LogOut,
   Home,
   Wrench,
-  BookOpen
+  BookOpen,
+  BarChart3
 } from "lucide-react";
 
 export const DashboardHeader = (): JSX.Element => {
@@ -102,9 +103,9 @@ export const DashboardHeader = (): JSX.Element => {
         {/* Right - Plan Status, Notifications and Profile */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           {/* Plan Status */}
-          <div className="hidden xl:flex items-center px-3 py-2 rounded-lg border border-blue-200 bg-blue-50">
+          <div className="hidden xl:flex items-center px-3 py-2 rounded-lg border border-[#f7433d]/30 bg-[#f7433d]/10">
             <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-sm font-medium text-blue-700">{user?.plan || 'Pro Plan'}</span>
+            <span className="text-sm font-medium text-[#f7433d] capitalize">{user?.plan || 'Free Plan'}</span>
           </div>
 
           {/* Manage Plan Button */}
@@ -119,7 +120,7 @@ export const DashboardHeader = (): JSX.Element => {
           {/* Notifications */}
           <Button variant="outline" size="icon" className="hidden sm:inline-flex relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#f7433d] text-white text-xs rounded-full flex items-center justify-center">
               2
             </span>
           </Button>
@@ -128,29 +129,41 @@ export const DashboardHeader = (): JSX.Element => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="px-4 py-2 rounded-lg flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <span className="text-sm font-semibold">{user?.email?.charAt(0).toUpperCase() || 'U'}</span>
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
+                  {user?.profilePictureUrl ? (
+                    <img src={user.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
                 </div>
                 <div className="text-left hidden xl:block max-w-[160px]">
                   <div className="flex items-center gap-1">
-                    <p className="text-sm font-medium truncate">{user?.email || 'User'}</p>
+                    <p className="text-sm font-medium truncate">{user?.name || user?.email || 'User'}</p>
                     {user ? (
                       <img src={verifiedBadge} alt="Verified" className="w-4 h-4 shrink-0" />
                     ) : null}
                   </div>
-                  <p className="text-xs text-blue-100">{user?.plan || 'Free Plan'}</p>
+                  <p className="text-xs text-white/70 capitalize">{user?.plan || 'Free Plan'}</p>
                 </div>
                 <ChevronDown className="w-4 h-4 hidden xl:block" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setLocation("/dashboard")}>
+                <Home className="mr-2 h-4 w-4" />
+                <span>Dashboard</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLocation("/dashboard/profile")}>
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation("/dashboard/settings")}>
-                <Settings className="mr-2 h-4 w-4" />
                 <span>Account Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation("/dashboard/usage")}>
+                <BarChart3 className="mr-2 h-4 w-4" />
+                <span>Usage Statistics</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleManagePlan}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Manage Plan</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
