@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
@@ -8,31 +8,33 @@ import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
-import { DEMO_USER, USAGE_STATS, type Plan } from "@/mocks/data";
-import { mockApi } from "@/mocks/mockApi";
+import { type MockUser } from "@/mocks/data";
+import {
+  changePlan,
+  fetchPlans,
+  formatBytes,
+  formatLimit,
+  usagePercent,
+  type Plan,
+} from "@/services/plans";
+import { fetchUsage, type UsageTotals } from "@/services/account";
 
 const C = colors.light;
-
-function formatPrice(plan: Plan): string {
-  return plan.price === 0 ? "$0" : `$${plan.price}`;
-}
 
 function UsageStat({
   title,
   icon,
   used,
-  total,
-  usedLabel,
-  totalLabel,
+  limit,
+  fmt,
 }: {
   title: string;
   icon: keyof typeof Feather.glyphMap;
   used: number;
-  total: number;
-  usedLabel: string;
-  totalLabel: string;
+  limit: number;
+  fmt: (n: number) => string;
 }) {
-  const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0;
+  const pct = usagePercent(used, limit);
   return (
     <View style={styles.usageCard}>
       <View style={styles.usageHead}>
@@ -40,13 +42,21 @@ function UsageStat({
         <Feather name={icon} size={18} color={C.primary} />
       </View>
       <View style={styles.usageValueRow}>
-        <Text style={styles.usageValue}>{usedLabel}</Text>
-        <Text style={styles.usageOf}>of {totalLabel}</Text>
+        <Text style={styles.usageValue}>{fmt(used)}</Text>
+        <Text style={styles.usageOf}>
+          {limit === 0 ? "not included" : `of ${formatLimit(limit, fmt)}`}
+        </Text>
       </View>
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${pct}%` }]} />
       </View>
-      <Text style={styles.usagePct}>{pct.toFixed(1)}% used</Text>
+      <Text style={styles.usagePct}>
+        {limit < 0
+          ? "Unlimited"
+          : limit === 0
+            ? "Upgrade to unlock"
+            : `${pct}% used`}
+      </Text>
     </View>
   );
 }
@@ -59,41 +69,66 @@ function AuthGate() {
         <Feather name="lock" size={28} color={C.primary} />
       </View>
       <Text style={styles.gateTitle}>Sign in required</Text>
-      <Text style={styles.gateText}>Sign in to manage your subscription and billing.</Text>
+      <Text style={styles.gateText}>Sign in to manage your subscription.</Text>
       <Button label="Sign In" icon="log-in" onPress={() => router.push(ROUTES.signIn as never)} style={{ alignSelf: "center" }} />
     </View>
   );
 }
 
 export default function ManagePlansScreen() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, token, updateUser } = useAuth();
 
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [totals, setTotals] = useState<UsageTotals | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
     let active = true;
-    mockApi.getPlans().then((p) => {
-      if (active) setPlans(p);
-    });
+    fetchPlans()
+      .then((p) => active && setPlans(p))
+      .catch((e) => active && setError(e.message));
     return () => {
       active = false;
     };
-  }, [isAuthenticated]);
+  }, []);
 
-  const currentPlanId = (user?.plan ?? DEMO_USER.plan).toLowerCase();
+  const loadUsage = useCallback(() => {
+    if (!token) return;
+    fetchUsage(token)
+      .then((u) => setTotals(u.totals))
+      .catch(() => {});
+  }, [token]);
+
+  useEffect(() => {
+    if (isAuthenticated) loadUsage();
+  }, [isAuthenticated, loadUsage]);
+
+  const currentPlanId = (user?.plan ?? "free").toLowerCase();
   const currentPlan = useMemo(
     () => plans.find((p) => p.id === currentPlanId),
     [plans, currentPlanId],
   );
+  const currentIndex = useMemo(
+    () => plans.findIndex((p) => p.id === currentPlanId),
+    [plans, currentPlanId],
+  );
 
-  const handleSubscribe = async (plan: Plan) => {
+  const handleSwitch = async (plan: Plan) => {
+    if (!token || plan.id === currentPlanId) return;
     setPendingId(plan.id);
-    await mockApi.subscribe(plan.id);
-    setPendingId(null);
-    setConfirmation(`Your plan change to ${plan.name} has been requested.`);
+    setConfirmation(null);
+    try {
+      const updated = await changePlan(token, plan.id);
+      await updateUser({ plan: updated.name as MockUser["plan"] });
+      setConfirmation(`You're now on the ${updated.name} plan.`);
+      loadUsage();
+    } catch (e: any) {
+      setError(e?.message ?? "Could not change plan.");
+    } finally {
+      setPendingId(null);
+    }
   };
 
   if (!isAuthenticated) {
@@ -104,15 +139,11 @@ export default function ManagePlansScreen() {
     );
   }
 
-  const storageGbUsed = (USAGE_STATS.storageUsedMB / 1024).toFixed(1);
-  const storageGbTotal = Math.round(USAGE_STATS.storageLimitMB / 1024);
-
   return (
     <ScreenScroll>
-      {/* Page Title */}
       <View style={{ alignItems: "center", marginBottom: 22 }}>
         <Text style={styles.pageTitle}>Manage Plans</Text>
-        <Text style={styles.pageSub}>Manage your subscription and billing</Text>
+        <Text style={styles.pageSub}>Switch plans instantly — usage updates in real time</Text>
       </View>
 
       {confirmation ? (
@@ -122,58 +153,60 @@ export default function ManagePlansScreen() {
         </View>
       ) : null}
 
-      {/* Current Plan */}
-      <Card style={styles.block} elevated={false}>
-        <View style={styles.currentHead}>
-          <Text style={styles.currentLabel}>Current Plan</Text>
-          <Badge label="Active" tone="success" />
+      {error ? (
+        <View style={styles.errorBanner}>
+          <Feather name="alert-circle" size={18} color="#991b1b" />
+          <Text style={styles.errorText}>{error}</Text>
         </View>
-        <Text style={styles.currentName}>{currentPlan ? currentPlan.name : user?.plan} Plan</Text>
-        <Text style={styles.currentMeta}>
-          {currentPlan
-            ? `${formatPrice(currentPlan)}/${currentPlan.period} • ${currentPlan.description}`
-            : "—"}
-        </Text>
-        <View style={styles.currentActions}>
-          <Button label="Change Plan" variant="outline" size="sm" />
-          <Button label="Cancel Subscription" variant="outline" size="sm" />
-        </View>
-      </Card>
+      ) : null}
 
-      {/* Usage Statistics */}
-      <View style={styles.usageGrid}>
-        <UsageStat
-          title="API Calls"
-          icon="code"
-          used={USAGE_STATS.apiCalls}
-          total={50000}
-          usedLabel={USAGE_STATS.apiCalls.toLocaleString()}
-          totalLabel="50,000"
-        />
-        <UsageStat
-          title="Storage"
-          icon="archive"
-          used={USAGE_STATS.storageUsedMB}
-          total={USAGE_STATS.storageLimitMB}
-          usedLabel={`${storageGbUsed} GB`}
-          totalLabel={`${storageGbTotal} GB`}
-        />
-        <UsageStat
-          title="Conversions"
-          icon="image"
-          used={USAGE_STATS.totalConversions}
-          total={10000}
-          usedLabel={USAGE_STATS.totalConversions.toLocaleString()}
-          totalLabel="10,000"
-        />
-      </View>
+      {/* Current Plan */}
+      {currentPlan ? (
+        <Card style={styles.block} elevated={false}>
+          <View style={styles.currentHead}>
+            <Text style={styles.currentLabel}>Current Plan</Text>
+            <Badge label="Active" tone="success" />
+          </View>
+          <Text style={styles.currentName}>{currentPlan.name} Plan</Text>
+          <Text style={styles.currentMeta}>
+            {currentPlan.price === 0 ? "Free forever" : `$${currentPlan.price}/month`} • {currentPlan.description}
+          </Text>
+        </Card>
+      ) : null}
+
+      {/* Usage Statistics (real data) */}
+      {currentPlan && totals ? (
+        <View style={styles.usageGrid}>
+          <UsageStat
+            title="API Calls"
+            icon="code"
+            used={totals.apiCalls}
+            limit={currentPlan.limits.apiCalls}
+            fmt={(n) => n.toLocaleString()}
+          />
+          <UsageStat
+            title="Storage"
+            icon="archive"
+            used={totals.dataProcessed}
+            limit={currentPlan.limits.storageBytes}
+            fmt={formatBytes}
+          />
+          <UsageStat
+            title="Conversions"
+            icon="image"
+            used={totals.total}
+            limit={currentPlan.limits.conversions}
+            fmt={(n) => n.toLocaleString()}
+          />
+        </View>
+      ) : null}
 
       {/* Available Plans */}
       <Text style={styles.sectionTitle}>Available Plans</Text>
       <View style={{ gap: 14 }}>
-        {plans.map((plan) => {
+        {plans.map((plan, index) => {
           const isCurrent = plan.id === currentPlanId;
-          const isUpgrade = currentPlan ? plan.price > currentPlan.price : false;
+          const isUpgrade = currentIndex >= 0 ? index > currentIndex : true;
           return (
             <View
               key={plan.id}
@@ -182,18 +215,22 @@ export default function ManagePlansScreen() {
             >
               <View style={styles.planTop}>
                 <Text style={styles.planName}>{plan.name}</Text>
-                {plan.popular ? <Badge label="Most Popular" tone="primary" /> : null}
+                {isCurrent ? (
+                  <Badge label="Your Plan" tone="primary" />
+                ) : plan.popular ? (
+                  <Badge label="Most Popular" tone="primary" />
+                ) : null}
               </View>
               <View style={styles.priceRow}>
-                <Text style={styles.price}>{formatPrice(plan)}</Text>
-                <Text style={styles.pricePer}>/{plan.period}</Text>
+                <Text style={styles.price}>${plan.price}</Text>
+                <Text style={styles.pricePer}>/month</Text>
               </View>
               <Text style={styles.planDesc}>{plan.description}</Text>
 
               <View style={{ gap: 10, marginTop: 12, marginBottom: 16 }}>
                 {plan.features.map((feature) => (
                   <View key={feature} style={styles.featureRow}>
-                    <Feather name="check" size={16} color={C.success} />
+                    <Feather name="check" size={16} color={C.primary} />
                     <Text style={styles.featureText}>{feature}</Text>
                   </View>
                 ))}
@@ -207,7 +244,7 @@ export default function ManagePlansScreen() {
                   variant={isUpgrade ? "primary" : "outline"}
                   fullWidth
                   loading={pendingId === plan.id}
-                  onPress={() => handleSubscribe(plan)}
+                  onPress={() => handleSwitch(plan)}
                   testID={`button-subscribe-${plan.id}`}
                 />
               )}
@@ -233,13 +270,22 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   confirmText: { flex: 1, fontSize: 13.5, color: "#166534", fontFamily: fonts.bodyMedium },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#fee2e2",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 18,
+  },
+  errorText: { flex: 1, fontSize: 13.5, color: "#991b1b", fontFamily: fonts.bodyMedium },
 
   block: { marginBottom: 18, ...cardShadow },
   currentHead: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   currentLabel: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingBold },
   currentName: { fontSize: 26, color: C.foreground, fontFamily: fonts.headingBold, marginBottom: 4 },
   currentMeta: { fontSize: 14, lineHeight: 20, color: C.mutedForeground, fontFamily: fonts.body },
-  currentActions: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 16 },
 
   usageGrid: { gap: 12, marginBottom: 22 },
   usageCard: {
@@ -268,7 +314,7 @@ const styles = StyleSheet.create({
     padding: 18,
     ...cardShadow,
   },
-  planCardCurrent: { borderWidth: 2, borderColor: C.blue200, backgroundColor: C.blue50 },
+  planCardCurrent: { borderWidth: 2, borderColor: C.primary, backgroundColor: C.accent },
   planTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 },
   planName: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingBold },
   priceRow: { flexDirection: "row", alignItems: "flex-end", marginTop: 4 },

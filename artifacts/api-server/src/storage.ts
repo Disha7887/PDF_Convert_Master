@@ -20,7 +20,7 @@ import {
   ToolType,
   ToolCategory
 } from "@workspace/db";
-import { db } from "./db";
+import { db } from "@workspace/db";
 import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { hashApiKey } from "./utils/generateApiKey";
 
@@ -35,6 +35,7 @@ export interface IStorage {
   updateUserProfile(id: string, updates: { name?: string; email?: string }): Promise<User | undefined>;
   updateUserProfilePicture(id: string, profilePictureUrl: string): Promise<User | undefined>;
   updateUserPassword(id: string, passwordHash: string): Promise<void>;
+  updateUserPlan(id: string, plan: string): Promise<User | undefined>;
 
   // Password reset methods
   createPasswordResetCode(userId: string, codeHash: string, expiresAt: Date): Promise<void>;
@@ -428,6 +429,14 @@ export class MemStorage implements IStorage {
     const user = this.users.get(id);
     if (!user) return;
     this.users.set(id, { ...user, passwordHash });
+  }
+
+  async updateUserPlan(id: string, plan: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const next: User = { ...user, plan };
+    this.users.set(id, next);
+    return next;
   }
 
   // Password reset methods
@@ -1017,6 +1026,15 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPassword(id: string, passwordHash: string): Promise<void> {
     await db.update(users).set({ passwordHash }).where(eq(users.id, id));
+  }
+
+  async updateUserPlan(id: string, plan: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ plan })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
   }
 
   // Password reset methods

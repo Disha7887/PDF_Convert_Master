@@ -55,3 +55,4 @@
 - [pdf.js v6 removed doc.destroy()](pdfjs-v6-doc-destroy.md) — destroy via loadingTask.destroy(); make cleanup finally best-effort so it can't discard a good result; verify the version the app resolves.
 - [Profile & password reset](profile-password-reset.md) — JWT rotates on profile update (web+mobile must persist it); forgot-password always-success; reset codes throttled (5 tries); emails via Resend connector.
 - [Shared enum runtime staleness](shared-enum-restart.md) — after editing the ToolType enum in lib/db, restart api-server or z.nativeEnum validation rejects the new value ("Invalid request data") until reload.
+- [api-server DB driver = @workspace/db](api-server-db-driver.md) — import shared @workspace/db (prefers SUPABASE_DB_URL via pg), NOT a local ./db Neon wrapper, or writes silently hit the wrong (Replit) database.

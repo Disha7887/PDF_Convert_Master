@@ -21,6 +21,7 @@ import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
 import { saveConvertedFile, getConvertedFile } from "./lib/conversionStorage";
+import { PLANS, getPlan } from "./plans";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
 import { execSync } from "child_process";
@@ -3425,6 +3426,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error computing usage:", error);
       return res.status(500).json({ success: false, error: "Failed to compute usage statistics" });
+    }
+  });
+
+  // --- Subscription plans ----------------------------------------------------
+
+  // Public plan catalog: the single source of truth shared by web and mobile.
+  app.get("/api/plans", (_req, res) => {
+    return res.json({ success: true, data: { plans: PLANS } });
+  });
+
+  // Switch the signed-in user's plan. No payment is taken — the new plan id is
+  // persisted to users.plan and reflected immediately on every client.
+  app.post("/api/account/plan", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const planId = String((req.body?.planId ?? "")).trim();
+      const plan = getPlan(planId);
+      if (!plan) {
+        return res.status(400).json({ success: false, error: "Unknown plan" });
+      }
+      const user = await storage.updateUserPlan(userId, plan.id);
+      if (!user) {
+        return res.status(404).json({ success: false, error: "User not found" });
+      }
+      return res.json({ success: true, data: { user, plan } });
+    } catch (error) {
+      console.error("Error updating plan:", error);
+      return res.status(500).json({ success: false, error: "Failed to update plan" });
     }
   });
 
