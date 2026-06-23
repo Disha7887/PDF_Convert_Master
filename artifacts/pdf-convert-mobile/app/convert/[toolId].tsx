@@ -334,6 +334,9 @@ export default function ConvertScreen() {
     }
   }, [tool]);
 
+  // Lock PDF / Unlock PDF are the only tools that take a password.
+  const needsPassword = tool?.id === "lock-pdf" || tool?.id === "unlock-pdf";
+
   const convert = useCallback(async () => {
     if (!tool || files.length === 0) return;
     setStage("converting");
@@ -390,7 +393,7 @@ export default function ConvertScreen() {
       setError(e instanceof Error ? e.message : "Conversion failed.");
       setStage("error");
     }
-  }, [tool, files, outputFormat, quality]);
+  }, [tool, files, outputFormat, quality, needsPassword, password]);
 
   const reset = useCallback(() => {
     setFiles([]);
@@ -550,9 +553,6 @@ export default function ConvertScreen() {
   }
 
   const isEditorTool = tool.editor === "pdf" || tool.editor === "image";
-  // Lock PDF / Unlock PDF are the only tools that take a password.
-  const needsPassword = tool.id === "lock-pdf" || tool.id === "unlock-pdf";
-
   const downloadFormats = getDownloadFormats(tool, {
     outputName: output?.name,
     hasOcrText: !!ocrPages,
