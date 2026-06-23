@@ -35,4 +35,7 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "add-image-pdf": require("../../assets/lottie/add-image-to-pdf.json"),
   "delete-pages-pdf": require("../../assets/lottie/delete-page.json"),
   "ocr-pdf": require("../../assets/lottie/ocr-pdf.json"),
+  "restore-document": require("../../assets/lottie/restore-trash.json"),
+  "lock-pdf": require("../../assets/lottie/lock.json"),
+  "unlock-pdf": require("../../assets/lottie/unlock.json"),
 };
