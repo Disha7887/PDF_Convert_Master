@@ -46,6 +46,10 @@ export interface Tool {
   editorMode?: string;
   /** True while the tool is temporarily offline ("Under maintenance"). */
   maintenance?: boolean;
+  /** Short badge/title shown when offline (defaults to "Under maintenance"). */
+  maintenanceLabel?: string;
+  /** Longer explanation shown on the tool's offline screen. */
+  maintenanceNote?: string;
   /** True when the tool offers a "Take Photo" (camera) capture option. */
   allowCamera?: boolean;
 }
@@ -470,6 +474,10 @@ export const tools: Tool[] = [
     isMerge: false,
     editor: null,
     allowCamera: true,
+    maintenance: true,
+    maintenanceLabel: "Coming soon",
+    maintenanceNote:
+      "Document Restore is coming soon. We're putting the finishing touches on it — check back shortly.",
   },
   {
     id: "lock-pdf",
@@ -530,6 +538,9 @@ export const tools: Tool[] = [
     isMerge: false,
     editor: "pdf",
     maintenance: true,
+    maintenanceLabel: "Available on web",
+    maintenanceNote:
+      "Edit PDF is available on the PDF Genius web app. Open it in your browser to add text and images to your PDF.",
     editorMode: "edit",
   },
   {

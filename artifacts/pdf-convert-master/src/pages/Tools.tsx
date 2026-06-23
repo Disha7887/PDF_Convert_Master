@@ -12,6 +12,7 @@ import {
   RefreshCw,
   FileText,
   SlidersHorizontal,
+  Clock,
 } from "lucide-react";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { UploadDropzone } from "@/components/upload/UploadDropzone";
@@ -148,6 +149,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const mountedRef = useRef(true);
   const [, setLocation] = useLocation();
   const isNavigateTool = NAVIGATE_TOOL_IDS.has(toolConfig.id);
+  const isComingSoon = !!toolConfig.comingSoon;
   const editUrlRef = useRef<string | null>(null);
   // Bumped on every new edit action (open/apply) and on reset; an async decode
   // whose token no longer matches is stale and must not touch state.
@@ -551,22 +553,26 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       <>
         <div
           role="button"
-          tabIndex={0}
-          onClick={() =>
-            isNavigateTool ? setLocation(toolConfig.route) : setUploadOpen(true)
-          }
+          tabIndex={isComingSoon ? -1 : 0}
+          aria-disabled={isComingSoon || undefined}
+          onClick={() => {
+            if (isComingSoon) return;
+            isNavigateTool ? setLocation(toolConfig.route) : setUploadOpen(true);
+          }}
           onKeyDown={(e) => {
+            if (isComingSoon) return;
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               isNavigateTool ? setLocation(toolConfig.route) : setUploadOpen(true);
             }
           }}
-          className={`${cardBase} ${cardIdle} cursor-pointer`}
+          className={`${cardBase} ${cardIdle} ${isComingSoon ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
           data-testid={`card-tool-${toolConfig.id}`}
         >
           <div
             className={`flex flex-col h-full ${isDragOver ? "opacity-80" : ""}`}
             onDragOver={(e) => {
+              if (isComingSoon) return;
               e.preventDefault();
               setIsDragOver(true);
             }}
@@ -574,7 +580,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
               e.preventDefault();
               setIsDragOver(false);
             }}
-            onDrop={handleDrop}
+            onDrop={isComingSoon ? undefined : handleDrop}
           >
             <div className="flex justify-center mb-4">
               <div
@@ -584,8 +590,14 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
               </div>
             </div>
 
-            <h3 className="text-lg font-bold text-gray-900 text-center mb-3">
+            <h3 className="text-lg font-bold text-gray-900 text-center mb-3 flex items-center justify-center gap-2">
               {toolConfig.title}
+              {isComingSoon && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#f7433d]/10 text-[#f7433d] text-[10px] font-semibold px-2 py-0.5">
+                  <Clock className="w-3 h-3" />
+                  Coming soon
+                </span>
+              )}
             </h3>
 
             <p className="text-sm text-gray-600 text-center mb-4 flex-grow flex items-center justify-center px-2">
@@ -601,13 +613,23 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
               </div>
             </div>
 
-            <div
-              className="w-full h-12 flex items-center justify-center gap-2 rounded-full border-2 border-dashed border-gray-300 text-sm font-semibold text-gray-500"
-              data-testid={`hint-upload-${toolConfig.id}`}
-            >
-              <Upload className="w-4 h-4" />
-              Click to upload
-            </div>
+            {isComingSoon ? (
+              <div
+                className="w-full h-12 flex items-center justify-center gap-2 rounded-full border-2 border-dashed border-[#f7433d]/30 text-sm font-semibold text-[#f7433d]"
+                data-testid={`hint-coming-soon-${toolConfig.id}`}
+              >
+                <Clock className="w-4 h-4" />
+                Coming soon
+              </div>
+            ) : (
+              <div
+                className="w-full h-12 flex items-center justify-center gap-2 rounded-full border-2 border-dashed border-gray-300 text-sm font-semibold text-gray-500"
+                data-testid={`hint-upload-${toolConfig.id}`}
+              >
+                <Upload className="w-4 h-4" />
+                Click to upload
+              </div>
+            )}
           </div>
         </div>
 

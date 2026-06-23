@@ -46,7 +46,7 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
           <Text style={styles.gridTitle} numberOfLines={2}>
             {tool.title}
           </Text>
-          {offline && <MaintenanceBadge />}
+          {offline && <MaintenanceBadge label={tool.maintenanceLabel} />}
         </Pressable>
       </GlassSurface>
     );
@@ -74,7 +74,7 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
           </Text>
           <View style={styles.badgeRow}>
             {offline ? (
-              <MaintenanceBadge />
+              <MaintenanceBadge label={tool.maintenanceLabel} />
             ) : (
               <Text style={styles.badgeText}>→ {tool.outputFormat}</Text>
             )}
@@ -86,11 +86,11 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
   );
 }
 
-function MaintenanceBadge() {
+function MaintenanceBadge({ label }: { label?: string }) {
   return (
     <View style={styles.maintBadge}>
-      <Feather name="tool" size={11} color={C.mutedForeground} />
-      <Text style={styles.maintText}>Under maintenance</Text>
+      <Feather name="clock" size={11} color={C.mutedForeground} />
+      <Text style={styles.maintText}>{label ?? "Under maintenance"}</Text>
     </View>
   );
 }

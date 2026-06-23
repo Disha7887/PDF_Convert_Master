@@ -540,11 +540,11 @@ export default function ConvertScreen() {
       <ScreenScroll insetTop>
         <BackRow onPress={goBack} title={tool.title} />
         <View style={styles.emptyState}>
-          <Feather name="tool" size={40} color={C.border} />
-          <Text style={styles.emptyTitle}>Under maintenance</Text>
+          <Feather name="clock" size={40} color={C.border} />
+          <Text style={styles.emptyTitle}>{tool.maintenanceLabel ?? "Under maintenance"}</Text>
           <Text style={styles.emptyText}>
-            {tool.title} is temporarily unavailable while we make improvements.
-            Please check back soon.
+            {tool.maintenanceNote ??
+              `${tool.title} is temporarily unavailable while we make improvements. Please check back soon.`}
           </Text>
           <Button label="Browse tools" icon="grid" onPress={() => router.replace(ROUTES.tools as never)} />
         </View>

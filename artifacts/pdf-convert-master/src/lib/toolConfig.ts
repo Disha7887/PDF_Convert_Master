@@ -39,6 +39,10 @@ export interface ToolConfig {
   iconBorderColor: string;
   category: string;
   route?: string;
+  /** True while the tool is not yet available ("Coming soon"). */
+  comingSoon?: boolean;
+  /** Longer explanation shown on the tool's coming-soon screen. */
+  comingSoonNote?: string;
 }
 
 export const toolConfigs: Record<string, ToolConfig> = {
@@ -351,7 +355,10 @@ export const toolConfigs: Record<string, ToolConfig> = {
     iconBgColor: "bg-[#f7433d]/10",
     iconBorderColor: "border-[#f7433d]/20",
     category: "Edit",
-    route: "/upload/restore-document"
+    route: "/upload/restore-document",
+    comingSoon: true,
+    comingSoonNote:
+      "Document Restore is coming soon. We're putting the finishing touches on it — check back shortly."
   },
   "lock-pdf": {
     id: "lock-pdf",
