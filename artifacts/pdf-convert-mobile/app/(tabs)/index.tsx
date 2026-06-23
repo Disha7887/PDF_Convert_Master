@@ -12,6 +12,8 @@ import {
   View,
 } from "react-native";
 
+import { SvgXml } from "react-native-svg";
+
 import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
@@ -22,6 +24,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
+
+const CROWN_XML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#b2b1ff" d="M4.03027,16.24268l-2-8A1.00014,1.00014,0,0,1,3.457,7.11035l3.85156,1.979L11.1748,3.43555a1.03743,1.03743,0,0,1,1.6504,0l3.86621,5.65381,3.85156-1.979a1.00014,1.00014,0,0,1,1.42676,1.13233l-2,8Z"/><path fill="#6563ff" d="M19.96973,16.24268H4.03027L4,16.12158V20a.99974.99974,0,0,0,1,1H19a.99974.99974,0,0,0,1-1V16.12158Z"/><circle cx="12" cy="12" r="1" fill="#6563ff"/></svg>`;
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -153,7 +157,7 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={styles.premiumIcon}>
-              <Feather name="award" size={34} color="rgba(255,255,255,0.9)" />
+              <SvgXml xml={CROWN_XML} width={40} height={40} />
             </View>
           </LinearGradient>
         </Pressable>
