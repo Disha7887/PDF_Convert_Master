@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import logoIcon from "@assets/IconOnly_Transparent_NoBuffer_1782108807761.png";
-import verifiedBadge from "@assets/verified_1782122950940.svg";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,7 +20,6 @@ import { ToolsNavDropdowns, MobileNav } from "@/components/ToolsNavMenu";
 import { ToolSearch } from "@/components/ToolSearch";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import {
-  ChevronDown,
   User,
   Settings,
   LogOut,
@@ -123,24 +121,17 @@ export const DashboardHeader = (): JSX.Element => {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="px-4 py-2 rounded-lg flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
-                  {user?.profilePictureUrl ? (
-                    <img src={user.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-4 h-4" />
-                  )}
-                </div>
-                <div className="text-left hidden xl:block max-w-[160px]">
-                  <div className="flex items-center gap-1">
-                    <p className="text-sm font-medium truncate">{user?.name || user?.email || 'User'}</p>
-                    {user ? (
-                      <img src={verifiedBadge} alt="Verified" className="w-4 h-4 shrink-0" />
-                    ) : null}
-                  </div>
-                  <p className="text-xs text-white/70 capitalize">{user?.plan || 'Free Plan'}</p>
-                </div>
-                <ChevronDown className="w-4 h-4 hidden xl:block" />
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full overflow-hidden p-0"
+                aria-label="Account menu"
+              >
+                {user?.profilePictureUrl ? (
+                  <img src={user.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
