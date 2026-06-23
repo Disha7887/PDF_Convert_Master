@@ -8,6 +8,7 @@ import { LottieIcon } from "@/components/ui/lottie-icon";
 import verifyEmailAnim from "@/assets/lottie/verify-email.json";
 import { SIGN_UP_XML } from "@/lib/signUpIcon";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { requestGoogleAuthCode } from "@/lib/googleAuth";
 
 type Mode = "signin" | "signup";
 
@@ -27,7 +28,7 @@ const REDIRECT_DELAY = 2600;
 
 export function AuthCard({ mode }: { mode: Mode }) {
   const [, setLocation] = useLocation();
-  const { signin, signup, verifySignupOtp, user, isAuthenticated, loading } = useAuth();
+  const { signin, signup, verifySignupOtp, googleSignin, user, isAuthenticated, loading } = useAuth();
 
   const [step, setStep] = useState<"email" | "credentials" | "otp">("email");
   const [name, setName] = useState("");
@@ -79,6 +80,31 @@ export function AuthCard({ mode }: { mode: Mode }) {
   const social = (provider: string) => {
     setError(null);
     setInfo(`${provider} sign-in isn't set up yet — continue with your email below.`);
+  };
+
+  // Real Google sign-in: open the Google popup, exchange the code for a session,
+  // then play the same welcome/redirect flow email login uses.
+  const handleGoogle = async () => {
+    if (isSubmitting) return;
+    setError(null);
+    setInfo(null);
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    setIsSubmitting(true);
+    try {
+      const code = await requestGoogleAuthCode();
+      const res = await googleSignin(code);
+      if (res.success) {
+        setResult(res.isNewUser ? "signup-success" : "signin-success");
+        redirectTimer.current = setTimeout(() => setLocation("/dashboard"), REDIRECT_DELAY);
+      } else {
+        setResult("error");
+        setError(res.error || "Google sign-in failed");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const continueWithEmail = () => {
@@ -423,7 +449,8 @@ export function AuthCard({ mode }: { mode: Mode }) {
             {/* Social */}
             <button
               type="button"
-              onClick={() => social("Google")}
+              onClick={handleGoogle}
+              disabled={isSubmitting}
               className={`${fieldClass} transition-opacity hover:opacity-90`}
               style={{ backgroundColor: SHEET.field, borderColor: SHEET.border }}
               data-testid="button-google"

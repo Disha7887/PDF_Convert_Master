@@ -14,7 +14,7 @@ import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
-import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword } from "./auth";
+import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword, googleAuth, googleConfig } from "./auth";
 import { saveAvatar, getAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
@@ -3110,6 +3110,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Step 2 of signup: verify the emailed OTP, which creates the account.
   app.post("/api/auth/verify-signup", authRateLimit(15), verifySignupOtp);
   app.post("/api/verify-signup", authRateLimit(15), verifySignupOtp); // alias
+
+  // Google OAuth: public config (client ID for the web popup) + sign-in.
+  app.get("/api/auth/google/config", googleConfig);
+  app.post("/api/auth/google", authRateLimit(15), googleAuth);
   
   // Protected route: Get current user (dashboard)
   app.get("/api/dashboard", authenticateUser, getCurrentUser);

@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
 import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import {
@@ -560,5 +561,133 @@ export async function resetPassword(req: Request, res: Response) {
   } catch (error) {
     console.error("Reset password error:", error);
     return res.status(500).json({ success: false, error: "Failed to reset password" });
+  }
+}
+
+// ============== GOOGLE OAUTH ==============
+
+function getGoogleClientId(): string | null {
+  const id = process.env.GOOGLE_CLIENT_ID;
+  return id && id.trim() ? id.trim() : null;
+}
+
+function getGoogleClientSecret(): string | null {
+  const secret = process.env.GOOGLE_CLIENT_SECRET;
+  return secret && secret.trim() ? secret.trim() : null;
+}
+
+// Public config endpoint — the web client needs the OAuth client ID to start the
+// Google sign-in popup. The client ID is NOT a secret (it's exposed to the
+// browser by design); the client secret never leaves the server.
+export function googleConfig(_req: Request, res: Response) {
+  const clientId = getGoogleClientId();
+  return res.status(200).json({
+    success: true,
+    data: { clientId, enabled: !!clientId },
+  });
+}
+
+// Google sign-in. The browser runs the GIS popup "code" flow and posts us the
+// short-lived authorization code. We exchange it for tokens (redirect_uri
+// "postmessage" is the magic value for popup code flow), verify the returned ID
+// token, then find-or-create the user and issue our own JWT — exactly the same
+// session token email/password login returns.
+export async function googleAuth(req: Request, res: Response) {
+  try {
+    const clientId = getGoogleClientId();
+    const clientSecret = getGoogleClientSecret();
+    if (!clientId || !clientSecret) {
+      return res.status(503).json({
+        success: false,
+        error: "Google sign-in isn't configured yet.",
+      });
+    }
+
+    const code = typeof req.body?.code === "string" ? req.body.code : null;
+    if (!code) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing Google authorization code." });
+    }
+
+    const oauthClient = new OAuth2Client(clientId, clientSecret, "postmessage");
+
+    let idToken: string | undefined;
+    try {
+      const { tokens } = await oauthClient.getToken(code);
+      idToken = tokens.id_token ?? undefined;
+    } catch (err) {
+      logger.warn({ err }, "Google token exchange failed");
+      return res.status(401).json({
+        success: false,
+        error: "Could not verify your Google sign-in. Please try again.",
+      });
+    }
+
+    if (!idToken) {
+      return res.status(401).json({
+        success: false,
+        error: "Google did not return an identity token.",
+      });
+    }
+
+    let payload;
+    try {
+      const ticket = await oauthClient.verifyIdToken({ idToken, audience: clientId });
+      payload = ticket.getPayload();
+    } catch (err) {
+      logger.warn({ err }, "Google ID token verification failed");
+      return res.status(401).json({
+        success: false,
+        error: "Could not verify your Google sign-in. Please try again.",
+      });
+    }
+
+    const email = payload?.email?.toLowerCase().trim();
+    if (!email || payload?.email_verified === false) {
+      return res.status(401).json({
+        success: false,
+        error: "Your Google account doesn't have a verified email.",
+      });
+    }
+
+    const name = payload?.name?.trim() || payload?.given_name?.trim() || null;
+    const picture = payload?.picture || null;
+
+    let user = await storage.getUserByEmail(email);
+    let isNewUser = false;
+
+    if (!user) {
+      // Google accounts have no usable password. Store a random bcrypt hash so
+      // the NOT NULL constraint holds and email/password login can never match
+      // (the random plaintext is never known to anyone). Such users sign in via
+      // Google or reset their password to set one.
+      const randomPassword = crypto.randomBytes(32).toString("hex");
+      const passwordHash = await hashPassword(randomPassword);
+      user = await storage.createUser({ email, name, passwordHash, plan: "free" });
+      isNewUser = true;
+
+      // Best-effort: seed the avatar from the Google profile picture.
+      if (picture) {
+        try {
+          const withPic = await storage.updateUserProfilePicture(user.id, picture);
+          if (withPic) user = withPic;
+        } catch (err) {
+          logger.warn({ err }, "Failed to set Google profile picture");
+        }
+      }
+    }
+
+    const token = generateToken(user);
+    const { passwordHash: _omit, ...userWithoutPassword } = user;
+
+    return res.status(200).json({
+      success: true,
+      data: { user: userWithoutPassword, token, isNewUser },
+      message: "Google sign-in successful",
+    });
+  } catch (error) {
+    console.error("Google auth error:", error);
+    return res.status(500).json({ success: false, error: "Google sign-in failed" });
   }
 }

@@ -10,6 +10,8 @@ interface AuthContextType {
   signup: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
   /** Step 2 of signup: verifies the emailed code, creates the account, logs in. */
   verifySignupOtp: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
+  /** Google OAuth: exchanges the popup authorization code for a session, logs in. */
+  googleSignin: (code: string) => Promise<{ success: boolean; error?: string; isNewUser?: boolean }>;
   signout: () => void;
   updateUser: (user: User, token?: string) => void;
   isAuthenticated: boolean;
@@ -160,6 +162,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Google sign-in: the browser obtains an authorization code via the Google
+  // popup, then we hand it to the backend which verifies it and returns the same
+  // session token email/password login does. Find-or-create happens server-side.
+  const googleSignin = async (
+    code: string,
+  ): Promise<{ success: boolean; error?: string; isNewUser?: boolean }> => {
+    try {
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const { user: userData, token: authToken, isNewUser } = data.data ?? {};
+        if (!userData || !authToken) {
+          return { success: false, error: "Google sign-in failed. Please try again." };
+        }
+        setUser(userData);
+        setToken(authToken);
+        localStorage.setItem("auth_token", authToken);
+        return { success: true, isNewUser: !!isNewUser };
+      } else {
+        return { success: false, error: data.error || "Google sign-in failed" };
+      }
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  };
+
   const signout = () => {
     setUser(null);
     setToken(null);
@@ -183,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signin,
     signup,
     verifySignupOtp,
+    googleSignin,
     signout,
     updateUser,
     isAuthenticated: !!user && !!token,
