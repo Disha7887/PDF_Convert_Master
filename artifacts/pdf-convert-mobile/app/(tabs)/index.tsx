@@ -3,7 +3,14 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import { GlassSurface } from "@/components/Glass";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
@@ -75,7 +82,11 @@ const QUICK_TOOLS: QuickTool[] = [
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { width } = useWindowDimensions();
   const [recent, setRecent] = useState<StoredFileEntry[]>([]);
+
+  const contentWidth = Math.min(width, 640);
+  const toolColWidth = contentWidth < 360 ? "100%" : "48%";
 
   useFocusEffect(
     useCallback(() => {
@@ -89,16 +100,22 @@ export default function HomeScreen() {
   );
 
   return (
-    <ScreenScroll navInset tabBar>
-      {/* Greeting */}
-      <View style={styles.greetRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.greetHello}>{greeting()},</Text>
-          <Text style={styles.greetName} numberOfLines={1}>
-            {firstName(user?.name)}
-          </Text>
+    <ScreenScroll
+      navInset
+      tabBar
+      contentStyle={{ width: "100%", maxWidth: 640, alignSelf: "center" }}
+    >
+      {/* Greeting — only when signed in (no placeholder for guests) */}
+      {user && (
+        <View style={styles.greetRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greetHello}>{greeting()},</Text>
+            <Text style={styles.greetName} numberOfLines={1}>
+              {firstName(user.name)}
+            </Text>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Search */}
       <Pressable
@@ -106,7 +123,7 @@ export default function HomeScreen() {
         onPress={() => router.push(ROUTES.tools as never)}
       >
         <Feather name="search" size={18} color={C.mutedForeground} />
-        <Text style={styles.searchPlaceholder}>Search tools…</Text>
+        <Text style={styles.searchPlaceholder}>Search files & tools…</Text>
       </Pressable>
 
       {/* Premium upsell */}
@@ -165,11 +182,16 @@ export default function HomeScreen() {
         {QUICK_TOOLS.map((t) => (
           <Pressable
             key={t.toolId}
-            style={({ pressed }) => [styles.toolCard, cardShadow, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.toolCard,
+              { width: toolColWidth },
+              cardShadow,
+              pressed && styles.pressed,
+            ]}
             onPress={() => router.push(ROUTES.convert(t.toolId) as never)}
           >
             <View style={styles.toolIcon}>
-              <ToolLottieIcon toolId={t.toolId} size={34} autoPlay={false} loop={false} />
+              <ToolLottieIcon toolId={t.toolId} size={34} />
             </View>
             <Text style={styles.toolLabel} numberOfLines={1}>
               {t.label}
