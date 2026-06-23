@@ -340,6 +340,11 @@ async function simulateConversionWithProgress(jobId: number, totalTime: number, 
   }
 }
 
+// Public API tools that are documented in the API reference but currently have
+// no live endpoint. Requests to /api/v1/<tool> for these return 503 "offline".
+// Keep in sync with OFFLINE_TOOL_TYPES in the web APIReference page.
+const OFFLINE_API_TOOLS = new Set<string>(["restore_document", "edit_pdf"]);
+
 // Actual file conversion function
 async function performActualConversion(
   fileBuffer: Buffer, 
@@ -3370,7 +3375,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // This prevents an authenticated caller from buffering many oversized files.
     async (req, res, next) => {
       try {
-        const toolTypeParam = req.params.toolType;
+        const toolTypeParam = String(req.params.toolType);
+        // Documented-but-offline public API tools. These are advertised in the
+        // API reference but have no live endpoint yet, so we reject them with a
+        // clear "offline" status instead of attempting a conversion. Keep this
+        // in sync with OFFLINE_TOOL_TYPES in the web APIReference page.
+        if (OFFLINE_API_TOOLS.has(toolTypeParam)) {
+          return res.status(503).json({
+            success: false,
+            status: "offline",
+            error: `The "${toolTypeParam}" API is currently offline.`,
+          });
+        }
         if (!Object.values(ToolType).includes(toolTypeParam as ToolType)) {
           return res.status(404).json({
             success: false,

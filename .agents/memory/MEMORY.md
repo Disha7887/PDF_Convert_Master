@@ -17,6 +17,7 @@
 - [Edit Text (mobile)](edit-text-mobile.md) — make real PDF text editable: pdf.js extract + canvas color-sample (web-only), whiteout cover + editable text per run; covers-first; skip already-editable + overprinted dupes.
 - [pdf-lib drawSvgPath Y-flip](pdf-lib-svgpath-yflip.md) — drawSvgPath already does scale(s,-s); anchor at top edge yTop, don't double-flip freehand/sign strokes. Editing is unrotated-space; undo snapshots elements only (web parity).
 - [Conversion endpoint auth](conversion-endpoint-auth.md) — /api/convert, /api/merge-pdfs, /api/uploads must be OPTIONAL-auth (free first-party tool); strict API-key gating belongs on /api/v1/:toolType only.
+- [API offline tools + custom domain](api-offline-and-domain.md) — OFFLINE_API_TOOLS (server 503) must stay in sync with OFFLINE_TOOL_TYPES (web docs); edit_pdf is docs-only synthetic; API docs hardcode pdfgenius.app.
 - [Mobile convert useCallback deps](mobile-convert-callback-deps.md) — convert callback must list every option-state dep (password etc.) or it sends stale values; deps consts must be declared above the hook + null-safe.
 - [qpdf lock/unlock PDF](qpdf-lock-unlock.md) — node-qpdf2 returned Buffer corrupts binary; use qpdf `output` file path + fs.readFile; needs qpdf system binary; rejects with stderr string.
 - [Web pdfjs version pin](pdfjs-web-version-pin.md) — pin web pdfjs-dist to 5.4.296 (match api-server); v6.0.227 crashes client render via getOrInsertComputed; use doc.loadingTask.destroy().

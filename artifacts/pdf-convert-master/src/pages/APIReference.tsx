@@ -28,10 +28,27 @@ export const APIReference: React.FC = () => {
     setLocation(path);
   };
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const baseUrl = `${origin}/api/v1`;
+  // Public API is served from the custom domain, so docs always show it
+  // (not the Replit dev/preview origin).
+  const API_DOMAIN = "https://pdfgenius.app";
+  const baseUrl = `${API_DOMAIN}/api/v1`;
 
-  const { data: tools = [], isLoading } = useQuery<Tool[]>({
+  // Tools documented in the reference but currently offline (no live endpoint).
+  // Mirrors OFFLINE_API_TOOLS in the api-server routes.
+  const OFFLINE_TOOL_TYPES = new Set<string>(["restore_document", "edit_pdf"]);
+
+  // Edit PDF is an announced API that isn't in /api/tools yet. We surface it in
+  // the reference (marked offline) so developers know it's coming. This is the
+  // individual Edit PDF tool, not the "Edit" tool category.
+  const EDIT_PDF_TOOL: Tool = {
+    type: "edit_pdf",
+    name: "Edit PDF",
+    category: "pdf_management",
+    inputFormats: ["pdf"],
+    maxFileSize: 50,
+  };
+
+  const { data: fetchedTools = [], isLoading } = useQuery<Tool[]>({
     queryKey: ["/api/tools"],
     queryFn: async () => {
       const res = await fetch("/api/tools");
@@ -39,6 +56,11 @@ export const APIReference: React.FC = () => {
       return body.data as Tool[];
     },
   });
+
+  // Append the announced Edit PDF endpoint if the server doesn't already list it.
+  const tools = fetchedTools.some((t) => t.type === "edit_pdf")
+    ? fetchedTools
+    : [...fetchedTools, EDIT_PDF_TOOL];
 
   // Tool-specific request options honoured by the live /api/v1 endpoint.
   // (Format list + max size come straight from /api/tools so they never drift.)
@@ -68,6 +90,12 @@ export const APIReference: React.FC = () => {
     ],
     upscale_image: [
       { name: "scale", desc: "Upscale factor — 2 or 4 (default 4); requires AI upscaling" },
+    ],
+    lock_pdf: [
+      { name: "password", desc: "Password used to AES-256 encrypt the PDF (required)" },
+    ],
+    unlock_pdf: [
+      { name: "password", desc: "Current password of the protected PDF (required)" },
     ],
   };
 
@@ -311,17 +339,28 @@ export const APIReference: React.FC = () => {
                     ) : (
                       filteredTools.map((tool) => {
                         const opts = TOOL_OPTIONS[tool.type] || [];
+                        const isOffline = OFFLINE_TOOL_TYPES.has(tool.type);
                         return (
                           <div
                             key={tool.type}
-                            className="p-3 rounded-lg border border-gray-100 bg-gray-50/50"
+                            className={`p-3 rounded-lg border ${isOffline ? "border-gray-200 bg-gray-100/60 opacity-80" : "border-gray-100 bg-gray-50/50"}`}
                             data-testid={`endpoint-${tool.type}`}
                           >
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-sm font-mono text-gray-900">POST /api/v1/{tool.type}</span>
-                              <Badge className="bg-green-100 text-green-700 border-green-200">Available</Badge>
+                              {isOffline ? (
+                                <Badge className="bg-gray-200 text-gray-600 border-gray-300" data-testid={`badge-offline-${tool.type}`}>Offline</Badge>
+                              ) : (
+                                <Badge className="bg-green-100 text-green-700 border-green-200" data-testid={`badge-available-${tool.type}`}>Available</Badge>
+                              )}
                             </div>
                             <p className="text-xs text-gray-500 mb-2">{tool.name}</p>
+
+                            {isOffline && (
+                              <p className="text-xs text-gray-500 mb-2" data-testid={`endpoint-offline-note-${tool.type}`}>
+                                This endpoint is currently offline and returns <span className="font-mono">503</span>. It will be enabled soon.
+                              </p>
+                            )}
 
                             <div className="space-y-1.5 text-xs text-gray-600">
                               <div data-testid={`endpoint-accepts-${tool.type}`}>

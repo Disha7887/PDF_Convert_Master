@@ -15,7 +15,8 @@ import { AnimatedBackground } from "@/components/ui/animated-background";
 
 export const APIDocumentationSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  // Public API lives on the custom domain, so the example always shows it.
+  const apiDomain = "https://pdfgenius.app";
 
   const apiFeatures = [
     {
@@ -81,7 +82,7 @@ export const APIDocumentationSection = (): JSX.Element => {
           <Card className="bg-gray-50 border border-gray-200 shadow-sm max-w-3xl mx-auto">
             <CardContent className="p-6">
               <pre className="text-sm text-gray-700 overflow-x-auto">
-                <code>{`curl -X POST "${origin}/api/v1/word_to_pdf" \\
+                <code>{`curl -X POST "${apiDomain}/api/v1/word_to_pdf" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "file=@document.docx" \\
   -o converted.pdf`}</code>
