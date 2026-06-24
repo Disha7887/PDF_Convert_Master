@@ -46,6 +46,7 @@ import {
   sanitizeName,
 } from "@/services/downloadFormats";
 import { saveFile } from "@/services/files";
+import { getAuthToken } from "@/services/authToken";
 
 const C = colors.light;
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff"];
@@ -134,15 +135,29 @@ function absoluteDownloadUrl(downloadUrl: string): string {
  */
 async function downloadOutput(downloadUrl: string, name: string): Promise<string> {
   const url = absoluteDownloadUrl(downloadUrl);
+  // Attach the signed-in user's token: a conversion attributed to a user is
+  // private, so `/api/download` only serves it to its owner. Anonymous jobs
+  // carry no token and remain downloadable. Only attach to our own backend
+  // origin (absoluteDownloadUrl already resolves to API_ORIGIN) so the token
+  // can't leak to a third-party URL.
+  const token = getAuthToken();
+  const isApiOrigin =
+    !!API_ORIGIN && (url === API_ORIGIN || url.startsWith(`${API_ORIGIN}/`));
+  const authHeaders =
+    token && isApiOrigin ? { Authorization: `Bearer ${token}` } : undefined;
   if (Platform.OS === "web") {
-    const res = await fetch(url);
+    const res = await fetch(url, authHeaders ? { headers: authHeaders } : undefined);
     if (!res.ok) throw new Error(`Download failed (${res.status})`);
     const blob = await res.blob();
     return URL.createObjectURL(blob);
   }
   const dir = new Directory(Paths.cache, `convert-${Date.now()}`);
   dir.create({ intermediates: true });
-  const dest = await File.downloadFileAsync(url, new File(dir, sanitizeName(name)));
+  const dest = await File.downloadFileAsync(
+    url,
+    new File(dir, sanitizeName(name)),
+    authHeaders ? { headers: authHeaders } : undefined,
+  );
   return dest.uri;
 }
 

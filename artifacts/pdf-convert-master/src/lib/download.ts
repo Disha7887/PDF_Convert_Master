@@ -8,6 +8,8 @@
 // Fetching the file as a Blob and clicking a temporary object-URL <a download>
 // works in those embedded contexts because the navigation stays same-document.
 
+import { getAuthToken } from "./authedFetch";
+
 function filenameFromDisposition(header: string | null): string | null {
   if (!header) return null;
   // Prefer RFC 5987 `filename*=UTF-8''...` when present.
@@ -35,7 +37,23 @@ export async function downloadFromUrl(
   url: string,
   fallbackName?: string,
 ): Promise<void> {
-  const res = await fetch(url);
+  // Attach the signed-in user's token for same-origin API downloads so the
+  // backend can authorize access to files owned by that user (`/api/download`
+  // only serves a user-owned job to its owner). Guest downloads send no token.
+  // Strict origin check (via URL parsing, not prefix matching) so the bearer
+  // token is never leaked to a look-alike third-party origin.
+  const token = getAuthToken();
+  let sameOrigin = false;
+  try {
+    sameOrigin = new URL(url, window.location.origin).origin === window.location.origin;
+  } catch {
+    sameOrigin = false;
+  }
+  const init: RequestInit | undefined =
+    token && sameOrigin
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : undefined;
+  const res = await fetch(url, init);
   if (!res.ok) {
     throw new Error(
       res.status === 404

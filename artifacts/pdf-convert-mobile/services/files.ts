@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as LegacyFS from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
+import { getAuthToken } from "@/services/authToken";
+import { API_ORIGIN } from "@/constants/api";
 
 /**
  * Save a converted file to the device.
@@ -205,15 +207,28 @@ export async function saveFile(uri: string, name: string): Promise<SaveResult> {
  * time, so it works anytime, not just right after converting.
  */
 export async function downloadRemoteFile(url: string, name: string): Promise<string> {
+  // Attach the signed-in user's token so the backend authorizes downloads of
+  // files owned by that user (`/api/download` serves a user-owned job only to
+  // its owner). Anonymous conversions have no token and stay downloadable.
+  // Only attach to our own backend origin so the token can't leak elsewhere.
+  const token = getAuthToken();
+  const isApiOrigin =
+    !!API_ORIGIN && (url === API_ORIGIN || url.startsWith(`${API_ORIGIN}/`));
+  const authHeaders =
+    token && isApiOrigin ? { Authorization: `Bearer ${token}` } : undefined;
   if (Platform.OS === "web") {
-    const res = await fetch(url);
+    const res = await fetch(url, authHeaders ? { headers: authHeaders } : undefined);
     if (!res.ok) throw new Error(`Download failed (${res.status})`);
     const blob = await res.blob();
     return URL.createObjectURL(blob);
   }
   const dir = LegacyFS.cacheDirectory;
   const target = `${dir}download-${Date.now()}-${encodeURIComponent(name)}`;
-  const result = await LegacyFS.downloadAsync(url, target);
+  const result = await LegacyFS.downloadAsync(
+    url,
+    target,
+    authHeaders ? { headers: authHeaders } : undefined,
+  );
   // Guard against saving an error body (e.g. a 404/500 JSON payload) as if it
   // were the converted file — without this the save flow would report success.
   if (result.status < 200 || result.status >= 300) {

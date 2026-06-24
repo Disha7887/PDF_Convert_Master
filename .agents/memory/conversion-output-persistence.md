@@ -25,10 +25,17 @@ server restart lost everything.
   Recent Activity + Usage Statistics history, all gated on `status === "completed"` and hitting
   `/api/download/:jobId` (web via the iframe-safe `downloadFromUrl` blob helper).
 
-**Known open caveat — IDOR on `/api/download/:jobId`:** the endpoint has NO auth/ownership check and
-jobIds are sequential serial integers, so anyone can enumerate and download another user's "private"
-output. Closing it safely is broad: it requires threading the auth token through every download call
-site (4 web immediate-download flows + the mobile convert flow + both Recent Activity surfaces) and
-enforcing `job.userId === requester.id` only for owned jobs (guest jobs with null userId must stay
-open for immediate post-conversion download). Don't add strict auth to this endpoint without updating
-all those call sites, or you break working immediate downloads.
+**Download access control (IDOR closed):** `/api/download/:jobId` uses `optionalAuth` + an ownership
+gate — `if (job.userId && req.user?.id !== job.userId) return 403`. Owned jobs serve only to their
+owner; guest jobs (`conversionJobs.userId` is NULLABLE) stay open so anonymous post-conversion
+downloads keep working. jobIds are sequential serial ints, so this gate is what prevents enumeration.
+
+**Why client downloads still work:** rather than editing every call site, the download *primitives*
+auto-attach the signed-in user's Bearer token — web `downloadFromUrl` (src/lib/download.ts) and mobile
+`downloadRemoteFile` (services/files.ts) + `downloadOutput` (convert/[toolId].tsx). UpscaleImage uses
+`authedFetch` directly. **Always route new downloads through these primitives**, or a logged-in user
+401/403s on their own file.
+
+**Token-leak guard:** only attach the token to OUR origin — web compares `new URL(url, location.origin)
+.origin` (never prefix `startsWith`, which a look-alike origin bypasses); mobile gates on
+`url === API_ORIGIN || url.startsWith(API_ORIGIN + "/")` (the trailing slash is the boundary).

@@ -114,8 +114,9 @@ export const UpscaleImageUpload = () => {
       const jobId = data.data.jobId;
       await pollJob(jobId);
 
-      // The download endpoint deletes the file after the first fetch, so fetch once.
-      const dl = await fetch(`/api/download/${jobId}`);
+      // Use the authed fetch so the signed-in owner can retrieve their file —
+      // /api/download enforces per-user ownership on user-attributed jobs.
+      const dl = await authedFetch(`/api/download/${jobId}`);
       if (!dl.ok) throw new Error("Failed to retrieve the upscaled image");
       const blob = await dl.blob();
       afterBlobRef.current = blob;

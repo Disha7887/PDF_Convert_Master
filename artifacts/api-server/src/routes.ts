@@ -2748,7 +2748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Download converted file
-  app.get("/api/download/:jobId", async (req, res) => {
+  app.get("/api/download/:jobId", optionalAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const jobId = parseInt(req.params.jobId);
       if (isNaN(jobId)) {
@@ -2763,6 +2763,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({
           success: false,
           error: "Job not found"
+        });
+      }
+
+      // Ownership: a job attributed to a user is private — only that user may
+      // download it. Guest jobs (userId null) stay open so anonymous immediate
+      // downloads keep working. IDs are sequential, so without this anyone could
+      // enumerate and download another user's files.
+      if (job.userId && req.user?.id !== job.userId) {
+        return res.status(403).json({
+          success: false,
+          error: "You don't have access to this file."
         });
       }
 
