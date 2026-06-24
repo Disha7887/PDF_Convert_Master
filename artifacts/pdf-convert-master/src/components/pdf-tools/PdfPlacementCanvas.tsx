@@ -136,10 +136,12 @@ export function PdfPlacementCanvas({
           alt="Overlay"
         />
         <div
-          className="absolute -right-2 -bottom-2 w-4 h-4 bg-blue-600 border-2 border-white rounded-full cursor-se-resize touch-none"
+          className="absolute -right-4 -bottom-4 w-8 h-8 flex items-center justify-center cursor-se-resize touch-none"
           onPointerDown={onPointerDown("resize")}
           data-testid="resize-handle"
-        />
+        >
+          <div className="w-4 h-4 bg-blue-600 border-2 border-white rounded-full" />
+        </div>
       </div>
     </div>
   );
