@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { PdfDropzone } from "@/components/pdf-tools/PdfToolShell";
 import { toolConfigs } from "@/lib/toolConfig";
 import { ManagePagesModal } from "@/components/pdf-tools/ManagePagesModal";
@@ -1577,7 +1578,7 @@ export const PdfEditor: React.FC = () => {
     setExporting(true);
     try {
       const out = await buildPdf();
-      const blob = new Blob([out], { type: "application/pdf" });
+      const blob = new Blob([out as BlobPart], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const w = window.open(url);
       if (w) {
@@ -2312,7 +2313,9 @@ export const PdfEditor: React.FC = () => {
               return (
                 <div key={page.pageIndex} className="flex flex-col items-center">
                   <div
-                    ref={(n) => (pageRefs.current[page.pageIndex] = n)}
+                    ref={(n) => {
+                      pageRefs.current[page.pageIndex] = n;
+                    }}
                     className="relative shadow-lg select-none bg-white"
                     style={{
                       width: w,

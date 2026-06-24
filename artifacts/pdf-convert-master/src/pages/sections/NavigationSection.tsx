@@ -16,7 +16,6 @@ import userAnim from "@/assets/lottie/user.json";
 
 export const NavigationSection = (): JSX.Element => {
   const [location, setLocation] = useLocation();
-  const { login } = useAuth();
   const [loginHover, setLoginHover] = React.useState(false);
 
   // Simple (non-dropdown) navigation links; the tool categories render as dropdowns

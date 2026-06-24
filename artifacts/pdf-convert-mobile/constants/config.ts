@@ -2,10 +2,11 @@
  * Global runtime configuration.
  *
  * `USE_MOCK_DATA` is the single switch that disables ALL real network / API /
- * auth behaviour. When true (the default for this build), the app runs fully
- * offline against the local mock-data layer in `mocks/` and conversions resolve
- * to bundled sample assets. The real backend code paths are preserved (see
- * `services/api.ts`) and re-activate automatically when this flag is false.
+ * auth behaviour. This build keeps it OFF (false): the app runs against the real
+ * backend for auth, dashboard and everything else — no mock data or demo emails
+ * are used. When flipped to true, the app would instead run fully offline against
+ * the local mock-data layer in `mocks/` (those files are kept but currently
+ * unused). The real backend code paths live in `services/api.ts`.
  */
 export const USE_MOCK_DATA = false;
 

@@ -323,7 +323,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
     e.preventDefault();
     setIsDragOver(false);
     if (isNavigateTool) {
-      setLocation(toolConfig.route);
+      setLocation(toolConfig.route!);
       return;
     }
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -557,13 +557,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
           aria-disabled={isComingSoon || undefined}
           onClick={() => {
             if (isComingSoon) return;
-            isNavigateTool ? setLocation(toolConfig.route) : setUploadOpen(true);
+            isNavigateTool ? setLocation(toolConfig.route!) : setUploadOpen(true);
           }}
           onKeyDown={(e) => {
             if (isComingSoon) return;
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              isNavigateTool ? setLocation(toolConfig.route) : setUploadOpen(true);
+              isNavigateTool ? setLocation(toolConfig.route!) : setUploadOpen(true);
             }
           }}
           className={`${cardBase} ${cardIdle} ${isComingSoon ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}

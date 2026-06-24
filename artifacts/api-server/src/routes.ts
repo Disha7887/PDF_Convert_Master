@@ -8,8 +8,7 @@ import {
   ToolType,
   ToolCategory
 } from "@workspace/db";
-import { z } from "zod";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
@@ -1303,7 +1302,7 @@ async function rotatePdf(pdfBuffer: Buffer, outputFilename: string) {
       const [existingPage] = await rotatedDoc.copyPages(pdfDoc, [i]);
       
       // Rotate page 90 degrees clockwise
-      existingPage.setRotation({ type: 'degrees', angle: 90 });
+      existingPage.setRotation(degrees(90));
       
       rotatedDoc.addPage(existingPage);
     }
@@ -1746,7 +1745,7 @@ async function getReplicateToken(): Promise<string | undefined> {
       { headers: { Accept: 'application/json', X_REPLIT_TOKEN: xReplitToken } }
     );
     if (!resp.ok) return undefined;
-    const data = await resp.json();
+    const data: any = await resp.json();
     const settings = data.items?.[0]?.settings ?? {};
     return (
       settings.api_token ||
@@ -1886,7 +1885,7 @@ async function removeBackground(imageBuffer: Buffer, inputExt: string | undefine
     const pngInput = await sharp(imageBuffer).png().toBuffer();
 
     const form = new FormData();
-    form.append('image_file', new Blob([pngInput], { type: 'image/png' }), 'image.png');
+    form.append('image_file', new Blob([pngInput as any], { type: 'image/png' }), 'image.png');
     form.append('size', 'auto');
 
     const response = await fetch('https://api.remove.bg/v1.0/removebg', {
@@ -1945,12 +1944,12 @@ const ocrTextStorage = new Map<number, string[]>();
 const uploadedFileStorage = new Map<string, { buffer: Buffer; mimeType: string; filename: string; expiresAt: number }>();
 
 // Extend Request interface for authentication
-interface AuthenticatedRequest extends Request {
+type AuthenticatedRequest = Omit<Request, "user"> & {
   user?: {
     id: string;
     email: string;
   };
-}
+};
 
 // Middleware to support optional authentication
 const optionalAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
@@ -2260,7 +2259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({
           success: false,
           error: "Invalid request data",
-          details: validationResult.error.errors
+          details: validationResult.error.issues
         });
       }
 
@@ -2658,7 +2657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get conversion job status
   app.get("/api/jobs/:jobId", async (req, res) => {
     try {
-      const jobId = parseInt(req.params.jobId);
+      const jobId = parseInt(String(req.params.jobId));
       if (isNaN(jobId)) {
         return res.status(400).json({
           success: false,
@@ -2703,7 +2702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get the OCR-recognized text for a completed OCR job (per page + joined).
   app.get("/api/ocr-text/:jobId", async (req, res) => {
     try {
-      const jobId = parseInt(req.params.jobId);
+      const jobId = parseInt(String(req.params.jobId));
       if (isNaN(jobId)) {
         return res.status(400).json({ success: false, error: "Invalid job ID" });
       }
@@ -2750,7 +2749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Download converted file
   app.get("/api/download/:jobId", optionalAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const jobId = parseInt(req.params.jobId);
+      const jobId = parseInt(String(req.params.jobId));
       if (isNaN(jobId)) {
         return res.status(400).json({
           success: false,
@@ -3286,7 +3285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/keys/:id", authenticateUser, async (req, res) => {
     try {
       const userId = (req as any).user.id as string;
-      const key = await storage.getApiKeyById(req.params.id);
+      const key = await storage.getApiKeyById(String(req.params.id));
       if (!key || key.userId !== userId) {
         return res.status(404).json({ success: false, error: "API key not found" });
       }

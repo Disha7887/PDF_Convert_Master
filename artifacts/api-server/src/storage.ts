@@ -457,6 +457,7 @@ export class MemStorage implements IStorage {
       expiresAt,
       consumedAt: null,
       createdAt: new Date(),
+      attempts: 0,
     });
   }
 

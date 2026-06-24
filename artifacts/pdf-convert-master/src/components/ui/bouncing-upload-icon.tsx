@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Upload } from "lucide-react";
 
 interface BouncingUploadIconProps {
@@ -52,7 +52,7 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
   const config = speedConfig[animationSpeed];
 
   // Physics-based bouncing animation that mimics a ball
-  const bouncingVariants = {
+  const bouncingVariants: Variants = {
     animate: {
       y: [0, -20, 0, -15, 0, -10, 0, -5, 0],
       transition: {
@@ -67,7 +67,7 @@ export const BouncingUploadIcon: React.FC<BouncingUploadIconProps> = ({
   };
 
   // Additional shadow animation for depth effect
-  const shadowVariants = {
+  const shadowVariants: Variants = {
     animate: {
       scale: [1, 1.2, 0.8, 1.1, 0.85, 1.05, 0.9, 1],
       opacity: [0.3, 0.5, 0.2, 0.4, 0.25, 0.35, 0.28, 0.3],

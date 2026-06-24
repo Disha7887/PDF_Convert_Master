@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
 
 interface AnimatedBackgroundProps {
@@ -118,7 +118,7 @@ export const AnimatedBackground = ({
           className={blur.className}
           {...(prefersReducedMotion
             ? {}
-            : { animate: blur.animate, transition: blur.transition })}
+            : { animate: blur.animate, transition: blur.transition as Transition })}
         />
       ))}
 
@@ -128,7 +128,7 @@ export const AnimatedBackground = ({
           className={circle.className}
           {...(prefersReducedMotion
             ? {}
-            : { animate: circle.animate, transition: circle.transition })}
+            : { animate: circle.animate, transition: circle.transition as Transition })}
         />
       ))}
 
@@ -138,7 +138,7 @@ export const AnimatedBackground = ({
           className={dot.className}
           {...(prefersReducedMotion
             ? {}
-            : { animate: dot.animate, transition: dot.transition })}
+            : { animate: dot.animate, transition: dot.transition as Transition })}
         />
       ))}
 

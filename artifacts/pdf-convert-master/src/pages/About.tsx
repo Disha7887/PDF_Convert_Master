@@ -236,7 +236,7 @@ export const About = (): JSX.Element => {
                 <Globe2 className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold mb-4">Website</h3>
-              <p className="text-gray-200 mb-1">pdfgenius.com</p>
+              <p className="text-gray-200 mb-1">pdfgenius.app</p>
               <p className="text-gray-200 text-sm">Your trusted PDF partner</p>
             </div>
           </div>

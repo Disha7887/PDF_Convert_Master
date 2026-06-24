@@ -254,7 +254,7 @@ const SECTIONS: Section[] = [
           ["Service:", "PDF Genius"],
           ["Phone:", "+447429919748"],
           ["Location:", "London, United Kingdom"],
-          ["Website:", "PDF Genius"],
+          ["Website:", "pdfgenius.app"],
         ],
       },
     ],

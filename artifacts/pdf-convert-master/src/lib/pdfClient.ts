@@ -62,7 +62,7 @@ export async function renderPdfPages(
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
       const ctx = canvas.getContext("2d")!;
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      await page.render({ canvas, canvasContext: ctx, viewport }).promise;
       const base = page.getViewport({ scale: 1, rotation });
       pages.push({
         pageIndex: i - 1,
@@ -80,8 +80,8 @@ export async function renderPdfPages(
   return pages;
 }
 
-export function downloadBytes(data: BlobPart, filename: string, mime: string) {
-  const blob = new Blob([data], { type: mime });
+export function downloadBytes(data: BlobPart | Uint8Array, filename: string, mime: string) {
+  const blob = new Blob([data as BlobPart], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

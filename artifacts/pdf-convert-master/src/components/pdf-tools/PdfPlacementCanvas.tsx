@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import type { RenderedPage } from "@/lib/pdfClient";
 
 export interface Placement {
@@ -39,21 +39,66 @@ export function PdfPlacementCanvas({
     scale: number;
   } | null>(null);
 
+  // Keep the latest props available to the window-bound listeners without
+  // re-registering them on every render.
+  const latest = useRef({ onChange, aspect, page, minSize });
+  latest.current = { onChange, aspect, page, minSize };
+
   const getScale = () => {
     const el = wrapRef.current;
     if (!el || !el.clientWidth) return 1;
     return el.clientWidth / page.width;
   };
 
+  // Drag is driven by window-level listeners (registered once). This is the
+  // robust pattern: moves fire no matter where the pointer travels — even
+  // outside the wrapper or across the canvas-embedded iframe — which the
+  // previous element-scoped handlers/pointer-capture failed to do.
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const d = drag.current;
+      if (!d) return;
+      const { onChange, aspect, page, minSize } = latest.current;
+      const dx = (e.clientX - d.startX) / d.scale;
+      const dy = (e.clientY - d.startY) / d.scale;
+      if (d.mode === "move") {
+        const nx = Math.max(
+          0,
+          Math.min(d.orig.x + dx, page.width - d.orig.width),
+        );
+        const ny = Math.max(
+          0,
+          Math.min(d.orig.y + dy, page.height - d.orig.height),
+        );
+        onChange({ ...d.orig, x: nx, y: ny });
+      } else {
+        let nw = Math.max(minSize, d.orig.width + dx);
+        nw = Math.min(nw, page.width - d.orig.x);
+        let nh = nw * aspect;
+        if (d.orig.y + nh > page.height) {
+          nh = page.height - d.orig.y;
+          nw = nh / aspect;
+        }
+        onChange({ ...d.orig, width: nw, height: nh });
+      }
+    };
+    const onUp = () => {
+      drag.current = null;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, []);
+
   const onPointerDown =
     (mode: "move" | "resize") => (e: React.PointerEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      // Capture on the wrapper (which owns onPointerMove/Up) not on the child
-      // that received the event. Capturing on a child element causes the wrapper
-      // to fire pointerleave at drag-start, which called endDrag() and set
-      // drag.current = null before any move fired — making move/resize a no-op.
-      wrapRef.current?.setPointerCapture(e.pointerId);
       drag.current = {
         mode,
         startX: e.clientX,
@@ -63,41 +108,10 @@ export function PdfPlacementCanvas({
       };
     };
 
-  const onPointerMove = (e: React.PointerEvent) => {
-    const d = drag.current;
-    if (!d) return;
-    const dx = (e.clientX - d.startX) / d.scale;
-    const dy = (e.clientY - d.startY) / d.scale;
-    if (d.mode === "move") {
-      const nx = Math.max(0, Math.min(d.orig.x + dx, page.width - d.orig.width));
-      const ny = Math.max(0, Math.min(d.orig.y + dy, page.height - d.orig.height));
-      onChange({ ...d.orig, x: nx, y: ny });
-    } else {
-      let nw = Math.max(minSize, d.orig.width + dx);
-      nw = Math.min(nw, page.width - d.orig.x);
-      let nh = nw * aspect;
-      if (d.orig.y + nh > page.height) {
-        nh = page.height - d.orig.y;
-        nw = nh / aspect;
-      }
-      onChange({ ...d.orig, width: nw, height: nh });
-    }
-  };
-
-  const endDrag = () => {
-    drag.current = null;
-  };
-
   const pct = (v: number, total: number) => `${(v / total) * 100}%`;
 
   return (
-    <div
-      ref={wrapRef}
-      className="relative w-full select-none shadow-lg"
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-    >
+    <div ref={wrapRef} className="relative w-full select-none shadow-lg">
       <img
         src={page.dataUrl}
         className="w-full block"

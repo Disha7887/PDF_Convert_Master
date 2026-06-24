@@ -1,5 +1,5 @@
 import React, { useMemo, memo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 
 interface Particle {
   id: number;
@@ -118,7 +118,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = memo(({
     }));
   }, []);
 
-  const getAnimationVariants = (particle: Particle) => {
+  const getAnimationVariants = (particle: Particle): Variants => {
     const moveDistance = 100; // pixels
     
     const movements = {

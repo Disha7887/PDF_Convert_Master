@@ -45,7 +45,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({
   
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Popular searches by page type
   const popularSearches = {

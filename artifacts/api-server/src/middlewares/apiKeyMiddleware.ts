@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
 
-interface ApiKeyRequest extends Request {
+type ApiKeyRequest = Omit<Request, "user"> & {
   user?: {
     id: string;
     email: string;
@@ -11,7 +11,7 @@ interface ApiKeyRequest extends Request {
     apiKey: string;
     userId: string;
   };
-}
+};
 
 // API Key Authentication Middleware
 export const authenticateApiKey = async (req: ApiKeyRequest, res: Response, next: NextFunction) => {

@@ -82,7 +82,7 @@ const TEAM: { name: string; position: string; description: string }[] = [
 const TOUCH: { icon: FeatherName; title: string; line1: string; line2: string }[] = [
   { icon: "briefcase", title: "Company", line1: "Mizan Store Ltd", line2: "Professional PDF Solutions" },
   { icon: "phone", title: "Phone", line1: "+447429919748", line2: "Available 24/7" },
-  { icon: "globe", title: "Website", line1: "pdfgenius.com", line2: "Your trusted PDF partner" },
+  { icon: "globe", title: "Website", line1: "pdfgenius.app", line2: "Your trusted PDF partner" },
 ];
 
 function initials(name: string) {

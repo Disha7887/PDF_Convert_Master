@@ -127,7 +127,7 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "contact-information",
       title: "Contact Information",
-      content: "For questions about these Terms of Service or our Service, please contact us: Company: Mizan Store Ltd, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Website: PDF Genius",
+      content: "For questions about these Terms of Service or our Service, please contact us: Company: Mizan Store Ltd, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Website: pdfgenius.app",
       category: "Contact"
     }
   ], []);
@@ -564,7 +564,7 @@ export const TermsOfService = (): JSX.Element => {
                       <p><strong>Service:</strong> PDF Genius</p>
                       <p><strong>Phone:</strong> +447429919748</p>
                       <p><strong>Location:</strong> London, United Kingdom</p>
-                      <p><strong>Website:</strong> PDF Genius</p>
+                      <p><strong>Website:</strong> pdfgenius.app</p>
                     </div>
                   </div>
                 </section>

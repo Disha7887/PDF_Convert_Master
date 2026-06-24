@@ -3,7 +3,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { AnimatedSelectButton } from "@/components/ui/animated-select-button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
@@ -150,7 +150,7 @@ export const HeroSection = (): JSX.Element => {
                         {trustIndicators.map((indicator, index) => {
                           // Different animation timing for each element
                           const animationDelay = index * 0.8; // 0s, 0.8s, 1.6s delays
-                          const floatingVariants = {
+                          const floatingVariants: Variants = {
                             animate: {
                               y: [-4, 4, -4],
                               transition: {
