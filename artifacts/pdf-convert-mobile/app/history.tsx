@@ -115,9 +115,11 @@ export default function HistoryScreen() {
               <Text style={styles.cardFile} numberOfLines={1}>
                 {entry.fileName}
               </Text>
-              <Text style={styles.cardTime}>{formatTime(entry.timestamp)}</Text>
+              <Text style={styles.cardTime} numberOfLines={1}>
+                {formatTime(entry.timestamp)}
+              </Text>
             </View>
-            <View style={{ alignItems: "flex-end", gap: 6 }}>
+            <View style={styles.cardRight}>
               <Badge
                 label={entry.outputFormat}
                 tone={entry.status === "completed" ? "primary" : "danger"}
@@ -176,6 +178,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  cardRight: {
+    alignItems: "flex-end",
+    gap: 6,
+    flexShrink: 0,
+    maxWidth: 108,
   },
   cardTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.headingSemibold },
   cardFile: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 1 },
