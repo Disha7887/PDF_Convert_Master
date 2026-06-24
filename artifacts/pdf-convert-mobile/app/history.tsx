@@ -4,6 +4,7 @@ import React, { useCallback, useState } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Loader } from "@/components/Loader";
+import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Badge, Button, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -93,17 +94,19 @@ export default function HistoryScreen() {
             onPress={() => entry.toolId && router.push(ROUTES.convert(entry.toolId) as never)}
             style={({ pressed }) => [styles.card, cardShadow, { opacity: pressed ? 0.92 : 1 }]}
           >
-            <View
-              style={[
-                styles.statusIcon,
-                { backgroundColor: entry.status === "completed" ? "#dcfce7" : "#fee2e2" },
-              ]}
-            >
-              <Feather
-                name={entry.status === "completed" ? "check" : "x"}
-                size={18}
-                color={entry.status === "completed" ? "#166534" : "#991b1b"}
-              />
+            {/* Same animated per-tool identity icon used in dashboard Recent
+                Activity, so a row reads at a glance as the tool that produced it
+                (success/failure is conveyed by the badge tone on the right). */}
+            <View style={[styles.statusIcon, { backgroundColor: C.accent }]}>
+              {entry.toolId ? (
+                <ToolLottieIcon toolId={entry.toolId} size={28} autoPlay={false} loop={false} />
+              ) : (
+                <Feather
+                  name={entry.status === "completed" ? "check" : "x"}
+                  size={18}
+                  color={entry.status === "completed" ? "#166534" : "#991b1b"}
+                />
+              )}
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle} numberOfLines={1}>
