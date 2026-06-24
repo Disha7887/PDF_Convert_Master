@@ -29,6 +29,18 @@ Verify via `https://$REPLIT_DEV_DOMAIN/` (200) and `/api/health` (JSON), not the
 - Auto/runtime-managed: PORT, BASE_PATH, REPL_ID, REPLIT_DOMAINS, REPLIT_CONNECTORS_HOSTNAME, etc.
 - Mobile (EAS build-time only, baked into eas.json → Railway): `EXPO_PUBLIC_DOMAIN`, `EXPO_PUBLIC_REPL_ID`.
 
+# Manual workflows collide with platform-managed ones (after registry sync)
+Once the artifact registry syncs (artifacts appear in `listArtifacts`), the platform auto-creates its
+OWN workflows from each `artifact.toml` (named `artifacts/<slug>: <service>`). If you earlier made
+manual workflows on the same ports, both fight for 8080/21027/24364 → `EADDRINUSE` / "Port already in use".
+Fix: REMOVE the manual workflows and let the platform-managed ones own the ports; don't run both.
+
+**Orphan-process trap:** `removeWorkflow` can report `wasRunning:false` yet leave the dev process alive
+as an orphan still holding the port. WORSE: `lsof -i :PORT` / `lsof -ti` sees NOTHING for these ports in
+this sandbox (false "port free"), so killing by lsof is useless. Find orphans with
+`ps -eo pid,ppid,etime,args | rg -i "vite|expo start|dist/index.mjs"` and `kill -9 <pid>` by PID, then
+restart the platform workflows. Verify with curl to the dev domain (502 = port truly freed), not lsof.
+
 # Health-check path mismatch
 The real route is `GET /api/health`; `pdf-convert-master`/api-server `artifact.toml` production health
 startup points at `/api/healthz` (404). Railway prod uses its dashboard health config, so this only
