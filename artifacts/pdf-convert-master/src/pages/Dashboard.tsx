@@ -8,7 +8,9 @@ import { useQuery } from "@tanstack/react-query";
 import { authedJson } from "@/lib/authedFetch";
 
 import { useLocation } from "wouter";
-import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw } from "lucide-react";
+import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Loader2 } from "lucide-react";
+import { downloadFromUrl } from "@/lib/download";
+import { useToast } from "@/hooks/use-toast";
 
 interface UsageData {
   totals: {
@@ -27,6 +29,7 @@ interface UsageData {
     toolType: string;
     toolName: string;
     inputFilename: string;
+    outputFilename: string | null;
     status: string;
     source: string;
     createdAt: string | null;
@@ -81,7 +84,15 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconB
   );
 };
 
-const ActivityItem: React.FC<{ title: string; description: string; time: string; status: string }> = ({ title, description, time, status }) => {
+const ActivityItem: React.FC<{
+  title: string;
+  description: string;
+  time: string;
+  status: string;
+  canDownload?: boolean;
+  downloading?: boolean;
+  onDownload?: () => void;
+}> = ({ title, description, time, status, canDownload, downloading, onDownload }) => {
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
   const iconWrap = isFailed ? "bg-red-100" : isCompleted ? "bg-green-100" : "bg-blue-100";
@@ -101,9 +112,27 @@ const ActivityItem: React.FC<{ title: string; description: string; time: string;
         <p className="text-base font-medium text-gray-900 truncate">{title}</p>
         <p className="text-sm text-gray-600 truncate">{description}</p>
       </div>
-      <div className="text-right ml-4 shrink-0">
-        <p className="text-sm text-gray-500">{time}</p>
-        <Badge className={`text-xs ${badge}`}>{status}</Badge>
+      <div className="text-right ml-4 shrink-0 flex items-center gap-3">
+        <div>
+          <p className="text-sm text-gray-500">{time}</p>
+          <Badge className={`text-xs ${badge}`}>{status}</Badge>
+        </div>
+        {canDownload && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={onDownload}
+            disabled={downloading}
+            aria-label="Download file again"
+            title="Download again"
+            data-testid={`download-activity`}
+          >
+            {downloading
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Download className="w-4 h-4" />}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -112,9 +141,33 @@ const ActivityItem: React.FC<{ title: string; description: string; time: string;
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [downloadingId, setDownloadingId] = React.useState<number | null>(null);
 
   const handleNavigation = (path: string) => {
     setLocation(path);
+  };
+
+  // Re-download a past conversion straight from Recent Activity. The bytes are
+  // fetched fresh from the backend's durable object storage, so this works
+  // anytime — long after the original conversion.
+  const handleDownload = async (job: UsageData["recent"][number]) => {
+    if (downloadingId !== null) return;
+    const name =
+      job.outputFilename ||
+      `${job.toolName.replace(/\s+/g, "-").toLowerCase()}-${job.id}`;
+    setDownloadingId(job.id);
+    try {
+      await downloadFromUrl(`/api/download/${job.id}`, name);
+    } catch {
+      toast({
+        title: "Download failed",
+        description: "We couldn't download this file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const { data: usage } = useQuery<UsageData>({
@@ -369,6 +422,9 @@ export const Dashboard: React.FC = () => {
                         description={item.inputFilename}
                         time={timeAgo(item.createdAt)}
                         status={item.status}
+                        canDownload={item.status === "completed"}
+                        downloading={downloadingId === item.id}
+                        onDownload={() => handleDownload(item)}
                       />
                     ))}
                   </div>

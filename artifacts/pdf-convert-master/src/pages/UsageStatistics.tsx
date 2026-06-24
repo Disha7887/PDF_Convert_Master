@@ -7,7 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { authedJson } from "@/lib/authedFetch";
 
 import { useLocation } from "wouter";
-import { Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight } from "lucide-react";
+import { Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Download, Loader2 } from "lucide-react";
+import { downloadFromUrl } from "@/lib/download";
+import { useToast } from "@/hooks/use-toast";
 
 interface UsageData {
   totals: {
@@ -27,6 +29,7 @@ interface UsageData {
     toolType: string;
     toolName: string;
     inputFilename: string;
+    outputFilename: string | null;
     status: string;
     source: string;
     createdAt: string | null;
@@ -88,9 +91,32 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, iconBg, ico
 
 export const UsageStatistics: React.FC = () => {
   const [location, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [downloadingId, setDownloadingId] = React.useState<number | null>(null);
 
   const handleNavigation = (path: string) => {
     setLocation(path);
+  };
+
+  // Re-download a past conversion from history. Bytes are fetched fresh from the
+  // backend's durable object storage, so it works anytime.
+  const handleDownload = async (job: UsageData["recent"][number]) => {
+    if (downloadingId !== null) return;
+    const name =
+      job.outputFilename ||
+      `${job.toolName.replace(/\s+/g, "-").toLowerCase()}-${job.id}`;
+    setDownloadingId(job.id);
+    try {
+      await downloadFromUrl(`/api/download/${job.id}`, name);
+    } catch {
+      toast({
+        title: "Download failed",
+        description: "We couldn't download this file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const { data: usage } = useQuery<UsageData>({
@@ -372,6 +398,22 @@ export const UsageStatistics: React.FC = () => {
                               {job.status}
                             </Badge>
                             <span className="text-xs text-gray-500 w-16 text-right">{timeAgo(job.createdAt)}</span>
+                            {job.status === "completed" && (
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-9 w-9 shrink-0"
+                                onClick={() => handleDownload(job)}
+                                disabled={downloadingId === job.id}
+                                aria-label="Download file again"
+                                title="Download again"
+                                data-testid={`download-usage-${job.id}`}
+                              >
+                                {downloadingId === job.id
+                                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                                  : <Download className="w-4 h-4" />}
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
