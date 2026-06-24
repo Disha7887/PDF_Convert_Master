@@ -60,3 +60,4 @@
 - [Web PDF placement-box drag](pdf-placement-drag-web.md) — drag must use window-level pointer listeners + latest-ref (not element-scoped/setPointerCapture); verify e2e with tall viewport + scrollIntoView, test move & resize separately.
 - [Download access model](download-access-model.md) — guests = ONE in-session download (never persist jobId/uri); logged-in persist gated on isAuthenticated; friendly 401/403 "Please log in…"; logout clears history not Files.
 - [Imported project run setup](imported-project-run-setup.md) — fresh import: artifact registry empty, configure workflows manually w/ inline PORT (api 8080, web 21027); full secrets inventory; /api/health not /api/healthz.
+- [RNGH GestureDetector blocks web drag](rngh-gesturedetector-web-drag.md) — wrapping PanResponder editor content in RNGH GestureDetector kills overlay drag/select on Expo web; skip it via ZoomViewport when Platform.OS==="web".

@@ -1470,9 +1470,7 @@ export default function PdfEditorScreen() {
               {/* Two-finger pinch/pan zoom layer. The gesture target is an
                   untransformed fill view so pinch focal coords are page-local;
                   page content + overlays live inside the transformed layer. */}
-              <GestureDetector gesture={zoomGesture}>
-                <View style={StyleSheet.absoluteFill} collapsable={false}>
-                  <Animated.View style={[StyleSheet.absoluteFill, zoomAnimStyle]}>
+              <ZoomViewport gesture={zoomGesture} animStyle={zoomAnimStyle}>
                     {slot?.src == null ? (
                       <View style={styles.blankPage} pointerEvents="none">
                         <Feather name="file" size={34} color={C.border} />
@@ -1576,9 +1574,7 @@ export default function PdfEditorScreen() {
                       />
                     )}
 
-                  </Animated.View>
-                </View>
-              </GestureDetector>
+              </ZoomViewport>
             </View>
 
             {/* Thumbnail rail */}
@@ -2476,6 +2472,32 @@ function RailThumb({ uri, src, rotate, index, active, onPress }: { uri?: string;
       </View>
     </Pressable>
   );
+}
+
+// ── Zoom viewport ────────────────────────────────────────────────────────────
+// On native, the page lives inside an RNGH GestureDetector for 2-finger
+// pinch/pan zoom. On web that GestureDetector swallows single-pointer (mouse)
+// events before react-native-web's responder system can hand them to the
+// element/capture PanResponders, so dragging/resizing overlays silently breaks.
+// Pinch zoom needs >=2 pointers and is unreachable with a mouse anyway, so on
+// web we drop the GestureDetector and render the content directly — restoring
+// element dragging. (zoomAnimStyle stays applied; it's just identity on web.)
+function ZoomViewport({
+  gesture,
+  animStyle,
+  children,
+}: {
+  gesture: React.ComponentProps<typeof GestureDetector>["gesture"];
+  animStyle: React.ComponentProps<typeof Animated.View>["style"];
+  children: React.ReactNode;
+}) {
+  const inner = (
+    <View style={StyleSheet.absoluteFill} collapsable={false}>
+      <Animated.View style={[StyleSheet.absoluteFill, animStyle]}>{children}</Animated.View>
+    </View>
+  );
+  if (Platform.OS === "web") return inner;
+  return <GestureDetector gesture={gesture}>{inner}</GestureDetector>;
 }
 
 // ── Draggable primitives ─────────────────────────────────────────────────────
