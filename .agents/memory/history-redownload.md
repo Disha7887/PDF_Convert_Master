@@ -17,7 +17,8 @@ History rows re-download the produced file on tap (they do NOT navigate to the t
 
 **How to apply:** when adding any new conversion entry-point, store `jobId` in history if the output came from the server so re-download stays durable.
 
-## Row display (both History and dashboard Recent Activity)
+## Row display (mobile AND web; History + dashboard Recent Activity)
 Show the SAVED file name (not the tool name), the timestamp, and a file-type badge.
-- History: `fileName` / `formatTime(timestamp)` / `outputFormat` badge.
-- Dashboard recent: `outputFilename || inputFilename` / `timeAgo` / `tool.outputFormat` badge ("Failed"/danger when status != completed).
+- Mobile History: `fileName` / `formatTime(timestamp)` / `outputFormat` badge.
+- Mobile Dashboard recent: `outputFilename || inputFilename` / `timeAgo` / `tool.outputFormat` badge ("Failed"/danger when status != completed).
+- Web (pdf-convert-master) Dashboard `ActivityItem` + `UsageStatistics` rows: same — primary = `outputFilename || inputFilename`, timestamp, badge = `getOutputFormatByServerType(toolType) ?? "File"` (added to `lib/toolConfig.ts` as a reverse lookup over `toolConfigs` via `getServerToolType`). Badge shows "Failed" for failed, raw status while processing. Re-download already worked via `downloadFromUrl(/api/download/:id)`; only the display changed. Web keeps a `" (API)"` suffix on API-sourced jobs (not the tool name).

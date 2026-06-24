@@ -9,6 +9,7 @@ import { authedJson } from "@/lib/authedFetch";
 import { useLocation } from "wouter";
 import { Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Download, Loader2 } from "lucide-react";
 import { downloadFromUrl } from "@/lib/download";
+import { getOutputFormatByServerType } from "@/lib/toolConfig";
 import { useToast } from "@/hooks/use-toast";
 
 interface UsageData {
@@ -390,12 +391,13 @@ export const UsageStatistics: React.FC = () => {
                           data-testid={`usage-recent-${job.id}`}
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-700 truncate">{job.toolName}</p>
-                            <p className="text-xs text-gray-500 truncate">{job.inputFilename}</p>
+                            <p className="text-sm font-medium text-gray-700 truncate">{job.outputFilename || job.inputFilename}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <Badge className={`capitalize border-0 ${STATUS_BADGE[job.status] ?? "bg-gray-100 text-gray-700"}`}>
-                              {job.status}
+                            <Badge className={`border-0 ${job.status === "completed" ? "bg-gray-100 text-gray-700" : STATUS_BADGE[job.status] ?? "bg-gray-100 text-gray-700"}`}>
+                              {job.status === "completed"
+                                ? getOutputFormatByServerType(job.toolType) ?? "File"
+                                : job.status === "failed" ? "Failed" : job.status}
                             </Badge>
                             <span className="text-xs text-gray-500 w-16 text-right">{timeAgo(job.createdAt)}</span>
                             {job.status === "completed" && (

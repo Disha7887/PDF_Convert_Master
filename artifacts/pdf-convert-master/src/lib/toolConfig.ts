@@ -615,6 +615,17 @@ export const getServerToolType = (cfg: ToolConfig): string => {
   return map[cfg.id] ?? cfg.id.replace(/-/g, "_");
 };
 
+// Output-format label for a server toolType (snake_case), e.g. "pdf_to_word" -> "DOCX".
+export const getOutputFormatByServerType = (toolType?: string | null): string | null => {
+  if (!toolType) return null;
+  for (const key of Object.keys(toolConfigs)) {
+    if (getServerToolType(toolConfigs[key]) === toolType) {
+      return toolConfigs[key].outputFormat;
+    }
+  }
+  return null;
+};
+
 // Helper function to get tool config by title
 export const getToolConfigByTitle = (title: string): ToolConfig | null => {
   const toolKey = Object.keys(toolConfigs).find(key => 

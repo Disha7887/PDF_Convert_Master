@@ -10,6 +10,7 @@ import { authedJson } from "@/lib/authedFetch";
 import { useLocation } from "wouter";
 import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Loader2 } from "lucide-react";
 import { downloadFromUrl } from "@/lib/download";
+import { getOutputFormatByServerType } from "@/lib/toolConfig";
 import { useToast } from "@/hooks/use-toast";
 
 interface UsageData {
@@ -86,13 +87,13 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconB
 
 const ActivityItem: React.FC<{
   title: string;
-  description: string;
+  fileType: string;
   time: string;
   status: string;
   canDownload?: boolean;
   downloading?: boolean;
   onDownload?: () => void;
-}> = ({ title, description, time, status, canDownload, downloading, onDownload }) => {
+}> = ({ title, fileType, time, status, canDownload, downloading, onDownload }) => {
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
   const iconWrap = isFailed ? "bg-red-100" : isCompleted ? "bg-green-100" : "bg-blue-100";
@@ -101,7 +102,8 @@ const ActivityItem: React.FC<{
     : isCompleted
       ? <Check className="w-4 h-4 text-green-600" />
       : <RefreshCw className="w-4 h-4 text-blue-600" />;
-  const badge = isFailed ? "bg-red-100 text-red-800" : isCompleted ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800";
+  const badge = isFailed ? "bg-red-100 text-red-800" : isCompleted ? "bg-gray-100 text-gray-700" : "bg-blue-100 text-blue-800";
+  const badgeLabel = isFailed ? "Failed" : isCompleted ? fileType : status;
 
   return (
     <div className="flex items-center p-3 rounded-lg">
@@ -110,12 +112,11 @@ const ActivityItem: React.FC<{
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-base font-medium text-gray-900 truncate">{title}</p>
-        <p className="text-sm text-gray-600 truncate">{description}</p>
+        <p className="text-sm text-gray-500">{time}</p>
       </div>
       <div className="text-right ml-4 shrink-0 flex items-center gap-3">
         <div>
-          <p className="text-sm text-gray-500">{time}</p>
-          <Badge className={`text-xs ${badge}`}>{status}</Badge>
+          <Badge className={`text-xs ${badge}`}>{badgeLabel}</Badge>
         </div>
         {canDownload && (
           <Button
@@ -418,8 +419,8 @@ export const Dashboard: React.FC = () => {
                     {(usage?.recent ?? []).map((item) => (
                       <ActivityItem
                         key={item.id}
-                        title={`${item.toolName}${item.source === "api" ? " (API)" : ""}`}
-                        description={item.inputFilename}
+                        title={`${item.outputFilename || item.inputFilename}${item.source === "api" ? " (API)" : ""}`}
+                        fileType={getOutputFormatByServerType(item.toolType) ?? "File"}
                         time={timeAgo(item.createdAt)}
                         status={item.status}
                         canDownload={item.status === "completed"}
