@@ -1,0 +1,63 @@
+Root cause in PdfPlacementCanvas.tsx:
+  - onPointerDown calls (e.target as Element).setPointerCapture(e.pointerId), capturing the pointer on
+  the grabbed CHILD element (the move box or the small resize handle).
+  - But onPointerMove, onPointerUp, and onPointerLeave are attached to the ANCESTOR wrapper div
+  (ref={wrapRef}).
+  - With capture on a child, the wrapper fires pointerleave at drag start, which runs endDrag() and sets
+  drag.current = null. onPointerMove then hits "if (!d) return" and bails, so nothing moves or resizes.
+  - The rich editor src/components/PdfEditor.tsx already does this correctly: it captures on the SAME
+  element that handles pointermove. Match that pattern.
+
+  Required changes in PdfPlacementCanvas.tsx (keep the geometry math — getScale, move clamping, resize
+  aspect logic — exactly as-is; only fix capture target + the leave handler):
+  1. In onPointerDown, capture on the wrapper instead of the child: use
+  wrapRef.current?.setPointerCapture(e.pointerId). Keep e.preventDefault() and e.stopPropagation().
+  2. Remove onPointerLeave={endDrag} from the wrapper div (it is what prematurely ends the drag). End the
+  drag only on onPointerUp and onPointerCancel. With proper capture, pointerup still fires on the
+  wrapper even when the pointer leaves the element bounds.
+
+  Also check the web rich editor (src/components/PdfEditor.tsx):
+  - onElementPointerDown returns early unless the active tool is "select" (if (tool !== "select")
+  return). If a user adds text/an element and then cannot move it, auto-switch the active tool to
+  "select" right after an element is added so it is immediately draggable. Confirm move + corner-resize
+  work for text, image, and shape elements.
+
+  Web verification:
+  - Sign PDF: create a signature, drag the box to move, drag the bottom-right handle to resize — both
+  work on desktop mouse AND touch.
+  - Add Image PDF: same move + resize behavior works.
+  - Rich editor: add text/image/shape, then move and resize each.
+  
+  ==================================================
+  PART 2 — MOBILE (artifacts/pdf-convert-mobile)  [VERIFY; only change if a real defect is reproduced]
+  ==================================================
+  
+  Mobile does NOT share the web bug. Move/resize in app/editor/pdf.tsx is implemented with React Native
+  PanResponder (DragMove/FreeBox/CropBox components) and uses a correct, separate architecture (grab on
+  touch-start, move via gesture deltas divided by container width × zoom scale, dedicated resize-handle
+  responder with hitSlop, pinch-to-zoom handling). Do NOT port the web fix here.
+
+  What to verify on a real device / simulator:
+  - An element can be moved by dragging its body and resized by dragging the corner handle, for every
+  element type (text, image, shape) and on the Sign flow.
+  - An element is selectable: tapping it shows the selection ring and the corner resize handle (FreeBox
+  renders the handle only when selected, and drag handlers are attached only when interactive === true;
+  the body has pointerEvents={interactive ? "auto" : "none"}).
+  - After placing a shape it should already auto-select and switch to the "select" tool (setSelectedId +
+  setActiveTool("select")). Confirm a freshly placed/added element is immediately draggable without an
+  extra tap. If it is NOT, ensure newly added text/images/signatures also auto-select and set the tool to
+  "select".
+  - Confirm dragging is not blocked by the parent zoom/scroll gesture: single-finger drag should move the
+  element; two fingers should pinch-zoom (it already drops the drag when a 2nd finger lands).
+
+  Only if a specific element genuinely cannot be moved/resized on mobile: report which tool, which
+  element type, and whether the selection ring/handle appears, then fix the minimal cause (most likely
+  the interactive/selected gating or the auto-select-on-add behavior). Do not rewrite the PanResponder
+  gesture system.
+
+  ==================================================
+  GLOBAL CONSTRAINTS
+  ==================================================
+  - Do not change branding/colors, unrelated styles, the crop tools, or the PDF output math.
+  - Keep all changes minimal and scoped strictly to the move/resize interaction.
+  - After changes, run typecheck and confirm both apps build.

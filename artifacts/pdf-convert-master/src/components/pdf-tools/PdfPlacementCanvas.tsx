@@ -49,7 +49,11 @@ export function PdfPlacementCanvas({
     (mode: "move" | "resize") => (e: React.PointerEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      (e.target as Element).setPointerCapture?.(e.pointerId);
+      // Capture on the wrapper (which owns onPointerMove/Up) not on the child
+      // that received the event. Capturing on a child element causes the wrapper
+      // to fire pointerleave at drag-start, which called endDrag() and set
+      // drag.current = null before any move fired — making move/resize a no-op.
+      wrapRef.current?.setPointerCapture(e.pointerId);
       drag.current = {
         mode,
         startX: e.clientX,
@@ -92,7 +96,7 @@ export function PdfPlacementCanvas({
       className="relative w-full select-none shadow-lg"
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
-      onPointerLeave={endDrag}
+      onPointerCancel={endDrag}
     >
       <img
         src={page.dataUrl}
