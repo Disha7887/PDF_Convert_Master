@@ -9,7 +9,8 @@ import { authedJson } from "@/lib/authedFetch";
 import { useLocation } from "wouter";
 import { Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Download, Loader2 } from "lucide-react";
 import { downloadFromUrl } from "@/lib/download";
-import { getOutputFormatByServerType } from "@/lib/toolConfig";
+import { getOutputFormatByServerType, getToolConfigByServerType } from "@/lib/toolConfig";
+import { ToolLottieIcon } from "@/components/tool-lottie-icon";
 import { useToast } from "@/hooks/use-toast";
 
 interface UsageData {
@@ -390,6 +391,18 @@ export const UsageStatistics: React.FC = () => {
                           className="flex items-center justify-between gap-4 py-3"
                           data-testid={`usage-recent-${job.id}`}
                         >
+                          {(() => {
+                            const cfg = getToolConfigByServerType(job.toolType);
+                            return (
+                              <div
+                                className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cfg ? `${cfg.iconBgColor} border ${cfg.iconBorderColor}` : "bg-gray-100 border border-gray-200"}`}
+                              >
+                                {cfg
+                                  ? <ToolLottieIcon toolId={cfg.id} config={cfg} size={26} loop={false} />
+                                  : <FileText className="w-4 h-4 text-gray-500" />}
+                              </div>
+                            );
+                          })()}
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-gray-700 truncate">{job.outputFilename || job.inputFilename}</p>
                           </div>

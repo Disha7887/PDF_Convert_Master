@@ -10,7 +10,8 @@ import { authedJson } from "@/lib/authedFetch";
 import { useLocation } from "wouter";
 import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Loader2 } from "lucide-react";
 import { downloadFromUrl } from "@/lib/download";
-import { getOutputFormatByServerType } from "@/lib/toolConfig";
+import { getOutputFormatByServerType, getToolConfigByServerType } from "@/lib/toolConfig";
+import { ToolLottieIcon } from "@/components/tool-lottie-icon";
 import { useToast } from "@/hooks/use-toast";
 
 interface UsageData {
@@ -90,25 +91,26 @@ const ActivityItem: React.FC<{
   fileType: string;
   time: string;
   status: string;
+  toolType: string;
   canDownload?: boolean;
   downloading?: boolean;
   onDownload?: () => void;
-}> = ({ title, fileType, time, status, canDownload, downloading, onDownload }) => {
+}> = ({ title, fileType, time, status, toolType, canDownload, downloading, onDownload }) => {
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
-  const iconWrap = isFailed ? "bg-red-100" : isCompleted ? "bg-green-100" : "bg-blue-100";
-  const icon = isFailed
-    ? <X className="w-4 h-4 text-red-600" />
-    : isCompleted
-      ? <Check className="w-4 h-4 text-green-600" />
-      : <RefreshCw className="w-4 h-4 text-blue-600" />;
+  const cfg = getToolConfigByServerType(toolType);
+  const iconWrap = cfg
+    ? `${cfg.iconBgColor} border ${cfg.iconBorderColor}`
+    : "bg-gray-100 border border-gray-200";
   const badge = isFailed ? "bg-red-100 text-red-800" : isCompleted ? "bg-gray-100 text-gray-700" : "bg-blue-100 text-blue-800";
   const badgeLabel = isFailed ? "Failed" : isCompleted ? fileType : status;
 
   return (
     <div className="flex items-center p-3 rounded-lg">
-      <div className={`w-10 h-10 rounded-lg ${iconWrap} flex items-center justify-center mr-4`}>
-        {icon}
+      <div className={`w-10 h-10 rounded-lg ${iconWrap} flex items-center justify-center mr-4 shrink-0`}>
+        {cfg
+          ? <ToolLottieIcon toolId={cfg.id} config={cfg} size={28} loop={false} />
+          : <FileText className="w-4 h-4 text-gray-500" />}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-base font-medium text-gray-900 truncate">{title}</p>
@@ -421,6 +423,7 @@ export const Dashboard: React.FC = () => {
                         key={item.id}
                         title={`${item.outputFilename || item.inputFilename}${item.source === "api" ? " (API)" : ""}`}
                         fileType={getOutputFormatByServerType(item.toolType) ?? "File"}
+                        toolType={item.toolType}
                         time={timeAgo(item.createdAt)}
                         status={item.status}
                         canDownload={item.status === "completed"}

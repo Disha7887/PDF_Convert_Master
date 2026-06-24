@@ -1,0 +1,34 @@
+GOAL:
+  - Logged-in users can download their files anytime, including after logging out and logging back in.
+  - Guest (not logged-in) users get ONE download per conversion during their session. On page refresh or
+  navigating away, their file access is lost and the screen resets. They must re-convert to download
+  again.
+  - No database changes and no download tokens.
+
+  SERVER (artifacts/api-server/src/routes.ts):
+  - Keep the current ownership rule on GET /api/download/:jobId. A job owned by a user (job.userId is
+  set) may only be downloaded by that same authenticated user (req.user.id === job.userId). This already
+  lets a logged-in user download anytime, including after logout + log back in. Do NOT change this.
+  - Guest jobs (userId is null) remain downloadable for the immediate session with no token. Do not add
+  any token or schema changes.
+
+  WEB CLIENT (artifacts/pdf-convert-master):
+  - For guests, keep file access purely in-session. The converted file's download info must live only in
+  React component state. On refresh or navigation, that state is gone and the UI resets to the starting
+  point. Do NOT persist guest download URLs to localStorage. This one-download-then-reset behavior is
+  intended.
+  - For logged-in users, downloads must continue to attach the JWT via downloadFromUrl
+  (src/lib/download.ts) so downloads work from the result screen, Dashboard, and Usage Statistics at any
+  time.
+  - Logout cleanup: in src/contexts/AuthContext.tsx, after logout clears auth_token, redirect to home (or
+  refresh) so stale account screens (Dashboard, Usage Statistics) no longer show download buttons for
+  files the user can no longer access.
+  - Friendly error: in src/lib/download.ts, when a download response is 401 or 403, surface a clear
+  message like "Please log in to download this file." instead of a raw error. Ensure the callers
+  Dashboard.tsx, UsageStatistics.tsx, ConversionWorkflow.tsx, HeroToolConverter.tsx,
+  PdfMergeWorkflow.tsx, and Tools.tsx display this message through the existing toast/error UI.
+
+  VERIFY:
+  - A logged-in user can download anytime, and again after logging out and logging back in.
+  - A guest can download right after converting, but loses access on refresh and the screen resets.
+  - A logged-in user's file cannot be downloaded by anyone else.
