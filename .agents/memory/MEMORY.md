@@ -56,3 +56,4 @@
 - [Profile & password reset](profile-password-reset.md) — JWT rotates on profile update (web+mobile must persist it); forgot-password always-success; reset codes throttled (5 tries); emails via Resend connector.
 - [Shared enum runtime staleness](shared-enum-restart.md) — after editing the ToolType enum in lib/db, restart api-server or z.nativeEnum validation rejects the new value ("Invalid request data") until reload.
 - [api-server DB driver = @workspace/db](api-server-db-driver.md) — import shared @workspace/db (prefers SUPABASE_DB_URL via pg), NOT a local ./db Neon wrapper, or writes silently hit the wrong (Replit) database.
+- [Imported project run setup](imported-project-run-setup.md) — fresh import: artifact registry empty, configure workflows manually w/ inline PORT (api 8080, web 21027); full secrets inventory; /api/health not /api/healthz.
