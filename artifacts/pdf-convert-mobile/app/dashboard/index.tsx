@@ -283,15 +283,17 @@ export default function WorkspaceScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.activityTitle} numberOfLines={1}>
-                      {job.toolName}
+                      {job.outputFilename || job.inputFilename}
                     </Text>
                     <Text style={styles.activitySub} numberOfLines={1}>
-                      {job.inputFilename}
+                      {timeAgo(job.createdAt)}
                     </Text>
                   </View>
                   <View style={styles.activityRight}>
-                    <Text style={styles.activityTime}>{timeAgo(job.createdAt)}</Text>
-                    <Badge label={job.status} tone={m.tone} />
+                    <Badge
+                      label={job.status === "completed" ? (tool?.outputFormat ?? "File") : "Failed"}
+                      tone={job.status === "completed" ? "primary" : "danger"}
+                    />
                   </View>
                   {canDownload ? (
                     isDownloading ? (

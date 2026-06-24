@@ -10,6 +10,8 @@ import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { clearHistory, loadHistory, type HistoryEntry } from "@/constants/history";
+import { API_ORIGIN } from "@/constants/api";
+import { downloadAndSave, saveFile } from "@/services/files";
 
 const C = colors.light;
 
@@ -27,6 +29,7 @@ export default function HistoryScreen() {
   const router = useRouter();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,6 +45,40 @@ export default function HistoryScreen() {
         active = false;
       };
     }, []),
+  );
+
+  const handleDownload = useCallback(
+    async (entry: HistoryEntry) => {
+      if (downloadingId !== null) return;
+      if (!entry.jobId && !entry.uri) {
+        Alert.alert(
+          "File unavailable",
+          "This file is no longer available to download. Please convert it again.",
+        );
+        return;
+      }
+      setDownloadingId(entry.id);
+      try {
+        // Prefer the durable backend copy (survives cache eviction / restarts);
+        // fall back to the local file for editor outputs that have no server job.
+        const res = entry.jobId
+          ? await downloadAndSave(`${API_ORIGIN}/api/download/${entry.jobId}`, entry.fileName)
+          : await saveFile(entry.uri!, entry.fileName);
+        if (res.status === "saved") {
+          Alert.alert("Downloaded", `${entry.fileName} was saved to ${res.location}.`);
+        } else if (res.status === "failed") {
+          Alert.alert(
+            "Download failed",
+            "We couldn't save this file. It may have been removed — try converting it again.",
+          );
+        }
+      } catch {
+        Alert.alert("Download failed", "We couldn't save this file. Please try again.");
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [downloadingId],
   );
 
   const handleClear = useCallback(() => {
@@ -88,45 +125,55 @@ export default function HistoryScreen() {
           />
         </View>
       ) : (
-        entries.map((entry) => (
-          <Pressable
-            key={entry.id}
-            onPress={() => entry.toolId && router.push(ROUTES.convert(entry.toolId) as never)}
-            style={({ pressed }) => [styles.card, cardShadow, { opacity: pressed ? 0.92 : 1 }]}
-          >
-            {/* Same animated per-tool identity icon used in dashboard Recent
-                Activity, so a row reads at a glance as the tool that produced it
-                (success/failure is conveyed by the badge tone on the right). */}
-            <View style={[styles.statusIcon, { backgroundColor: C.accent }]}>
-              {entry.toolId ? (
-                <ToolLottieIcon toolId={entry.toolId} size={28} autoPlay={false} loop={false} />
-              ) : (
-                <Feather
-                  name={entry.status === "completed" ? "check" : "x"}
-                  size={18}
-                  color={entry.status === "completed" ? "#166534" : "#991b1b"}
+        entries.map((entry) => {
+          const isDownloading = downloadingId === entry.id;
+          const canDownload = !!(entry.jobId || entry.uri);
+          return (
+            <Pressable
+              key={entry.id}
+              onPress={() => void handleDownload(entry)}
+              disabled={downloadingId !== null || !canDownload}
+              style={({ pressed }) => [
+                styles.card,
+                cardShadow,
+                { opacity: !canDownload ? 0.6 : pressed ? 0.92 : 1 },
+              ]}
+            >
+              {/* Per-tool identity icon (same as dashboard Recent Activity), so a
+                  row reads at a glance as the tool that produced the file. */}
+              <View style={[styles.statusIcon, { backgroundColor: C.accent }]}>
+                {entry.toolId ? (
+                  <ToolLottieIcon toolId={entry.toolId} size={28} autoPlay={false} loop={false} />
+                ) : (
+                  <Feather
+                    name={entry.status === "completed" ? "check" : "x"}
+                    size={18}
+                    color={entry.status === "completed" ? "#166534" : "#991b1b"}
+                  />
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                  {entry.fileName}
+                </Text>
+                <Text style={styles.cardTime} numberOfLines={1}>
+                  {formatTime(entry.timestamp)}
+                </Text>
+              </View>
+              <View style={styles.cardRight}>
+                <Badge
+                  label={entry.outputFormat}
+                  tone={entry.status === "completed" ? "primary" : "danger"}
                 />
-              )}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle} numberOfLines={1}>
-                {entry.toolTitle}
-              </Text>
-              <Text style={styles.cardFile} numberOfLines={1}>
-                {entry.fileName}
-              </Text>
-              <Text style={styles.cardTime} numberOfLines={1}>
-                {formatTime(entry.timestamp)}
-              </Text>
-            </View>
-            <View style={styles.cardRight}>
-              <Badge
-                label={entry.outputFormat}
-                tone={entry.status === "completed" ? "primary" : "danger"}
-              />
-            </View>
-          </Pressable>
-        ))
+                {isDownloading ? (
+                  <Loader size={20} />
+                ) : canDownload ? (
+                  <Feather name="download" size={18} color={C.primary} />
+                ) : null}
+              </View>
+            </Pressable>
+          );
+        })
       )}
     </ScreenScroll>
   );
@@ -186,6 +233,5 @@ const styles = StyleSheet.create({
     maxWidth: 108,
   },
   cardTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.headingSemibold },
-  cardFile: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 1 },
-  cardTime: { fontSize: 11, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 3 },
+  cardTime: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 3 },
 });

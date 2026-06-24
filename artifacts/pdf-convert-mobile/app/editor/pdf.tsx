@@ -1206,6 +1206,7 @@ export default function PdfEditorScreen() {
         toolId: tool.id,
         toolTitle: tool.title,
         fileName: name,
+        uri,
         outputFormat: tool.outputFormat,
         timestamp: Date.now(),
         status: "completed",

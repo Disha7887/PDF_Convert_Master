@@ -263,6 +263,7 @@ export default function ImageEditorScreen() {
         toolId: tool.id,
         toolTitle: tool.title,
         fileName: name,
+        uri: result.uri,
         outputFormat: tool.outputFormat,
         timestamp: Date.now(),
         status: "completed",

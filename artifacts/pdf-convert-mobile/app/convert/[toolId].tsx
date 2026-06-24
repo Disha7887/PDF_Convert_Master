@@ -387,6 +387,8 @@ export default function ConvertScreen() {
         toolId: tool.id,
         toolTitle: tool.title,
         fileName: name,
+        jobId,
+        uri,
         outputFormat: tool.outputFormat,
         timestamp: Date.now(),
         status: "completed",

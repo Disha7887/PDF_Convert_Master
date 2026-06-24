@@ -7,6 +7,14 @@ export interface HistoryEntry {
   toolId?: string;
   toolTitle: string;
   fileName: string;
+  /**
+   * Backend job id for server-converted outputs. Preferred for re-download
+   * because the file is fetched fresh from durable storage (survives cache
+   * eviction / app restarts). Absent for purely local editor outputs.
+   */
+  jobId?: string;
+  /** Local URI of the produced file; fallback re-download for editor outputs. */
+  uri?: string;
   outputFormat: string;
   timestamp: number;
   status: "completed" | "failed";
