@@ -1,0 +1,49 @@
+Finalize download access behavior consistently across the WEB app (artifacts/pdf-convert-master) and
+  the MOBILE app (artifacts/pdf-convert-mobile), backed by the shared API server (artifacts/api-server).
+
+  GOAL (same on web and mobile):
+  - Logged-in users can download their files anytime, including after logging out and logging back in.
+  - Guest (not logged-in) users get ONE download per conversion during their current session. Once they
+  leave/refresh the screen (web) or navigate away / close the app (mobile), guest file access is lost and
+  the flow resets. They must re-convert to download again.
+  - No database changes and no download tokens.
+
+  SERVER (artifacts/api-server/src/routes.ts):
+  - Keep the current ownership rule on GET /api/download/:jobId. A job owned by a user (job.userId set)
+  may only be downloaded by that same authenticated user (req.user.id === job.userId). This already lets
+  a logged-in user download anytime, including after logout + log back in. Do NOT change this.
+  - Guest jobs (userId null) remain downloadable for the immediate session with no token. Do not add any
+  token or schema changes.
+
+  WEB CLIENT (artifacts/pdf-convert-master):
+  - For guests, keep file access purely in-session: the converted file's download info lives only in
+  React component state. On refresh or navigation it is gone and the UI resets to the start. Do NOT
+  persist guest download URLs to localStorage. One-download-then-reset is intended.
+  - For logged-in users, downloads keep attaching the JWT via downloadFromUrl (src/lib/download.ts) so
+  they work from the result screen, Dashboard, and Usage Statistics anytime.
+  - Logout cleanup: in src/contexts/AuthContext.tsx, after logout clears auth_token, redirect to home (or
+  refresh) so stale account screens (Dashboard, Usage Statistics) no longer show download buttons for
+  files the user can no longer access.
+  - Friendly error: in src/lib/download.ts, when a download returns 401 or 403, surface a clear message
+  like "Please log in to download this file." instead of a raw error, shown via the existing toast/error
+  UI in callers: Dashboard.tsx, UsageStatistics.tsx, ConversionWorkflow.tsx, HeroToolConverter.tsx,
+  PdfMergeWorkflow.tsx, Tools.tsx.
+
+  MOBILE CLIENT (artifacts/pdf-convert-mobile):
+  - For guests, keep file access purely in-session: the converted result lives only in the convert screen
+  state (app/convert/[toolId].tsx). After leaving the screen or restarting the app, guest access is gone
+  and the flow resets. Do NOT persist guest download URLs/jobs for re-download.
+  - For logged-in users, downloads keep attaching the JWT via downloadRemoteFile/downloadAndSave
+  (services/files.ts) so re-downloading from history (app/history.tsx) works anytime.
+  - Logout cleanup: in contexts/AuthContext.tsx where logout calls setAuthToken(null), also clear/reset
+  any cached account screens (e.g. history) so the user does not see download buttons for files they can
+  no longer access.
+  - Friendly error: when a download returns 401 or 403, show a clear message like "Please log in to
+  download this file." (keep the existing "no longer available, please convert it again" handling in
+  app/history.tsx for genuinely missing files).
+
+  VERIFY (both apps):
+  - A logged-in user can download anytime, and again after logging out and logging back in.
+  - A guest can download right after converting, but loses access once the screen is refreshed (web) or
+  left/closed (mobile), and the flow resets.
+  - A logged-in user's file cannot be downloaded by anyone else.

@@ -162,10 +162,11 @@ export const Dashboard: React.FC = () => {
     setDownloadingId(job.id);
     try {
       await downloadFromUrl(`/api/download/${job.id}`, name);
-    } catch {
+    } catch (err) {
       toast({
         title: "Download failed",
-        description: "We couldn't download this file. Please try again.",
+        description:
+          err instanceof Error ? err.message : "We couldn't download this file. Please try again.",
         variant: "destructive",
       });
     } finally {

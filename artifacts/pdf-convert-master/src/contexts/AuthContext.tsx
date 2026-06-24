@@ -199,6 +199,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setToken(null);
     localStorage.removeItem("auth_token");
+    // Hard-navigate home so account-only screens (Dashboard, Usage Statistics)
+    // and any in-memory conversion state are fully torn down. Without this the
+    // user could be left on a stale page showing download buttons for files the
+    // backend will now refuse (their jobs require their token).
+    if (typeof window !== "undefined") {
+      window.location.href = import.meta.env.BASE_URL || "/";
+    }
   };
 
   // Merge fresh user data (and optionally a reissued token) into state after a

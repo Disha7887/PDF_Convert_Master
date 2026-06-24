@@ -27,6 +27,15 @@ export type SaveResult =
 
 const SAF_DIR_KEY = "downloads.safDirectoryUri";
 
+/** Error carrying the HTTP status so callers can show a 401/403-specific message. */
+export type DownloadError = Error & { status: number };
+
+function downloadError(status: number): DownloadError {
+  const err = new Error(`Download failed (${status})`) as DownloadError;
+  err.status = status;
+  return err;
+}
+
 const MIME_BY_EXT: Record<string, string> = {
   pdf: "application/pdf",
   doc: "application/msword",
@@ -218,7 +227,7 @@ export async function downloadRemoteFile(url: string, name: string): Promise<str
     token && isApiOrigin ? { Authorization: `Bearer ${token}` } : undefined;
   if (Platform.OS === "web") {
     const res = await fetch(url, authHeaders ? { headers: authHeaders } : undefined);
-    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+    if (!res.ok) throw downloadError(res.status);
     const blob = await res.blob();
     return URL.createObjectURL(blob);
   }
@@ -233,7 +242,7 @@ export async function downloadRemoteFile(url: string, name: string): Promise<str
   // were the converted file — without this the save flow would report success.
   if (result.status < 200 || result.status >= 300) {
     await LegacyFS.deleteAsync(result.uri, { idempotent: true });
-    throw new Error(`Download failed (${result.status})`);
+    throw downloadError(result.status);
   }
   return result.uri;
 }

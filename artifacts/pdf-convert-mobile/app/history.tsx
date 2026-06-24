@@ -72,8 +72,18 @@ export default function HistoryScreen() {
             "We couldn't save this file. It may have been removed — try converting it again.",
           );
         }
-      } catch {
-        Alert.alert("Download failed", "We couldn't save this file. Please try again.");
+      } catch (err) {
+        const status = (err as { status?: number } | null)?.status;
+        if (status === 401 || status === 403) {
+          Alert.alert("Sign in required", "Please log in to download this file.");
+        } else if (status === 404) {
+          Alert.alert(
+            "File unavailable",
+            "This file is no longer available to download. Please convert it again.",
+          );
+        } else {
+          Alert.alert("Download failed", "We couldn't save this file. Please try again.");
+        }
       } finally {
         setDownloadingId(null);
       }

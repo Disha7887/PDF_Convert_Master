@@ -11,6 +11,7 @@ import React, {
 
 import { USE_MOCK_DATA } from "@/constants/config";
 import { API_BASE_URL } from "@/constants/api";
+import { clearHistory } from "@/constants/history";
 import { DEMO_USER, type MockUser } from "@/mocks/data";
 import { mockApi } from "@/mocks/mockApi";
 import { setAuthToken } from "@/services/authToken";
@@ -188,6 +189,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setAuthToken(null);
     AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]).catch(() => {});
+    // Clear cached conversion history so the History screen doesn't keep
+    // showing download buttons for jobs the backend will now refuse (a
+    // signed-in user's jobs require their token; after logout they 403).
+    clearHistory().catch(() => {});
   }, []);
 
   const value = useMemo<AuthContextType>(

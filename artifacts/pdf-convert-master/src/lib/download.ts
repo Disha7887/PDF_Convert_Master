@@ -55,6 +55,12 @@ export async function downloadFromUrl(
       : undefined;
   const res = await fetch(url, init);
   if (!res.ok) {
+    // 401/403 mean the file belongs to a user and this caller isn't that
+    // signed-in user (e.g. a guest, or someone who logged out): surface a
+    // clear, actionable message instead of a raw status code.
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("Please log in to download this file.");
+    }
     throw new Error(
       res.status === 404
         ? "This file is no longer available. Please run the conversion again."

@@ -26,6 +26,7 @@ import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { addFile } from "@/constants/files";
 import { addHistory } from "@/constants/history";
+import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { getToolActionLabels } from "@/constants/toolActionLabels";
@@ -147,7 +148,13 @@ async function downloadOutput(downloadUrl: string, name: string): Promise<string
     token && isApiOrigin ? { Authorization: `Bearer ${token}` } : undefined;
   if (Platform.OS === "web") {
     const res = await fetch(url, authHeaders ? { headers: authHeaders } : undefined);
-    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+    if (!res.ok) {
+      throw new Error(
+        res.status === 401 || res.status === 403
+          ? "Please log in to download this file."
+          : `Download failed (${res.status})`,
+      );
+    }
     const blob = await res.blob();
     return URL.createObjectURL(blob);
   }
@@ -165,6 +172,7 @@ async function downloadOutput(downloadUrl: string, name: string): Promise<string
 export default function ConvertScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const { toolId, preview } = useLocalSearchParams<{ toolId: string; preview?: string }>();
   const tool = getToolById(toolId);
 
@@ -382,35 +390,41 @@ export default function ConvertScreen() {
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      await addHistory({
-        id: `h_${Date.now()}`,
-        toolId: tool.id,
-        toolTitle: tool.title,
-        fileName: name,
-        jobId,
-        uri,
-        outputFormat: tool.outputFormat,
-        timestamp: Date.now(),
-        status: "completed",
-      });
-      await addFile({
-        id: `f_${Date.now()}`,
-        kind: tool.outputFormat.toLowerCase().includes("pdf")
-          ? "converted-pdf"
-          : "converted-file",
-        name,
-        uri,
-        elementCount: files.length,
-        createdAt: Date.now(),
-        toolId: tool.id,
-        toolTitle: tool.title,
-        outputFormat: tool.outputFormat,
-      });
+      // Persist for later re-download ONLY for signed-in users. Guests get a
+      // single in-session download from this screen's state (above); we must
+      // not stash their jobId/uri anywhere durable, or they could re-download
+      // after leaving — the flow is intentionally one-download-then-reset.
+      if (isAuthenticated) {
+        await addHistory({
+          id: `h_${Date.now()}`,
+          toolId: tool.id,
+          toolTitle: tool.title,
+          fileName: name,
+          jobId,
+          uri,
+          outputFormat: tool.outputFormat,
+          timestamp: Date.now(),
+          status: "completed",
+        });
+        await addFile({
+          id: `f_${Date.now()}`,
+          kind: tool.outputFormat.toLowerCase().includes("pdf")
+            ? "converted-pdf"
+            : "converted-file",
+          name,
+          uri,
+          elementCount: files.length,
+          createdAt: Date.now(),
+          toolId: tool.id,
+          toolTitle: tool.title,
+          outputFormat: tool.outputFormat,
+        });
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Conversion failed.");
       setStage("error");
     }
-  }, [tool, files, outputFormat, quality, needsPassword, password]);
+  }, [tool, files, outputFormat, quality, needsPassword, password, isAuthenticated]);
 
   const reset = useCallback(() => {
     setFiles([]);
