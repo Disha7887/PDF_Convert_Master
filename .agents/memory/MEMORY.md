@@ -58,6 +58,7 @@
 - [Shared enum runtime staleness](shared-enum-restart.md) — after editing the ToolType enum in lib/db, restart api-server or z.nativeEnum validation rejects the new value ("Invalid request data") until reload.
 - [Mobile History re-download](history-redownload.md) — History rows re-download on tap (prefer jobId/backend, local uri fallback); rows show saved fileName + timestamp + file-type badge, not the tool name.
 - [api-server DB driver = @workspace/db](api-server-db-driver.md) — import shared @workspace/db (prefers SUPABASE_DB_URL via pg), NOT a local ./db Neon wrapper, or writes silently hit the wrong (Replit) database.
+- [RevenueCat IAP (mobile)](revenuecat-iap.md) — native SDK behind purchasesClient.ts + .web.ts stub (rn-purchases breaks web bundle); type-only import in revenuecat.tsx; sync is non-clobbering, idempotent credits, runs only on purchase/restore not login.
 - [pdf-lib embedJpg JFIF](pdf-lib-embedjpg-jfif.md) — embedJpg throws "SOI not found" on headerless (sharp) JPEGs; re-encode via sharp before embed; normalize non-jpeg to PNG.
 - [Web PDF placement-box drag](pdf-placement-drag-web.md) — drag must use window-level pointer listeners + latest-ref (not element-scoped/setPointerCapture); verify e2e with tall viewport + scrollIntoView, test move & resize separately.
 - [Download access model](download-access-model.md) — guests = ONE in-session download (never persist jobId/uri); logged-in persist gated on isAuthenticated; friendly 401/403 "Please log in…"; logout clears history not Files.
