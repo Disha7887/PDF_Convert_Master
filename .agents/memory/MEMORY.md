@@ -40,6 +40,7 @@
 - [Deploy architecture](deploy-architecture.md) — prod = Railway(api-server co-hosts web build, single origin) + Supabase + Expo EAS; pin pnpm@10 in root pkg for Railpack; mobile uses EXPO_PUBLIC_DOMAIN.
 - [iOS modal-share race](ios-modal-share-race.md) — closing an RN Modal then immediately Sharing.shareAsync silently fails on iOS; defer the share to the Modal's onDismiss.
 - [Web download in iframe](web-download-iframe-blob.md) — converted-file downloads must fetch→blob→`<a download>` (downloadFromUrl); window.open/anchor-nav is blocked in the Replit preview/canvas iframe.
+- [iOS Safari web download](web-ios-download.md) — deployed site on iPhone: <a download> opens blob inline, never saves; use navigator.share({files}) on iOS, anchor elsewhere.
 - [Mobile real-data mode](mobile-real-data-mode.md) — logged-in mobile uses real backend; token bridged via services/authToken.ts; conversions must send Bearer token; dashboard+usage share services/account.ts#fetchUsage.
 - [Liquid Glass material (mobile)](liquid-glass-mobile.md) — glossy look = custom `GlassSurface` (blur+sheen+border), works in Expo Go; needs ambient backdrop behind it; coral accent kept.
 - [Mobile auth dark sheet](auth-sheet-mobile.md) — sign-in/up share AuthSheet (dark sheet over photo); email-first progressive disclosure preserves mock password auth; Google/Apple are honest placeholders.

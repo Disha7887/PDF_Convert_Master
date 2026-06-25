@@ -10,6 +10,20 @@
 
 import { getAuthToken } from "./authedFetch";
 
+// iOS Safari (iPhone/iPad) ignores the <a download> attribute for blob: URLs:
+// instead of saving the file it opens it inline in the tab, so the user never
+// gets a real download. The reliable path on iOS is the Web Share sheet, which
+// offers "Save to Files"/Photos. Detect iOS (incl. iPadOS, which reports as a
+// Mac) so we only change behavior there and leave desktop/Android untouched.
+function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  const iPhoneClass = /iPad|iPhone|iPod/.test(ua);
+  const iPadOS =
+    navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return iPhoneClass || iPadOS;
+}
+
 function filenameFromDisposition(header: string | null): string | null {
   if (!header) return null;
   // Prefer RFC 5987 `filename*=UTF-8''...` when present.
@@ -74,6 +88,26 @@ export async function downloadFromUrl(
     fallbackName ||
     url.split("/").pop() ||
     "download";
+
+  // iOS: open the native share sheet so the user can "Save to Files"/Photos.
+  // The <a download> path below silently fails on iOS Safari (opens the file
+  // inline instead of saving), which is the reported bug.
+  if (isIOS() && typeof navigator !== "undefined") {
+    const file = new File([blob], name, {
+      type: blob.type || "application/octet-stream",
+    });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: name });
+        return;
+      } catch (err) {
+        // The user dismissing the share sheet is not a failure.
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // Anything else (e.g. activation expired) falls through to the anchor
+        // download as a best-effort last resort.
+      }
+    }
+  }
 
   const objectUrl = URL.createObjectURL(blob);
   const a = document.createElement("a");
