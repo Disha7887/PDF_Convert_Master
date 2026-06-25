@@ -24,8 +24,14 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
   const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<AuthError | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [outputName, setOutputName] = useState("");
   const mountedRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // "Images to PDF" combines MULTIPLE images into ONE PDF, so the hero card
+  // accepts several files and posts them to the dedicated multi-file endpoint
+  // (every other hero tool is single-file via /api/convert).
+  const isImagesToPdf = tool.id === "images-to-pdf";
 
   useEffect(() => {
     mountedRef.current = true;
@@ -40,6 +46,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
   const reset = () => {
     setStage("idle");
     setFileName("");
+    setOutputName("");
     setError(null);
     setAuthError(null);
     setDownloadUrl(null);
@@ -106,10 +113,35 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     }
   };
 
+  const convertImages = async (fs: File[]) => {
+    if (fs.length === 0) return;
+    setStage("converting");
+    setError(null);
+    setAuthError(null);
+    setFileName(fs.length === 1 ? fs[0].name : `${fs.length} images`);
+    setOutputName("images.pdf");
+    setDownloadUrl(null);
+    try {
+      const fd = new FormData();
+      for (const f of fs) fd.append("files", f);
+      const res = await authedFetch("/api/images-to-pdf", { method: "POST", body: fd });
+      const data = await res.json();
+      const authErr = getAuthError(res.status, data?.error);
+      if (authErr) throw authErr;
+      if (!data.success) throw new Error(data.error || "Conversion failed");
+      await pollJob(data.data.jobId);
+    } catch (e) {
+      if (!mountedRef.current) return;
+      if (e instanceof AuthError) setAuthError(e);
+      setError(e instanceof Error ? e.message : "Conversion failed");
+      setStage("error");
+    }
+  };
+
   const handleDownload = async () => {
     if (!downloadUrl) return;
     try {
-      await downloadFromUrl(downloadUrl, fileName || undefined);
+      await downloadFromUrl(downloadUrl, outputName || fileName || undefined);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Download failed");
       setStage("error");
@@ -124,7 +156,9 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
         toolId={tool.id}
         title={tool.dropAreaText}
         actionLabel={label}
-        onFiles={(files) => convert(files[0])}
+        multiple={isImagesToPdf}
+        maxFiles={isImagesToPdf ? 20 : undefined}
+        onFiles={(files) => (isImagesToPdf ? convertImages(files) : convert(files[0]))}
         onValidationError={(msg) => {
           setFileName("");
           setError(msg);

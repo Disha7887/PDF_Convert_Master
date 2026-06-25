@@ -232,7 +232,7 @@ export const tools: Tool[] = [
     feather: "image",
     route: "/upload/images-to-pdf",
     serverToolType: "images_to_pdf",
-    multiFile: false,
+    multiFile: true,
     isMerge: false,
     editor: null,
   },

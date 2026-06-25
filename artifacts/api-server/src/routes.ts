@@ -1248,6 +1248,61 @@ async function convertImageToPdf(imageBuffer: Buffer, inputExt: string | undefin
   }
 }
 
+// Combine MULTIPLE images into a SINGLE PDF — one page per image, in the order
+// given. Each page is sized to its image (aspect-ratio preserved, capped) so the
+// result reads like a clean photo book rather than letterboxed A4 pages.
+async function combineImagesToPdf(
+  images: { buffer: Buffer; name: string }[],
+  _outputFilename: string,
+) {
+  try {
+    const pdfDoc = await PDFDocument.create();
+
+    for (const img of images) {
+      const metadata = await sharp(img.buffer).metadata();
+
+      let embedded;
+      if (metadata.format === 'jpeg') {
+        // Re-encode through sharp so the JPEG carries a JFIF/APP0 header that
+        // pdf-lib's embedJpg requires — some encoders (including sharp's own
+        // output) omit it, which makes embedJpg throw "SOI not found". This
+        // keeps photos in compact JPEG form rather than bloating to PNG.
+        const jpgBuffer = await sharp(img.buffer).jpeg().toBuffer();
+        embedded = await pdfDoc.embedJpg(jpgBuffer);
+      } else {
+        // Everything else (png, webp, gif, bmp, tiff, ...) is normalized to
+        // PNG, which pdf-lib's embedPng reliably accepts regardless of the
+        // source color type.
+        const pngBuffer = await sharp(img.buffer).png().toBuffer();
+        embedded = await pdfDoc.embedPng(pngBuffer);
+      }
+
+      const MAX_DIM = 2000;
+      const scale = Math.min(1, MAX_DIM / Math.max(embedded.width, embedded.height));
+      const pageWidth = embedded.width * scale;
+      const pageHeight = embedded.height * scale;
+
+      const page = pdfDoc.addPage([pageWidth, pageHeight]);
+      page.drawImage(embedded, {
+        x: 0,
+        y: 0,
+        width: pageWidth,
+        height: pageHeight,
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+
+    return {
+      success: true,
+      convertedBuffer: Buffer.from(pdfBytes),
+      mimeType: 'application/pdf',
+    };
+  } catch (error) {
+    throw new Error(`Images to PDF conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
 async function compressPdf(pdfBuffer: Buffer, outputFilename: string) {
   try {
     // Load and analyze the PDF
@@ -1934,6 +1989,26 @@ const uploadMultiple = multer({
   },
 });
 
+// Multi-image upload for "Images to PDF". Accepts only images (no text files,
+// unlike uploadMultiple) and allows up to 20 so several photos can be combined
+// into a single PDF in one request.
+const imageMultiUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB per file
+    files: 20,
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (file.mimetype.startsWith('image/') || allowedExtensions.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPG, PNG, GIF, BMP, WebP) are allowed.'));
+    }
+  },
+});
+
 // File storage for conversion processing
 const fileStorage = new Map<number, Buffer>();
 const convertedFileStorage = new Map<number, { buffer: Buffer; mimeType: string; filename: string }>();
@@ -2427,6 +2502,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         error: "Failed to merge PDFs",
         details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Combine multiple images into a SINGLE PDF (one page per image, in order).
+  // Like /api/merge-pdfs, the generic single-file /api/convert can't do this, so
+  // "Images to PDF" gets its own multi-file endpoint that reuses the job +
+  // /api/download infrastructure (poll + download exactly like every other tool).
+  app.post("/api/images-to-pdf", optionalConversionAuth, (req, res, next) => {
+    imageMultiUpload.array('files', 20)(req, res, (err: any) => {
+      if (err) {
+        let msg = err instanceof Error ? err.message : 'Upload failed';
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') msg = 'Each image must be 25MB or smaller.';
+          else if (err.code === 'LIMIT_FILE_COUNT') msg = 'You can combine at most 20 images at once.';
+        }
+        return res.status(400).json({ success: false, error: msg });
+      }
+      next();
+    });
+  }, async (req, res) => {
+    try {
+      const files = (req.files as Express.Multer.File[]) || [];
+      if (files.length < 1) {
+        return res.status(400).json({
+          success: false,
+          error: "Please select at least one image to convert.",
+        });
+      }
+
+      const images = files.map((f) => ({ buffer: f.buffer, name: f.originalname }));
+      const totalInputSize = files.reduce((sum, f) => sum + f.size, 0);
+      const outputFilename = "images.pdf";
+
+      const job = await storage.createConversionJob({
+        userId: (req as ConversionAuthRequest).user?.id || null,
+        toolType: ToolType.IMAGES_TO_PDF,
+        status: "processing",
+        source: (req as ConversionAuthRequest).authSource || "web",
+        inputFilename: files.map((f) => f.originalname).join(", ").slice(0, 255),
+        inputFileSize: totalInputSize,
+        outputFilename: null,
+        outputFileSize: null,
+        processingTime: null,
+        errorMessage: null,
+      });
+
+      try {
+        const startTime = Date.now();
+        const result = await combineImagesToPdf(images, outputFilename);
+        if (!result.success || !result.convertedBuffer || result.convertedBuffer.length === 0) {
+          throw new Error("Conversion produced no output");
+        }
+        convertedFileStorage.set(job.id, {
+          buffer: result.convertedBuffer,
+          mimeType: result.mimeType || "application/pdf",
+          filename: outputFilename,
+        });
+        // Best-effort durable copy so the result survives an in-memory purge or
+        // a server restart (a storage failure must not fail the job).
+        try {
+          await saveConvertedFile(job.id, result.convertedBuffer, result.mimeType || "application/pdf");
+        } catch (storageError) {
+          console.error(`Failed to persist images-to-pdf result for job ${job.id}:`, storageError);
+        }
+        await storage.updateConversionJobStatus(
+          job.id,
+          "completed",
+          outputFilename,
+          undefined,
+          Date.now() - startTime,
+          result.convertedBuffer.length,
+        );
+      } catch (err) {
+        await storage.updateConversionJobStatus(
+          job.id,
+          "failed",
+          undefined,
+          err instanceof Error ? err.message : "Conversion failed",
+        );
+      }
+
+      res.json({
+        success: true,
+        data: {
+          jobId: job.id,
+          status: "processing",
+          message: "Images uploaded successfully. Conversion started.",
+        },
+      });
+    } catch (error) {
+      console.error("Images to PDF error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to convert images to PDF",
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });

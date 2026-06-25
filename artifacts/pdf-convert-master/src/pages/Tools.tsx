@@ -79,6 +79,9 @@ const NAVIGATE_TOOL_IDS = new Set([
   "add-image-pdf",
   "delete-pages-pdf",
   "ocr-pdf",
+  // Combines MULTIPLE images into one PDF — needs the dedicated multi-file page,
+  // not the single-file card modal.
+  "images-to-pdf",
 ]);
 const editSuffixMap: Record<EditOp, string> = {
   resize: "resized",

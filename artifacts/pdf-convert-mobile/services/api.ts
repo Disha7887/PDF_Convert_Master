@@ -177,6 +177,22 @@ async function realStartMerge(files: PickedFile[]): Promise<StartConversionResul
   return { jobId: String(data.data.jobId) };
 }
 
+async function realStartImagesToPdf(files: PickedFile[]): Promise<StartConversionResult> {
+  assertBackendConfigured();
+  if (files.length < 1) {
+    throw new Error("Select at least one image to convert.");
+  }
+  const form = new FormData();
+  for (const f of files) await appendFile(form, "files", f);
+
+  const res = await fetch(`${API_BASE_URL}/images-to-pdf`, { method: "POST", headers: authHeaders(), body: form });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.success || !data?.data?.jobId) {
+    throw new Error(data?.error || `Conversion request failed (${res.status})`);
+  }
+  return { jobId: String(data.data.jobId) };
+}
+
 async function realPollJob(jobId: string): Promise<ConvertJob> {
   assertBackendConfigured();
   for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
@@ -225,6 +241,10 @@ export async function startConversion(
 
   if (files.length === 0) throw new Error("No file selected.");
   if (tool?.isMerge) return realStartMerge(files);
+  // "Images to PDF" combines every selected image into a SINGLE PDF, so all
+  // files go to the dedicated multi-file endpoint instead of converting only
+  // the first one.
+  if (tool?.serverToolType === "images_to_pdf") return realStartImagesToPdf(files);
   return realStartConvert(tool?.serverToolType ?? toolId, files[0], options);
 }
 
