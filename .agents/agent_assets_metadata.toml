@@ -1,8 +1,13 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "xiZfsYtXDjOI0jj4cGX52"
 uri = "file://artifacts/pdf-convert-mobile/assets/images/icon.png"
 type = "image"
 title = "pdf convert master app icon"
+
+[[outputs]]
+id = "N34neGBOwag1MhkAIiDvt"
+uri = "file://store-assets/PDF-Genius-Data-Safety.csv"
+type = "table"
+title = "PDF Genius — Google Play Data Safety answers"

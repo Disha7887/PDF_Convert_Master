@@ -1,0 +1,32 @@
+PDF Genius - Google Play Data Safety answers,,,,,,
+Package name,com.pdfconvertmaster.app,,,,,
+,,,,,,
+SECTION 1 - Overall declarations,,,,,,
+Question,Answer,,,,,
+Does your app collect or share any of the required user data types?,Yes,,,,,
+Is all of the user data collected by your app encrypted in transit?,Yes,,,,,
+Do you provide a way for users to request that their data is deleted?,Yes,,,,,
+,,,,,,
+SECTION 2 - Data types (answer each one in the form),,,,,,
+Data category,Data type,Collected,Shared,Processed ephemerally,Required or optional,Purposes
+Personal info,Name,Yes,No,No,Optional,App functionality; Account management
+Personal info,Email address,Yes,No,No,Required,App functionality; Account management
+Personal info,User IDs,Yes,No,No,Required,App functionality; Account management
+Financial info,Purchase history,Yes,No,No,Optional,App functionality; Account management
+Files and docs,Files and docs,Yes,No,No,Required,App functionality
+Photos and videos,Photos,Yes,No,No,Optional,App functionality
+App activity,App interactions,Yes,No,No,Optional,App functionality; Analytics
+App info and performance,Crash logs,No,,,,
+App info and performance,Diagnostics,No,,,,
+Device or other IDs,Device or other IDs,Yes,No,No,Optional,"Fraud prevention, security, and compliance; Analytics"
+,,,,,,
+SECTION 3 - Data types NOT collected (answer No in the form),,,,,,
+Location (approximate and precise),No,,,,,
+Personal info - Address / Phone / Race / Political / Religious / Sexual orientation,No,,,,,
+Financial info - Payment info / Credit score (handled by Google Play),No,,,,,
+Health and fitness,No,,,,,
+Messages (emails / SMS / in-app),No,,,,,
+Audio (voice / music / sound recordings),No,,,,,
+Calendar / Contacts,No,,,,,
+Web browsing history,No,,,,,
+Installed apps / Other app activity (search history),No,,,,,
