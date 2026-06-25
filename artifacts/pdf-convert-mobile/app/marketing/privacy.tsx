@@ -183,7 +183,7 @@ const SECTIONS: Section[] = [
       {
         type: "contact",
         rows: [
-          ["Company:", "Mizan Store Ltd"],
+          ["Company:", "PDF Genius"],
           ["Service:", "PDF Genius"],
           ["Phone:", "+447429919748"],
           ["Location:", "London, United Kingdom"],
@@ -212,7 +212,7 @@ const SECTIONS: Section[] = [
     icon: "calendar",
     title: "Effective Date",
     blocks: [
-      { type: "def", label: "Current Version:", text: "This Privacy Policy is effective as of January 15, 2024, and applies to all information collected on or after this date." },
+      { type: "def", label: "Current Version:", text: "This Privacy Policy is effective as of June 25, 2026, and applies to all information collected on or after this date." },
       { type: "def", label: "Previous Versions:", text: "This policy supersedes all previous versions of our privacy statements and policies." },
       { type: "def", label: "Retroactive Application:", text: "Changes to this policy apply only to information collected after the effective date, unless otherwise specified." },
       { type: "def", label: "Regular Reviews:", text: "We review and update this policy regularly to ensure it remains current with legal requirements and best practices." },
@@ -256,16 +256,16 @@ export default function Screen() {
         <Text style={styles.title}>Privacy Policy</Text>
         <Text style={styles.subtitle}>
           Your privacy is important to us. This Privacy Policy explains how PDF Genius
-          (operated by Mizan Store Ltd) collects, uses, and protects your personal information.
+          (operated by the PDF Genius team) collects, uses, and protects your personal information.
         </Text>
         <Card style={styles.dateCard}>
           <View style={styles.dateRow}>
             <Feather name="calendar" size={16} color={C.primary} />
-            <Text style={styles.dateText}>Last Updated: January 15, 2024</Text>
+            <Text style={styles.dateText}>Last Updated: June 25, 2026</Text>
           </View>
           <View style={styles.dateRow}>
             <Feather name="clock" size={16} color={C.primary} />
-            <Text style={styles.dateText}>Effective Date: January 15, 2024</Text>
+            <Text style={styles.dateText}>Effective Date: June 25, 2026</Text>
           </View>
         </Card>
       </View>
@@ -293,10 +293,10 @@ export default function Screen() {
           <Text style={styles.bold}>Document Version:</Text> 1.0
         </Text>
         <Text style={styles.docLine}>
-          <Text style={styles.bold}>Last Updated:</Text> January 15, 2024
+          <Text style={styles.bold}>Last Updated:</Text> June 25, 2026
         </Text>
         <Text style={styles.docLine}>
-          <Text style={styles.bold}>Effective Date:</Text> January 15, 2024
+          <Text style={styles.bold}>Effective Date:</Text> June 25, 2026
         </Text>
       </View>
     </ScreenScroll>

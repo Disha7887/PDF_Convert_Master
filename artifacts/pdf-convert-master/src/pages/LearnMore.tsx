@@ -1355,7 +1355,7 @@ export const LearnMore: React.FC = () => {
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold mb-4">About PDF Genius</h3>
             <p className="text-gray-600 max-w-3xl mx-auto">
-              Developed by Mizan Store Ltd in London, UK, PDF Genius provides professional-grade 
+              Developed in London, UK, PDF Genius provides professional-grade 
               PDF tools trusted by millions worldwide. Our mission is to make document management 
               simple, secure, and accessible for everyone.
             </p>

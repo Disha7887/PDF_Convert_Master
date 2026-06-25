@@ -80,7 +80,7 @@ const TEAM: { name: string; position: string; description: string }[] = [
 ];
 
 const TOUCH: { icon: FeatherName; title: string; line1: string; line2: string }[] = [
-  { icon: "briefcase", title: "Company", line1: "Mizan Store Ltd", line2: "Professional PDF Solutions" },
+  { icon: "briefcase", title: "Company", line1: "PDF Genius", line2: "Professional PDF Solutions" },
   { icon: "phone", title: "Phone", line1: "+447429919748", line2: "Available 24/7" },
   { icon: "globe", title: "Website", line1: "pdfgenius.app", line2: "Your trusted PDF partner" },
 ];
@@ -115,7 +115,7 @@ export default function Screen() {
         <View style={styles.heroMeta}>
           <View style={styles.heroMetaItem}>
             <Feather name="briefcase" size={16} color={C.blue200} />
-            <Text style={styles.heroMetaText}>Mizan Store Ltd</Text>
+            <Text style={styles.heroMetaText}>PDF Genius</Text>
           </View>
           <View style={styles.heroMetaItem}>
             <Feather name="phone" size={16} color={C.blue200} />
@@ -133,7 +133,7 @@ export default function Screen() {
           growing need for reliable, secure, and user-friendly PDF tools.
         </Text>
         <Text style={styles.paragraph}>
-          Under the umbrella of Mizan Store Ltd, we've built a platform that combines cutting-edge
+          We've built a platform that combines cutting-edge
           technology with intuitive design, making professional PDF conversion accessible to everyone.
         </Text>
 

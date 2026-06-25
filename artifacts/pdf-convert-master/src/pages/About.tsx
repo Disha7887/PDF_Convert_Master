@@ -98,7 +98,7 @@ export const About = (): JSX.Element => {
           <div className="flex items-center justify-center gap-4 text-lg">
             <div className="flex items-center gap-2">
               <Building className="w-5 h-5 text-blue-300" />
-              <span>Mizan Store Ltd</span>
+              <span>PDF Genius</span>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="w-5 h-5 text-blue-300" />
@@ -119,7 +119,7 @@ export const About = (): JSX.Element => {
                   Founded with a vision to simplify document management, PDF Genius has become the trusted solution for millions of users worldwide. Our journey began when we recognized the growing need for reliable, secure, and user-friendly PDF tools.
                 </p>
                 <p>
-                  Under the umbrella of Mizan Store Ltd, we've built a platform that combines cutting-edge technology with intuitive design, making professional PDF conversion accessible to everyone.
+                  We've built a platform that combines cutting-edge technology with intuitive design, making professional PDF conversion accessible to everyone.
                 </p>
               </div>
               
@@ -218,7 +218,7 @@ export const About = (): JSX.Element => {
                 <Building className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold mb-4">Company</h3>
-              <p className="text-gray-200 mb-1">Mizan Store Ltd</p>
+              <p className="text-gray-200 mb-1">PDF Genius</p>
               <p className="text-gray-200">Professional PDF Solutions</p>
             </div>
             

@@ -31,13 +31,13 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "acceptance-of-terms",
       title: "Acceptance of Terms",
-      content: "By accessing and using PDF Genius (the \"Service\"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, please do not use our Service. These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.",
+      content: "By accessing and using PDF Genius (the \"Service\"), a web-based PDF conversion platform operated by the PDF Genius team, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service (\"Terms\"). If you do not agree to these Terms, please do not use our Service. These Terms constitute a legally binding agreement between you and PDF Genius. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.",
       category: "Legal"
     },
     {
       id: "definitions",
       title: "Definitions",
-      content: "\"Service\" refers to PDF Genius, our web-based platform and all related tools and features. \"User,\" \"you,\" or \"your\" refers to any individual or entity using our Service. \"Company,\" \"we,\" \"us,\" or \"our\" refers to Mizan Store Ltd, a company incorporated in England and Wales. \"Content\" refers to any files, documents, data, or information uploaded to or processed through our Service. \"Account\" refers to your registered user account on our platform. \"Personal Data\" has the meaning set out in the UK General Data Protection Regulation (UK GDPR).",
+      content: "\"Service\" refers to PDF Genius, our web-based platform and all related tools and features. \"User,\" \"you,\" or \"your\" refers to any individual or entity using our Service. \"Company,\" \"we,\" \"us,\" or \"our\" refers to PDF Genius. \"Content\" refers to any files, documents, data, or information uploaded to or processed through our Service. \"Account\" refers to your registered user account on our platform. \"Personal Data\" has the meaning set out in the UK General Data Protection Regulation (UK GDPR).",
       category: "Legal"
     },
     {
@@ -67,7 +67,7 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "intellectual-property",
       title: "Intellectual Property",
-      content: "Our Rights: The Service, including all software, designs, text, graphics, and other content, is owned by Mizan Store Ltd and protected by copyright, trademark, and other intellectual property laws. Limited License: We grant you a limited, non-exclusive, non-transferable license to use our Service for its intended purpose. Restrictions: You may not copy, modify, distribute, sell, or lease any part of our Service or attempt to reverse engineer our software. Feedback: Any feedback, suggestions, or ideas you provide about our Service may be used by us without compensation or attribution.",
+      content: "Our Rights: The Service, including all software, designs, text, graphics, and other content, is owned by PDF Genius and protected by copyright, trademark, and other intellectual property laws. Limited License: We grant you a limited, non-exclusive, non-transferable license to use our Service for its intended purpose. Restrictions: You may not copy, modify, distribute, sell, or lease any part of our Service or attempt to reverse engineer our software. Feedback: Any feedback, suggestions, or ideas you provide about our Service may be used by us without compensation or attribution.",
       category: "Legal"
     },
     {
@@ -103,7 +103,7 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "indemnification",
       title: "Indemnification",
-      content: "You agree to indemnify, defend, and hold harmless Mizan Store Ltd, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.",
+      content: "You agree to indemnify, defend, and hold harmless PDF Genius, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.",
       category: "Legal"
     },
     {
@@ -127,7 +127,7 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "contact-information",
       title: "Contact Information",
-      content: "For questions about these Terms of Service or our Service, please contact us: Company: Mizan Store Ltd, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Website: pdfgenius.app",
+      content: "For questions about these Terms of Service or our Service, please contact us: Company: PDF Genius, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Website: pdfgenius.app",
       category: "Contact"
     }
   ], []);
@@ -225,7 +225,7 @@ export const TermsOfService = (): JSX.Element => {
               Please read these Terms of Service carefully before using PDF Genius services provided
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
-              by Mizan Store Ltd.
+              by the PDF Genius team.
             </p>
           </div>
 
@@ -241,7 +241,7 @@ export const TermsOfService = (): JSX.Element => {
                     <Calendar className="w-4 h-4 text-blue-600" />
                   </div>
                   <span className="text-sm text-gray-600">
-                    Last Updated: January 15, 2024
+                    Last Updated: June 25, 2026
                   </span>
                 </div>
 
@@ -251,7 +251,7 @@ export const TermsOfService = (): JSX.Element => {
                     <Clock className="w-4 h-4 text-blue-600" />
                   </div>
                   <span className="text-sm text-gray-600">
-                    Effective Date: January 15, 2024
+                    Effective Date: June 25, 2026
                   </span>
                 </div>
               </div>
@@ -307,10 +307,10 @@ export const TermsOfService = (): JSX.Element => {
                     1. Acceptance of Terms
                   </h2>
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    By accessing and using PDF Genius (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.
+                    By accessing and using PDF Genius (the "Service"), a web-based PDF conversion platform operated by the PDF Genius team, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.
                   </p>
                   <p className="text-gray-700 leading-relaxed">
-                    These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.
+                    These Terms constitute a legally binding agreement between you and PDF Genius. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.
                   </p>
                 </section>
 
@@ -325,7 +325,7 @@ export const TermsOfService = (): JSX.Element => {
                   <div className="text-gray-700 leading-relaxed space-y-2">
                     <p><strong>"Service"</strong> refers to PDF Genius, our web-based platform and all related tools and features.</p>
                     <p><strong>"User," "you," or "your"</strong> refers to any individual or entity using our Service.</p>
-                    <p><strong>"Company," "we," "us," or "our"</strong> refers to Mizan Store Ltd, a company incorporated in England and Wales.</p>
+                    <p><strong>"Company," "we," "us," or "our"</strong> refers to PDF Genius.</p>
                     <p><strong>"Content"</strong> refers to any files, documents, data, or information uploaded to or processed through our Service.</p>
                     <p><strong>"Account"</strong> refers to your registered user account on our platform.</p>
                     <p><strong>"Personal Data"</strong> has the meaning set out in the UK General Data Protection Regulation (UK GDPR).</p>
@@ -416,7 +416,7 @@ export const TermsOfService = (): JSX.Element => {
                     7. Intellectual Property
                   </h2>
                   <div className="text-gray-700 leading-relaxed space-y-3">
-                    <p><strong>Our Rights:</strong> The Service, including all software, designs, text, graphics, and other content, is owned by Mizan Store Ltd and protected by copyright, trademark, and other intellectual property laws.</p>
+                    <p><strong>Our Rights:</strong> The Service, including all software, designs, text, graphics, and other content, is owned by PDF Genius and protected by copyright, trademark, and other intellectual property laws.</p>
                     <p><strong>Limited License:</strong> We grant you a limited, non-exclusive, non-transferable license to use our Service for its intended purpose.</p>
                     <p><strong>Restrictions:</strong> You may not copy, modify, distribute, sell, or lease any part of our Service or attempt to reverse engineer our software.</p>
                     <p><strong>Feedback:</strong> Any feedback, suggestions, or ideas you provide about our Service may be used by us without compensation or attribution.</p>
@@ -508,7 +508,7 @@ export const TermsOfService = (): JSX.Element => {
                     13. Indemnification
                   </h2>
                   <p className="text-gray-700 leading-relaxed">
-                    You agree to indemnify, defend, and hold harmless Mizan Store Ltd, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.
+                    You agree to indemnify, defend, and hold harmless PDF Genius, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.
                   </p>
                 </section>
 
@@ -560,7 +560,7 @@ export const TermsOfService = (): JSX.Element => {
                   <div className="text-gray-700 leading-relaxed space-y-3">
                     <p>For questions about these Terms of Service or our Service, please contact us:</p>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <p><strong>Company:</strong> Mizan Store Ltd</p>
+                      <p><strong>Company:</strong> PDF Genius</p>
                       <p><strong>Service:</strong> PDF Genius</p>
                       <p><strong>Phone:</strong> +447429919748</p>
                       <p><strong>Location:</strong> London, United Kingdom</p>
@@ -572,8 +572,8 @@ export const TermsOfService = (): JSX.Element => {
                 {/* Document Information */}
                 <div className="border-t pt-6 mt-8 text-sm text-gray-500">
                   <p className="mb-2"><strong>Document Version:</strong> 1.0</p>
-                  <p className="mb-2"><strong>Last Updated:</strong> January 15, 2024</p>
-                  <p><strong>Effective Date:</strong> January 15, 2024</p>
+                  <p className="mb-2"><strong>Last Updated:</strong> June 25, 2026</p>
+                  <p><strong>Effective Date:</strong> June 25, 2026</p>
                 </div>
 
               </div>

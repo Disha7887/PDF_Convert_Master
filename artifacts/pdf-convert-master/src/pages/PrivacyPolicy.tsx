@@ -101,7 +101,7 @@ export const PrivacyPolicy = (): JSX.Element => {
     {
       id: "contact-for-privacy-concerns",
       title: "Contact for Privacy Concerns",
-      content: "If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us: Company: Mizan Store Ltd, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Privacy Inquiries: Please contact us through our website contact form. Response Time: We aim to respond to privacy inquiries within 30 days of receipt. Regulatory Contact: You also have the right to contact the Information Commissioner's Office (ICO) in the UK regarding privacy concerns.",
+      content: "If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us: Company: PDF Genius, Service: PDF Genius, Phone: +447429919748, Location: London, United Kingdom, Privacy Inquiries: Please contact us through our website contact form. Response Time: We aim to respond to privacy inquiries within 30 days of receipt. Regulatory Contact: You also have the right to contact the Information Commissioner's Office (ICO) in the UK regarding privacy concerns.",
       category: "Contact"
     },
     {
@@ -113,7 +113,7 @@ export const PrivacyPolicy = (): JSX.Element => {
     {
       id: "effective-date",
       title: "Effective Date",
-      content: "Current Version: This Privacy Policy is effective as of January 15, 2024, and applies to all information collected on or after this date. Previous Versions: This policy supersedes all previous versions of our privacy statements and policies. Retroactive Application: Changes to this policy apply only to information collected after the effective date, unless otherwise specified. Regular Reviews: We review and update this policy regularly to ensure it remains current with legal requirements and best practices. Contact for Clarification: If you have questions about when specific provisions became effective, please contact us for clarification.",
+      content: "Current Version: This Privacy Policy is effective as of June 25, 2026, and applies to all information collected on or after this date. Previous Versions: This policy supersedes all previous versions of our privacy statements and policies. Retroactive Application: Changes to this policy apply only to information collected after the effective date, unless otherwise specified. Regular Reviews: We review and update this policy regularly to ensure it remains current with legal requirements and best practices. Contact for Clarification: If you have questions about when specific provisions became effective, please contact us for clarification.",
       category: "Effective"
     }
   ], []);
@@ -211,7 +211,7 @@ export const PrivacyPolicy = (): JSX.Element => {
               Your privacy is important to us. This Privacy Policy explains how PDF Genius
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
-              (operated by Mizan Store Ltd) collects, uses, and protects your personal information.
+              (operated by the PDF Genius team) collects, uses, and protects your personal information.
             </p>
           </div>
 
@@ -227,7 +227,7 @@ export const PrivacyPolicy = (): JSX.Element => {
                     <Calendar className="w-4 h-4 text-blue-600" />
                   </div>
                   <span className="text-sm text-gray-600">
-                    Last Updated: January 15, 2024
+                    Last Updated: June 25, 2026
                   </span>
                 </div>
 
@@ -237,7 +237,7 @@ export const PrivacyPolicy = (): JSX.Element => {
                     <Clock className="w-4 h-4 text-blue-600" />
                   </div>
                   <span className="text-sm text-gray-600">
-                    Effective Date: January 15, 2024
+                    Effective Date: June 25, 2026
                   </span>
                 </div>
               </div>
@@ -491,7 +491,7 @@ export const PrivacyPolicy = (): JSX.Element => {
                   <div className="text-gray-700 leading-relaxed space-y-3">
                     <p>If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <p><strong>Company:</strong> Mizan Store Ltd</p>
+                      <p><strong>Company:</strong> PDF Genius</p>
                       <p><strong>Service:</strong> PDF Genius</p>
                       <p><strong>Phone:</strong> +447429919748</p>
                       <p><strong>Location:</strong> London, United Kingdom</p>
@@ -525,7 +525,7 @@ export const PrivacyPolicy = (): JSX.Element => {
                     15. Effective Date
                   </h2>
                   <div className="text-gray-700 leading-relaxed space-y-3">
-                    <p><strong>Current Version:</strong> This Privacy Policy is effective as of January 15, 2024, and applies to all information collected on or after this date.</p>
+                    <p><strong>Current Version:</strong> This Privacy Policy is effective as of June 25, 2026, and applies to all information collected on or after this date.</p>
                     <p><strong>Previous Versions:</strong> This policy supersedes all previous versions of our privacy statements and policies.</p>
                     <p><strong>Retroactive Application:</strong> Changes to this policy apply only to information collected after the effective date, unless otherwise specified.</p>
                     <p><strong>Regular Reviews:</strong> We review and update this policy regularly to ensure it remains current with legal requirements and best practices.</p>
@@ -536,8 +536,8 @@ export const PrivacyPolicy = (): JSX.Element => {
                 {/* Document Information */}
                 <div className="border-t pt-6 mt-8 text-sm text-gray-500">
                   <p className="mb-2"><strong>Document Version:</strong> 1.0</p>
-                  <p className="mb-2"><strong>Last Updated:</strong> January 15, 2024</p>
-                  <p><strong>Effective Date:</strong> January 15, 2024</p>
+                  <p className="mb-2"><strong>Last Updated:</strong> June 25, 2026</p>
+                  <p><strong>Effective Date:</strong> June 25, 2026</p>
                 </div>
 
               </div>

@@ -31,12 +31,12 @@ const SECTIONS: Section[] = [
       {
         type: "p",
         text:
-          'By accessing and using PDF Genius (the "Service"), a web-based PDF conversion platform operated by Mizan Store Ltd, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.',
+          'By accessing and using PDF Genius (the "Service"), a web-based PDF conversion platform operated by the PDF Genius team, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.',
       },
       {
         type: "p",
         text:
-          "These Terms constitute a legally binding agreement between you and Mizan Store Ltd. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.",
+          "These Terms constitute a legally binding agreement between you and PDF Genius. Your continued use of the Service constitutes your acceptance of any modifications to these Terms.",
       },
     ],
   },
@@ -47,7 +47,7 @@ const SECTIONS: Section[] = [
     blocks: [
       { type: "def", label: '"Service"', text: "refers to PDF Genius, our web-based platform and all related tools and features." },
       { type: "def", label: '"User," "you," or "your"', text: "refers to any individual or entity using our Service." },
-      { type: "def", label: '"Company," "we," "us," or "our"', text: "refers to Mizan Store Ltd, a company incorporated in England and Wales." },
+      { type: "def", label: '"Company," "we," "us," or "our"', text: "refers to PDF Genius." },
       { type: "def", label: '"Content"', text: "refers to any files, documents, data, or information uploaded to or processed through our Service." },
       { type: "def", label: '"Account"', text: "refers to your registered user account on our platform." },
       { type: "def", label: '"Personal Data"', text: "has the meaning set out in the UK General Data Protection Regulation (UK GDPR)." },
@@ -132,7 +132,7 @@ const SECTIONS: Section[] = [
     icon: "award",
     title: "Intellectual Property",
     blocks: [
-      { type: "def", label: "Our Rights:", text: "The Service, including all software, designs, text, graphics, and other content, is owned by Mizan Store Ltd and protected by copyright, trademark, and other intellectual property laws." },
+      { type: "def", label: "Our Rights:", text: "The Service, including all software, designs, text, graphics, and other content, is owned by PDF Genius and protected by copyright, trademark, and other intellectual property laws." },
       { type: "def", label: "Limited License:", text: "We grant you a limited, non-exclusive, non-transferable license to use our Service for its intended purpose." },
       { type: "def", label: "Restrictions:", text: "You may not copy, modify, distribute, sell, or lease any part of our Service or attempt to reverse engineer our software." },
       { type: "def", label: "Feedback:", text: "Any feedback, suggestions, or ideas you provide about our Service may be used by us without compensation or attribution." },
@@ -203,7 +203,7 @@ const SECTIONS: Section[] = [
       {
         type: "p",
         text:
-          "You agree to indemnify, defend, and hold harmless Mizan Store Ltd, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.",
+          "You agree to indemnify, defend, and hold harmless PDF Genius, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorney fees) arising from: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) any content you upload or process through our Service.",
       },
     ],
   },
@@ -250,7 +250,7 @@ const SECTIONS: Section[] = [
       {
         type: "contact",
         rows: [
-          ["Company:", "Mizan Store Ltd"],
+          ["Company:", "PDF Genius"],
           ["Service:", "PDF Genius"],
           ["Phone:", "+447429919748"],
           ["Location:", "London, United Kingdom"],
@@ -307,16 +307,16 @@ export default function Screen() {
         <Text style={styles.title}>Terms of Service</Text>
         <Text style={styles.subtitle}>
           Please read these Terms of Service carefully before using PDF Genius services
-          provided by Mizan Store Ltd.
+          provided by the PDF Genius team.
         </Text>
         <Card style={styles.dateCard}>
           <View style={styles.dateRow}>
             <Feather name="calendar" size={16} color={C.primary} />
-            <Text style={styles.dateText}>Last Updated: January 15, 2024</Text>
+            <Text style={styles.dateText}>Last Updated: June 25, 2026</Text>
           </View>
           <View style={styles.dateRow}>
             <Feather name="clock" size={16} color={C.primary} />
-            <Text style={styles.dateText}>Effective Date: January 15, 2024</Text>
+            <Text style={styles.dateText}>Effective Date: June 25, 2026</Text>
           </View>
         </Card>
       </View>
@@ -344,10 +344,10 @@ export default function Screen() {
           <Text style={styles.bold}>Document Version:</Text> 1.0
         </Text>
         <Text style={styles.docLine}>
-          <Text style={styles.bold}>Last Updated:</Text> January 15, 2024
+          <Text style={styles.bold}>Last Updated:</Text> June 25, 2026
         </Text>
         <Text style={styles.docLine}>
-          <Text style={styles.bold}>Effective Date:</Text> January 15, 2024
+          <Text style={styles.bold}>Effective Date:</Text> June 25, 2026
         </Text>
       </View>
     </ScreenScroll>

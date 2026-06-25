@@ -1,4 +1,4 @@
-import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon, MapPin, Mail, Facebook, Instagram, Linkedin } from "lucide-react";
+import { CloudIcon, LockIcon, PhoneIcon, ShieldIcon, Mail, Facebook, Instagram, Linkedin } from "lucide-react";
 import React from "react";
 import logoFull from "@assets/FullLogo_Transparent_NoBuffer_1782108807761.png";
 import { Button } from "@/components/ui/button";
@@ -87,19 +87,8 @@ export const FooterSection = (): JSX.Element => {
               </p>
             </div>
 
-            {/* Company Details */}
+            {/* Contact Details */}
             <div className="space-y-3">
-              <h4 className="text-gray-900 font-semibold text-sm">Mizan Store Ltd</h4>
-
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
-                <div className="text-gray-600 text-sm">
-                  <p>123 Business Street</p>
-                  <p>London, SW1A 1AA</p>
-                  <p>United Kingdom</p>
-                </div>
-              </div>
-
               <div className="flex items-center space-x-3">
                 <PhoneIcon className="w-4 h-4 text-gray-600 flex-shrink-0" />
                 <span className="text-gray-600 text-sm">+447429919748</span>
@@ -210,7 +199,7 @@ export const FooterSection = (): JSX.Element => {
 
             {/* Copyright */}
             <div className="text-gray-600 text-sm">
-              © {new Date().getFullYear()} PDF Genius by Mizan Store Ltd. All rights reserved.
+              © {new Date().getFullYear()} PDF Genius. All rights reserved.
             </div>
 
             {/* Security Features */}

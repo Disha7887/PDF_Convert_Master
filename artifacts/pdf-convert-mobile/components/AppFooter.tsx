@@ -60,15 +60,6 @@ export function AppFooter() {
       </Text>
 
       <View style={styles.companyBlock}>
-        <Text style={styles.companyName}>Mizan Store Ltd</Text>
-        <View style={styles.infoRow}>
-          <Feather name="map-pin" size={15} color={C.mutedForeground} style={styles.infoIcon} />
-          <View>
-            <Text style={styles.infoText}>123 Business Street</Text>
-            <Text style={styles.infoText}>London, SW1A 1AA</Text>
-            <Text style={styles.infoText}>United Kingdom</Text>
-          </View>
-        </View>
         <View style={styles.infoRow}>
           <Feather name="phone" size={15} color={C.mutedForeground} style={styles.infoIcon} />
           <Text style={styles.infoText}>+447429919748</Text>
@@ -135,7 +126,7 @@ export function AppFooter() {
 
       {/* Bottom bar */}
       <Text style={styles.copyright}>
-        © {new Date().getFullYear()} PDF Genius by Mizan Store Ltd. All rights reserved.
+        © {new Date().getFullYear()} PDF Genius. All rights reserved.
       </Text>
       <View style={styles.badgeRow}>
         {SECURITY_BADGES.map((b) => (
@@ -160,7 +151,6 @@ const styles = StyleSheet.create({
   tagline: { fontSize: 13, lineHeight: 20, color: C.mutedForeground, fontFamily: fonts.body },
 
   companyBlock: { marginTop: 18, gap: 10 },
-  companyName: { fontSize: 14, color: C.foreground, fontFamily: fonts.bodySemibold },
   infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   infoIcon: { marginTop: 2 },
   infoText: { fontSize: 13, lineHeight: 19, color: C.mutedForeground, fontFamily: fonts.body },

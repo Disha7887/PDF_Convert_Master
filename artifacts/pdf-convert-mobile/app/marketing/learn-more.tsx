@@ -284,7 +284,7 @@ export default function Screen() {
         <SectionHeading
           align="center"
           title="About PDF Genius"
-          subtitle="Developed by Mizan Store Ltd in London, UK, PDF Genius provides professional-grade PDF tools trusted by millions worldwide. Our mission is to make document management simple, secure, and accessible for everyone."
+          subtitle="Developed in London, UK, PDF Genius provides professional-grade PDF tools trusted by millions worldwide. Our mission is to make document management simple, secure, and accessible for everyone."
           style={{ marginBottom: 18 }}
         />
         <View style={{ gap: 16 }}>
