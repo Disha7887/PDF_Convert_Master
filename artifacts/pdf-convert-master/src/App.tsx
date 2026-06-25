@@ -32,6 +32,7 @@ const ManagePlans = named(() => import("@/pages/ManagePlans"), "ManagePlans");
 const LiveTools = named(() => import("@/pages/LiveTools"), "LiveTools");
 const TermsOfService = named(() => import("@/pages/TermsOfService"), "TermsOfService");
 const PrivacyPolicy = named(() => import("@/pages/PrivacyPolicy"), "PrivacyPolicy");
+const DataSafety = named(() => import("@/pages/DataSafety"), "DataSafety");
 const Support = named(() => import("@/pages/Support"), "Support");
 const SignUp = named(() => import("@/pages/SignUp"), "SignUp");
 const SignIn = named(() => import("@/pages/SignIn"), "SignIn");
@@ -233,6 +234,12 @@ function Router() {
       <Route path="/privacy-policy">
         <DynamicLayout>
           <PrivacyPolicy />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/data-safety">
+        <DynamicLayout>
+          <DataSafety />
         </DynamicLayout>
       </Route>
 

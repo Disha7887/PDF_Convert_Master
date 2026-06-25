@@ -29,7 +29,7 @@ export const PrivacyPolicy = (): JSX.Element => {
     {
       id: "information-we-collect",
       title: "Information We Collect",
-      content: "Personal Information: We collect minimal personal information, including email addresses for account creation, user preferences, and customer support communications. File Information: When you upload files for conversion, we temporarily process file metadata and content solely for conversion purposes. We do not permanently store or analyze your file contents. Usage Data: We collect anonymous usage statistics, including conversion types, file sizes, processing times, and general usage patterns to improve our services. Technical Information: We automatically collect IP addresses, browser types, device information, and referral URLs for security, analytics, and service optimization. Account Information: For registered users, we store account credentials, preferences, subscription status, and basic profile information.",
+      content: "Personal Information: We collect minimal personal information, including email addresses and an optional display name for account creation, user preferences, and customer support communications. File Information: When you upload files for conversion, we temporarily process file metadata and content solely for conversion purposes. We do not permanently store or analyze your file contents. Camera and Photos: When you use the document scanner, photos you capture with your camera or select from your device are uploaded solely to produce the requested document and are deleted on the same temporary schedule as other files. We never access your camera or photo library without your action. Usage Data: We collect anonymous usage statistics, including conversion types, file sizes, processing times, and general usage patterns to improve our services. Purchase Information: When you buy a subscription or credit pack through the app, we receive purchase history (the products you bought and their status) from the app store so we can activate your plan or credits. Payment card details are handled entirely by the app store (Google Play or Apple) and are never collected or stored by us. Technical Information: We automatically collect IP addresses, browser types, device identifiers, and referral URLs for security, fraud prevention, analytics, and service optimization. Account Information: For registered users, we store account credentials, preferences, subscription status, credit balance, and basic profile information.",
       category: "Data Collection"
     },
     {
@@ -53,13 +53,13 @@ export const PrivacyPolicy = (): JSX.Element => {
     {
       id: "cookies-and-tracking",
       title: "Cookies and Tracking",
-      content: "Essential Cookies: We use necessary cookies for core site functionality, including user authentication, session management, and security features. Functional Cookies: Cookies that remember your preferences, settings, and improve your user experience on our platform. Analytics Cookies: Anonymous analytics cookies help us understand how users interact with our service to improve functionality and performance. Cookie Control: You can control cookie settings through your browser preferences, though disabling certain cookies may affect site functionality. Third-Party Cookies: We may use third-party services that set their own cookies, subject to their respective privacy policies. Cookie Retention: Most cookies expire automatically, with session cookies deleted when you close your browser.",
+      content: "Essential Cookies: We use necessary cookies for core site functionality, including user authentication, session management, and security features. Functional Cookies: Cookies that remember your preferences, settings, and improve your user experience on our platform. Analytics Cookies: We use our own first-party cookies to understand, in aggregate, how users interact with our service. We do not use third-party advertising or cross-app tracking cookies. Cookie Control: You can control cookie settings through your browser preferences, though disabling certain cookies may affect site functionality. Cookie Retention: Most cookies expire automatically, with session cookies deleted when you close your browser.",
       category: "Cookies"
     },
     {
       id: "third-party-services",
       title: "Third-Party Services",
-      content: "Payment Processing: We use secure third-party payment processors for subscription billing. These services have their own privacy policies and security measures. Analytics Services: Anonymous usage analytics are collected through third-party services to help improve our platform performance. Customer Support: We may use third-party tools for customer support communications, subject to strict data protection agreements. Cloud Infrastructure: Our services are hosted on secure cloud infrastructure providers who comply with industry security standards. Data Sharing Limitations: We do not share your personal data or files with third parties for marketing or unrelated business purposes. Vendor Agreements: All third-party vendors are bound by data protection agreements and must comply with our privacy standards.",
+      content: "Payment Processing: In-app subscriptions and credit packs are sold and billed through the official app stores (Google Play Billing and Apple App Store), which process all payment details under their own privacy policies. We use RevenueCat as our purchase-management provider to verify purchases and activate your plan or credits; it acts as our data processor and receives only purchase and device identifiers needed for that purpose. Analytics: We analyze anonymous, aggregated usage statistics using our own systems to improve performance. We do not use third-party advertising or analytics SDKs that track you across other apps or services. Customer Support: We may use third-party tools for customer support communications, subject to strict data protection agreements. Cloud Infrastructure: Our services are hosted on secure cloud infrastructure providers who comply with industry security standards. Data Sharing Limitations: We do not share your personal data or files with third parties for marketing or unrelated business purposes. Vendor Agreements: All third-party vendors are bound by data protection agreements and must comply with our privacy standards.",
       category: "Third Party"
     },
     {
@@ -293,11 +293,13 @@ export const PrivacyPolicy = (): JSX.Element => {
                     1. Information We Collect
                   </h2>
                   <div className="text-gray-700 leading-relaxed space-y-4">
-                    <p><strong>Personal Information:</strong> We collect minimal personal information, including email addresses for account creation, user preferences, and customer support communications.</p>
+                    <p><strong>Personal Information:</strong> We collect minimal personal information, including email addresses and an optional display name for account creation, user preferences, and customer support communications.</p>
                     <p><strong>File Information:</strong> When you upload files for conversion, we temporarily process file metadata and content solely for conversion purposes. We do not permanently store or analyze your file contents.</p>
+                    <p><strong>Camera and Photos:</strong> When you use the document scanner, photos you capture with your camera or select from your device are uploaded solely to produce the requested document and are deleted on the same temporary schedule as other files. We never access your camera or photo library without your action.</p>
                     <p><strong>Usage Data:</strong> We collect anonymous usage statistics, including conversion types, file sizes, processing times, and general usage patterns to improve our services.</p>
-                    <p><strong>Technical Information:</strong> We automatically collect IP addresses, browser types, device information, and referral URLs for security, analytics, and service optimization.</p>
-                    <p><strong>Account Information:</strong> For registered users, we store account credentials, preferences, subscription status, and basic profile information.</p>
+                    <p><strong>Purchase Information:</strong> When you buy a subscription or credit pack through the app, we receive purchase history (the products you bought and their status) from the app store so we can activate your plan or credits. Payment card details are handled entirely by the app store (Google Play or Apple) and are never collected or stored by us.</p>
+                    <p><strong>Technical Information:</strong> We automatically collect IP addresses, browser types, device identifiers, and referral URLs for security, fraud prevention, analytics, and service optimization.</p>
+                    <p><strong>Account Information:</strong> For registered users, we store account credentials, preferences, subscription status, credit balance, and basic profile information.</p>
                   </div>
                 </section>
 
@@ -361,9 +363,8 @@ export const PrivacyPolicy = (): JSX.Element => {
                   <div className="text-gray-700 leading-relaxed space-y-3">
                     <p><strong>Essential Cookies:</strong> We use necessary cookies for core site functionality, including user authentication, session management, and security features.</p>
                     <p><strong>Functional Cookies:</strong> Cookies that remember your preferences, settings, and improve your user experience on our platform.</p>
-                    <p><strong>Analytics Cookies:</strong> Anonymous analytics cookies help us understand how users interact with our service to improve functionality and performance.</p>
+                    <p><strong>Analytics Cookies:</strong> We use our own first-party cookies to understand, in aggregate, how users interact with our service. We do not use third-party advertising or cross-app tracking cookies.</p>
                     <p><strong>Cookie Control:</strong> You can control cookie settings through your browser preferences, though disabling certain cookies may affect site functionality.</p>
-                    <p><strong>Third-Party Cookies:</strong> We may use third-party services that set their own cookies, subject to their respective privacy policies.</p>
                     <p><strong>Cookie Retention:</strong> Most cookies expire automatically, with session cookies deleted when you close your browser.</p>
                   </div>
                 </section>
@@ -375,8 +376,8 @@ export const PrivacyPolicy = (): JSX.Element => {
                     6. Third-Party Services
                   </h2>
                   <div className="text-gray-700 leading-relaxed space-y-3">
-                    <p><strong>Payment Processing:</strong> We use secure third-party payment processors for subscription billing. These services have their own privacy policies and security measures.</p>
-                    <p><strong>Analytics Services:</strong> Anonymous usage analytics are collected through third-party services to help improve our platform performance.</p>
+                    <p><strong>Payment Processing:</strong> In-app subscriptions and credit packs are sold and billed through the official app stores (Google Play Billing and Apple App Store), which process all payment details under their own privacy policies. We use RevenueCat as our purchase-management provider to verify purchases and activate your plan or credits; it acts as our data processor and receives only the purchase and device identifiers needed for that purpose.</p>
+                    <p><strong>Analytics:</strong> We analyze anonymous, aggregated usage statistics using our own systems to improve performance. We do not use third-party advertising or analytics SDKs that track you across other apps or services.</p>
                     <p><strong>Customer Support:</strong> We may use third-party tools for customer support communications, subject to strict data protection agreements.</p>
                     <p><strong>Cloud Infrastructure:</strong> Our services are hosted on secure cloud infrastructure providers who comply with industry security standards.</p>
                     <p><strong>Data Sharing Limitations:</strong> We do not share your personal data or files with third parties for marketing or unrelated business purposes.</p>
