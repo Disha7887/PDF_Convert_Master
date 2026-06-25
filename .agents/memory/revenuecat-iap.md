@@ -40,6 +40,16 @@ gated by `enabled: available`; plan switching still works via `changePlan`.
   lapse-downgrade; running sync on login would let RC override deliberate manual
   plan changes.
 
+## Web credit balance (read-only)
+The web app (pdf-convert-master) DISPLAYS the credit balance on manage-plans
+(PlansManager) read-only — no web purchasing. **Why:** credit packs are bought
+via Google Play (RevenueCat), which can't run on web; user chose display-only
+over a separate Stripe web checkout. Balance comes from the authed `user.credits`
+(@workspace/db User type; backend returns the full user row on every auth
+response). Mobile carries credits the same way (AuthContext persists the raw
+backend user; MockUser has optional `credits`). Buying credits on web would
+require a separate payment provider (Stripe/Whop), not Google Play.
+
 ## Scope gaps (accepted)
 - No webhooks → no automatic downgrade when a sub lapses.
 - Real Play billing needs a Play Console internal-testing upload + Google

@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Code2, Archive, FileImage, Loader2 } from "lucide-react";
+import { Check, Code2, Archive, FileImage, Loader2, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -116,6 +116,30 @@ export const PlansManager: React.FC = () => {
                   </p>
                 </div>
               </div>
+            </div>
+          </Card>
+
+          {/* Credit Balance (real data; credit packs are purchased in the mobile app) */}
+          <Card className="mb-8">
+            <div className="p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#f7433d]/10 flex items-center justify-center shrink-0">
+                <Zap className="w-6 h-6 text-[#f7433d]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-900">
+                  Credit Balance
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Buy credit packs in the PDF Genius mobile app — your balance is
+                  shared across web and mobile.
+                </p>
+              </div>
+              <span
+                className="text-3xl font-bold text-[#f7433d]"
+                data-testid="text-credit-balance"
+              >
+                {(user?.credits ?? 0).toLocaleString()}
+              </span>
             </div>
           </Card>
 
