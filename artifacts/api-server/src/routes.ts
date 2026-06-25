@@ -21,6 +21,7 @@ import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/req
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
 import { saveConvertedFile, getConvertedFile } from "./lib/conversionStorage";
 import { PLANS, getPlan } from "./plans";
+import { syncRevenueCatCustomer } from "./revenuecat";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
 import { execSync } from "child_process";
@@ -3635,6 +3636,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating plan:", error);
       return res.status(500).json({ success: false, error: "Failed to update plan" });
+    }
+  });
+
+  // Reconcile the signed-in user's RevenueCat purchases into our database. The
+  // mobile client calls this right after a purchase/restore (and on launch) so
+  // active subscriptions activate the plan and credit packs top up the balance
+  // in real time. The RevenueCat customer id is the user's id (the client calls
+  // Purchases.logIn(userId) before buying). Returns the up-to-date plan + credit
+  // balance so the client can refresh immediately.
+  app.post("/api/revenuecat/sync", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const result = await syncRevenueCatCustomer(userId);
+      const user = await storage.getUserById(userId);
+      return res.json({ success: true, data: { ...result, user } });
+    } catch (error) {
+      console.error("Error syncing RevenueCat customer:", error);
+      return res
+        .status(502)
+        .json({ success: false, error: "Failed to sync purchases" });
     }
   });
 

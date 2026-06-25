@@ -9,6 +9,7 @@ import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/lib/revenuecat";
 import { fetchPlans, type Plan } from "@/services/plans";
 
 const C = colors.light;
@@ -16,6 +17,7 @@ const C = colors.light;
 export default function Screen() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+  const { credits } = useSubscription();
   const [plans, setPlans] = useState<Plan[]>([]);
 
   useEffect(() => {
@@ -43,6 +45,15 @@ export default function Screen() {
         }
         style={{ marginBottom: 24 }}
       />
+
+      {isAuthenticated ? (
+        <View style={styles.creditBanner}>
+          <Feather name="zap" size={18} color={C.primary} />
+          <Text style={styles.creditText}>
+            Credit balance: <Text style={styles.creditValue}>{credits.toLocaleString()}</Text>
+          </Text>
+        </View>
+      ) : null}
 
       <View style={{ gap: 20 }}>
         {plans.map((plan) => {
@@ -116,6 +127,19 @@ export default function Screen() {
 }
 
 const styles = StyleSheet.create({
+  creditBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: C.accent,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  creditText: { fontSize: 14, color: C.foreground, fontFamily: fonts.body },
+  creditValue: { fontFamily: fonts.headingBold, color: C.primary },
   planCard: { gap: 8 },
   popularBadge: { alignSelf: "center", marginBottom: 4 },
   planName: {

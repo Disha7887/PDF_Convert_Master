@@ -2,12 +2,18 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
 
+import {
+  PurchaseConfirmModal,
+  type PurchaseConfirmDetails,
+} from "@/components/PurchaseConfirmModal";
 import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/lib/revenuecat";
 import { type MockUser } from "@/mocks/data";
 import {
   changePlan,
@@ -20,6 +26,21 @@ import {
 import { fetchUsage, type UsageTotals } from "@/services/account";
 
 const C = colors.light;
+
+/**
+ * Find the in-app-purchase package for a subscription plan, preferring the
+ * monthly option. Matches on the store product id (e.g. "pro_monthly").
+ */
+function findSubscriptionPackage(
+  packages: PurchasesPackage[],
+  planId: string,
+): PurchasesPackage | null {
+  const matches = packages.filter((p) =>
+    p.product.identifier.toLowerCase().startsWith(planId.toLowerCase()),
+  );
+  if (matches.length === 0) return null;
+  return matches.find((p) => /month/i.test(p.product.identifier)) ?? matches[0];
+}
 
 function UsageStat({
   title,
@@ -77,12 +98,27 @@ function AuthGate() {
 
 export default function ManagePlansScreen() {
   const { isAuthenticated, user, token, updateUser } = useAuth();
+  const {
+    available,
+    subscriptionsOffering,
+    creditsOffering,
+    credits,
+    purchase,
+    isPurchasing,
+    restore,
+    isRestoring,
+  } = useSubscription();
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [totals, setTotals] = useState<UsageTotals | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingPurchase, setPendingPurchase] = useState<{
+    pkg: PurchasesPackage;
+    details: PurchaseConfirmDetails;
+    kind: "subscription" | "credits";
+  } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -131,6 +167,78 @@ export default function ManagePlansScreen() {
     }
   };
 
+  // Subscription packages keyed by plan id, when real IAP is available.
+  const subPackages = subscriptionsOffering?.availablePackages ?? [];
+  const creditPackages = creditsOffering?.availablePackages ?? [];
+
+  // Either open the native purchase confirm (real IAP) or fall back to the
+  // instant plan switch when in-app purchases aren't available in this build.
+  const handleUpgrade = (plan: Plan) => {
+    setError(null);
+    setConfirmation(null);
+    const pkg = available ? findSubscriptionPackage(subPackages, plan.id) : null;
+    if (!pkg) {
+      handleSwitch(plan);
+      return;
+    }
+    setPendingPurchase({
+      pkg,
+      kind: "subscription",
+      details: {
+        title: pkg.product.title || `${plan.name} Plan`,
+        priceString: pkg.product.priceString,
+        detail: "Recurring subscription",
+      },
+    });
+  };
+
+  const handleBuyCredits = (pkg: PurchasesPackage) => {
+    setError(null);
+    setConfirmation(null);
+    setPendingPurchase({
+      pkg,
+      kind: "credits",
+      details: {
+        title: pkg.product.title || "Credit Pack",
+        priceString: pkg.product.priceString,
+        detail: "One-time purchase",
+      },
+    });
+  };
+
+  const confirmPurchase = async () => {
+    if (!pendingPurchase) return;
+    const { pkg, kind } = pendingPurchase;
+    try {
+      await purchase(pkg);
+      setConfirmation(
+        kind === "credits"
+          ? "Credits added to your balance."
+          : "Subscription activated.",
+      );
+      loadUsage();
+    } catch (e: any) {
+      // User-cancelled purchases aren't errors.
+      if (!e?.userCancelled) {
+        setError(e?.message ?? "Purchase could not be completed.");
+      }
+    } finally {
+      setPendingPurchase(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    setError(null);
+    setConfirmation(null);
+    try {
+      await restore();
+      setConfirmation("Purchases restored.");
+      loadUsage();
+    } catch (e: any) {
+      setError(e?.message ?? "Could not restore purchases.");
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <ScreenScroll>
@@ -173,6 +281,22 @@ export default function ManagePlansScreen() {
           </Text>
         </Card>
       ) : null}
+
+      {/* Credit Balance */}
+      <View style={styles.creditCard}>
+        <View style={styles.creditIcon}>
+          <Feather name="zap" size={20} color={C.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.creditLabel}>Credit Balance</Text>
+          <Text style={styles.creditHint}>
+            Credit packs add to a balance you can spend anytime.
+          </Text>
+        </View>
+        <Text style={styles.creditValue} testID="text-credit-balance">
+          {credits.toLocaleString()}
+        </Text>
+      </View>
 
       {/* Usage Statistics (real data) */}
       {currentPlan && totals ? (
@@ -244,7 +368,7 @@ export default function ManagePlansScreen() {
                   variant={isUpgrade ? "primary" : "outline"}
                   fullWidth
                   loading={pendingId === plan.id}
-                  onPress={() => handleSwitch(plan)}
+                  onPress={() => handleUpgrade(plan)}
                   testID={`button-subscribe-${plan.id}`}
                 />
               )}
@@ -252,6 +376,60 @@ export default function ManagePlansScreen() {
           );
         })}
       </View>
+
+      {/* Credit Packs (real in-app purchases) */}
+      {available && creditPackages.length > 0 ? (
+        <>
+          <Text style={[styles.sectionTitle, { marginTop: 26 }]}>Credit Packs</Text>
+          <View style={{ gap: 12 }}>
+            {creditPackages.map((pkg) => (
+              <View key={pkg.identifier} style={styles.packRow} testID={`pack-${pkg.identifier}`}>
+                <View style={styles.packIcon}>
+                  <Feather name="zap" size={18} color={C.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.packTitle}>
+                    {pkg.product.title || pkg.product.identifier}
+                  </Text>
+                  {pkg.product.description ? (
+                    <Text style={styles.packDesc} numberOfLines={2}>
+                      {pkg.product.description}
+                    </Text>
+                  ) : null}
+                </View>
+                <Button
+                  label={pkg.product.priceString}
+                  variant="primary"
+                  size="sm"
+                  onPress={() => handleBuyCredits(pkg)}
+                  testID={`button-buy-${pkg.identifier}`}
+                />
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      {/* Restore purchases — only meaningful when real IAP is available */}
+      {available ? (
+        <Button
+          label="Restore Purchases"
+          variant="ghost"
+          icon="refresh-ccw"
+          loading={isRestoring}
+          onPress={handleRestore}
+          style={{ alignSelf: "center", marginTop: 22 }}
+          testID="button-restore-purchases"
+        />
+      ) : null}
+
+      <PurchaseConfirmModal
+        visible={pendingPurchase !== null}
+        details={pendingPurchase?.details ?? null}
+        loading={isPurchasing}
+        onConfirm={confirmPurchase}
+        onCancel={() => setPendingPurchase(null)}
+      />
     </ScreenScroll>
   );
 }
@@ -282,6 +460,52 @@ const styles = StyleSheet.create({
   errorText: { flex: 1, fontSize: 13.5, color: "#991b1b", fontFamily: fonts.bodyMedium },
 
   block: { marginBottom: 18, ...cardShadow },
+
+  creditCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: C.card,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 22,
+    ...cardShadow,
+  },
+  creditIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: C.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  creditLabel: { fontSize: 15, color: C.foreground, fontFamily: fonts.bodySemibold },
+  creditHint: { fontSize: 12.5, lineHeight: 17, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 2 },
+  creditValue: { fontSize: 26, color: C.primary, fontFamily: fonts.headingBold },
+
+  packRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: C.card,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 16,
+    padding: 14,
+    ...cardShadow,
+  },
+  packIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: C.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  packTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.bodySemibold },
+  packDesc: { fontSize: 12.5, lineHeight: 17, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 2 },
   currentHead: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   currentLabel: { fontSize: 18, color: C.foreground, fontFamily: fonts.headingBold },
   currentName: { fontSize: 26, color: C.foreground, fontFamily: fonts.headingBold, marginBottom: 4 },

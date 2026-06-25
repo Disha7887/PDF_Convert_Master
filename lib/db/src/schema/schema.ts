@@ -10,9 +10,29 @@ export const users = pgTable("users", {
   name: text("name"),
   passwordHash: text("password_hash").notNull(),
   plan: text("plan").notNull().default("free"),
+  // Consumable credit balance. Topped up by one-time credit-pack purchases
+  // (see creditGrants) and spent by metered operations.
+  credits: integer("credits").notNull().default(0),
   profilePictureUrl: text("profile_picture_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Ledger of consumable credit-pack purchases. Each row records that a specific
+// store purchase has already been credited to a user. The purchaseId is unique
+// so the same RevenueCat purchase can never be granted twice (idempotent sync).
+export const creditGrants = pgTable("credit_grants", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  // RevenueCat purchase id (purchase.id) — the idempotency key.
+  purchaseId: text("purchase_id").notNull().unique(),
+  // The store/product identifier of the credit pack that was purchased.
+  productId: text("product_id").notNull(),
+  // Number of credits granted by this purchase.
+  credits: integer("credits").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type CreditGrant = typeof creditGrants.$inferSelect;
 
 // Password reset codes. A short numeric code is emailed to the user; only its
 // hash is stored here. Codes are single-use (consumedAt) and time-limited.

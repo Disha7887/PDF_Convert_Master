@@ -25,8 +25,21 @@ import { ScreenLoader } from "@/components/Loader";
 import colors from "@/constants/colors";
 import { fonts } from "@/constants/theme";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
 
 SplashScreen.preventAutoHideAsync();
+
+// Configure the in-app purchase SDK once at startup. In Expo Go / web the
+// native module is absent, so this fails softly and purchases degrade to a
+// "not available in this build" state rather than crashing the app.
+try {
+  initializeRevenueCat();
+} catch (err) {
+  console.warn(
+    "[pdf-convert-mobile] RevenueCat unavailable:",
+    err instanceof Error ? err.message : String(err),
+  );
+}
 
 const queryClient = new QueryClient();
 const C = colors.light;
@@ -137,7 +150,9 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <AuthProvider>
-                <RootLayoutNav />
+                <SubscriptionProvider>
+                  <RootLayoutNav />
+                </SubscriptionProvider>
               </AuthProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

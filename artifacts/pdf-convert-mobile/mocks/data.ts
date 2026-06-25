@@ -14,6 +14,8 @@ export interface MockUser {
   avatarInitials: string;
   /** URL (origin-relative) of the user's uploaded profile picture, if any. */
   profilePictureUrl?: string | null;
+  /** Durable credit balance topped up by one-time credit-pack purchases. */
+  credits?: number;
 }
 
 export interface Plan {

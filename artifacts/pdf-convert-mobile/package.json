@@ -70,6 +70,7 @@
     "lottie-react": "^2.4.1",
     "lottie-react-native": "~7.3.8",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.0.227"
+    "pdfjs-dist": "^6.0.227",
+    "react-native-purchases": "^10.4.0"
   }
 }

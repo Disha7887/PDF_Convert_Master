@@ -6,7 +6,9 @@ import {
   notifications,
   passwordResetCodes,
   signupVerifications,
+  creditGrants,
   type User, 
+  type CreditGrant,
   type InsertUser,
   type ApiKey,
   type InsertApiKey,
@@ -36,6 +38,16 @@ export interface IStorage {
   updateUserProfilePicture(id: string, profilePictureUrl: string): Promise<User | undefined>;
   updateUserPassword(id: string, passwordHash: string): Promise<void>;
   updateUserPlan(id: string, plan: string): Promise<User | undefined>;
+
+  // Credit methods. grantCreditsForPurchase is idempotent on purchaseId: it
+  // returns the granted CreditGrant the first time a purchase is seen, and
+  // undefined on every subsequent call for the same purchase.
+  grantCreditsForPurchase(
+    userId: string,
+    purchaseId: string,
+    productId: string,
+    credits: number,
+  ): Promise<CreditGrant | undefined>;
 
   // Password reset methods
   createPasswordResetCode(userId: string, codeHash: string, expiresAt: Date): Promise<void>;
@@ -392,11 +404,38 @@ export class MemStorage implements IStorage {
       name: insertUser.name ?? null,
       passwordHash: insertUser.passwordHash!,
       plan: insertUser.plan || "free",
+      credits: 0,
       profilePictureUrl: null,
       createdAt: now
     };
     this.users.set(id, user);
     return user;
+  }
+
+  // In-memory idempotent credit grant: keyed by purchaseId so re-syncing the
+  // same purchase never double-credits.
+  private creditGrants: Map<string, CreditGrant> = new Map();
+
+  async grantCreditsForPurchase(
+    userId: string,
+    purchaseId: string,
+    productId: string,
+    credits: number,
+  ): Promise<CreditGrant | undefined> {
+    if (this.creditGrants.has(purchaseId)) return undefined;
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    const grant: CreditGrant = {
+      id: crypto.randomUUID(),
+      userId,
+      purchaseId,
+      productId,
+      credits,
+      createdAt: new Date(),
+    };
+    this.creditGrants.set(purchaseId, grant);
+    this.users.set(userId, { ...user, credits: (user.credits ?? 0) + credits });
+    return grant;
   }
 
   async updateUserProfile(
@@ -1036,6 +1075,35 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  // Idempotently credit a one-time purchase. The unique purchaseId constraint is
+  // the idempotency key: we insert the ledger row with onConflictDoNothing, and
+  // only bump the user's balance when a NEW row was actually written. The whole
+  // thing runs in a transaction so the ledger row and the balance can't diverge.
+  async grantCreditsForPurchase(
+    userId: string,
+    purchaseId: string,
+    productId: string,
+    credits: number,
+  ): Promise<CreditGrant | undefined> {
+    return await db.transaction(async (tx) => {
+      const [grant] = await tx
+        .insert(creditGrants)
+        .values({ userId, purchaseId, productId, credits })
+        .onConflictDoNothing({ target: creditGrants.purchaseId })
+        .returning();
+
+      // Already granted on a previous sync — nothing to do.
+      if (!grant) return undefined;
+
+      await tx
+        .update(users)
+        .set({ credits: sql`${users.credits} + ${credits}` })
+        .where(eq(users.id, userId));
+
+      return grant;
+    });
   }
 
   // Password reset methods
