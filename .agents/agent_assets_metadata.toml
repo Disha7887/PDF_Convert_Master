@@ -11,3 +11,9 @@ id = "N34neGBOwag1MhkAIiDvt"
 uri = "file://store-assets/PDF-Genius-Data-Safety.csv"
 type = "table"
 title = "PDF Genius — Google Play Data Safety (official import format)"
+
+[[outputs]]
+id = "6SoaTwaXpH63C7ROg8cR6"
+uri = "file://play-store/data-safety.csv"
+type = "table"
+title = "Google Play Data Safety - PDF Genius"

@@ -1,0 +1,9 @@
+Data type,Collected,Shared,Processed ephemerally,Required or optional,Purposes
+Email address,Yes,No,No,Required,App functionality; Account management
+Name,Yes,No,No,Optional,App functionality; Account management
+User IDs,Yes,No,No,Required,App functionality; Account management; Fraud prevention security and compliance
+Purchase history,Yes,No,No,Required,App functionality
+Files and docs,Yes,No,No,Required,App functionality
+Photos,Yes,No,No,Required,App functionality
+App interactions,Yes,No,No,Optional,Analytics; App functionality
+Device or other IDs,Yes,No,No,Required,Analytics; Fraud prevention security and compliance; App functionality
