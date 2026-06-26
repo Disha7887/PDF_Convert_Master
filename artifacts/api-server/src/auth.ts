@@ -636,6 +636,10 @@ function isAllowedAppRedirect(url: string): boolean {
   if (process.env.NODE_ENV !== "production") {
     const expoHost = process.env.REPLIT_EXPO_DEV_DOMAIN;
     if (expoHost && url.startsWith(`exp://${expoHost}`)) return true;
+    // Expo Web preview: Linking.createURL() yields the page's own https origin
+    // (the server-known Expo dev domain), not a custom scheme. Trust it in dev so
+    // Google sign-in can be tested in the in-browser preview, same as Expo Go.
+    if (expoHost && url.startsWith(`https://${expoHost}`)) return true;
 
     const extra = process.env.MOBILE_OAUTH_DEV_REDIRECTS;
     if (extra) {

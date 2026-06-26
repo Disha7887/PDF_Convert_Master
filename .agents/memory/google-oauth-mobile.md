@@ -40,5 +40,15 @@ there is no remote host to leak to. Dev/Expo-Go testing opts in via the
   so the redirect_uri is built deterministically and matches Google's allowlist.
 - Mobile points at prod (`EXPO_PUBLIC_DOMAIN=pdfgenius.app`), so the backend
   changes must be DEPLOYED and a fresh EAS build shipped (new JS + deep-link).
-- Can't be fully E2E'd inside Replit (Expo-web preview redirect is http://localhost,
-  which the allowlist rejects — native build only).
+
+## Testing in the Replit Expo Web preview
+- On Expo **web**, `Linking.createURL("auth")` returns the page's own https origin
+  (`https://<REPLIT_EXPO_DEV_DOMAIN>/auth`), NOT a custom scheme — so the strict
+  allowlist returns "Invalid or missing redirect target." `isAllowedAppRedirect()`
+  therefore ALSO trusts `https://<REPLIT_EXPO_DEV_DOMAIN>` but ONLY when
+  `NODE_ENV !== "production"` (server-known host, no prod surface).
+- Still requires the dev callback `https://<REPLIT_DEV_DOMAIN>/api/auth/google/mobile/callback`
+  to be an authorized redirect URI in the Google Cloud web client, or Google
+  returns `redirect_uri_mismatch` after consent. The replit.dev domain is stable
+  per-repl. (Note: callback is on the `.sisko.replit.dev` host, redirect-back is
+  on the `.expo.sisko.replit.dev` host — both belong to this repl.)
