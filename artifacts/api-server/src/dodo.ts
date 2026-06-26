@@ -77,6 +77,38 @@ export function isBillingConfigured(): boolean {
   );
 }
 
+// Brand the hosted Dodo checkout to match the PDF Genius web app (coral on a
+// light surface). Dodo is a Merchant of Record, so the checkout itself must be
+// hosted by Dodo — but every colour/font/radius is themeable, so it reads as our
+// own page. Keep these tokens in sync with the web app's palette (#f7433d coral).
+const BRAND_CHECKOUT_CUSTOMIZATION = {
+  theme: "light" as const,
+  show_on_demand_tag: false,
+  theme_config: {
+    radius: "10px",
+    font_size: "md" as const,
+    pay_button_text: "Subscribe",
+    light: {
+      bg_primary: "#ffffff",
+      bg_secondary: "#f9fafb",
+      border_primary: "#e5e7eb",
+      border_secondary: "#f3f4f6",
+      button_primary: "#f7433d",
+      button_primary_hover: "#d93832",
+      button_text_primary: "#ffffff",
+      button_secondary: "#f3f4f6",
+      button_secondary_hover: "#e5e7eb",
+      button_text_secondary: "#111827",
+      input_focus_border: "#f7433d",
+      text_primary: "#111827",
+      text_secondary: "#6b7280",
+      text_placeholder: "#9ca3af",
+      text_error: "#dc2626",
+      text_success: "#16a34a",
+    },
+  },
+};
+
 export interface CheckoutUser {
   id: string;
   email: string;
@@ -110,6 +142,8 @@ export async function createCheckoutForPlan(opts: {
     customer: customer as any,
     return_url: opts.returnUrl,
     ...(opts.cancelUrl ? { cancel_url: opts.cancelUrl } : {}),
+    // Brand the hosted checkout to match our site.
+    customization: BRAND_CHECKOUT_CUSTOMIZATION,
     // Carried back to us on every subscription webhook so we can attribute the
     // subscription to the right user without a DB round-trip.
     metadata: { userId: opts.user.id, planId: opts.planId },
