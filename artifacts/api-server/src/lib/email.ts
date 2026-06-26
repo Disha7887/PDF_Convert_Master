@@ -59,8 +59,23 @@ interface ResendConnectionSettings {
   [key: string]: unknown;
 }
 
-/** Fetches the Resend API key (and optional from-address) from the connector proxy. */
+/**
+ * Resolves the Resend API key (and optional from-address).
+ *
+ * Prefers a directly-provided `RESEND_API_KEY` env var so the app works on any
+ * host (Railway, etc.) without the Replit connector. Falls back to the Replit
+ * connector proxy when no env key is set (e.g. local Replit development).
+ */
 async function getResendCredentials(): Promise<{ apiKey: string; from?: string }> {
+  const envKey = process.env.RESEND_API_KEY?.trim();
+  if (envKey) {
+    return { apiKey: envKey, from: process.env.RESEND_FROM?.trim() || undefined };
+  }
+  return getResendCredentialsFromConnector();
+}
+
+/** Fetches the Resend API key (and optional from-address) from the connector proxy. */
+async function getResendCredentialsFromConnector(): Promise<{ apiKey: string; from?: string }> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY

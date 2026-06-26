@@ -40,6 +40,7 @@
 - [Mobile flat surfaces](mobile-flat-surfaces.md) — pdf-convert-mobile buttons/cards are flat solid color; GlassSurface is solid (name kept, sheen/intensity now no-ops); don't reintroduce glossy sheen.
 - [Mobile keyboard resize](mobile-keyboard-resize.md) — Android needs softwareKeyboardLayoutMode "resize" (not "pan") or keyboard hides bottom inputs; native change → needs fresh EAS build.
 - [Deploy architecture](deploy-architecture.md) — prod = Railway(api-server co-hosts web build, single origin) + Supabase + Expo EAS; pin pnpm@10 in root pkg for Railpack; mobile uses EXPO_PUBLIC_DOMAIN.
+- [S3 storage + Resend on Railway](storage-email-railway.md) — storage shifted off Replit sidecar to provider-agnostic S3 (s3Storage.ts); email reads RESEND_API_KEY env, connector only as fallback; old objectStorage/objectAcl deleted.
 - [iOS modal-share race](ios-modal-share-race.md) — closing an RN Modal then immediately Sharing.shareAsync silently fails on iOS; defer the share to the Modal's onDismiss.
 - [Web download in iframe](web-download-iframe-blob.md) — converted-file downloads must fetch→blob→`<a download>` (downloadFromUrl); window.open/anchor-nav is blocked in the Replit preview/canvas iframe.
 - [iOS Safari web download](web-ios-download.md) — deployed site on iPhone: <a download> opens blob inline, never saves; use navigator.share({files}) on iOS, anchor elsewhere.
