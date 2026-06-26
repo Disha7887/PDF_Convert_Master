@@ -6,7 +6,7 @@
     "versionCode": 1,
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "pdfconvertmaster",
+    "scheme": "pdfgenius",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -16,14 +16,14 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pdfconvertmaster.app",
+      "bundleIdentifier": "com.pdfgenius.app",
       "infoPlist": {
         "UIFileSharingEnabled": true,
         "LSSupportsOpeningDocumentsInPlace": true
       }
     },
     "android": {
-      "package": "com.pdfconvertmaster.app",
+      "package": "com.pdfgenius.app",
       "versionCode": 1,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {

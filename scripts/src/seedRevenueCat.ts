@@ -28,9 +28,9 @@ import {
 const PROJECT_NAME = "PDF Genius";
 
 const APP_STORE_APP_NAME = "PDF Genius (iOS)";
-const APP_STORE_BUNDLE_ID = "com.pdfconvertmaster.app";
+const APP_STORE_BUNDLE_ID = "com.pdfgenius.app";
 const PLAY_STORE_APP_NAME = "PDF Genius (Android)";
-const PLAY_STORE_PACKAGE_NAME = "com.pdfconvertmaster.app";
+const PLAY_STORE_PACKAGE_NAME = "com.pdfgenius.app";
 
 type Duration = "P1W" | "P1M" | "P2M" | "P3M" | "P6M" | "P1Y";
 
