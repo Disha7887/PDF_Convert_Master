@@ -58,6 +58,8 @@
 - [Shared enum runtime staleness](shared-enum-restart.md) — after editing the ToolType enum in lib/db, restart api-server or z.nativeEnum validation rejects the new value ("Invalid request data") until reload.
 - [Mobile History re-download](history-redownload.md) — History rows re-download on tap (prefer jobId/backend, local uri fallback); rows show saved fileName + timestamp + file-type badge, not the tool name.
 - [api-server DB driver = @workspace/db](api-server-db-driver.md) — import shared @workspace/db (prefers SUPABASE_DB_URL via pg), NOT a local ./db Neon wrapper, or writes silently hit the wrong (Replit) database.
+- [RevenueCat seed reconcile](revenuecat-seed-reconcile.md) — RC store-app identifier (package_name/bundle_id) is mutable via updateApp; ensureApps reconciles drift on re-seed; plain re-seed alone keeps stale id.
+- [EAS build in main agent](eas-build-main-agent.md) — `eas build` git step hits the sandbox git-write block; run with `EAS_NO_VCS=1` to tar the workdir instead.
 - [Data Safety + Privacy alignment](data-safety-privacy.md) — Play Data Safety declared baseline + CSV uses Google's 5-col import schema; analytics is FIRST-PARTY only (no 3rd-party SDKs); keep CSV/PrivacyPolicy/DataSafety page in lockstep.
 - [RevenueCat IAP (mobile)](revenuecat-iap.md) — native SDK behind purchasesClient.ts + .web.ts stub (rn-purchases breaks web bundle); type-only import in revenuecat.tsx; sync is non-clobbering, idempotent credits, runs only on purchase/restore not login.
 - [pdf-lib embedJpg JFIF](pdf-lib-embedjpg-jfif.md) — embedJpg throws "SOI not found" on headerless (sharp) JPEGs; re-encode via sharp before embed; normalize non-jpeg to PNG.

@@ -14,6 +14,7 @@ import {
   listOfferings,
   createOffering,
   updateOffering,
+  updateApp,
   listPackages,
   createPackages,
   attachProductsToPackage,
@@ -222,6 +223,17 @@ async function ensureApps(client: Client, projectId: string) {
     console.log("Created App Store app:", appStore.id);
   } else {
     console.log("App Store app:", appStore.id);
+    const currentBundleId = (appStore as { app_store?: { bundle_id?: string } }).app_store?.bundle_id;
+    if (currentBundleId && currentBundleId !== APP_STORE_BUNDLE_ID) {
+      const { data, error: err } = await updateApp({
+        client,
+        path: { project_id: projectId, app_id: appStore.id },
+        body: { app_store: { bundle_id: APP_STORE_BUNDLE_ID } },
+      });
+      if (err) throw new Error("Failed to update App Store bundle id: " + JSON.stringify(err));
+      appStore = data;
+      console.log(`  Updated App Store bundle id: ${currentBundleId} -> ${APP_STORE_BUNDLE_ID}`);
+    }
   }
 
   let playStore = apps.items.find((a) => a.type === "play_store");
@@ -240,6 +252,17 @@ async function ensureApps(client: Client, projectId: string) {
     console.log("Created Play Store app:", playStore.id);
   } else {
     console.log("Play Store app:", playStore.id);
+    const currentPackage = (playStore as { play_store?: { package_name?: string } }).play_store?.package_name;
+    if (currentPackage && currentPackage !== PLAY_STORE_PACKAGE_NAME) {
+      const { data, error: err } = await updateApp({
+        client,
+        path: { project_id: projectId, app_id: playStore.id },
+        body: { play_store: { package_name: PLAY_STORE_PACKAGE_NAME } },
+      });
+      if (err) throw new Error("Failed to update Play Store package name: " + JSON.stringify(err));
+      playStore = data;
+      console.log(`  Updated Play Store package name: ${currentPackage} -> ${PLAY_STORE_PACKAGE_NAME}`);
+    }
   }
 
   return { testStore, appStore, playStore };
