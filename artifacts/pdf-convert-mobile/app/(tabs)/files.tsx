@@ -74,9 +74,19 @@ export default function FilesScreen() {
         actions.push({
           text: "Download",
           onPress: async () => {
-            const res = await saveFile(entry.uri!, entry.name);
+            // The stored `name` is a display name without an extension (e.g.
+            // "Scan Jun 26"); the real extension lives in `outputFormat`. Append
+            // it so the saved file is named "<name>.pdf" — without the extension
+            // Android writes it as application/octet-stream and the Files app
+            // reports "cannot open document".
+            const ext = entry.outputFormat?.replace(/^\./, "").toLowerCase();
+            const downloadName =
+              ext && !entry.name.toLowerCase().endsWith(`.${ext}`)
+                ? `${entry.name}.${ext}`
+                : entry.name;
+            const res = await saveFile(entry.uri!, downloadName);
             if (res.status === "saved") {
-              Alert.alert("Downloaded", `${entry.name} was saved to ${res.location}.`);
+              Alert.alert("Downloaded", `${downloadName} was saved to ${res.location}.`);
             } else if (res.status === "failed") {
               Alert.alert("Couldn't save", "Could not save the file. Please try again.");
             }
