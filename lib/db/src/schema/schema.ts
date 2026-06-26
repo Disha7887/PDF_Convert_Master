@@ -13,6 +13,11 @@ export const users = pgTable("users", {
   // Consumable credit balance. Topped up by one-time credit-pack purchases
   // (see creditGrants) and spent by metered operations.
   credits: integer("credits").notNull().default(0),
+  // Dodo Payments references for web subscriptions. Set by the billing webhook
+  // when a subscription activates; used to open the customer portal and to map
+  // subscription lifecycle events back to this user.
+  dodoCustomerId: text("dodo_customer_id"),
+  dodoSubscriptionId: text("dodo_subscription_id"),
   profilePictureUrl: text("profile_picture_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });

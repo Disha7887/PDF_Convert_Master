@@ -14,6 +14,8 @@ interface AuthContextType {
   googleSignin: (code: string) => Promise<{ success: boolean; error?: string; isNewUser?: boolean }>;
   signout: () => void;
   updateUser: (user: User, token?: string) => void;
+  /** Re-fetch the signed-in user from the backend (e.g. after a plan change). */
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -218,6 +220,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Re-pull the user record from the backend without a full reload. Used after a
+  // Dodo checkout returns so the freshly-activated plan shows up once the webhook
+  // has reconciled it.
+  const refreshUser = async () => {
+    const authToken = token || localStorage.getItem("auth_token");
+    if (!authToken) return;
+    try {
+      const response = await fetch("/api/user", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) setUser(data.data.user);
+      }
+    } catch (error) {
+      console.error("Refresh user failed:", error);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -228,6 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     googleSignin,
     signout,
     updateUser,
+    refreshUser,
     isAuthenticated: !!user && !!token,
   };
 

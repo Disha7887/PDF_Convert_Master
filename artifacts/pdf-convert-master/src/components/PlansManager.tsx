@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Code2, Archive, FileImage, Loader2, Zap } from "lucide-react";
+import { Check, Code2, Archive, FileImage, Loader2, Zap, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,9 @@ import {
   fetchPlans,
   fetchUsage,
   changePlan,
+  startCheckout,
+  openBillingPortal,
+  fetchMe,
   formatBytes,
   formatLimit,
   usagePercent,
@@ -24,6 +27,11 @@ export const PlansManager: React.FC = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Tracks which paid plan's checkout button is busy (redirecting to Dodo).
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null);
+  // The customer portal opens for management/cancellation; one global flag.
+  const [portalBusy, setPortalBusy] = useState(false);
 
   const { data: plans = [] } = useQuery<Plan[]>({
     queryKey: ["/api/plans"],
@@ -38,14 +46,16 @@ export const PlansManager: React.FC = () => {
 
   const currentPlanId = user?.plan ?? "free";
   const currentPlan = plans.find((p) => p.id === currentPlanId);
-  const currentIndex = plans.findIndex((p) => p.id === currentPlanId);
+  // A user with an active Dodo subscription manages everything via the portal;
+  // a free user upgrades through hosted checkout.
+  const hasSubscription = Boolean((user as any)?.dodoSubscriptionId);
 
-  const mutation = useMutation({
+  // Downgrade-to-free for subscription-less users (rare). Subscribers cancel via
+  // the portal instead, so the backend rejects a free switch while a sub exists.
+  const downgradeMutation = useMutation({
     mutationFn: changePlan,
     onSuccess: (plan: Plan) => {
-      if (user) {
-        updateUser({ ...user, plan: plan.id } as User);
-      }
+      if (user) updateUser({ ...user, plan: plan.id } as User);
       queryClient.invalidateQueries({ queryKey: ["/api/usage"] });
       toast({
         title: "Plan updated",
@@ -60,6 +70,82 @@ export const PlansManager: React.FC = () => {
       });
     },
   });
+
+  // Redirect the browser into a Dodo checkout session for a paid plan.
+  const handleUpgrade = async (planId: string) => {
+    setPendingPlan(planId);
+    try {
+      const url = await startCheckout(planId);
+      window.location.href = url;
+    } catch (err: any) {
+      toast({
+        title: "Could not start checkout",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+      setPendingPlan(null);
+    }
+  };
+
+  // Open the Dodo customer portal (update payment, switch plan, or cancel).
+  const handlePortal = async () => {
+    setPortalBusy(true);
+    try {
+      const url = await openBillingPortal();
+      window.location.href = url;
+    } catch (err: any) {
+      toast({
+        title: "Could not open billing",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+      setPortalBusy(false);
+    }
+  };
+
+  // Handle the return from a Dodo checkout. The plan flips via the webhook, which
+  // may land a moment after the redirect, so poll the user a few times.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("checkout");
+    if (!status) return;
+    // Clean the URL so a refresh doesn't re-trigger the toast/poll.
+    window.history.replaceState({}, "", window.location.pathname);
+
+    if (status === "success") {
+      toast({
+        title: "Payment successful",
+        description: "Your plan is being activated…",
+      });
+      let tries = 0;
+      const poll = async () => {
+        tries++;
+        try {
+          const me = await fetchMe();
+          updateUser(me as User);
+          queryClient.invalidateQueries({ queryKey: ["/api/usage"] });
+          if (me?.plan && me.plan !== "free") {
+            toast({
+              title: "Plan activated",
+              description: `You're now on the ${me.plan} plan.`,
+            });
+            return;
+          }
+        } catch {
+          // ignore and retry
+        }
+        if (tries < 6) setTimeout(poll, 2000);
+      };
+      poll();
+    } else if (status === "cancelled") {
+      toast({
+        title: "Checkout cancelled",
+        description: "No changes were made.",
+        variant: "destructive",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const meters =
     currentPlan && usage
@@ -115,6 +201,21 @@ export const PlansManager: React.FC = () => {
                     • {currentPlan.description}
                   </p>
                 </div>
+                {hasSubscription && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePortal}
+                    disabled={portalBusy}
+                    data-testid="button-manage-billing"
+                  >
+                    {portalBusy ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CreditCard className="w-4 h-4 mr-2" />
+                    )}
+                    Manage Billing
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
@@ -197,16 +298,20 @@ export const PlansManager: React.FC = () => {
         </CardHeader>
         <div className="p-6 pt-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {plans.map((plan, index) => {
+            {plans.map((plan) => {
               const isCurrent = isAuthenticated && plan.id === currentPlanId;
+              const isFree = plan.id === "free";
               const isPending =
-                mutation.isPending && mutation.variables === plan.id;
+                pendingPlan === plan.id ||
+                (downgradeMutation.isPending &&
+                  downgradeMutation.variables === plan.id) ||
+                (portalBusy && hasSubscription && !isCurrent);
 
               let label = plan.cta;
               if (isAuthenticated) {
                 if (isCurrent) label = "Current Plan";
-                else if (currentIndex >= 0 && index < currentIndex)
-                  label = "Downgrade";
+                else if (isFree) label = "Downgrade";
+                else if (hasSubscription) label = "Switch Plan";
                 else label = "Upgrade";
               }
 
@@ -216,7 +321,18 @@ export const PlansManager: React.FC = () => {
                   return;
                 }
                 if (isCurrent) return;
-                mutation.mutate(plan.id);
+                // Subscribers manage every change (switch or cancel) in the portal.
+                if (hasSubscription) {
+                  handlePortal();
+                  return;
+                }
+                // No subscription yet: downgrade-to-free is a direct switch,
+                // upgrading to a paid plan goes through Dodo checkout.
+                if (isFree) {
+                  downgradeMutation.mutate(plan.id);
+                  return;
+                }
+                handleUpgrade(plan.id);
               };
 
               return (

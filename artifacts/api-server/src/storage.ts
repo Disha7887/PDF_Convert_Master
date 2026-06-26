@@ -38,6 +38,12 @@ export interface IStorage {
   updateUserProfilePicture(id: string, profilePictureUrl: string): Promise<User | undefined>;
   updateUserPassword(id: string, passwordHash: string): Promise<void>;
   updateUserPlan(id: string, plan: string): Promise<User | undefined>;
+  // Dodo Payments references, set by the billing webhook on subscription events.
+  updateUserDodoRefs(
+    id: string,
+    refs: { dodoCustomerId?: string | null; dodoSubscriptionId?: string | null },
+  ): Promise<User | undefined>;
+  getUserByDodoCustomerId(customerId: string): Promise<User | undefined>;
 
   // Credit methods. grantCreditsForPurchase is idempotent on purchaseId: it
   // returns the granted CreditGrant the first time a purchase is seen, and
@@ -476,6 +482,32 @@ export class MemStorage implements IStorage {
     const next: User = { ...user, plan };
     this.users.set(id, next);
     return next;
+  }
+
+  async updateUserDodoRefs(
+    id: string,
+    refs: { dodoCustomerId?: string | null; dodoSubscriptionId?: string | null },
+  ): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const next: User = {
+      ...user,
+      ...(refs.dodoCustomerId !== undefined
+        ? { dodoCustomerId: refs.dodoCustomerId }
+        : {}),
+      ...(refs.dodoSubscriptionId !== undefined
+        ? { dodoSubscriptionId: refs.dodoSubscriptionId }
+        : {}),
+    };
+    this.users.set(id, next);
+    return next;
+  }
+
+  async getUserByDodoCustomerId(customerId: string): Promise<User | undefined> {
+    for (const u of this.users.values()) {
+      if ((u as any).dodoCustomerId === customerId) return u;
+    }
+    return undefined;
   }
 
   // Password reset methods
@@ -1074,6 +1106,32 @@ export class DatabaseStorage implements IStorage {
       .set({ plan })
       .where(eq(users.id, id))
       .returning();
+    return user || undefined;
+  }
+
+  async updateUserDodoRefs(
+    id: string,
+    refs: { dodoCustomerId?: string | null; dodoSubscriptionId?: string | null },
+  ): Promise<User | undefined> {
+    const set: Record<string, string | null> = {};
+    if (refs.dodoCustomerId !== undefined) set.dodoCustomerId = refs.dodoCustomerId;
+    if (refs.dodoSubscriptionId !== undefined)
+      set.dodoSubscriptionId = refs.dodoSubscriptionId;
+    if (Object.keys(set).length === 0) return this.getUserById(id);
+    const [user] = await db
+      .update(users)
+      .set(set)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async getUserByDodoCustomerId(customerId: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.dodoCustomerId, customerId))
+      .limit(1);
     return user || undefined;
   }
 

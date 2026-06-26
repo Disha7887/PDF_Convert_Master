@@ -25,6 +25,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "docx": "^9.7.1",
+    "dodopayments": "^2.40.0",
     "drizzle-orm": "catalog:",
     "express": "^5.2.1",
     "google-auth-library": "^10.7.0",

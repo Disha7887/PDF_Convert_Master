@@ -26,7 +26,15 @@ app.use(
   }),
 );
 app.use(cors());
-app.use(express.json());
+// Capture the raw request body so the Dodo Payments webhook route can verify the
+// Standard-Webhooks HMAC signature against the exact bytes Dodo signed.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      (req as any).rawBody = buf;
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
 
 export { app, registerRoutes };

@@ -22,6 +22,14 @@ import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
 import { saveConvertedFile, getConvertedFile } from "./lib/conversionStorage";
 import { PLANS, getPlan } from "./plans";
 import { syncRevenueCatCustomer } from "./revenuecat";
+import {
+  createCheckoutForPlan,
+  createPortalSession,
+  verifyWebhook,
+  handleWebhookEvent,
+  isBillingConfigured,
+  getProductIdForPlan,
+} from "./dodo";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
 import { execSync } from "child_process";
@@ -2057,6 +2065,20 @@ const optionalAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
   next();
 };
 
+// Best public origin for building return/cancel URLs that point back at the web
+// app. In production the web build is co-hosted with the API on a single origin,
+// so the incoming request's host is correct; PUBLIC_APP_URL overrides it.
+function appOrigin(req: Request): string {
+  const configured = process.env.PUBLIC_APP_URL;
+  if (configured) return configured.replace(/\/$/, "");
+  const proto =
+    (req.headers["x-forwarded-proto"] as string | undefined)?.split(",")[0] ||
+    req.protocol ||
+    "https";
+  const host = req.get("host");
+  return `${proto}://${host}`;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   // Authentication routes are defined above
@@ -3621,8 +3643,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json({ success: true, data: { plans: PLANS } });
   });
 
-  // Switch the signed-in user's plan. No payment is taken — the new plan id is
-  // persisted to users.plan and reflected immediately on every client.
+  // Self-service plan endpoint, now restricted to downgrading to the free plan.
+  // Upgrades to paid plans go through Dodo checkout; cancellations go through the
+  // Dodo customer portal (both reconcile via the billing webhook).
   app.post("/api/account/plan", authenticateUser, async (req, res) => {
     try {
       const userId = (req as any).user.id as string;
@@ -3630,6 +3653,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const plan = getPlan(planId);
       if (!plan) {
         return res.status(400).json({ success: false, error: "Unknown plan" });
+      }
+      // Paid plans must be purchased through Dodo checkout — never flip a user to
+      // a paid plan for free. This closes the previous monetization hole where any
+      // logged-in user could self-assign the business plan.
+      if (plan.id !== "free") {
+        return res.status(400).json({
+          success: false,
+          error: "Use checkout to upgrade to a paid plan.",
+        });
+      }
+      // Downgrading to free: if the user still has an active Dodo subscription
+      // they must cancel it through the billing portal — the webhook then flips
+      // them to free. This keeps our plan state in lockstep with Dodo.
+      const current = await storage.getUserById(userId);
+      if ((current as any)?.dodoSubscriptionId) {
+        return res.status(400).json({
+          success: false,
+          error: "Manage or cancel your subscription from the billing portal.",
+        });
       }
       const user = await storage.updateUserPlan(userId, plan.id);
       if (!user) {
@@ -3659,6 +3701,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res
         .status(502)
         .json({ success: false, error: "Failed to sync purchases" });
+    }
+  });
+
+  // --- Billing (Dodo Payments) ----------------------------------------------
+
+  // Whether the web billing flow is live (api key + at least one product id set).
+  app.get("/api/billing/config", (_req, res) => {
+    return res.json({ success: true, data: { enabled: isBillingConfigured() } });
+  });
+
+  // Start a hosted Dodo checkout for a paid plan. Returns the checkout URL the
+  // browser should redirect to. The plan only changes once Dodo's webhook fires.
+  app.post("/api/billing/checkout", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const planId = String(req.body?.planId ?? "").trim();
+      const plan = getPlan(planId);
+      if (!plan || plan.id === "free") {
+        return res.status(400).json({ success: false, error: "Choose a paid plan." });
+      }
+      if (!getProductIdForPlan(plan.id)) {
+        return res.status(503).json({
+          success: false,
+          error: "Billing is not configured for this plan yet.",
+        });
+      }
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: "User not found" });
+      }
+      // A user with an active subscription must change plans through the portal,
+      // never start a second checkout (which would create a duplicate sub).
+      if ((user as any).dodoSubscriptionId) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "You already have an active subscription. Manage it from the billing portal.",
+        });
+      }
+      const origin = appOrigin(req);
+      const { url } = await createCheckoutForPlan({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? null,
+          dodoCustomerId: (user as any).dodoCustomerId ?? null,
+        },
+        planId: plan.id,
+        returnUrl: `${origin}/dashboard/manage-plans?checkout=success`,
+        cancelUrl: `${origin}/dashboard/manage-plans?checkout=cancelled`,
+      });
+      return res.json({ success: true, data: { url } });
+    } catch (error) {
+      console.error("Error creating checkout:", error);
+      return res.status(502).json({ success: false, error: "Could not start checkout." });
+    }
+  });
+
+  // Open a Dodo customer portal session so the user can update payment details,
+  // switch plans or cancel. Requires an existing Dodo customer.
+  app.post("/api/billing/portal", authenticateUser, async (req, res) => {
+    try {
+      const userId = (req as any).user.id as string;
+      const user = await storage.getUserById(userId);
+      const customerId = (user as any)?.dodoCustomerId as string | undefined;
+      if (!customerId) {
+        return res.status(400).json({
+          success: false,
+          error: "No billing account yet — upgrade to a paid plan first.",
+        });
+      }
+      const origin = appOrigin(req);
+      const { url } = await createPortalSession(
+        customerId,
+        `${origin}/dashboard/manage-plans`,
+      );
+      return res.json({ success: true, data: { url } });
+    } catch (error) {
+      console.error("Error creating billing portal session:", error);
+      return res
+        .status(502)
+        .json({ success: false, error: "Could not open billing portal." });
+    }
+  });
+
+  // Dodo webhook receiver. No auth — authenticity is proven by the Standard
+  // Webhooks HMAC signature, verified against DODO_PAYMENTS_WEBHOOK_KEY using the
+  // RAW request body (captured in app.ts).
+  app.post("/api/billing/dodo/webhook", async (req, res) => {
+    try {
+      const raw = (req as any).rawBody;
+      const rawBody =
+        raw instanceof Buffer
+          ? raw.toString("utf8")
+          : typeof raw === "string"
+            ? raw
+            : JSON.stringify(req.body ?? {});
+      const headers: Record<string, string> = {};
+      for (const [k, v] of Object.entries(req.headers)) {
+        if (typeof v === "string") headers[k] = v;
+        else if (Array.isArray(v)) headers[k] = v.join(",");
+      }
+      const event = await verifyWebhook(rawBody, headers);
+      await handleWebhookEvent(event);
+      return res.json({ received: true });
+    } catch (error) {
+      console.error("Dodo webhook error:", error);
+      // 400 so Dodo retries on transient failures, but never leak detail.
+      return res.status(400).json({ received: false });
     }
   });
 

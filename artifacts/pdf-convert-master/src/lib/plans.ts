@@ -2,6 +2,7 @@
 // The catalog is fetched from the server (`GET /api/plans`) so web and mobile
 // always agree; usage comes from `GET /api/usage` (real conversion data).
 import { authedJson } from "@/lib/authedFetch";
+import type { User } from "@workspace/db";
 
 export interface PlanLimits {
   apiCalls: number;
@@ -50,6 +51,38 @@ export function changePlan(planId: string): Promise<Plan> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ planId }),
   }).then((r) => r.data.plan);
+}
+
+// --- Dodo Payments billing -------------------------------------------------
+
+/** Start a hosted Dodo checkout for a paid plan; resolves to its checkout URL. */
+export function startCheckout(planId: string): Promise<string> {
+  return authedJson<{ data: { url: string } }>("/api/billing/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ planId }),
+  }).then((r) => r.data.url);
+}
+
+/** Open the Dodo customer portal (manage/cancel); resolves to its URL. */
+export function openBillingPortal(): Promise<string> {
+  return authedJson<{ data: { url: string } }>("/api/billing/portal", {
+    method: "POST",
+  }).then((r) => r.data.url);
+}
+
+/** Whether the web billing flow is configured and live. */
+export function fetchBillingConfig(): Promise<{ enabled: boolean }> {
+  return authedJson<{ data: { enabled: boolean } }>("/api/billing/config").then(
+    (r) => r.data,
+  );
+}
+
+/** Re-fetch the signed-in user (used to reflect a plan change after checkout). */
+export function fetchMe(): Promise<User> {
+  return authedJson<{ data: { user: User } }>("/api/user").then(
+    (r) => r.data.user,
+  );
 }
 
 export function formatBytes(bytes: number): string {
