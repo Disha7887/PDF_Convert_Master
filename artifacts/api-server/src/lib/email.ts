@@ -30,6 +30,26 @@ function getLogoUrl(): string {
   return `${base}/genius-logo.png`;
 }
 
+/**
+ * Default "from" address. Resend only delivers mail sent from a VERIFIED domain;
+ * our verified domain is pdfgenius.app, so we send as noreply@pdfgenius.app.
+ */
+const DEFAULT_FROM = "PDF Genius <noreply@pdfgenius.app>";
+
+/**
+ * Pick a safe sender. The Resend connector lets the user type any "from" address,
+ * but anything not on our verified pdfgenius.app domain is rejected by Resend
+ * (HTTP 403). So we only honour a connector-configured sender when it's on
+ * pdfgenius.app; otherwise we fall back to the verified no-reply address.
+ */
+function resolveFromAddress(configured?: string): string {
+  const value = configured?.trim();
+  if (value && /@pdfgenius\.app>?$/i.test(value)) {
+    return value;
+  }
+  return DEFAULT_FROM;
+}
+
 interface ResendConnectionSettings {
   api_key?: string;
   apiKey?: string;
@@ -82,9 +102,7 @@ async function getResendCredentials(): Promise<{ apiKey: string; from?: string }
 /** Sends a 6-digit password reset code to the user's email via Resend. */
 export async function sendPasswordResetEmail(to: string, code: string): Promise<void> {
   const { apiKey, from } = await getResendCredentials();
-  // `onboarding@resend.dev` is Resend's shared sender; works before a domain is
-  // verified (in test mode it only delivers to the account owner's address).
-  const fromAddress = from || "PDF Genius <onboarding@resend.dev>";
+  const fromAddress = resolveFromAddress(from);
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -114,7 +132,7 @@ export async function sendPasswordResetEmail(to: string, code: string): Promise<
 /** Sends a 6-digit signup verification code to a prospective user via Resend. */
 export async function sendSignupOtpEmail(to: string, code: string): Promise<void> {
   const { apiKey, from } = await getResendCredentials();
-  const fromAddress = from || "PDF Genius <onboarding@resend.dev>";
+  const fromAddress = resolveFromAddress(from);
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
