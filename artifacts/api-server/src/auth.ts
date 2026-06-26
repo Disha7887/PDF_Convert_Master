@@ -583,14 +583,32 @@ function getGoogleClientSecret(): string | null {
  * Resolve the public, externally-reachable base URL of this server (no trailing
  * slash). Used to build the mobile OAuth redirect_uri, which must EXACTLY match
  * a value authorized in the Google Cloud console. `PUBLIC_APP_URL` (e.g.
- * https://pdfgenius.app) takes precedence; otherwise we fall back to the first
- * REPLIT_DOMAINS entry (the dev domain).
+ * https://pdfgenius.app) takes precedence, then the first REPLIT_DOMAINS entry
+ * (the dev domain), and finally the incoming request's own forwarded host (so
+ * the deployed single-origin server works without any extra env wiring).
  */
-function getPublicBaseUrl(): string | null {
+function getPublicBaseUrl(req?: Request): string | null {
   const override = process.env.PUBLIC_APP_URL?.replace(/\/$/, "");
   if (override) return override;
   const replit = process.env.REPLIT_DOMAINS?.split(",")[0]?.trim();
-  return replit ? `https://${replit}` : null;
+  if (replit) return `https://${replit}`;
+  // Final fallback: derive from the incoming request. In production the API is
+  // co-hosted with the web build on a single origin (e.g. Railway), where
+  // neither PUBLIC_APP_URL nor REPLIT_DOMAINS exist — so the request's own
+  // (forwarded) host is the correct public origin. Google only honours
+  // redirect_uris registered in its console, and the final app redirect is
+  // gated by isAllowedAppRedirect, so a spoofed Host can't exfiltrate a token.
+  if (req) {
+    const proto =
+      (req.headers["x-forwarded-proto"] as string | undefined)?.split(",")[0] ||
+      req.protocol ||
+      "https";
+    const host =
+      (req.headers["x-forwarded-host"] as string | undefined)?.split(",")[0] ||
+      req.get("host");
+    if (host) return `${proto}://${host}`;
+  }
+  return null;
 }
 
 /**
@@ -783,8 +801,8 @@ export async function googleAuth(req: Request, res: Response) {
 // authorizing `<PUBLIC_APP_URL>/api/auth/google/mobile/callback` as a redirect
 // URI.
 
-function googleMobileCallbackUrl(): string | null {
-  const base = getPublicBaseUrl();
+function googleMobileCallbackUrl(req?: Request): string | null {
+  const base = getPublicBaseUrl(req);
   return base ? `${base}/api/auth/google/mobile/callback` : null;
 }
 
@@ -793,7 +811,7 @@ function googleMobileCallbackUrl(): string | null {
 export function googleMobileStart(req: Request, res: Response) {
   const clientId = getGoogleClientId();
   const clientSecret = getGoogleClientSecret();
-  const callbackUrl = googleMobileCallbackUrl();
+  const callbackUrl = googleMobileCallbackUrl(req);
   const appRedirect =
     typeof req.query.redirect === "string" ? req.query.redirect : "";
 
@@ -804,11 +822,15 @@ export function googleMobileStart(req: Request, res: Response) {
     return res.status(400).send("Invalid or missing redirect target.");
   }
 
-  // Sign the app's return deep link into `state` so the callback can trust it
-  // (and so it can't be swapped mid-flight). Short-lived.
-  const state = jwt.sign({ redirect: appRedirect }, JWT_SECRET, {
-    expiresIn: "10m",
-  });
+  // Sign the app's return deep link AND the exact callback URL into `state` so
+  // the callback can trust them (and so they can't be swapped mid-flight). Baking
+  // in the callback URL guarantees the token exchange reuses the same redirect_uri
+  // even if the two requests ever observe different forwarded host headers.
+  const state = jwt.sign(
+    { redirect: appRedirect, cb: callbackUrl },
+    JWT_SECRET,
+    { expiresIn: "10m" },
+  );
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   authUrl.searchParams.set("client_id", clientId);
@@ -827,11 +849,16 @@ export function googleMobileStart(req: Request, res: Response) {
 export async function googleMobileCallback(req: Request, res: Response) {
   const stateRaw = typeof req.query.state === "string" ? req.query.state : "";
   let appRedirect: string | null = null;
+  let stateCallbackUrl: string | null = null;
   try {
-    const decoded = jwt.verify(stateRaw, JWT_SECRET) as { redirect?: string };
+    const decoded = jwt.verify(stateRaw, JWT_SECRET) as {
+      redirect?: string;
+      cb?: string;
+    };
     if (decoded?.redirect && isAllowedAppRedirect(decoded.redirect)) {
       appRedirect = decoded.redirect;
     }
+    if (typeof decoded?.cb === "string") stateCallbackUrl = decoded.cb;
   } catch {
     appRedirect = null;
   }
@@ -853,7 +880,9 @@ export async function googleMobileCallback(req: Request, res: Response) {
   const code = typeof req.query.code === "string" ? req.query.code : "";
   const clientId = getGoogleClientId();
   const clientSecret = getGoogleClientSecret();
-  const callbackUrl = googleMobileCallbackUrl();
+  // Reuse the exact redirect_uri minted at /start (carried in signed state) so
+  // the token exchange always matches; fall back to recomputing from this request.
+  const callbackUrl = stateCallbackUrl || googleMobileCallbackUrl(req);
   if (!code || !clientId || !clientSecret || !callbackUrl) {
     return fail("Google sign-in failed. Please try again.");
   }
