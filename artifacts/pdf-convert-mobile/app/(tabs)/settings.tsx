@@ -62,17 +62,11 @@ export default function SettingsScreen() {
     }
   };
 
-  const showCredits = () =>
-    Alert.alert(
-      "Credits",
-      "PDF Genius\nBuilt with Expo & React Native.\nIcons by Feather.\nFonts: Poppins & Inter.",
-    );
-
   const moreLinks: LinkRow[] = [
+    { label: "My Credits", icon: "zap", onPress: () => go(ROUTES.credits) },
     { label: "Terms & Conditions", icon: "file-text", onPress: () => go(ROUTES.terms) },
     { label: "Privacy Policy", icon: "shield", onPress: () => go(ROUTES.privacy) },
     { label: "About us", icon: "info", onPress: () => go(ROUTES.about) },
-    { label: "Credits", icon: "award", onPress: showCredits },
     { label: "Help & Contact", icon: "life-buoy", onPress: () => go(ROUTES.contact) },
     { label: "Share App", icon: "share-2", onPress: shareApp },
   ];

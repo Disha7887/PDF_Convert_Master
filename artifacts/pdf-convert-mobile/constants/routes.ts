@@ -41,5 +41,6 @@ export const ROUTES = {
   apiSetup: "/dashboard/api-setup",
   apiReference: "/dashboard/api-reference",
   managePlans: "/dashboard/manage-plans",
+  credits: "/dashboard/credits",
   liveTools: "/dashboard/live-tools",
 } as const;

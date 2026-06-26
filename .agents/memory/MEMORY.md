@@ -11,6 +11,7 @@
 - [Watermark/overlay text fit](watermark-text-fit.md) — size overlay font from box WIDTH not height; off-screen measuring races font load; adjustsFontSizeToFit is web-unsupported.
 - [Nested PanResponder steal](nested-panresponder-steal.md) — child handle inside a draggable parent only "moves"; fix with capture handlers + `onPanResponderTerminationRequest:false` + hitSlop.
 - [pdf.js web-only split](pdfjs-mobile-web-split.md) — real PDF page rendering: pdfjs imported only from `.web.ts` (native stub), worker via unpkg CDN; draw/type signature via SignaturePad + drawSvgPath.
+- [Scanner image→PDF build](scanner-pdf-build.md) — camera "Save as PDF" must use pdf-lib embedJpg (transcode via image-manipulator), NEVER expo-print HTML (corrupts PDFs on Android).
 - [Mobile real conversions](mobile-real-conversions.md) — Expo CONVERT tools hit real api-server; web FormData needs a real Blob; always-real via USE_REAL_CONVERSIONS; EXPO_PUBLIC_DOMAIN inlined at bundle time.
 - [Download format honesty](download-format-honesty.md) — only offer download formats the result can genuinely become; pdf_to_images is a ZIP (not a re-encodable image); gate OCR text formats on recognized-text availability.
 - [Mobile PDF editor coord/scale](mobile-pdf-editor-coord-scale.md) — overlays in page-fractions + text size in points; render glyph at size*ptScale, offset DragMove padding, rasterize rotation:0 so raster/overlay/export agree.

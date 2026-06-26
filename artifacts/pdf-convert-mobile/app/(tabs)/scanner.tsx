@@ -4,9 +4,10 @@ import { File, Paths } from "expo-file-system";
 import * as LegacyFS from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
-import * as Print from "expo-print";
 import { useFocusEffect } from "expo-router";
+import { PDFDocument } from "pdf-lib";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -57,25 +58,48 @@ function persistToDocuments(srcUri: string, filename: string): string {
   }
 }
 
+/**
+ * Build a real PDF from a list of image URIs using pdf-lib.
+ *
+ * The old implementation rendered HTML <img> tags through
+ * `Print.printToFileAsync`, which produced corrupt/unopenable PDFs on many
+ * Android devices (large inline base64 payloads, mislabelled MIME types).
+ * Embedding the JPEG bytes directly with pdf-lib yields a deterministic,
+ * always-valid PDF. Every image is transcoded to JPEG first so camera shots
+ * AND gallery imports (which may be PNG/HEIC) all embed correctly.
+ */
 async function buildPdf(imageUris: string[]): Promise<string | null> {
   try {
-    const sources = await Promise.all(
-      imageUris.map(async (uri) => {
-        if (uri.startsWith("data:")) return uri;
-        const b64 = await LegacyFS.readAsStringAsync(uri, {
+    const pdf = await PDFDocument.create();
+    for (const uri of imageUris) {
+      const ref = await ImageManipulator.manipulate(uri).renderAsync();
+      const saved = await ref.saveAsync({
+        format: SaveFormat.JPEG,
+        compress: 0.7,
+        base64: true,
+      });
+      const b64 =
+        saved.base64 ??
+        (await LegacyFS.readAsStringAsync(saved.uri, {
           encoding: LegacyFS.EncodingType.Base64,
-        });
-        return `data:image/jpeg;base64,${b64}`;
-      }),
-    );
-    const html = `<html><head><meta name="viewport" content="width=device-width,initial-scale=1"/></head><body style="margin:0;padding:0">${sources
-      .map(
-        (d) =>
-          `<img src="${d}" style="width:100%;display:block;page-break-after:always"/>`,
-      )
-      .join("")}</body></html>`;
-    const { uri } = await Print.printToFileAsync({ html });
-    return uri;
+        }));
+      const image = await pdf.embedJpg(`data:image/jpeg;base64,${b64}`);
+      const page = pdf.addPage([image.width, image.height]);
+      page.drawImage(image, {
+        x: 0,
+        y: 0,
+        width: image.width,
+        height: image.height,
+      });
+    }
+    const base64 = await pdf.saveAsBase64();
+    if (isWeb) return `data:application/pdf;base64,${base64}`;
+    const dest = new File(Paths.cache, `scan_${Date.now()}.pdf`);
+    if (dest.exists) dest.delete();
+    await LegacyFS.writeAsStringAsync(dest.uri, base64, {
+      encoding: LegacyFS.EncodingType.Base64,
+    });
+    return dest.uri;
   } catch {
     return null;
   }
