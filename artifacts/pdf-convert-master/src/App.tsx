@@ -69,7 +69,6 @@ const OcrPdfUpload = named(() => import("@/pages/upload/OcrPdf"), "OcrPdfUpload"
 const RestoreDocumentUpload = named(() => import("@/pages/upload/RestoreDocument"), "RestoreDocumentUpload");
 const LockPdfUpload = named(() => import("@/pages/upload/LockPdf"), "LockPdfUpload");
 const UnlockPdfUpload = named(() => import("@/pages/upload/UnlockPdf"), "UnlockPdfUpload");
-const UploadDemo = named(() => import("@/pages/UploadDemo"), "UploadDemo");
 const ResizeImageTool = named(() => import("@/pages/ImageEditTools"), "ResizeImageTool");
 const CropImageTool = named(() => import("@/pages/ImageEditTools"), "CropImageTool");
 const RotateImageTool = named(() => import("@/pages/ImageEditTools"), "RotateImageTool");
@@ -479,12 +478,6 @@ function Router() {
       <Route path="/image-editor/rotate">
         <DynamicLayout>
           <RotateImageTool />
-        </DynamicLayout>
-      </Route>
-
-      <Route path="/upload-demo">
-        <DynamicLayout>
-          <UploadDemo />
         </DynamicLayout>
       </Route>
 

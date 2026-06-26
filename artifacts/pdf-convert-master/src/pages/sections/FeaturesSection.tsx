@@ -183,9 +183,10 @@ export const FeaturesSection = (): JSX.Element => {
               <Button
                 variant="outline"
                 className="font-semibold px-8 py-4 h-[59px] rounded-lg"
+                onClick={() => setLocation('/tools')}
               >
                 <Play className="mr-2 w-5 h-5 text-gray-700" />
-                Watch Demo
+                Try It Now
               </Button>
             </div>
           </div>

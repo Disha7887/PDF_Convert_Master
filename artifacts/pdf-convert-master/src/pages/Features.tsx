@@ -70,10 +70,10 @@ export const Features: React.FC = () => {
               size="lg"
               variant="outline"
               className="border-slate-600 text-white hover:bg-slate-800 px-8 py-4 text-lg font-semibold"
-              onClick={() => setLocation('/upload-demo')}
+              onClick={() => setLocation('/tools')}
             >
               <Play className="w-5 h-5 mr-2" />
-              Watch Demo
+              Try It Now
             </Button>
           </div>
         </div>
