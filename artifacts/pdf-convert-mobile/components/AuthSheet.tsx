@@ -29,6 +29,7 @@ import { DEMO_CREDENTIALS } from "@/mocks/data";
 const C = colors.light;
 
 const VERIFY_EMAIL_ANIM = require("../assets/lottie/verify-email.json");
+const APPLE_UNAVAILABLE_ANIM = require("../assets/lottie/apple-unavailable.json");
 
 // Sheet palette — this auth screen is intentionally dark (matches the design),
 // independent of the otherwise light-only app theme.
@@ -62,7 +63,9 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [result, setResult] = useState<"signup-success" | "signin-success" | "error" | null>(null);
+  const [result, setResult] = useState<
+    "signup-success" | "signin-success" | "error" | "unavailable" | null
+  >(null);
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -129,7 +132,8 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
 
   const onApple = () => {
     setError(null);
-    setInfo("Apple sign-in isn't set up yet — continue with your email below.");
+    setInfo(null);
+    setResult("unavailable");
   };
 
   const continueWithEmail = () => {
@@ -326,7 +330,28 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.sheetContent}
           >
-            {result === "error" ? (
+            {result === "unavailable" ? (
+              <View style={styles.resultBlock} testID="view-auth-unavailable">
+                <LottieView
+                  source={APPLE_UNAVAILABLE_ANIM as never}
+                  autoPlay
+                  loop
+                  style={styles.unavailableLottie}
+                />
+                <Text style={styles.resultTitle}>Apple sign-in unavailable</Text>
+                <Text style={styles.resultSub}>
+                  Apple sign-in isn&apos;t available yet. Please continue with your email or
+                  Google instead.
+                </Text>
+                <Pressable
+                  style={({ pressed }) => [styles.primaryBtn, styles.resultBtn, pressed && styles.pressed]}
+                  onPress={dismissError}
+                  testID="button-unavailable-ok"
+                >
+                  <Text style={styles.primaryText}>Got it</Text>
+                </Pressable>
+              </View>
+            ) : result === "error" ? (
               <View style={styles.resultBlock} testID="view-auth-error">
                 <AuthResultIcon kind="error" size={150} loop={false} />
                 <Text style={styles.resultTitle}>
@@ -747,6 +772,7 @@ const styles = StyleSheet.create({
 
   // Result states (success / error) shown inside the sheet
   resultBlock: { alignItems: "center", justifyContent: "center", paddingVertical: 18, gap: 6 },
+  unavailableLottie: { width: 150, height: 150 },
   resultTitle: { fontSize: 20, color: SHEET.text, fontFamily: fonts.headingBold, marginTop: 4 },
   resultSub: {
     fontSize: 14,

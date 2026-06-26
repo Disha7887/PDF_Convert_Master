@@ -15,6 +15,6 @@ Mobile auth (`app/auth/sign-in.tsx` + `sign-up.tsx`) both render a shared `compo
 **Email-first progressive disclosure:** step starts at `"email"` (Google/Apple + email field, matching the reference design which shows no password). Pressing Continue advances to `"credentials"`, revealing password (+ name/confirm for signup).
 **Why:** the reference design is email-only/magic-link style, but `AuthContext` mock auth requires email+password. Progressive disclosure keeps the minimal look while preserving the working password path. Do not "simplify" by removing the password step — it would break sign-in.
 
-**Social buttons (Google/Apple) are intentional placeholders**, not broken. They surface an honest "isn't set up yet — continue with your email below" notice rather than faking success. Don't wire real OAuth unless explicitly asked (needs provider credentials).
+**Social buttons:** Google is REAL (backend-mediated OAuth, see [google-oauth-mobile](google-oauth-mobile.md)). **Apple is intentionally NOT implemented** — tapping it shows a dedicated `result === "unavailable"` state (apple-unavailable.json Lottie + "Apple sign-in unavailable" message + "Got it" dismiss), NOT a placeholder login. The user explicitly does not want Apple set up; do not wire real Apple OAuth unless asked. Web mirrors this exactly in AuthCard.
 
 **Branding:** primary action + logo use coral `C.primary` (`#f7433d`); never blue. Sheet uses a local dark palette (`SHEET`), separate from the light theme tokens.

@@ -11,7 +11,9 @@ independent of the otherwise light web theme — this mirrors the mobile `AuthSh
 
 - Shared component `AuthCard` (mode `signin|signup`) backs both pages; the page
   files are thin wrappers. Progressive email → credentials step, Google/Apple
-  social (info-only, not wired), SIGN_UP_XML illustration, forgot-password (signin),
+  social (Google REAL OAuth; Apple intentionally NOT set up — tapping shows a
+  `result==="unavailable"` apple-unavailable.json Lottie + "Apple sign-in unavailable"
+  + "Got it" dismiss, mirrored on mobile), SIGN_UP_XML illustration, forgot-password (signin),
   terms/privacy links, error + full-screen welcome result states.
 - Lottie via `AuthResultIcon` (welcome/error/success) on top of the existing
   `LottieIcon` (`lottie-react`); JSON copied from mobile `assets/lottie`.

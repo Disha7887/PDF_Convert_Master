@@ -6,6 +6,7 @@ import AuthResultIcon from "@/components/AuthResultIcon";
 import { ProcessingSpinner } from "@/components/processing-spinner";
 import { LottieIcon } from "@/components/ui/lottie-icon";
 import verifyEmailAnim from "@/assets/lottie/verify-email.json";
+import appleUnavailableAnim from "@/assets/lottie/apple-unavailable.json";
 import { SIGN_UP_XML } from "@/lib/signUpIcon";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { requestGoogleAuthCode } from "@/lib/googleAuth";
@@ -40,7 +41,9 @@ export function AuthCard({ mode }: { mode: Mode }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [result, setResult] = useState<"signin-success" | "signup-success" | "error" | null>(null);
+  const [result, setResult] = useState<
+    "signin-success" | "signup-success" | "error" | "unavailable" | null
+  >(null);
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -77,9 +80,10 @@ export function AuthCard({ mode }: { mode: Mode }) {
 
   const close = () => setLocation("/");
 
-  const social = (provider: string) => {
+  const social = (_provider: string) => {
     setError(null);
-    setInfo(`${provider} sign-in isn't set up yet — continue with your email below.`);
+    setInfo(null);
+    setResult("unavailable");
   };
 
   // Real Google sign-in: open the Google popup, exchange the code for a session,
@@ -397,7 +401,26 @@ export function AuthCard({ mode }: { mode: Mode }) {
         className="w-full max-w-[460px] rounded-[26px] p-[22px] flex flex-col gap-3 shadow-2xl"
         style={{ backgroundColor: SHEET.bg }}
       >
-        {result === "error" ? (
+        {result === "unavailable" ? (
+          <div className="flex flex-col items-center justify-center py-5 gap-1.5" data-testid="view-auth-unavailable">
+            <LottieIcon animationData={appleUnavailableAnim} size={150} loop autoplay />
+            <h2 className="text-xl font-bold mt-1" style={{ color: SHEET.text, fontFamily: "Poppins, sans-serif" }}>
+              Apple sign-in unavailable
+            </h2>
+            <p className="text-sm text-center leading-5" style={{ color: SHEET.muted }}>
+              Apple sign-in isn't available yet. Please continue with your email or Google instead.
+            </p>
+            <button
+              type="button"
+              onClick={dismissError}
+              className="self-stretch h-[54px] rounded-[14px] mt-4 font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80"
+              style={{ backgroundColor: SHEET.primary }}
+              data-testid="button-unavailable-ok"
+            >
+              Got it
+            </button>
+          </div>
+        ) : result === "error" ? (
           <div className="flex flex-col items-center justify-center py-5 gap-1.5" data-testid="view-auth-error">
             <AuthResultIcon kind="error" size={150} loop={false} />
             <h2 className="text-xl font-bold mt-1" style={{ color: SHEET.text, fontFamily: "Poppins, sans-serif" }}>
