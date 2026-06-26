@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
 import { downloadFromUrl } from "@/lib/download";
+import { addGuestDownload, isGuest } from "@/lib/guestDownloads";
+import { GuestRecentDownloads } from "@/components/GuestRecentDownloads";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
@@ -59,7 +61,9 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
       const tick = async () => {
         if (!mountedRef.current) return;
         try {
-          const r = await fetch(`/api/jobs/${jobId}`);
+          // Send the JWT so a logged-in user can poll their own job: the server
+          // now 403s an owned job when polled without the owner's token.
+          const r = await authedFetch(`/api/jobs/${jobId}`);
           const d = await r.json();
           if (!mountedRef.current) return;
           if (!d.success) throw new Error("Failed to get job status");
@@ -67,6 +71,16 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
           if (job.status === "completed") {
             setDownloadUrl(`/api/download/${jobId}`);
             setStage("done");
+            // Guests have no dashboard history; persist so they can re-download
+            // after a refresh (the file lives in durable server storage).
+            if (isGuest()) {
+              addGuestDownload({
+                toolType: getServerToolType(tool),
+                jobId,
+                fileName: job.outputFilename || fileName || `download-${jobId}`,
+                ts: Date.now(),
+              });
+            }
             resolve();
             return;
           }
@@ -150,23 +164,26 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
 
   if (stage === "idle") {
     return (
-      <UploadDropzone
-        acceptedFormats={tool.acceptedFormats}
-        maxFileSize={tool.maxFileSize}
-        toolId={tool.id}
-        title={tool.dropAreaText}
-        actionLabel={label}
-        multiple={isImagesToPdf}
-        maxFiles={isImagesToPdf ? 20 : undefined}
-        onFiles={(files) => (isImagesToPdf ? convertImages(files) : convert(files[0]))}
-        onValidationError={(msg) => {
-          setFileName("");
-          setError(msg);
-          setStage("error");
-        }}
-        className="w-full md:w-[584px] min-h-[405px] justify-center rounded-3xl border-blue-300 p-[50px] shadow-sm"
-        testId={`hero-converter-${tool.id}`}
-      />
+      <div className="flex flex-col items-center w-full md:w-[584px]">
+        <UploadDropzone
+          acceptedFormats={tool.acceptedFormats}
+          maxFileSize={tool.maxFileSize}
+          toolId={tool.id}
+          title={tool.dropAreaText}
+          actionLabel={label}
+          multiple={isImagesToPdf}
+          maxFiles={isImagesToPdf ? 20 : undefined}
+          onFiles={(files) => (isImagesToPdf ? convertImages(files) : convert(files[0]))}
+          onValidationError={(msg) => {
+            setFileName("");
+            setError(msg);
+            setStage("error");
+          }}
+          className="w-full md:w-[584px] min-h-[405px] justify-center rounded-3xl border-blue-300 p-[50px] shadow-sm"
+          testId={`hero-converter-${tool.id}`}
+        />
+        <GuestRecentDownloads toolType={getServerToolType(tool)} />
+      </div>
     );
   }
 

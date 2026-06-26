@@ -2849,7 +2849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Get conversion job status
-  app.get("/api/jobs/:jobId", async (req, res) => {
+  app.get("/api/jobs/:jobId", optionalAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const jobId = parseInt(String(req.params.jobId));
       if (isNaN(jobId)) {
@@ -2864,6 +2864,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({
           success: false,
           error: "Job not found"
+        });
+      }
+
+      // Ownership: a job attributed to a user is private — only that user may
+      // see its status/metadata. Guest jobs (userId null) stay open so anonymous
+      // polling keeps working. IDs are sequential, so without this anyone could
+      // enumerate and read another user's filenames.
+      if (job.userId && req.user?.id !== job.userId) {
+        return res.status(403).json({
+          success: false,
+          error: "You don't have access to this file."
         });
       }
 
@@ -2894,11 +2905,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get the OCR-recognized text for a completed OCR job (per page + joined).
-  app.get("/api/ocr-text/:jobId", async (req, res) => {
+  app.get("/api/ocr-text/:jobId", optionalAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const jobId = parseInt(String(req.params.jobId));
       if (isNaN(jobId)) {
         return res.status(400).json({ success: false, error: "Invalid job ID" });
+      }
+      // Ownership: OCR text is the actual document content. A job attributed to a
+      // user is private — only that user may read its recognized text. Guest jobs
+      // (userId null) stay open. IDs are sequential, so without this anyone could
+      // enumerate and read another user's extracted text.
+      const job = await storage.getConversionJob(jobId);
+      if (job && job.userId && req.user?.id !== job.userId) {
+        return res.status(403).json({ success: false, error: "You don't have access to this file." });
       }
       const pages = ocrTextStorage.get(jobId);
       if (!pages) {

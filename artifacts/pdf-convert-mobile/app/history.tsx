@@ -4,6 +4,7 @@ import React, { useCallback, useState } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Loader } from "@/components/Loader";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Badge, Button, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
@@ -11,7 +12,9 @@ import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { clearHistory, loadHistory, type HistoryEntry } from "@/constants/history";
 import { API_ORIGIN } from "@/constants/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { downloadAndSave, saveFile } from "@/services/files";
+import { isGuestDownloadExpired } from "@/services/downloadGate";
 
 const C = colors.light;
 
@@ -27,9 +30,11 @@ function formatTime(ts: number): string {
 
 export default function HistoryScreen() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -55,6 +60,11 @@ export default function HistoryScreen() {
           "File unavailable",
           "This file is no longer available to download. Please convert it again.",
         );
+        return;
+      }
+      // Guests may re-download for 12h; after that prompt them to sign in.
+      if (isGuestDownloadExpired(entry.timestamp, isAuthenticated)) {
+        setLoginPromptOpen(true);
         return;
       }
       setDownloadingId(entry.id);
@@ -88,7 +98,7 @@ export default function HistoryScreen() {
         setDownloadingId(null);
       }
     },
-    [downloadingId],
+    [downloadingId, isAuthenticated],
   );
 
   const handleClear = useCallback(() => {
@@ -108,6 +118,10 @@ export default function HistoryScreen() {
 
   return (
     <ScreenScroll>
+      <LoginRequiredModal
+        visible={loginPromptOpen}
+        onClose={() => setLoginPromptOpen(false)}
+      />
       {entries.length > 0 && (
         <View style={styles.topBar}>
           <Text style={styles.count}>{entries.length} conversions</Text>

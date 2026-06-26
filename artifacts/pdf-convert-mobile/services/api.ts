@@ -196,7 +196,9 @@ async function realStartImagesToPdf(files: PickedFile[]): Promise<StartConversio
 async function realPollJob(jobId: string): Promise<ConvertJob> {
   assertBackendConfigured();
   for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
-    const res = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    // Send the JWT so a logged-in user can poll their own job: the server now
+    // 403s an owned job when polled without the owner's token.
+    const res = await fetch(`${API_BASE_URL}/jobs/${jobId}`, { headers: authHeaders() });
     if (res.ok) {
       const payload = await res.json().catch(() => null);
       const job = payload?.data;
@@ -220,7 +222,9 @@ async function realPollJob(jobId: string): Promise<ConvertJob> {
 /** Fetches the per-page OCR text for a completed OCR job, if available. */
 async function realFetchOcrText(jobId: string): Promise<string[] | undefined> {
   try {
-    const res = await fetch(`${API_BASE_URL}/ocr-text/${jobId}`);
+    // Send the JWT so a logged-in user can read their own job's OCR text: the
+    // server now 403s an owned job when fetched without the owner's token.
+    const res = await fetch(`${API_BASE_URL}/ocr-text/${jobId}`, { headers: authHeaders() });
     if (!res.ok) return undefined;
     const payload = await res.json().catch(() => null);
     const pages = payload?.data?.pages;

@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
+import LoginRequiredModal from "@/components/LoginRequiredModal";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Field, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
@@ -18,7 +19,9 @@ import {
   type StoredFileEntry,
   type StoredFileKind,
 } from "@/constants/files";
+import { useAuth } from "@/contexts/AuthContext";
 import { saveFile } from "@/services/files";
+import { isGuestDownloadExpired } from "@/services/downloadGate";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -36,9 +39,11 @@ const KIND_ICON: Record<StoredFileKind, FeatherName> = {
 
 export default function FilesScreen() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [files, setFiles] = useState<StoredFileEntry[]>([]);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<FileCategory | null>(null);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
 
   const reload = useCallback(() => {
     loadFiles().then(setFiles);
@@ -74,6 +79,15 @@ export default function FilesScreen() {
         actions.push({
           text: "Download",
           onPress: async () => {
+            // Converted files follow the guest 12h re-download window; scanned
+            // images are the user's own local captures and stay available.
+            if (
+              categoryOf(entry.kind) === "converted" &&
+              isGuestDownloadExpired(entry.createdAt, isAuthenticated)
+            ) {
+              setLoginPromptOpen(true);
+              return;
+            }
             // The stored `name` is a display name without an extension (e.g.
             // "Scan Jun 26"); the real extension lives in `outputFormat`. Append
             // it so the saved file is named "<name>.pdf" — without the extension
@@ -104,7 +118,7 @@ export default function FilesScreen() {
       actions.push({ text: "Cancel", style: "cancel" });
       Alert.alert(entry.name, undefined, actions);
     },
-    [reload],
+    [reload, isAuthenticated],
   );
 
   const toggleCategory = (cat: FileCategory) =>
@@ -112,6 +126,10 @@ export default function FilesScreen() {
 
   return (
     <ScreenScroll navInset tabBar>
+      <LoginRequiredModal
+        visible={loginPromptOpen}
+        onClose={() => setLoginPromptOpen(false)}
+      />
       <Field
         icon="search"
         placeholder="Search files & scans"

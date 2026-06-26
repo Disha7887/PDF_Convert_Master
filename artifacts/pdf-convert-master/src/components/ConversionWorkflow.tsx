@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from "react";
 import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
 import { downloadFromUrl } from "@/lib/download";
+import { addGuestDownload, isGuest } from "@/lib/guestDownloads";
+import { GuestRecentDownloads } from "@/components/GuestRecentDownloads";
 import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { Progress } from "@/components/ui/progress";
@@ -301,7 +303,9 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     
     const poll = async (): Promise<void> => {
       try {
-        const response = await fetch(`/api/jobs/${jobId}`);
+        // Send the JWT so a logged-in user can poll their own job: the server
+        // now 403s an owned job when polled without the owner's token.
+        const response = await authedFetch(`/api/jobs/${jobId}`);
         const responseData = await response.json();
         
         if (!responseData.success) {
@@ -311,6 +315,16 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         const job = responseData.data;
         
         if (job.status === 'completed') {
+          // Guests have no dashboard history; persist so they can re-download
+          // after a page refresh (the file lives in durable server storage).
+          if (isGuest()) {
+            addGuestDownload({
+              toolType: toolType.replace(/-/g, '_'),
+              jobId,
+              fileName: job.outputFilename || job.inputFilename || `download-${jobId}`,
+              ts: Date.now(),
+            });
+          }
           // File completed successfully
           setSelectedFiles(prev => {
             const updated = prev.map(f => 
@@ -537,21 +551,24 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     >
       {/* Upload Stage — bare dropzone, identical design to every other tool */}
       {stage === 'upload' && (
-        <EnhancedUploadArea
-          acceptedFormats={acceptedFormats}
-          maxFileSize={maxFileSize}
-          maxFiles={maxFiles}
-          onFilesSelected={handleFilesSelection}
-          isDragOver={isDragOver}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          currentFileCount={selectedFiles.length}
-          showAdvancedFeatures={true}
-          toolId={toolType}
-          title={uploadTitle}
-          actionLabel={uploadActionLabel}
-        />
+        <>
+          <EnhancedUploadArea
+            acceptedFormats={acceptedFormats}
+            maxFileSize={maxFileSize}
+            maxFiles={maxFiles}
+            onFilesSelected={handleFilesSelection}
+            isDragOver={isDragOver}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            currentFileCount={selectedFiles.length}
+            showAdvancedFeatures={true}
+            toolId={toolType}
+            title={uploadTitle}
+            actionLabel={uploadActionLabel}
+          />
+          <GuestRecentDownloads toolType={toolType.replace(/-/g, '_')} />
+        </>
       )}
 
       {/* Workflow Card — only after files are selected / converting / done */}

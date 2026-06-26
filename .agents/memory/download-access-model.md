@@ -5,18 +5,21 @@ description: Who can re-download a converted file, and how guest vs logged-in ac
 
 # Download access behavior
 
-**Rule:** the server is the source of truth — `GET /api/download/:jobId` is optionalAuth and 403s when `job.userId && req.user?.id !== job.userId`; guest jobs (`userId` null) stay open. Do NOT add download tokens or schema changes. Logged-in users can therefore re-download anytime, including after logout + re-login.
+**Server is the source of truth.** `GET /api/download/:jobId`, `GET /api/jobs/:jobId`, and `GET /api/ocr-text/:jobId` are ALL optionalAuth and 403 when `job.userId && req.user?.id !== job.userId`; guest jobs (`userId` null) stay open. Do NOT add download tokens or schema changes. Logged-in users can re-download anytime (incl. after logout + re-login).
 
-**Guests get ONE in-session download per conversion.** Access lives only in component/screen state:
-- Web: converted `downloadUrl` lives in React component state (ConversionWorkflow / HeroToolConverter / Tools / PdfMergeWorkflow). Never persist guest download URLs to localStorage.
-- Mobile: the convert screen (`app/convert/[toolId].tsx`) holds `output={uri,name}` in state. Persistence to `addHistory`/`addFile` is **gated on `isAuthenticated`** — guests are never written to durable history/files, otherwise their open guest job (durable object storage) would be re-downloadable forever.
+**CRITICAL — owned jobs require the token on EVERY read, including polling.** Because `/api/jobs/:jobId` and `/api/ocr-text/:jobId` now enforce ownership, any client that polls/reads a job MUST send the JWT, or a logged-in user's own job 403s and the conversion appears to fail/time out. Authed callers:
+- Web: `authedFetch` (attaches `Bearer auth_token`) — used by `HeroToolConverter.pollJob` and `ConversionWorkflow.pollJobStatus`. Plain `fetch` for polling is a regression.
+- Mobile: `headers: authHeaders()` on the GET in `services/api.ts` `realPollJob` AND `realFetchOcrText`.
+**Why:** adding the ownership check server-side without updating these poll calls silently breaks all logged-in conversions. The architect caught exactly this.
 
-**Why:** guest jobs are intentionally open on the server (no token), so the ONLY thing preventing re-download is the client not stashing the jobId/uri anywhere durable.
+**Guests now PERSIST their last conversion (NOT one-shot anymore).** Guest jobs stay open on the server, so the client deliberately stashes them to enable re-download:
+- **Web — re-download after refresh.** `src/lib/guestDownloads.ts` persists `{toolType,jobId,fileName,ts}` to localStorage (only when `isGuest()` = no auth token). `GuestRecentDownloads.tsx` renders a per-tool card on the idle/upload stage (hero homepage + ConversionWorkflow). Persist on guest job completion using `job.outputFilename`. Logged-in users are NOT persisted here (their durable history covers them).
+- **Mobile — 12h guest window then login wall.** `app/convert/[toolId].tsx` persists EVERY conversion (guests too; the old `isAuthenticated` guard was removed). `services/downloadGate.ts` (`GUEST_DOWNLOAD_WINDOW_MS` = 12h, `isGuestDownloadExpired(ts)`) decides at download time. Gate is purely client-side + based on CURRENT `isAuthenticated` + entry age (history.timestamp / files.createdAt) — there is NO per-entry guest flag. `history.tsx` gates ALL entries; `(tabs)/files.tsx` gates converted entries only (scanned images are exempt). When expired & not authed, show `LoginRequiredModal` (RN Modal + `AuthResultIcon` kind `"login-required"` → `assets/lottie/please-login.json`) which routes to sign-in. Logged-in mobile downloads anytime.
 
-**Friendly 401/403 message** — everywhere a download can hit a user-owned job the caller must show "Please log in to download this file." (not a raw status):
-- Web: `src/lib/download.ts` throws that message on 401/403; callers must surface `err.message` (Dashboard, UsageStatistics, ConversionWorkflow, HeroToolConverter, PdfMergeWorkflow, Tools).
-- Mobile: `services/files.ts#downloadRemoteFile` throws a status-bearing `DownloadError` (`.status`); callers (`app/history.tsx`, `app/dashboard/index.tsx`) map 401/403→friendly, 404→"convert again". The convert screen's own `downloadOutput` web path maps 401/403 too.
+**Friendly 401/403 message** — everywhere a download/read can hit a user-owned job, surface "Please log in to download this file." (not a raw status):
+- Web: `src/lib/download.ts` throws that message on 401/403; callers surface `err.message`.
+- Mobile: `services/files.ts#downloadRemoteFile` throws a status-bearing `DownloadError`; callers map 401/403→friendly, 404→"convert again".
 
-**Logout cleanup** so stale account screens don't show dead download buttons:
+**Logout cleanup:**
 - Web `AuthContext.signout()` hard-navigates to `import.meta.env.BASE_URL` (full teardown).
-- Mobile `AuthContext.signout()` calls `clearHistory()`. Do NOT clear the Files store on logout — its entries re-download from a LOCAL `uri` (works offline, not backend-gated), so they aren't "dead", and clearing would also delete scanned docs.
+- Mobile `AuthContext.signout()` calls `clearHistory()`. Do NOT clear the Files store on logout — entries re-download from a LOCAL `uri` (offline, not backend-gated) and clearing would also delete scanned docs.

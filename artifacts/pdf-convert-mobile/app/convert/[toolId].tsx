@@ -390,36 +390,35 @@ export default function ConvertScreen() {
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      // Persist for later re-download ONLY for signed-in users. Guests get a
-      // single in-session download from this screen's state (above); we must
-      // not stash their jobId/uri anywhere durable, or they could re-download
-      // after leaving — the flow is intentionally one-download-then-reset.
-      if (isAuthenticated) {
-        await addHistory({
-          id: `h_${Date.now()}`,
-          toolId: tool.id,
-          toolTitle: tool.title,
-          fileName: name,
-          jobId,
-          uri,
-          outputFormat: tool.outputFormat,
-          timestamp: Date.now(),
-          status: "completed",
-        });
-        await addFile({
-          id: `f_${Date.now()}`,
-          kind: tool.outputFormat.toLowerCase().includes("pdf")
-            ? "converted-pdf"
-            : "converted-file",
-          name,
-          uri,
-          elementCount: files.length,
-          createdAt: Date.now(),
-          toolId: tool.id,
-          toolTitle: tool.title,
-          outputFormat: tool.outputFormat,
-        });
-      }
+      // Persist for later re-download. Signed-in users can re-download anytime;
+      // guests get a 12h window enforced at download time (see downloadGate +
+      // LoginRequiredModal in history/files), after which they're asked to log
+      // in. The createdAt/timestamp recorded here anchors that window.
+      const createdAt = Date.now();
+      await addHistory({
+        id: `h_${createdAt}`,
+        toolId: tool.id,
+        toolTitle: tool.title,
+        fileName: name,
+        jobId,
+        uri,
+        outputFormat: tool.outputFormat,
+        timestamp: createdAt,
+        status: "completed",
+      });
+      await addFile({
+        id: `f_${createdAt}`,
+        kind: tool.outputFormat.toLowerCase().includes("pdf")
+          ? "converted-pdf"
+          : "converted-file",
+        name,
+        uri,
+        elementCount: files.length,
+        createdAt,
+        toolId: tool.id,
+        toolTitle: tool.title,
+        outputFormat: tool.outputFormat,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Conversion failed.");
       setStage("error");
