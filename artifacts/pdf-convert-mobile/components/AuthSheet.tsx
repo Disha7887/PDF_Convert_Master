@@ -49,7 +49,7 @@ type Mode = "signin" | "signup";
 export default function AuthSheet({ mode }: { mode: Mode }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { signin, signup, verifySignupOtp, user, isAuthenticated, loading } = useAuth();
+  const { signin, signup, verifySignupOtp, googleSignin, user, isAuthenticated, loading } = useAuth();
 
   const [step, setStep] = useState<"email" | "credentials" | "otp">("email");
   const [name, setName] = useState("");
@@ -59,6 +59,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
   const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [result, setResult] = useState<"signup-success" | "signin-success" | "error" | null>(null);
@@ -94,19 +95,41 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
     // celebration) is playing. signin() flips isAuthenticated before its promise
     // resolves, so without the isSubmitting/result gate this effect would fire
     // first and skip the welcome animation.
-    if (isAuthenticated && !loading && !isSubmitting && !result) {
+    if (isAuthenticated && !loading && !isSubmitting && !googleLoading && !result) {
       router.replace(ROUTES.dashboardHome as never);
     }
-  }, [isAuthenticated, loading, isSubmitting, result, router]);
+  }, [isAuthenticated, loading, isSubmitting, googleLoading, result, router]);
 
   const close = () => {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.home as never);
   };
 
-  const social = (provider: string) => {
+  const onGoogle = async () => {
     setError(null);
-    setInfo(`${provider} sign-in isn't set up yet — continue with your email below.`);
+    setInfo(null);
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    setGoogleLoading(true);
+    try {
+      const res = await googleSignin();
+      if (res.success) {
+        setResult("signin-success");
+        redirectTimer.current = setTimeout(
+          () => router.replace(ROUTES.dashboardHome as never),
+          2600,
+        );
+      } else if (!res.cancelled) {
+        setResult("error");
+        setError(res.error || "Google sign-in failed");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const onApple = () => {
+    setError(null);
+    setInfo("Apple sign-in isn't set up yet — continue with your email below.");
   };
 
   const continueWithEmail = () => {
@@ -423,16 +446,27 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
 
             {/* Social */}
             <Pressable
-              style={({ pressed }) => [styles.socialBtn, pressed && styles.pressed]}
-              onPress={() => social("Google")}
+              style={({ pressed }) => [
+                styles.socialBtn,
+                googleLoading && styles.primaryBtnDisabled,
+                pressed && styles.pressed,
+              ]}
+              onPress={onGoogle}
+              disabled={googleLoading || isSubmitting}
               testID="button-google"
             >
-              <Ionicons name="logo-google" size={20} color="#ea4335" />
-              <Text style={styles.socialText}>Google</Text>
+              {googleLoading ? (
+                <Loader size={20} />
+              ) : (
+                <Ionicons name="logo-google" size={20} color="#ea4335" />
+              )}
+              <Text style={styles.socialText}>
+                {googleLoading ? "Connecting…" : "Google"}
+              </Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.socialBtn, pressed && styles.pressed]}
-              onPress={() => social("Apple")}
+              onPress={onApple}
               testID="button-apple"
             >
               <Ionicons name="logo-apple" size={21} color={SHEET.text} />

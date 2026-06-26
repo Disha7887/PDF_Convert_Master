@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { OAuth2Client } from "google-auth-library";
+import { OAuth2Client, type TokenPayload } from "google-auth-library";
 import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import {
@@ -579,6 +579,102 @@ function getGoogleClientSecret(): string | null {
   return secret && secret.trim() ? secret.trim() : null;
 }
 
+/**
+ * Resolve the public, externally-reachable base URL of this server (no trailing
+ * slash). Used to build the mobile OAuth redirect_uri, which must EXACTLY match
+ * a value authorized in the Google Cloud console. `PUBLIC_APP_URL` (e.g.
+ * https://pdfgenius.app) takes precedence; otherwise we fall back to the first
+ * REPLIT_DOMAINS entry (the dev domain).
+ */
+function getPublicBaseUrl(): string | null {
+  const override = process.env.PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (override) return override;
+  const replit = process.env.REPLIT_DOMAINS?.split(",")[0]?.trim();
+  return replit ? `https://${replit}` : null;
+}
+
+/**
+ * Mobile OAuth hands the issued JWT back to the app by redirecting the system
+ * browser to the app's own deep link. The `/start` endpoint is public, so a
+ * crafted `redirect` is attacker-controlled — we must only ever bounce the
+ * minted token to a destination we trust, or it can be exfiltrated.
+ *
+ * Production allows ONLY the app's own custom scheme (`pdfgenius://`): a custom
+ * scheme resolves to the installed app on-device, with no remote host to forward
+ * the token to. We deliberately do NOT allow arbitrary `exp://` / `exps://` /
+ * `https://auth.expo.io/*` — those carry a host and would let a tampered
+ * redirect deliver the JWT to an attacker-controlled Expo bundle/project.
+ *
+ * For development (e.g. testing in Expo Go), set `MOBILE_OAUTH_DEV_REDIRECTS` to
+ * a comma-separated list of exact deep-link prefixes to additionally allow. Only
+ * set this in dev — never in production.
+ */
+function isAllowedAppRedirect(url: string): boolean {
+  if (/^pdfgenius:\/\//i.test(url)) return true;
+
+  const extra = process.env.MOBILE_OAUTH_DEV_REDIRECTS;
+  if (extra) {
+    return extra
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .some((prefix) => url.startsWith(prefix));
+  }
+  return false;
+}
+
+/** Append a query param to a URL / deep-link, choosing ? or & appropriately. */
+function appendQueryParam(url: string, key: string, value: string): string {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}${key}=${encodeURIComponent(value)}`;
+}
+
+/**
+ * Find-or-create the local user for a verified Google ID-token payload, seeding
+ * a welcome notification for brand-new accounts. Returns null when the payload
+ * lacks a verified email. Shared by the web (popup code) and mobile (browser
+ * redirect) Google flows so both behave identically.
+ */
+async function findOrCreateGoogleUser(
+  payload: TokenPayload | undefined,
+): Promise<{ user: User; isNewUser: boolean } | null> {
+  const email = payload?.email?.toLowerCase().trim();
+  if (!email || payload?.email_verified !== true) return null;
+
+  const name = payload?.name?.trim() || payload?.given_name?.trim() || null;
+  const picture = payload?.picture || null;
+
+  let user = await storage.getUserByEmail(email);
+  let isNewUser = false;
+
+  if (!user) {
+    // Google accounts have no usable password. Store a random bcrypt hash so the
+    // NOT NULL constraint holds and email/password login can never match (the
+    // random plaintext is never known to anyone). Such users sign in via Google
+    // or reset their password to set one.
+    const randomPassword = crypto.randomBytes(32).toString("hex");
+    const passwordHash = await hashPassword(randomPassword);
+    user = await storage.createUser({ email, name, passwordHash, plan: "free" });
+    isNewUser = true;
+
+    // Best-effort: seed the avatar from the Google profile picture.
+    if (picture) {
+      try {
+        const withPic = await storage.updateUserProfilePicture(user.id, picture);
+        if (withPic) user = withPic;
+      } catch (err) {
+        logger.warn({ err }, "Failed to set Google profile picture");
+      }
+    }
+  }
+
+  if (isNewUser) {
+    await ensureWelcomeNotification(user.id);
+  }
+
+  return { user, isNewUser };
+}
+
 // Public config endpoint — the web client needs the OAuth client ID to start the
 // Google sign-in popup. The client ID is NOT a secret (it's exposed to the
 // browser by design); the client secret never leaves the server.
@@ -646,55 +742,130 @@ export async function googleAuth(req: Request, res: Response) {
       });
     }
 
-    const email = payload?.email?.toLowerCase().trim();
-    if (!email || payload?.email_verified !== true) {
+    const result = await findOrCreateGoogleUser(payload);
+    if (!result) {
       return res.status(401).json({
         success: false,
         error: "Your Google account doesn't have a verified email.",
       });
     }
 
-    const name = payload?.name?.trim() || payload?.given_name?.trim() || null;
-    const picture = payload?.picture || null;
-
-    let user = await storage.getUserByEmail(email);
-    let isNewUser = false;
-
-    if (!user) {
-      // Google accounts have no usable password. Store a random bcrypt hash so
-      // the NOT NULL constraint holds and email/password login can never match
-      // (the random plaintext is never known to anyone). Such users sign in via
-      // Google or reset their password to set one.
-      const randomPassword = crypto.randomBytes(32).toString("hex");
-      const passwordHash = await hashPassword(randomPassword);
-      user = await storage.createUser({ email, name, passwordHash, plan: "free" });
-      isNewUser = true;
-
-      // Best-effort: seed the avatar from the Google profile picture.
-      if (picture) {
-        try {
-          const withPic = await storage.updateUserProfilePicture(user.id, picture);
-          if (withPic) user = withPic;
-        } catch (err) {
-          logger.warn({ err }, "Failed to set Google profile picture");
-        }
-      }
-    }
-
-    if (isNewUser) {
-      await ensureWelcomeNotification(user.id);
-    }
-
-    const token = generateToken(user);
-    const { passwordHash: _omit, ...userWithoutPassword } = user;
+    const token = generateToken(result.user);
+    const { passwordHash: _omit, ...userWithoutPassword } = result.user;
 
     return res.status(200).json({
       success: true,
-      data: { user: userWithoutPassword, token, isNewUser },
+      data: { user: userWithoutPassword, token, isNewUser: result.isNewUser },
       message: "Google sign-in successful",
     });
   } catch (error) {
     console.error("Google auth error:", error);
     return res.status(500).json({ success: false, error: "Google sign-in failed" });
+  }
+}
+
+// ============== GOOGLE OAUTH — MOBILE (system-browser redirect flow) ==============
+//
+// Native apps can't run the GIS popup. Instead the app opens `/start` in the
+// system browser; we bounce to Google's consent screen with our own `/callback`
+// as the redirect_uri. Google returns the user to `/callback`, we exchange the
+// code, find-or-create the user, mint our JWT, and hand it back to the app by
+// redirecting to the app's deep link (?token=... or ?error=...). This reuses the
+// SAME Google web client as the popup flow — the only console change required is
+// authorizing `<PUBLIC_APP_URL>/api/auth/google/mobile/callback` as a redirect
+// URI.
+
+function googleMobileCallbackUrl(): string | null {
+  const base = getPublicBaseUrl();
+  return base ? `${base}/api/auth/google/mobile/callback` : null;
+}
+
+// Step 1: open in the system browser. Validates config + the app's return deep
+// link, signs that deep link into the OAuth `state`, then redirects to Google.
+export function googleMobileStart(req: Request, res: Response) {
+  const clientId = getGoogleClientId();
+  const clientSecret = getGoogleClientSecret();
+  const callbackUrl = googleMobileCallbackUrl();
+  const appRedirect =
+    typeof req.query.redirect === "string" ? req.query.redirect : "";
+
+  if (!clientId || !clientSecret || !callbackUrl) {
+    return res.status(503).send("Google sign-in isn't configured yet.");
+  }
+  if (!appRedirect || !isAllowedAppRedirect(appRedirect)) {
+    return res.status(400).send("Invalid or missing redirect target.");
+  }
+
+  // Sign the app's return deep link into `state` so the callback can trust it
+  // (and so it can't be swapped mid-flight). Short-lived.
+  const state = jwt.sign({ redirect: appRedirect }, JWT_SECRET, {
+    expiresIn: "10m",
+  });
+
+  const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  authUrl.searchParams.set("client_id", clientId);
+  authUrl.searchParams.set("redirect_uri", callbackUrl);
+  authUrl.searchParams.set("response_type", "code");
+  authUrl.searchParams.set("scope", "openid email profile");
+  authUrl.searchParams.set("access_type", "online");
+  authUrl.searchParams.set("prompt", "select_account");
+  authUrl.searchParams.set("state", state);
+
+  return res.redirect(authUrl.toString());
+}
+
+// Step 2: Google returns the user here. Decode the signed state to learn where
+// to send them back, exchange the code, then redirect to the app deep link.
+export async function googleMobileCallback(req: Request, res: Response) {
+  const stateRaw = typeof req.query.state === "string" ? req.query.state : "";
+  let appRedirect: string | null = null;
+  try {
+    const decoded = jwt.verify(stateRaw, JWT_SECRET) as { redirect?: string };
+    if (decoded?.redirect && isAllowedAppRedirect(decoded.redirect)) {
+      appRedirect = decoded.redirect;
+    }
+  } catch {
+    appRedirect = null;
+  }
+
+  if (!appRedirect) {
+    return res
+      .status(400)
+      .send("Your sign-in session expired. Please try again.");
+  }
+
+  const fail = (message: string) =>
+    res.redirect(appendQueryParam(appRedirect as string, "error", message));
+
+  // Google bounces back with ?error=access_denied when the user cancels.
+  if (typeof req.query.error === "string" && req.query.error) {
+    return fail("Google sign-in was cancelled.");
+  }
+
+  const code = typeof req.query.code === "string" ? req.query.code : "";
+  const clientId = getGoogleClientId();
+  const clientSecret = getGoogleClientSecret();
+  const callbackUrl = googleMobileCallbackUrl();
+  if (!code || !clientId || !clientSecret || !callbackUrl) {
+    return fail("Google sign-in failed. Please try again.");
+  }
+
+  try {
+    const oauthClient = new OAuth2Client(clientId, clientSecret, callbackUrl);
+    const { tokens } = await oauthClient.getToken(code);
+    const idToken = tokens.id_token ?? undefined;
+    if (!idToken) return fail("Google did not return an identity token.");
+
+    const ticket = await oauthClient.verifyIdToken({ idToken, audience: clientId });
+    const result = await findOrCreateGoogleUser(ticket.getPayload());
+    if (!result) {
+      return fail("Your Google account doesn't have a verified email.");
+    }
+
+    const token = generateToken(result.user);
+    return res.redirect(appendQueryParam(appRedirect, "token", token));
+  } catch (err) {
+    logger.warn({ err }, "Google mobile sign-in failed");
+    return fail("Could not verify your Google sign-in. Please try again.");
   }
 }

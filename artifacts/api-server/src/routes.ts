@@ -13,7 +13,7 @@ import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
-import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword, googleAuth, googleConfig } from "./auth";
+import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword, googleAuth, googleConfig, googleMobileStart, googleMobileCallback } from "./auth";
 import { notifyUser, ensureWelcomeNotification } from "./notify";
 import { saveAvatar, getAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
@@ -3298,6 +3298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Google OAuth: public config (client ID for the web popup) + sign-in.
   app.get("/api/auth/google/config", googleConfig);
   app.post("/api/auth/google", authRateLimit(15), googleAuth);
+  // Mobile (native) Google sign-in: system-browser redirect flow.
+  app.get("/api/auth/google/mobile/start", googleMobileStart);
+  app.get("/api/auth/google/mobile/callback", googleMobileCallback);
   
   // Protected route: Get current user (dashboard)
   app.get("/api/dashboard", authenticateUser, getCurrentUser);

@@ -21,6 +21,7 @@
 - [Supabase is the DB](supabase-migration.md) — app Postgres is Supabase; connection = `SUPABASE_DB_URL ?? DATABASE_URL` in lib/db index + drizzle.config; don't assume DATABASE_URL is active.
 - [API offline tools + custom domain](api-offline-and-domain.md) — OFFLINE_API_TOOLS (server 503) must stay in sync with OFFLINE_TOOL_TYPES (web docs); edit_pdf is docs-only synthetic; API docs hardcode pdfgenius.app.
 - [Google OAuth web](google-oauth-web.md) — GIS popup code flow, redirect_uri "postmessage"; client ID served from backend config endpoint; needs JS origins authorized in Google Cloud.
+- [Google sign-in mobile](google-oauth-mobile.md) — native login = backend-mediated browser OAuth reusing the WEB client; redirect allowlist MUST stay pdfgenius:// only (no exp://) or JWT exfiltrates.
 - [Mobile convert useCallback deps](mobile-convert-callback-deps.md) — convert callback must list every option-state dep (password etc.) or it sends stale values; deps consts must be declared above the hook + null-safe.
 - [qpdf lock/unlock PDF](qpdf-lock-unlock.md) — node-qpdf2 returned Buffer corrupts binary; use qpdf `output` file path + fs.readFile; needs qpdf system binary; rejects with stderr string.
 - [Web pdfjs version pin](pdfjs-web-version-pin.md) — pin web pdfjs-dist to 5.4.296 (match api-server); v6.0.227 crashes client render via getOrInsertComputed; use doc.loadingTask.destroy().

@@ -14,7 +14,14 @@ import { API_BASE_URL } from "@/constants/api";
 import { clearHistory } from "@/constants/history";
 import { DEMO_USER, type MockUser } from "@/mocks/data";
 import { mockApi } from "@/mocks/mockApi";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+
 import { setAuthToken } from "@/services/authToken";
+
+// Lets the system browser hand the OAuth redirect back to a waiting
+// openAuthSessionAsync call (no-op on native, required on web).
+WebBrowser.maybeCompleteAuthSession();
 
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
@@ -36,6 +43,8 @@ interface AuthContextType {
     code: string,
   ) => Promise<{ success: boolean; error?: string }>;
   signout: () => void;
+  /** Google sign-in via the system browser (backend-mediated OAuth). */
+  googleSignin: () => Promise<{ success: boolean; error?: string; cancelled?: boolean }>;
   /** Merge partial fields into the signed-in user and persist them locally. */
   updateUser: (updates: Partial<MockUser>, newToken?: string) => Promise<void>;
   /**
@@ -171,6 +180,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  // Native Google sign-in. Opens the backend's OAuth start endpoint in the
+  // system browser; the backend bounces through Google and redirects back to our
+  // deep link with ?token=... (or ?error=...). We then load the account and
+  // persist the session exactly like email login.
+  const googleSignin = useCallback(async () => {
+    if (!API_BASE_URL) {
+      return { success: false, error: "Google sign-in isn't available in this build." };
+    }
+    try {
+      const redirectUrl = Linking.createURL("auth");
+      const startUrl = `${API_BASE_URL}/auth/google/mobile/start?redirect=${encodeURIComponent(
+        redirectUrl,
+      )}`;
+      const result = await WebBrowser.openAuthSessionAsync(startUrl, redirectUrl);
+
+      if (result.type === "cancel" || result.type === "dismiss") {
+        return { success: false, cancelled: true };
+      }
+      if (result.type !== "success" || !result.url) {
+        return { success: false, error: "Google sign-in failed. Please try again." };
+      }
+
+      const { queryParams } = Linking.parse(result.url);
+      const errorParam =
+        typeof queryParams?.error === "string" ? queryParams.error : null;
+      if (errorParam) return { success: false, error: errorParam };
+      const newToken =
+        typeof queryParams?.token === "string" ? queryParams.token : null;
+      if (!newToken) {
+        return { success: false, error: "Google sign-in failed. Please try again." };
+      }
+
+      // We hold a valid session token; load the account it belongs to so the UI
+      // has the user's name / plan / credits immediately.
+      const res = await fetch(`${API_BASE_URL}/auth/user`, {
+        headers: { Authorization: `Bearer ${newToken}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success || !data?.data?.user) {
+        return { success: false, error: "Could not load your account. Please try again." };
+      }
+      await persist(data.data.user, newToken);
+      return { success: true };
+    } catch {
+      return { success: false, error: "Network error. Please try again." };
+    }
+  }, [persist]);
+
   const updateUser = useCallback(
     async (updates: Partial<MockUser>, newToken?: string) => {
       setUser((prev) => {
@@ -232,11 +289,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signup,
       verifySignupOtp,
       signout,
+      googleSignin,
       updateUser,
       refreshUser,
       isAuthenticated: !!user && !!token,
     }),
-    [user, token, loading, signin, signup, verifySignupOtp, signout, updateUser, refreshUser],
+    [user, token, loading, signin, signup, verifySignupOtp, signout, googleSignin, updateUser, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
