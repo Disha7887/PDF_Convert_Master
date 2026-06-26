@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "workspaceapi-server-production-2402.up.railway.app"
+        "EXPO_PUBLIC_DOMAIN": "pdfgenius.app"
       }
     },
     "preview": {
@@ -17,13 +17,13 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "workspaceapi-server-production-2402.up.railway.app"
+        "EXPO_PUBLIC_DOMAIN": "pdfgenius.app"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "workspaceapi-server-production-2402.up.railway.app"
+        "EXPO_PUBLIC_DOMAIN": "pdfgenius.app"
       }
     }
   },
