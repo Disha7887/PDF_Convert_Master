@@ -38,6 +38,12 @@ interface AuthContextType {
   signout: () => void;
   /** Merge partial fields into the signed-in user and persist them locally. */
   updateUser: (updates: Partial<MockUser>, newToken?: string) => Promise<void>;
+  /**
+   * Re-fetch the signed-in user from the backend (credits, plan, etc.) and
+   * mirror it onto local state. Returns the fresh credit balance, or null if
+   * the refresh could not be completed.
+   */
+  refreshUser: () => Promise<number | null>;
   isAuthenticated: boolean;
 }
 
@@ -184,6 +190,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const refreshUser = useCallback(async (): Promise<number | null> => {
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      const payload = await res.json();
+      const fresh = payload?.data?.user as Partial<MockUser> | undefined;
+      if (!fresh) return null;
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ...fresh };
+        AsyncStorage.setItem(USER_KEY, JSON.stringify(next)).catch(() => {});
+        return next;
+      });
+      return typeof fresh.credits === "number" ? fresh.credits : null;
+    } catch {
+      return null;
+    }
+  }, [token]);
+
   const signout = useCallback(() => {
     setUser(null);
     setToken(null);
@@ -205,9 +233,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verifySignupOtp,
       signout,
       updateUser,
+      refreshUser,
       isAuthenticated: !!user && !!token,
     }),
-    [user, token, loading, signin, signup, verifySignupOtp, signout, updateUser],
+    [user, token, loading, signin, signup, verifySignupOtp, signout, updateUser, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

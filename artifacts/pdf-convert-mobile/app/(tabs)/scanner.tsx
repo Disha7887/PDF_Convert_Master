@@ -84,13 +84,21 @@ async function buildPdf(imageUris: string[]): Promise<string | null> {
           encoding: LegacyFS.EncodingType.Base64,
         }));
       const image = await pdf.embedJpg(`data:image/jpeg;base64,${b64}`);
-      const page = pdf.addPage([image.width, image.height]);
-      page.drawImage(image, {
-        x: 0,
-        y: 0,
-        width: image.width,
-        height: image.height,
-      });
+      // Page size comes from ImageManipulator's reported pixel dimensions, which
+      // are always present. We never rely solely on pdf-lib's parsed dimensions
+      // (they can come back NaN for some encoders, which crashes addPage and
+      // yields a corrupt/unopenable PDF). Fall back to the embedded image's own
+      // dimensions, then to US-Letter, so a page is always created.
+      const w =
+        (Number.isFinite(saved.width) && saved.width > 0 && saved.width) ||
+        (Number.isFinite(image.width) && image.width > 0 && image.width) ||
+        612;
+      const h =
+        (Number.isFinite(saved.height) && saved.height > 0 && saved.height) ||
+        (Number.isFinite(image.height) && image.height > 0 && image.height) ||
+        792;
+      const page = pdf.addPage([w, h]);
+      page.drawImage(image, { x: 0, y: 0, width: w, height: h });
     }
     const base64 = await pdf.saveAsBase64();
     if (isWeb) return `data:application/pdf;base64,${base64}`;

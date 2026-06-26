@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
@@ -39,7 +39,7 @@ function AuthGate() {
 }
 
 export default function CreditsScreen() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshUser } = useAuth();
   const {
     available,
     creditsOffering,
@@ -49,6 +49,14 @@ export default function CreditsScreen() {
     restore,
     isRestoring,
   } = useSubscription();
+
+  // Pull the live credit balance from the backend every time this screen comes
+  // into focus, so spending/purchases made elsewhere are reflected immediately.
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) void refreshUser();
+    }, [isAuthenticated, refreshUser]),
+  );
 
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -129,9 +137,9 @@ export default function CreditsScreen() {
       ) : null}
 
       {/* Balance */}
-      <Card style={styles.balanceCard} elevated={false}>
+      <View style={styles.balanceCard}>
         <View style={styles.balanceIcon}>
-          <Feather name="zap" size={26} color={C.primary} />
+          <Feather name="zap" size={26} color="#ffffff" />
         </View>
         <Text style={styles.balanceValue} testID="text-credit-balance">
           {credits.toLocaleString()}
@@ -141,7 +149,7 @@ export default function CreditsScreen() {
           Credits are added to a balance you can spend anytime — use them for
           conversions once you reach your plan's limit.
         </Text>
-      </Card>
+      </View>
 
       {/* Credit packs (real in-app purchases) */}
       {available && creditPackages.length > 0 ? (
@@ -260,35 +268,37 @@ const styles = StyleSheet.create({
 
   balanceCard: {
     alignItems: "center",
-    paddingVertical: 28,
+    paddingVertical: 30,
+    paddingHorizontal: 20,
     marginBottom: 24,
-    ...cardShadow,
+    borderRadius: 22,
+    backgroundColor: C.primary,
   },
   balanceIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: C.accent,
+    backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   balanceValue: {
     fontSize: 48,
-    color: C.primary,
+    color: "#ffffff",
     fontFamily: fonts.headingBold,
     lineHeight: 54,
   },
   balanceLabel: {
     fontSize: 15,
-    color: C.foreground,
+    color: "rgba(255,255,255,0.92)",
     fontFamily: fonts.bodySemibold,
     marginTop: 2,
   },
   balanceHint: {
     fontSize: 13,
     lineHeight: 19,
-    color: C.mutedForeground,
+    color: "rgba(255,255,255,0.82)",
     fontFamily: fonts.body,
     textAlign: "center",
     marginTop: 12,

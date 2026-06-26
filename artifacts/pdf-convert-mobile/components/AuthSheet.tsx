@@ -288,7 +288,12 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
 
       <KeyboardAvoidingView
         style={styles.fill}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        // These screens are presented as a `transparentModal`, which on Android
+        // lives in its own window that does NOT honour the activity's
+        // `softwareKeyboardLayoutMode: "resize"`. With `behavior={undefined}` the
+        // keyboard simply covers the inputs. "height" shrinks this view so the
+        // bottom-anchored sheet floats above the keyboard.
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         pointerEvents="box-none"
       >
         <Pressable style={styles.spacer} onPress={close} />

@@ -22,3 +22,11 @@ JPEG also fixes gallery imports that are actually PNG/HEIC but inlined as `image
 the existing tslib→CJS metro resolver fix (see expo-web-metro-replit.md); the repeated tslib export WARN
 is expected and harmless. Changes are JS/route-level but still need a fresh EAS build (or OTA) to reach a
 device — they won't appear in an already-installed APK.
+
+**Page sizing — do NOT trust pdf-lib's parsed image dims.** Size each page from the
+`ImageManipulator` `saveAsync` result (`saved.width`/`saved.height`, which are always present), falling
+back to `image.width`/`image.height` then US-Letter (612×792), all behind `Number.isFinite(x) && x > 0`
+guards. `embedJpg(...).width/.height` can come back **NaN** for some encoder outputs; passing NaN to
+`addPage([w,h])` throws (`page must be ... but was NaN`), which the `catch` swallows → null/fallback →
+the "Cannot open document" symptom. This was the real Android scanner-PDF bug, separate from the old
+expo-print issue.
