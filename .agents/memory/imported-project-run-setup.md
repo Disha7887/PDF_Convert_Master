@@ -7,11 +7,18 @@ description: How to get this imported monorepo running on a fresh Replit env —
 
 When this project is freshly imported (cloned from GitHub), the artifact registry callbacks
 (`listArtifacts`, `presentArtifact`, `screenshot` app_preview) return EMPTY / "Artifact not found"
-even though `.replit-artifact/artifact.toml` files exist for every artifact. The app still runs and
-is visible in the preview pane via the webview workflow + dev-domain proxy — don't burn time trying to
-make `presentArtifact`/`screenshot` resolve it.
+even though `.replit-artifact/artifact.toml` files exist for every artifact. An empty registry also
+makes the workspace **preview pane render blank/white** (nothing for it to resolve), even though the
+server is fully healthy and `https://$REPLIT_DEV_DOMAIN/` returns valid 200 HTML.
 
 **Why:** the platform's artifact registry isn't synced to the on-disk `artifact.toml` after a raw import.
+
+**Fix (the registry CAN be re-synced — do this, don't work around it):** `restart_workflow` the web
+workflow ("Start application"). The restart triggers the platform to re-scan `artifact.toml` and
+repopulate the registry — `listArtifacts` then returns all artifacts, the preview pane resolves the
+web app at `/`, and `screenshot` app_preview works (artifact_dir_name `pdf-convert-master`). This
+supersedes the old "don't burn time" advice. Symptom that points here: blank preview + curl 200 +
+NO browser console logs + `listArtifacts` empty.
 
 **How to run it:** there are NO workflows on import. Configure them manually, and inject `PORT` inline
 (the artifact system normally injects it from `localPort`, but manual `configureWorkflow` does not — the
