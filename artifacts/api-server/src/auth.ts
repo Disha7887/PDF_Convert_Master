@@ -612,13 +612,21 @@ function getPublicBaseUrl(): string | null {
 function isAllowedAppRedirect(url: string): boolean {
   if (/^pdfgenius:\/\//i.test(url)) return true;
 
-  const extra = process.env.MOBILE_OAUTH_DEV_REDIRECTS;
-  if (extra) {
-    return extra
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .some((prefix) => url.startsWith(prefix));
+  // Dev only — never in production. Allow the Expo Go deep link for THIS repl
+  // (a server-known host, not attacker-supplied) so Google sign-in can be tested
+  // in Expo Go, plus any exact prefixes opted-in via MOBILE_OAUTH_DEV_REDIRECTS.
+  if (process.env.NODE_ENV !== "production") {
+    const expoHost = process.env.REPLIT_EXPO_DEV_DOMAIN;
+    if (expoHost && url.startsWith(`exp://${expoHost}`)) return true;
+
+    const extra = process.env.MOBILE_OAUTH_DEV_REDIRECTS;
+    if (extra) {
+      return extra
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .some((prefix) => url.startsWith(prefix));
+    }
   }
   return false;
 }
