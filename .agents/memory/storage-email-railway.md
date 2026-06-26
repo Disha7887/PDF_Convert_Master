@@ -15,6 +15,10 @@ The app was moved off Replit-only infrastructure for two services so it runs on 
 - **Env:** `S3_BUCKET`, `S3_REGION` (default us-east-1), `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`; optional `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE=true`, `S3_KEY_PREFIX`.
 - **Why key layout matters:** keys are now fixed logical paths + optional `S3_KEY_PREFIX` (no longer derived from `PRIVATE_OBJECT_DIR`). Old Replit-stored files won't carry over — fine for a fresh Railway bucket; if ever migrating real data, set `S3_KEY_PREFIX` to the old base path.
 
+## Side effect: aws-sdk crashes Metro file watcher
+- Installing `@aws-sdk/client-s3` pulls in `@aws-crypto/*`. During the pnpm install, Metro (mobile Expo workflow) can crash with `ENOENT: watch '.../@aws-crypto+sha1-browser..._tmp_NNNN'` — it tried to watch a pnpm temp dir that was removed mid-install.
+- **Fix:** transient. Once install finishes (no `*_tmp_*` left in `node_modules/.pnpm`), just restart the `pdf-convert-mobile: expo` workflow. Not a code problem; the S3 SDK is api-server-only and the mobile bundle is unaffected.
+
 ## Resend email → direct API key
 - `lib/email.ts` `getResendCredentials()` now prefers `RESEND_API_KEY` env var (optional `RESEND_FROM`), and only falls back to the Replit connector proxy when no env key is set. Lets emails work on Railway where the connector proxy is absent.
 - Sender still forced to a verified `@pdfgenius.app` address via `resolveFromAddress` (Resend rejects unverified domains with 403). Default `noreply@pdfgenius.app`.
