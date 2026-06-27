@@ -6,7 +6,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native
 import { Loader } from "@/components/Loader";
 import LoginRequiredModal from "@/components/LoginRequiredModal";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
-import { Badge, Button, ScreenScroll } from "@/components/ui";
+import { Button, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
@@ -211,13 +211,10 @@ export default function HistoryScreen() {
                 </Text>
                 <Text style={styles.cardTime} numberOfLines={1}>
                   {formatTime(entry.timestamp)}
+                  {entry.status !== "completed" ? " · Failed" : ""}
                 </Text>
               </View>
               <View style={styles.cardRight}>
-                <Badge
-                  label={entry.outputFormat}
-                  tone={entry.status === "completed" ? "primary" : "danger"}
-                />
                 {isDownloading ? (
                   <Loader size={20} />
                 ) : canDownload ? (
@@ -291,7 +288,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 6,
     flexShrink: 0,
-    maxWidth: 108,
   },
   cardTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.headingSemibold },
   cardTime: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 3 },

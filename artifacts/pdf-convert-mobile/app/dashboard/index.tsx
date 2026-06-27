@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -7,7 +7,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Loader } from "@/components/Loader";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
-import { Badge, Button, Card, ScreenScroll } from "@/components/ui";
+import { Button, Card, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
@@ -16,6 +16,7 @@ import { getToolByServerType } from "@/constants/tools";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchUsage, type AccountUsage, type UsageRecentJob } from "@/services/account";
 import { downloadAndSave } from "@/services/files";
+import { deleteConversion } from "@/services/conversions";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -76,12 +77,6 @@ function StatCard({
   );
 }
 
-function statusMeta(status: string): { icon: FeatherName; bg: string; fg: string; tone: "success" | "danger" | "warning" } {
-  if (status === "failed") return { icon: "x", bg: "#fee2e2", fg: "#dc2626", tone: "danger" };
-  if (status === "completed") return { icon: "check", bg: "#dcfce7", fg: "#16a34a", tone: "success" };
-  return { icon: "refresh-cw", bg: C.blue50, fg: C.primary, tone: "warning" };
-}
-
 function SignInGate() {
   const router = useRouter();
   return (
@@ -100,7 +95,35 @@ export default function WorkspaceScreen() {
   const router = useRouter();
   const { user, isAuthenticated, token } = useAuth();
   const go = (r: string) => router.push(r as never);
+  const queryClient = useQueryClient();
   const [downloadingId, setDownloadingId] = React.useState<number | null>(null);
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
+
+  // Permanently delete a past conversion — removes the durable stored copy
+  // (Backblaze) and the job record so the file isn't kept forever, then refreshes
+  // the activity list.
+  const handleDelete = (job: UsageRecentJob) => {
+    const doDelete = async () => {
+      if (deletingId !== null) return;
+      setDeletingId(job.id);
+      try {
+        await deleteConversion(job.id);
+        await queryClient.invalidateQueries({ queryKey: ["account-usage"] });
+      } catch {
+        Alert.alert("Delete failed", "We couldn't delete this file. Please try again.");
+      } finally {
+        setDeletingId(null);
+      }
+    };
+    Alert.alert(
+      "Delete this file?",
+      "This permanently removes the file and its download.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => void doDelete() },
+      ],
+    );
+  };
 
   // Re-download a past conversion straight from Recent Activity. The bytes are
   // fetched fresh from the backend's durable storage, so this works anytime —
@@ -270,25 +293,19 @@ export default function WorkspaceScreen() {
         ) : (
           <View style={styles.activityList}>
             {recent.slice(0, 5).map((job) => {
-              const m = statusMeta(job.status);
               const tool = getToolByServerType(job.toolType);
               const canDownload = job.status === "completed";
               const isDownloading = downloadingId === job.id;
+              const isDeleting = deletingId === job.id;
               return (
-                <Pressable
-                  key={job.id}
-                  style={styles.activityRow}
-                  disabled={!canDownload || downloadingId !== null}
-                  onPress={() => handleDownload(job)}
-                >
+                <View key={job.id} style={styles.activityRow}>
                   {/* Same animated tool identity icon used on the All Tools page,
-                      so each row reads at a glance as the tool that produced it
-                      (status is shown by the badge on the right). */}
+                      so each row reads at a glance as the tool that produced it. */}
                   <View style={[styles.activityIcon, { backgroundColor: C.accent }]}>
                     {tool ? (
                       <ToolLottieIcon toolId={tool.id} size={28} />
                     ) : (
-                      <Feather name={m.icon} size={16} color={C.primary} />
+                      <Feather name="file-text" size={16} color={C.primary} />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
@@ -297,24 +314,36 @@ export default function WorkspaceScreen() {
                     </Text>
                     <Text style={styles.activitySub} numberOfLines={1}>
                       {timeAgo(job.createdAt)}
+                      {job.status === "failed" ? " · Failed" : ""}
                     </Text>
-                  </View>
-                  <View style={styles.activityRight}>
-                    <Badge
-                      label={job.status === "completed" ? (tool?.outputFormat ?? "File") : "Failed"}
-                      tone={job.status === "completed" ? "primary" : "danger"}
-                    />
                   </View>
                   {canDownload ? (
                     isDownloading ? (
-                      <Loader size={22} style={styles.activityDownload} />
+                      <Loader size={22} style={styles.activityAction} />
                     ) : (
-                      <View style={styles.activityDownload}>
+                      <Pressable
+                        style={styles.activityAction}
+                        onPress={() => handleDownload(job)}
+                        disabled={downloadingId !== null}
+                        hitSlop={8}
+                      >
                         <Feather name="download" size={18} color={C.primary} />
-                      </View>
+                      </Pressable>
                     )
                   ) : null}
-                </Pressable>
+                  {isDeleting ? (
+                    <Loader size={22} style={styles.activityAction} />
+                  ) : (
+                    <Pressable
+                      style={styles.activityAction}
+                      onPress={() => handleDelete(job)}
+                      disabled={deletingId !== null}
+                      hitSlop={8}
+                    >
+                      <Feather name="trash-2" size={18} color={C.mutedForeground} />
+                    </Pressable>
+                  )}
+                </View>
               );
             })}
           </View>
@@ -420,9 +449,7 @@ const styles = StyleSheet.create({
   activityIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
   activityTitle: { fontSize: 14, color: C.foreground, fontFamily: fonts.bodyMedium },
   activitySub: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 1 },
-  activityRight: { alignItems: "flex-end", gap: 5 },
-  activityDownload: { width: 28, alignItems: "center", justifyContent: "center" },
-  activityTime: { fontSize: 11, color: C.mutedForeground, fontFamily: fonts.body },
+  activityAction: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
 
   quickRow: { flexDirection: "row", gap: 12, marginTop: 14 },
   quickBtn: { flex: 1, justifyContent: "center" },
