@@ -169,8 +169,15 @@ export default function WorkspaceScreen() {
     }
     setDownloadingId(entry.id);
     try {
+      // Pass the chosen output format so the server rebuilds the right file —
+      // e.g. an OCR result saved as ".txt" gets the recognized text, not the
+      // searchable PDF bytes under a .txt name (a broken file).
+      const ext = entry.fileName.split(".").pop()?.toLowerCase() ?? "";
       const res = entry.jobId
-        ? await downloadAndSave(`${API_ORIGIN}/api/download/${entry.jobId}`, entry.fileName)
+        ? await downloadAndSave(
+            `${API_ORIGIN}/api/download/${entry.jobId}${ext ? `?format=${ext}` : ""}`,
+            entry.fileName,
+          )
         : await saveFile(entry.uri!, entry.fileName);
       if (res.status === "saved") {
         Alert.alert("Downloaded", `${entry.fileName} was saved to ${res.location}.`);

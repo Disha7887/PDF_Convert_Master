@@ -19,7 +19,7 @@ import { saveAvatar, getAvatar, deleteAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
-import { saveConvertedFile, getConvertedFile, deleteConvertedFile } from "./lib/conversionStorage";
+import { saveConvertedFile, getConvertedFile, deleteConvertedFile, saveOcrText, getOcrText } from "./lib/conversionStorage";
 import { PLANS, getPlan } from "./plans";
 import { syncRevenueCatCustomer } from "./revenuecat";
 import {
@@ -2023,6 +2023,60 @@ const fileStorage = new Map<number, Buffer>();
 const convertedFileStorage = new Map<number, { buffer: Buffer; mimeType: string; filename: string }>();
 // OCR recognized text, per page, keyed by job id — surfaced via /api/ocr-text/:jobId.
 const ocrTextStorage = new Map<number, string[]>();
+
+// Text-derived OCR export formats the client can request via /api/download?format=.
+type OcrExportFormat = "txt" | "doc" | "html" | "md";
+const OCR_EXPORT_FORMATS = new Set<string>(["txt", "doc", "html", "md"]);
+const OCR_FORMAT_MIME: Record<OcrExportFormat, string> = {
+  txt: "text/plain; charset=utf-8",
+  doc: "application/msword",
+  html: "text/html; charset=utf-8",
+  md: "text/markdown; charset=utf-8",
+};
+
+function escapeOcrHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Mirror of the web/mobile buildOcrContent so a server-built re-download is
+// byte-identical to the file the first (client-built) download produced.
+function buildOcrContent(format: OcrExportFormat, pages: string[], title: string): string {
+  const trimmed = pages.map((p) => p.trim());
+  switch (format) {
+    case "md":
+      return trimmed.map((t, i) => `## Page ${i + 1}\n\n${t}`).join("\n\n");
+    case "html":
+    case "doc": {
+      const head =
+        format === "doc"
+          ? `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${escapeOcrHtml(title)}</title></head><body>`
+          : `<!doctype html><html><head><meta charset="utf-8"><title>${escapeOcrHtml(title)}</title></head><body style="font-family:sans-serif">`;
+      const body = trimmed
+        .map(
+          (t, i) =>
+            `<h2>Page ${i + 1}</h2><pre style="white-space:pre-wrap;font-family:inherit;font-size:14px">${escapeOcrHtml(t)}</pre>`,
+        )
+        .join("\n");
+      return `${head}${body}</body></html>`;
+    }
+    case "txt":
+    default:
+      return trimmed.map((t, i) => `--- Page ${i + 1} ---\n${t}`).join("\n\n");
+  }
+}
+
+// Resolve a job's OCR text pages: fast in-memory copy first, then the durable
+// object-storage sidecar (so re-downloads work after purge / restart).
+async function resolveOcrPages(jobId: number): Promise<string[] | null> {
+  const inMemory = ocrTextStorage.get(jobId);
+  if (inMemory && inMemory.length > 0) return inMemory;
+  try {
+    return await getOcrText(jobId);
+  } catch (err) {
+    console.error(`Failed to load OCR text for job ${jobId} from object storage:`, err);
+    return null;
+  }
+}
 // Stores images "uploaded to the server" from the in-browser Crop/Resize/Rotate
 // editors. Kept in memory with a short TTL — a lightweight upload target.
 const uploadedFileStorage = new Map<string, { buffer: Buffer; mimeType: string; filename: string; expiresAt: number }>();
@@ -2827,9 +2881,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // OCR also returns the recognized text per page so the client can display,
-      // copy, and export it alongside the searchable PDF.
+      // copy, and export it alongside the searchable PDF. Persist it durably too
+      // (best-effort) so the TXT/DOC/HTML/MD download formats can be rebuilt for
+      // a later re-download — even after the in-memory copy is purged or the
+      // server restarts. Without this, re-downloading an OCR ".txt" served the
+      // PDF bytes under a .txt name (a broken file).
       if (conversionResult.pages) {
         ocrTextStorage.set(jobId, conversionResult.pages);
+        try {
+          await saveOcrText(jobId, conversionResult.pages);
+        } catch (storageError) {
+          console.error(`Failed to persist OCR text for job ${jobId} to object storage:`, storageError);
+        }
       }
       
       const actualProcessingTime = Date.now() - startTime;
@@ -2929,8 +2992,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (job && job.userId && req.user?.id !== job.userId) {
         return res.status(403).json({ success: false, error: "You don't have access to this file." });
       }
-      const pages = ocrTextStorage.get(jobId);
-      if (!pages) {
+      // Prefer the fast in-memory copy; fall back to the durable object-storage
+      // sidecar so the recognized text survives an in-memory purge / restart.
+      const pages = await resolveOcrPages(jobId);
+      if (!pages || pages.length === 0) {
         return res.status(404).json({ success: false, error: "No OCR text for this job" });
       }
       res.json({
@@ -3004,6 +3069,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           success: false,
           error: "File not ready for download"
         });
+      }
+
+      // Format-aware download for OCR results. An OCR job's primary output is the
+      // searchable PDF (served by the passthrough below), but the user can also
+      // download the recognized text as TXT/DOC/HTML/Markdown. The first download
+      // builds those client-side; a later re-download (from history or the files
+      // list) hits this endpoint, so the server rebuilds the SAME text file here.
+      // Without this, the PDF bytes were served under a .txt name — a broken file.
+      // Any non-text / absent format falls through to the passthrough unchanged.
+      const requestedFormat = String(req.query.format || "").toLowerCase();
+      if (OCR_EXPORT_FORMATS.has(requestedFormat)) {
+        const pages = await resolveOcrPages(jobId);
+        if (pages && pages.length > 0) {
+          const fmt = requestedFormat as OcrExportFormat;
+          const base = (job.outputFilename || `converted_file_${jobId}`).replace(/\.[^./]+$/, "");
+          const textFilename = `${base}.${fmt}`;
+          const body = Buffer.from(buildOcrContent(fmt, pages, base), "utf-8");
+          res.setHeader('Content-Disposition', `attachment; filename="${textFilename}"`);
+          res.setHeader('Content-Type', OCR_FORMAT_MIME[fmt]);
+          res.setHeader('Content-Length', body.length.toString());
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Disposition');
+          console.log(`Serving OCR ${fmt} download for job ${jobId}: ${textFilename}`);
+          res.send(body);
+          return;
+        }
+        if (job.toolType === 'ocr_pdf') {
+          // OCR job whose recognized text is no longer recoverable (an old job
+          // from before text was persisted). Be honest with a 404 rather than
+          // serving the PDF bytes under a text extension (a broken file).
+          return res.status(404).json({
+            success: false,
+            error: "The recognized text for this file is no longer available. Please run OCR again.",
+          });
+        }
+        // Not an OCR job — a tool that genuinely produced a .txt/.doc/etc file.
+        // Fall through to the passthrough so it's served unchanged.
       }
 
       // Resolve the converted bytes. Prefer the fast in-memory copy; fall back to

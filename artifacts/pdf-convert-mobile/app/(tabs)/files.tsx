@@ -19,8 +19,9 @@ import {
   type StoredFileEntry,
   type StoredFileKind,
 } from "@/constants/files";
+import { API_ORIGIN } from "@/constants/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { saveFile } from "@/services/files";
+import { downloadAndSave, saveFile } from "@/services/files";
 import { deleteConversion } from "@/services/conversions";
 import { isGuestDownloadExpired } from "@/services/downloadGate";
 
@@ -99,11 +100,37 @@ export default function FilesScreen() {
               ext && !entry.name.toLowerCase().endsWith(`.${ext}`)
                 ? `${entry.name}.${ext}`
                 : entry.name;
-            const res = await saveFile(entry.uri!, downloadName);
-            if (res.status === "saved") {
-              Alert.alert("Downloaded", `${downloadName} was saved to ${res.location}.`);
-            } else if (res.status === "failed") {
-              Alert.alert("Couldn't save", "Could not save the file. Please try again.");
+            try {
+              // Prefer the durable backend copy (with the chosen format) for
+              // server conversions: the local uri can be a different
+              // representation than the chosen output format (e.g. OCR keeps the
+              // PDF locally but the user picked TXT), which would otherwise save
+              // mismatched bytes under a text name (a broken file). Fall back to
+              // the local file for scanned/editor outputs that have no job.
+              const res =
+                categoryOf(entry.kind) === "converted" && entry.jobId
+                  ? await downloadAndSave(
+                      `${API_ORIGIN}/api/download/${entry.jobId}${ext ? `?format=${ext}` : ""}`,
+                      downloadName,
+                    )
+                  : await saveFile(entry.uri!, downloadName);
+              if (res.status === "saved") {
+                Alert.alert("Downloaded", `${downloadName} was saved to ${res.location}.`);
+              } else if (res.status === "failed") {
+                Alert.alert("Couldn't save", "Could not save the file. Please try again.");
+              }
+            } catch (err) {
+              const status = (err as { status?: number } | null)?.status;
+              if (status === 401 || status === 403) {
+                Alert.alert("Sign in required", "Please log in to download this file.");
+              } else if (status === 404) {
+                Alert.alert(
+                  "File unavailable",
+                  "This file is no longer available to download. Please convert it again.",
+                );
+              } else {
+                Alert.alert("Couldn't save", "Could not save the file. Please try again.");
+              }
             }
           },
         });
