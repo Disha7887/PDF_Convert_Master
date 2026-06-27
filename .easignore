@@ -1,0 +1,21 @@
+# Dependencies — EAS reinstalls these on its build servers from the lockfile.
+node_modules
+
+# Version control / Replit-internal — not needed for the build (runs with EAS_NO_VCS).
+.git
+.local
+.agents
+attached_assets
+
+# Build output & caches
+dist
+out-tsc
+tmp
+.expo
+.expo-shared
+*.tsbuildinfo
+
+# Other artifacts in the monorepo that aren't the mobile app build
+artifacts/api-server/dist
+artifacts/pdf-convert-master/dist
+artifacts/mockup-sandbox
