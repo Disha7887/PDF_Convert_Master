@@ -363,7 +363,7 @@ export default function WorkspaceScreen() {
                     ) : (
                       <Pressable
                         style={styles.activityAction}
-                        onPress={() => handleDownload(job)}
+                        onPress={() => void handleDownload(entry)}
                         disabled={downloadingId !== null}
                         hitSlop={8}
                       >
@@ -371,18 +371,14 @@ export default function WorkspaceScreen() {
                       </Pressable>
                     )
                   ) : null}
-                  {isDeleting ? (
-                    <Loader size={22} style={styles.activityAction} />
-                  ) : (
-                    <Pressable
-                      style={styles.activityAction}
-                      onPress={() => handleDelete(job)}
-                      disabled={deletingId !== null}
-                      hitSlop={8}
-                    >
-                      <Feather name="trash-2" size={18} color={C.mutedForeground} />
-                    </Pressable>
-                  )}
+                  <Pressable
+                    style={styles.activityAction}
+                    onPress={() => handleDelete(entry)}
+                    disabled={downloadingId !== null}
+                    hitSlop={8}
+                  >
+                    <Feather name="trash-2" size={18} color={C.mutedForeground} />
+                  </Pressable>
                 </View>
               );
             })}
