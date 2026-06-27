@@ -21,6 +21,7 @@ import {
 } from "@/constants/files";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveFile } from "@/services/files";
+import { deleteConversion } from "@/services/conversions";
 import { isGuestDownloadExpired } from "@/services/downloadGate";
 
 const C = colors.light;
@@ -113,6 +114,15 @@ export default function FilesScreen() {
         onPress: async () => {
           await removeFile(entry.id);
           reload();
+          // Also purge the durable backend/Backblaze copy so the file isn't kept
+          // forever. Best-effort — the local entry is already gone either way.
+          if (entry.jobId) {
+            try {
+              await deleteConversion(entry.jobId);
+            } catch {
+              // ignore — local removal already succeeded
+            }
+          }
         },
       });
       actions.push({ text: "Cancel", style: "cancel" });

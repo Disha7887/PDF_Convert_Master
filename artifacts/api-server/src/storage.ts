@@ -80,6 +80,7 @@ export interface IStorage {
   getConversionJob(id: number): Promise<ConversionJob | undefined>;
   getUserConversionJobs(userId: string): Promise<ConversionJob[]>;
   updateConversionJobStatus(id: number, status: string, outputFilename?: string, errorMessage?: string, processingTime?: number, outputFileSize?: number): Promise<ConversionJob | undefined>;
+  deleteConversionJob(id: number): Promise<void>;
 
   // Notification methods
   createNotification(notification: InsertNotification): Promise<Notification>;
@@ -704,6 +705,10 @@ export class MemStorage implements IStorage {
     return updatedJob;
   }
 
+  async deleteConversionJob(id: number): Promise<void> {
+    this.conversionJobs.delete(id);
+  }
+
   // Notification methods
   async createNotification(insert: InsertNotification): Promise<Notification> {
     const id = crypto.randomUUID();
@@ -1324,6 +1329,10 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return job || undefined;
+  }
+
+  async deleteConversionJob(id: number): Promise<void> {
+    await db.delete(conversionJobs).where(eq(conversionJobs.id, id));
   }
 
   // Notification methods

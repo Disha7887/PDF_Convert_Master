@@ -4,11 +4,11 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { authedJson } from "@/lib/authedFetch";
 
 import { useLocation } from "wouter";
-import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Loader2 } from "lucide-react";
+import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Loader2, Trash2 } from "lucide-react";
 import { downloadFromUrl } from "@/lib/download";
 import { getOutputFormatByServerType, getToolConfigByServerType } from "@/lib/toolConfig";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
@@ -95,7 +95,9 @@ const ActivityItem: React.FC<{
   canDownload?: boolean;
   downloading?: boolean;
   onDownload?: () => void;
-}> = ({ title, fileType, time, status, toolType, canDownload, downloading, onDownload }) => {
+  deleting?: boolean;
+  onDelete?: () => void;
+}> = ({ title, fileType, time, status, toolType, canDownload, downloading, onDownload, deleting, onDelete }) => {
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
   const cfg = getToolConfigByServerType(toolType);
@@ -136,6 +138,22 @@ const ActivityItem: React.FC<{
               : <Download className="w-4 h-4" />}
           </Button>
         )}
+        {onDelete && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0 text-gray-500 hover:text-red-600"
+            onClick={onDelete}
+            disabled={deleting}
+            aria-label="Delete file"
+            title="Delete file"
+            data-testid="delete-activity"
+          >
+            {deleting
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Trash2 className="w-4 h-4" />}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -145,7 +163,9 @@ export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [downloadingId, setDownloadingId] = React.useState<number | null>(null);
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
 
   const handleNavigation = (path: string) => {
     setLocation(path);
@@ -171,6 +191,30 @@ export const Dashboard: React.FC = () => {
       });
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  // Permanently delete a past conversion — removes the durable stored copy
+  // (Backblaze) and the job record so the file isn't kept forever, then drops it
+  // from the activity list.
+  const handleDelete = async (job: UsageData["recent"][number]) => {
+    if (deletingId !== null) return;
+    if (!window.confirm("Delete this file? This permanently removes the file and its download.")) {
+      return;
+    }
+    setDeletingId(job.id);
+    try {
+      await authedJson(`/api/download/${job.id}`, { method: "DELETE" });
+      await queryClient.invalidateQueries({ queryKey: ["/api/usage"] });
+    } catch (err) {
+      toast({
+        title: "Delete failed",
+        description:
+          err instanceof Error ? err.message : "We couldn't delete this file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -430,6 +474,8 @@ export const Dashboard: React.FC = () => {
                         canDownload={item.status === "completed"}
                         downloading={downloadingId === item.id}
                         onDownload={() => handleDownload(item)}
+                        deleting={deletingId === item.id}
+                        onDelete={() => handleDelete(item)}
                       />
                     ))}
                   </div>

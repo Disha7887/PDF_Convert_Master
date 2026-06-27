@@ -10,10 +10,11 @@ import { Badge, Button, ScreenScroll } from "@/components/ui";
 import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
-import { clearHistory, loadHistory, type HistoryEntry } from "@/constants/history";
+import { clearHistory, loadHistory, removeHistory, type HistoryEntry } from "@/constants/history";
 import { API_ORIGIN } from "@/constants/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { downloadAndSave, saveFile } from "@/services/files";
+import { deleteConversion } from "@/services/conversions";
 import { isGuestDownloadExpired } from "@/services/downloadGate";
 
 const C = colors.light;
@@ -100,6 +101,34 @@ export default function HistoryScreen() {
     },
     [downloadingId, isAuthenticated],
   );
+
+  const handleDelete = useCallback((entry: HistoryEntry) => {
+    const doDelete = async () => {
+      await removeHistory(entry.id);
+      setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+      // Also purge the durable backend/Backblaze copy so it isn't kept forever.
+      // Best-effort — the local entry is already gone either way.
+      if (entry.jobId) {
+        try {
+          await deleteConversion(entry.jobId);
+        } catch {
+          // ignore — local removal already succeeded
+        }
+      }
+    };
+    if (Platform.OS === "web") {
+      void doDelete();
+      return;
+    }
+    Alert.alert(
+      "Delete this file?",
+      "This permanently removes the file and its download.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => void doDelete() },
+      ],
+    );
+  }, []);
 
   const handleClear = useCallback(() => {
     const doClear = async () => {
@@ -195,6 +224,14 @@ export default function HistoryScreen() {
                   <Feather name="download" size={18} color={C.primary} />
                 ) : null}
               </View>
+              <Pressable
+                onPress={() => handleDelete(entry)}
+                disabled={downloadingId !== null}
+                hitSlop={10}
+                style={({ pressed }) => [styles.deleteBtn, { opacity: pressed ? 0.5 : 1 }]}
+              >
+                <Feather name="trash-2" size={18} color={C.mutedForeground} />
+              </Pressable>
             </Pressable>
           );
         })
@@ -258,4 +295,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 15, color: C.foreground, fontFamily: fonts.headingSemibold },
   cardTime: { fontSize: 12, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 3 },
+  deleteBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: C.muted,
+    flexShrink: 0,
+  },
 });

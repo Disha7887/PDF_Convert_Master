@@ -73,5 +73,6 @@
 - [RNGH GestureDetector blocks web drag](rngh-gesturedetector-web-drag.md) — wrapping PanResponder editor content in RNGH GestureDetector kills overlay drag/select on Expo web; skip it via ZoomViewport when Platform.OS==="web".
 - [Dodo Payments web billing](dodo-payments-web.md) — web subscriptions: webhook is source-of-truth, plan tier from product_id not metadata, gate cancel by subscription_id match; account/plan is free-only.
 - [code sandbox lacks process.env](code-sandbox-no-processenv.md) — code_execution can't read secrets; run secret-dependent SDK calls via a bash `node script.mjs` instead.
+- [Conversion delete purges durable copy](conversion-delete-purge.md) — DELETE /api/download/:jobId removes S3+DB+memory; S3 delete is authoritative (fail→500, don't orphan); web toast / mobile best-effort; jobId on both History+Files entries.
 - [Avatar storage](avatar-storage.md) — profile photos stay in Backblaze (key `avatars/<userId>`), NOT Supabase (user-confirmed); DELETE /api/auth/avatar clears url to "".
 - [Mobile edited-filename persist](mobile-edited-filename-persist.md) — History/Files written at conversion time w/ original name; rename is PATCHED on download-confirm via savedEntryRef, don't move the persist.

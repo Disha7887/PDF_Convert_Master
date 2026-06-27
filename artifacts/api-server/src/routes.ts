@@ -19,7 +19,7 @@ import { saveAvatar, getAvatar, deleteAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
-import { saveConvertedFile, getConvertedFile } from "./lib/conversionStorage";
+import { saveConvertedFile, getConvertedFile, deleteConvertedFile } from "./lib/conversionStorage";
 import { PLANS, getPlan } from "./plans";
 import { syncRevenueCatCustomer } from "./revenuecat";
 import {
@@ -3065,6 +3065,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         error: "Failed to download file"
       });
+    }
+  });
+
+  // Delete a conversion's stored output. Removes the durable Backblaze copy, any
+  // in-memory copies, and the job record so a deleted file isn't kept forever.
+  // Ownership mirrors the download route: a user-owned job is only deletable by
+  // its owner; guest jobs (userId null) stay open (IDs alone are the capability).
+  app.delete("/api/download/:jobId", optionalAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const jobId = parseInt(String(req.params.jobId));
+      if (isNaN(jobId)) {
+        return res.status(400).json({ success: false, error: "Invalid job ID" });
+      }
+
+      const job = await storage.getConversionJob(jobId);
+      // Already gone (or never existed) — treat delete as idempotent success so
+      // the client can clear its local entry without surfacing an error.
+      if (!job) {
+        return res.json({ success: true });
+      }
+
+      if (job.userId && req.user?.id !== job.userId) {
+        return res.status(403).json({
+          success: false,
+          error: "You don't have access to this file.",
+        });
+      }
+
+      // Purge the durable copy FIRST and make it authoritative: if the object
+      // store genuinely fails (transient error), abort without removing the job
+      // row so the file isn't silently orphaned forever — the client keeps its
+      // entry and can retry. deleteConvertedFile is idempotent for a missing
+      // object (no-op), so an already-gone durable copy still succeeds here.
+      await deleteConvertedFile(jobId);
+
+      fileStorage.delete(jobId);
+      convertedFileStorage.delete(jobId);
+      ocrTextStorage.delete(jobId);
+      await storage.deleteConversionJob(jobId);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      res.status(500).json({ success: false, error: "Failed to delete file" });
     }
   });
 

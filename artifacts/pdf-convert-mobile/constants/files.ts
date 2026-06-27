@@ -22,6 +22,11 @@ export interface StoredFileEntry {
   toolId?: string;
   toolTitle?: string;
   outputFormat?: string;
+  /**
+   * Backend job id for server-converted outputs. Lets the Files tab also delete
+   * the durable backend/Backblaze copy (not just this local entry) on removal.
+   */
+  jobId?: string | number;
 }
 
 export function categoryOf(kind: StoredFileKind): FileCategory {

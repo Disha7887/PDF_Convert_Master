@@ -55,6 +55,16 @@ export async function updateHistory(
   }
 }
 
+export async function removeHistory(id: string): Promise<void> {
+  try {
+    const current = await loadHistory();
+    const next = current.filter((e) => e.id !== id);
+    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
+
 export async function clearHistory(): Promise<void> {
   try {
     await AsyncStorage.removeItem(HISTORY_KEY);

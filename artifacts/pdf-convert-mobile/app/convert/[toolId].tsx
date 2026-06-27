@@ -421,6 +421,7 @@ export default function ConvertScreen() {
         toolId: tool.id,
         toolTitle: tool.title,
         outputFormat: tool.outputFormat,
+        jobId,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Conversion failed.");
