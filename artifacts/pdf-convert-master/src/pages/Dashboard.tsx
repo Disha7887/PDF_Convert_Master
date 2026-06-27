@@ -315,7 +315,7 @@ export const Dashboard: React.FC = () => {
               <Button
                 variant="ghost"
                 className="w-full justify-start p-3"
-                onClick={() => handleNavigation('/dashboard/manage-plans?buy=credits')}
+                onClick={() => handleNavigation('/dashboard/buy-credits')}
                 data-testid="nav-buy-credits"
               >
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">

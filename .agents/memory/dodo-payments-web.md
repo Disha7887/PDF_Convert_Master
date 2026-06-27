@@ -50,6 +50,13 @@ Web users can buy a custom $ of credits (was mobile-only before). Rate
   line so the customer can't change it, plus metadata `{userId,kind:"credits",credits,amountCents}`.
 - Endpoint: `POST /api/billing/credits-checkout` (authenticated, validates min/max),
   returnUrl `?checkout=credits-success` → web polls balance on return.
+- **Credits UI lives on its OWN page** `/dashboard/buy-credits` (component
+  `CreditPurchaseCard`), separate from Manage Plans. The credits-checkout
+  return/cancel URLs MUST point at wherever that card is mounted, and only ONE
+  component may handle `?checkout=credits-success` (the card owns it) — Manage
+  Plans only handles plan `success`/`cancelled`. **Why:** two mounted handlers =
+  double toast/double poll; a mismatched returnUrl lands the user on a page with
+  no handler so the balance never refreshes.
 - **Grant ONLY in the `payment.succeeded` webhook, idempotent on `payment_id`**
   (`storage.grantCreditsForPurchase`, unique `credit_grants.purchase_id`).
 - **Fulfillment trust boundary (architect-required):** never grant on metadata

@@ -3968,8 +3968,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         amountCents,
         credits,
-        returnUrl: `${origin}/dashboard/manage-plans?checkout=credits-success`,
-        cancelUrl: `${origin}/dashboard/manage-plans?checkout=cancelled`,
+        returnUrl: `${origin}/dashboard/buy-credits?checkout=credits-success`,
+        cancelUrl: `${origin}/dashboard/buy-credits?checkout=cancelled`,
       });
       return res.json({ success: true, data: { url } });
     } catch (error) {
