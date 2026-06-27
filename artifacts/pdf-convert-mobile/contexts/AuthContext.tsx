@@ -230,20 +230,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!API_BASE_URL) {
       return { success: false, error: "Google sign-in isn't available in this build." };
     }
-    const redirectUrl = Linking.createURL("auth");
+    // On web the popup returns to <origin>/auth; tag it with ?popup=1 so that
+    // landing page hands the token back to THIS window and closes itself instead
+    // of logging in inside the popup.
+    const baseRedirect = Linking.createURL("auth");
+    const redirectUrl =
+      Platform.OS === "web" ? `${baseRedirect}?popup=1` : baseRedirect;
     const startUrl = `${API_BASE_URL}/auth/google/mobile/start?redirect=${encodeURIComponent(
       redirectUrl,
     )}`;
 
-    // Web (Expo web preview / browser): a popup-based auth session finishes the
-    // login INSIDE the popup and never hands control back to the opener, so the
-    // app sits stuck on "Connecting…". Do a same-window full-page redirect
-    // instead — Google bounces back to /auth?token=... in THIS tab and the
-    // callback screen (app/auth/index.tsx) completes the login on cold boot.
+    // Web (Expo web preview / browser): Google refuses to load inside Replit's
+    // preview iframe (the "403 — you do not have access" page), so a same-window
+    // redirect can't work. Open Google in a real top-level popup instead. The
+    // popup can't postMessage back to us — Google's COOP severs window.opener —
+    // so the /auth landing page relays the token over a same-origin
+    // BroadcastChannel, which we await here.
     if (Platform.OS === "web") {
-      if (typeof window !== "undefined") window.location.assign(startUrl);
-      // The page is navigating away; nothing more to do in this call.
-      return { success: false, cancelled: true };
+      if (
+        typeof window === "undefined" ||
+        typeof BroadcastChannel === "undefined"
+      ) {
+        return {
+          success: false,
+          error:
+            "Google sign-in isn't supported in this browser. Please update it or sign in with email.",
+        };
+      }
+      return new Promise<{
+        success: boolean;
+        error?: string;
+        cancelled?: boolean;
+      }>((resolve) => {
+        let settled = false;
+        let channel: BroadcastChannel | null = null;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        const cleanup = () => {
+          try {
+            channel?.close();
+          } catch {
+            /* ignore */
+          }
+          if (timeout) clearTimeout(timeout);
+        };
+        const finish = async (
+          payload: { token?: string; error?: string } | null,
+        ) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          try {
+            popup?.close();
+          } catch {
+            /* ignore */
+          }
+          if (!payload) return resolve({ success: false, cancelled: true });
+          if (payload.error)
+            return resolve({ success: false, error: payload.error });
+          if (!payload.token)
+            return resolve({
+              success: false,
+              error: "Google sign-in failed. Please try again.",
+            });
+          resolve(await completeGoogleLogin(payload.token));
+        };
+        try {
+          channel = new BroadcastChannel("pdfgenius-oauth");
+        } catch {
+          return resolve({
+            success: false,
+            error: "Google sign-in isn't available here.",
+          });
+        }
+        channel.onmessage = (e) => {
+          if (e?.data?.type === "pdfgenius-google-auth") {
+            finish({ token: e.data.token, error: e.data.error });
+          }
+        };
+        const popup = window.open(
+          startUrl,
+          "pdfgenius-google",
+          "width=480,height=640",
+        );
+        if (!popup) {
+          cleanup();
+          return resolve({
+            success: false,
+            error: "Please allow pop-ups for this site to sign in with Google.",
+          });
+        }
+        // Note: we deliberately do NOT poll popup.closed for cancellation —
+        // Google's COOP disowns the popup handle once it navigates to the
+        // consent screen, so popup.closed reads true even while the user is
+        // still signing in, which would cancel a perfectly good login. The
+        // BroadcastChannel relay (success OR Google-side error) is the real
+        // signal; this timeout is just a hard stop so the button can't spin
+        // forever if the user abandons the popup.
+        timeout = setTimeout(() => finish(null), 120000);
+      });
     }
 
     try {
