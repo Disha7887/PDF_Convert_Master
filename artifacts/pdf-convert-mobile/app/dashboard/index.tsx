@@ -1,22 +1,25 @@
 import { Feather } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Loader } from "@/components/Loader";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
 import ToolLottieIcon from "@/components/ToolLottieIcon";
 import { Button, Card, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
+import { loadHistory, removeHistory, type HistoryEntry } from "@/constants/history";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
 import { getToolByServerType } from "@/constants/tools";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchUsage, type AccountUsage, type UsageRecentJob } from "@/services/account";
-import { downloadAndSave } from "@/services/files";
+import { fetchUsage, type AccountUsage } from "@/services/account";
+import { downloadAndSave, saveFile } from "@/services/files";
 import { deleteConversion } from "@/services/conversions";
+import { isGuestDownloadExpired } from "@/services/downloadGate";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -37,9 +40,9 @@ function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
-function timeAgo(value: string | null): string {
-  if (!value) return "";
-  const d = new Date(value).getTime();
+function timeAgo(value: number | string | null): string {
+  if (value === null || value === undefined || value === "") return "";
+  const d = typeof value === "number" ? value : new Date(value).getTime();
   if (Number.isNaN(d)) return "";
   const mins = Math.floor((Date.now() - d) / 60000);
   if (mins < 1) return "just now";
@@ -96,25 +99,47 @@ export default function WorkspaceScreen() {
   const { user, isAuthenticated, token } = useAuth();
   const go = (r: string) => router.push(r as never);
   const queryClient = useQueryClient();
-  const [downloadingId, setDownloadingId] = React.useState<number | null>(null);
-  const [deletingId, setDeletingId] = React.useState<number | null>(null);
+  const [entries, setEntries] = React.useState<HistoryEntry[]>([]);
+  const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+  const [loginPromptOpen, setLoginPromptOpen] = React.useState(false);
 
-  // Permanently delete a past conversion — removes the durable stored copy
-  // (Backblaze) and the job record so the file isn't kept forever, then refreshes
-  // the activity list.
-  const handleDelete = (job: UsageRecentJob) => {
+  // Recent Activity mirrors the History screen exactly — it reads the SAME local
+  // history store, with the same download + delete logic — so the two lists never
+  // diverge. "Full history" links to the History screen, which is the complete
+  // version of this same list. Reload on focus so a delete made on History (or
+  // anywhere) is reflected here when the user returns.
+  useFocusEffect(
+    React.useCallback(() => {
+      let active = true;
+      void loadHistory().then((list) => {
+        if (active) setEntries(list);
+      });
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
+  // Delete from Recent Activity behaves identically to the History screen: drop
+  // the local entry first (instantly updates both lists), then best-effort purge
+  // the durable backend/Backblaze copy and refresh the usage stats.
+  const handleDelete = (entry: HistoryEntry) => {
     const doDelete = async () => {
-      if (deletingId !== null) return;
-      setDeletingId(job.id);
-      try {
-        await deleteConversion(job.id);
-        await queryClient.invalidateQueries({ queryKey: ["account-usage"] });
-      } catch {
-        Alert.alert("Delete failed", "We couldn't delete this file. Please try again.");
-      } finally {
-        setDeletingId(null);
+      await removeHistory(entry.id);
+      setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+      if (entry.jobId) {
+        try {
+          await deleteConversion(entry.jobId);
+        } catch {
+          // ignore — local removal already succeeded
+        }
       }
+      void queryClient.invalidateQueries({ queryKey: ["account-usage"] });
     };
+    if (Platform.OS === "web") {
+      void doDelete();
+      return;
+    }
     Alert.alert(
       "Delete this file?",
       "This permanently removes the file and its download.",
@@ -125,20 +150,34 @@ export default function WorkspaceScreen() {
     );
   };
 
-  // Re-download a past conversion straight from Recent Activity. The bytes are
-  // fetched fresh from the backend's durable storage, so this works anytime —
-  // not just immediately after the file was converted.
-  const handleDownload = async (job: UsageRecentJob) => {
+  // Re-download a past conversion — same logic as the History screen: prefer the
+  // durable backend copy (survives cache eviction / restarts), fall back to the
+  // local file for editor outputs that have no server job.
+  const handleDownload = async (entry: HistoryEntry) => {
     if (downloadingId !== null) return;
-    const name =
-      job.outputFilename || `${job.toolName.replace(/\s+/g, "-").toLowerCase()}-${job.id}`;
-    setDownloadingId(job.id);
+    if (!entry.jobId && !entry.uri) {
+      Alert.alert(
+        "File unavailable",
+        "This file is no longer available to download. Please convert it again.",
+      );
+      return;
+    }
+    if (isGuestDownloadExpired(entry.timestamp, isAuthenticated)) {
+      setLoginPromptOpen(true);
+      return;
+    }
+    setDownloadingId(entry.id);
     try {
-      const res = await downloadAndSave(`${API_ORIGIN}/api/download/${job.id}`, name);
+      const res = entry.jobId
+        ? await downloadAndSave(`${API_ORIGIN}/api/download/${entry.jobId}`, entry.fileName)
+        : await saveFile(entry.uri!, entry.fileName);
       if (res.status === "saved") {
-        Alert.alert("Downloaded", `${name} was saved to ${res.location}.`);
+        Alert.alert("Downloaded", `${entry.fileName} was saved to ${res.location}.`);
       } else if (res.status === "failed") {
-        Alert.alert("Download failed", "We couldn't download this file. Please try again.");
+        Alert.alert(
+          "Download failed",
+          "We couldn't save this file. It may have been removed — try converting it again.",
+        );
       }
     } catch (err) {
       const status = (err as { status?: number } | null)?.status;
@@ -150,7 +189,7 @@ export default function WorkspaceScreen() {
           "This file is no longer available to download. Please convert it again.",
         );
       } else {
-        Alert.alert("Download failed", "We couldn't download this file. Please try again.");
+        Alert.alert("Download failed", "We couldn't save this file. Please try again.");
       }
     } finally {
       setDownloadingId(null);
@@ -187,10 +226,13 @@ export default function WorkspaceScreen() {
     .filter((d) => d.date.startsWith(thisMonthPrefix))
     .reduce((sum, d) => sum + d.count, 0);
   const byTool = (usage?.mostUsed ?? []).slice(0, 6);
-  const recent = usage?.recent ?? [];
 
   return (
     <ScreenScroll>
+      <LoginRequiredModal
+        visible={loginPromptOpen}
+        onClose={() => setLoginPromptOpen(false)}
+      />
       {/* Welcome header */}
       <LinearGradient
         colors={["#f7433d", "#fb5d52"]}
@@ -288,33 +330,31 @@ export default function WorkspaceScreen() {
             <Text style={styles.link}>Full history</Text>
           </Pressable>
         </View>
-        {recent.length === 0 ? (
+        {entries.length === 0 ? (
           <Text style={styles.empty}>No recent activity yet.</Text>
         ) : (
           <View style={styles.activityList}>
-            {recent.slice(0, 5).map((job) => {
-              const tool = getToolByServerType(job.toolType);
-              const canDownload = job.status === "completed";
-              const isDownloading = downloadingId === job.id;
-              const isDeleting = deletingId === job.id;
+            {entries.slice(0, 5).map((entry) => {
+              const canDownload = !!(entry.jobId || entry.uri);
+              const isDownloading = downloadingId === entry.id;
               return (
-                <View key={job.id} style={styles.activityRow}>
+                <View key={entry.id} style={styles.activityRow}>
                   {/* Same animated tool identity icon used on the All Tools page,
                       so each row reads at a glance as the tool that produced it. */}
                   <View style={[styles.activityIcon, { backgroundColor: C.accent }]}>
-                    {tool ? (
-                      <ToolLottieIcon toolId={tool.id} size={28} />
+                    {entry.toolId ? (
+                      <ToolLottieIcon toolId={entry.toolId} size={28} autoPlay={false} loop={false} />
                     ) : (
                       <Feather name="file-text" size={16} color={C.primary} />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.activityTitle} numberOfLines={1}>
-                      {job.outputFilename || job.inputFilename}
+                      {entry.fileName}
                     </Text>
                     <Text style={styles.activitySub} numberOfLines={1}>
-                      {timeAgo(job.createdAt)}
-                      {job.status === "failed" ? " · Failed" : ""}
+                      {timeAgo(entry.timestamp)}
+                      {entry.status === "failed" ? " · Failed" : ""}
                     </Text>
                   </View>
                   {canDownload ? (
