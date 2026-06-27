@@ -41,6 +41,33 @@ corrupt plan state.
 - User must create the webhook in the Dodo dashboard → subscription events →
   endpoint `https://pdfgenius.app/api/billing/dodo/webhook`.
 
+## Buy Credits (web pay-what-you-want, one-time)
+Web users can buy a custom $ of credits (was mobile-only before). Rate
+`CREDITS_PER_USD=100` (1 credit = 1¢), `MIN_CREDITS_USD=1`, `MAX_CREDITS_USD=500`
+— all in `dodo.ts`.
+- Product: a single **pay_what_you_want one-time** Dodo product; id in env
+  `DODO_PRODUCT_CREDITS`. Checkout passes the chosen `amount` (cents) on the cart
+  line so the customer can't change it, plus metadata `{userId,kind:"credits",credits,amountCents}`.
+- Endpoint: `POST /api/billing/credits-checkout` (authenticated, validates min/max),
+  returnUrl `?checkout=credits-success` → web polls balance on return.
+- **Credits UI lives on its OWN page** `/dashboard/buy-credits` (component
+  `CreditPurchaseCard`), separate from Manage Plans. The credits-checkout
+  return/cancel URLs MUST point at wherever that card is mounted, and only ONE
+  component may handle `?checkout=credits-success` (the card owns it) — Manage
+  Plans only handles plan `success`/`cancelled`. **Why:** two mounted handlers =
+  double toast/double poll; a mismatched returnUrl lands the user on a page with
+  no handler so the balance never refreshes.
+- **Grant ONLY in the `payment.succeeded` webhook, idempotent on `payment_id`**
+  (`storage.grantCreditsForPurchase`, unique `credit_grants.purchase_id`).
+- **Fulfillment trust boundary (architect-required):** never grant on metadata
+  alone. Gate on the settled `product_cart` actually containing
+  `DODO_PRODUCT_CREDITS`, and for USD recompute credits from the **pre-tax** settled
+  amount (`total_amount - tax`), not `metadata.credits` (metadata is only a
+  cross-check / non-USD fallback). **Why:** metadata is attacker-influenced;
+  discounts/coupons/tax can make it diverge from money actually collected.
+- **Dashboard webhook MUST also subscribe to `payment.succeeded`** (it was
+  subscription.* only) or credits never grant in test/live.
+
 ## SDK product creation shape (recurring)
 `client.products.create({ name, tax_category:"saas", price:{ type:"recurring_price",
 price: dollars*100, currency:"USD", payment_frequency_interval:"Month",

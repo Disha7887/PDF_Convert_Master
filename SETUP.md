@@ -1,0 +1,151 @@
+# PDF Genius — Setup Guide (after transferring to a new Replit account)
+
+When you copy/fork this project into another Replit account, **none of the secrets
+or API keys transfer with it.** You have to add them yourself. This file lists
+every key the app uses, whether it's required, and where to get it.
+
+## How to add keys on Replit
+
+1. Open the **Secrets** tool (lock icon in the left sidebar, or Tools → Secrets).
+2. Add each key below as a **Key = Value** pair.
+3. After adding/changing keys, **restart the workflows** (API Server, and the web/mobile
+   apps) so they pick up the new values.
+
+> Tip: keys marked **Secret** must go in the Secrets tool. Keys marked **Config**
+> are not sensitive but still need to be set (the app reads them the same way).
+> Keys marked _auto_ are provided by Replit automatically — **do not set them.**
+
+---
+
+## 1. Required to boot (the app won't work properly without these)
+
+| Key | Type | What it's for | Where to get it |
+|-----|------|---------------|-----------------|
+| `SUPABASE_DB_URL` | Secret | Postgres connection string. The whole app (users, jobs, credits, billing) reads/writes here. Falls back to `DATABASE_URL` if unset. | Supabase project → Settings → Database → Connection string (URI). Or create a Replit PostgreSQL DB and use its URL as `DATABASE_URL`. |
+| `JWT_SECRET` | Secret | Signs login tokens. **In production the server refuses to start if this is missing or too short.** | Generate a long random string (32+ chars), e.g. run `openssl rand -base64 48`. |
+
+---
+
+## 2. File storage (converted/processed files) — required for conversions
+
+Converted PDFs and images are stored in S3-compatible object storage.
+
+| Key | Type | What it's for |
+|-----|------|---------------|
+| `S3_BUCKET` | Config | Bucket name |
+| `S3_ENDPOINT` | Config | S3 endpoint URL (e.g. AWS, Cloudflare R2, Supabase Storage, Backblaze) |
+| `S3_REGION` | Config | Region (e.g. `us-east-1`, or `auto` for R2) |
+| `S3_ACCESS_KEY_ID` | Secret | Access key |
+| `S3_SECRET_ACCESS_KEY` | Secret | Secret key |
+| `S3_FORCE_PATH_STYLE` | Config (optional) | Set to `true` for R2/MinIO/Supabase-style endpoints |
+| `S3_KEY_PREFIX` | Config (optional) | Folder prefix for stored objects |
+
+Get these from your storage provider (Cloudflare R2, AWS S3, Backblaze B2, Supabase Storage, etc.).
+
+---
+
+## 3. Google Sign-In — required if you want "Continue with Google"
+
+| Key | Type | What it's for |
+|-----|------|---------------|
+| `GOOGLE_CLIENT_ID` | Secret | OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Secret | OAuth client secret |
+
+Get these at **Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client**.
+After transferring, you must also **authorize your new domain**:
+- Add your new Replit dev domain and your production domain to **Authorized JavaScript origins**.
+- For mobile login, authorize `<your-public-url>/api/auth/google/mobile/callback` as a redirect URI.
+
+---
+
+## 4. Email (OTP sign-up codes + password reset) — required for those flows
+
+The app sends email through **Resend**. Two ways to provide it:
+
+- **Easiest:** connect the **Resend integration** in Replit (Tools → Integrations → Resend). No key needed.
+- **Or** set the key directly (works on any host):
+
+| Key | Type | What it's for |
+|-----|------|---------------|
+| `RESEND_API_KEY` | Secret | Resend API key (from https://resend.com → API Keys) |
+| `RESEND_FROM` | Config (optional) | Custom from-address (must be a verified Resend sender) |
+
+> If neither is set, sign-up codes and password-reset emails silently won't be delivered.
+
+---
+
+## 5. Payments — Dodo Payments (subscriptions + Buy Credits)
+
+Only needed if you want billing. Without these, the app runs but billing is disabled.
+
+| Key | Type | What it's for |
+|-----|------|---------------|
+| `DODO_PAYMENTS_API_KEY` | Secret | Dodo API key |
+| `DODO_PAYMENTS_WEBHOOK_KEY` | Secret | Verifies incoming Dodo webhooks |
+| `DODO_PAYMENTS_ENVIRONMENT` | Config | `test_mode` or `live_mode` |
+| `DODO_PRODUCT_PRO` | Config | Product ID for the Pro plan |
+| `DODO_PRODUCT_BUSINESS` | Config | Product ID for the Business plan |
+| `DODO_PRODUCT_CREDITS` | Config | Product ID for the pay-what-you-want **Buy Credits** product |
+
+Get the API/webhook keys and product IDs from your **Dodo Payments dashboard**.
+
+**After setup, in the Dodo dashboard create a webhook** pointing to:
+```
+https://<your-domain>/api/billing/dodo/webhook
+```
+and subscribe it to **both** `subscription.*` events **and** `payment.succeeded`
+(the latter is what grants purchased credits — without it, credit buys charge but never deliver).
+
+---
+
+## 6. Mobile app + in-app purchases (RevenueCat) — only if you ship the Expo app
+
+| Key | Type | What it's for |
+|-----|------|---------------|
+| `REVENUECAT_API_KEY` | Secret | RevenueCat server (REST) API key |
+| `REVENUECAT_PROJECT_ID` | Config | RevenueCat project ID |
+| `EXPO_TOKEN` | Secret | Expo access token for EAS builds |
+| `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` | Config | RevenueCat iOS public SDK key |
+| `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY` | Config | RevenueCat Android public SDK key |
+| `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` | Config (optional) | RevenueCat test key for Expo Go |
+| `EXPO_PUBLIC_DOMAIN` | Config | Public API domain the mobile app calls (your production URL) |
+| `EXPO_PUBLIC_REPL_ID` | Config (optional) | Used for some Expo dev wiring |
+
+Get RevenueCat keys from the **RevenueCat dashboard**; `EXPO_TOKEN` from **expo.dev → Account → Access Tokens**.
+
+> `EXPO_PUBLIC_*` keys are **inlined into the mobile bundle at build time** — after changing them you must rebuild the app (EAS), not just restart.
+
+---
+
+## 7. Optional / feature keys (safe to skip)
+
+| Key | What it's for |
+|-----|---------------|
+| `PUBLIC_APP_URL` | Force the public URL used in OAuth redirects + email links (useful on non-Replit hosts). |
+| `MOBILE_OAUTH_DEV_REDIRECTS` | Extra allowed redirect prefixes for testing mobile OAuth in Expo Go (dev only). |
+| `LOG_LEVEL` | Logger verbosity (e.g. `info`, `debug`). |
+| `REMOVE_BG_API_KEY` | Optional background-removal feature. |
+| `REPLICATE_API_TOKEN` | Optional AI feature. |
+| `PUPPETEER_EXECUTABLE_PATH` | Optional Chromium path override for HTML→PDF. |
+
+---
+
+## 8. Do NOT set these (Replit provides them automatically)
+
+`PORT`, `BASE_PATH`, `NODE_ENV`, `REPL_ID`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL`,
+`REPLIT_CONNECTORS_HOSTNAME`, `REPLIT_DEV_DOMAIN`, `REPLIT_DOMAINS`,
+`REPLIT_EXPO_DEV_DOMAIN`, `REPLIT_INTERNAL_APP_DOMAIN`.
+
+---
+
+## Quick checklist for a fresh transfer
+
+- [ ] `SUPABASE_DB_URL` (or `DATABASE_URL`)
+- [ ] `JWT_SECRET`
+- [ ] `S3_BUCKET`, `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+- [ ] `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (+ authorize new domain in Google Cloud)
+- [ ] Resend connected **or** `RESEND_API_KEY`
+- [ ] Dodo keys + product IDs (if billing) + add `payment.succeeded` to the webhook
+- [ ] RevenueCat / Expo keys (if mobile)
+- [ ] Restart workflows after adding keys
+- [ ] Run the database schema push: `pnpm --filter @workspace/db run push`

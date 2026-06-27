@@ -3486,7 +3486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============== AUTHENTICATION ROUTES ==============
+  // -------------- AUTHENTICATION ROUTES --------------
   
   // User registration
   app.post("/api/signup", authRateLimit(10), register);
@@ -3606,9 +3606,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API health check
-  // ===========================================================================
+  // ---------------------------------------------------------------------------
   // API PLATFORM: key management, usage analytics, and the public REST API.
-  // ===========================================================================
+  // ---------------------------------------------------------------------------
 
   // --- API key management (dashboard, JWT-authenticated) ---------------------
 
@@ -3929,34 +3929,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Start a hosted Dodo checkout for a custom-dollar credit purchase. The credits
-  // land only when the `payment.succeeded` webhook fires (see handleWebhookEvent).
-  app.post("/api/billing/credits/checkout", authenticateUser, async (req, res) => {
+  // Start a hosted Dodo checkout to buy a custom-dollar amount of credits.
+  // Credits are granted only when Dodo's payment.succeeded webhook fires.
+  app.post("/api/billing/credits-checkout", authenticateUser, async (req, res) => {
     try {
-      const userId = (req as any).user.id as string;
-      const amountUsd = Number(req.body?.amountUsd);
-      if (
-        !Number.isFinite(amountUsd) ||
-        amountUsd < MIN_CREDITS_USD ||
-        amountUsd > MAX_CREDITS_USD
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: `Choose an amount between $${MIN_CREDITS_USD} and $${MAX_CREDITS_USD}.`,
-        });
-      }
       if (!isCreditsConfigured()) {
         return res.status(503).json({
           success: false,
           error: "Credit purchases are not configured yet.",
         });
       }
+      const userId = (req as any).user.id as string;
+      const amountUsd = Number(req.body?.amountUsd);
+      if (!Number.isFinite(amountUsd) || amountUsd < MIN_CREDITS_USD) {
+        return res.status(400).json({
+          success: false,
+          error: `Enter an amount of at least $${MIN_CREDITS_USD}.`,
+        });
+      }
+      if (amountUsd > MAX_CREDITS_USD) {
+        return res.status(400).json({
+          success: false,
+          error: `The maximum per purchase is $${MAX_CREDITS_USD}.`,
+        });
+      }
+      // Round to whole cents; credits scale with the exact dollar amount.
+      const amountCents = Math.round(amountUsd * 100);
+      const credits = Math.round((amountCents / 100) * CREDITS_PER_USD);
       const user = await storage.getUserById(userId);
       if (!user) {
         return res.status(404).json({ success: false, error: "User not found" });
       }
-      const amountCents = Math.round(amountUsd * 100);
-      const credits = Math.round(amountUsd * CREDITS_PER_USD);
       const origin = appOrigin(req);
       const { url } = await createCreditCheckout({
         user: {
@@ -3972,7 +3975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       return res.json({ success: true, data: { url } });
     } catch (error) {
-      console.error("Error creating credit checkout:", error);
+      console.error("Error creating credits checkout:", error);
       return res
         .status(502)
         .json({ success: false, error: "Could not start checkout." });

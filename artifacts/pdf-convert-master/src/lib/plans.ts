@@ -71,34 +71,32 @@ export function openBillingPortal(): Promise<string> {
   }).then((r) => r.data.url);
 }
 
-/** Pay-as-you-go credits config advertised by the server. */
-export interface BillingConfig {
-  enabled: boolean;
-  credits?: {
-    enabled: boolean;
-    creditsPerUsd: number;
-    minUsd: number;
-    maxUsd: number;
-  };
-}
-
-/** Whether the web billing flow is configured and live (+ credits config). */
-export function fetchBillingConfig(): Promise<BillingConfig> {
-  return authedJson<{ data: BillingConfig }>("/api/billing/config").then(
-    (r) => r.data,
-  );
-}
-
-/**
- * Start a hosted Dodo checkout for a custom-dollar credit purchase; resolves to
- * its checkout URL. Credits land via the payment webhook after redirect-back.
- */
+/** Start a hosted Dodo checkout to buy a custom $ amount of credits. */
 export function startCreditsCheckout(amountUsd: number): Promise<string> {
-  return authedJson<{ data: { url: string } }>("/api/billing/credits/checkout", {
+  return authedJson<{ data: { url: string } }>("/api/billing/credits-checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ amountUsd }),
   }).then((r) => r.data.url);
+}
+
+export interface CreditsConfig {
+  enabled: boolean;
+  creditsPerUsd: number;
+  minUsd: number;
+  maxUsd: number;
+}
+
+export interface BillingConfig {
+  enabled: boolean;
+  credits: CreditsConfig;
+}
+
+/** Whether the web billing flow is configured and live. */
+export function fetchBillingConfig(): Promise<BillingConfig> {
+  return authedJson<{ data: BillingConfig }>("/api/billing/config").then(
+    (r) => r.data,
+  );
 }
 
 /** Re-fetch the signed-in user (used to reflect a plan change after checkout). */
