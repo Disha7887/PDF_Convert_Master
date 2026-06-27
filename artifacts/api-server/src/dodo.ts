@@ -50,6 +50,26 @@ export function getDodoClient(): DodoPayments {
   return cachedClient;
 }
 
+// --- Pay-as-you-go credits -------------------------------------------------
+//
+// Credits are sold on the web as a single pay-what-you-want one-time Dodo
+// product (DODO_PRODUCT_CREDITS). The customer picks any dollar amount in our
+// UI; we pass it as the checkout line's `amount` (cents) and grant credits at a
+// fixed rate. The grant happens only on the `payment.succeeded` webhook.
+export const CREDITS_PER_USD = 100; // $1 = 100 credits (1 credit = 1¢)
+export const MIN_CREDITS_USD = 1; // smallest purchase ($1 floor matches product)
+export const MAX_CREDITS_USD = 500; // sanity cap per checkout
+
+/** The Dodo product id backing pay-as-you-go credit purchases (env-driven). */
+export function getCreditsProductId(): string | undefined {
+  return process.env.DODO_PRODUCT_CREDITS || undefined;
+}
+
+/** Credit purchases are usable once the api key and credits product are set. */
+export function isCreditsConfigured(): boolean {
+  return Boolean(process.env.DODO_PAYMENTS_API_KEY && getCreditsProductId());
+}
+
 /** Map an internal plan id to its configured Dodo product id (env-driven). */
 export function getProductIdForPlan(planId: string): string | undefined {
   const map: Record<string, string | undefined> = {
@@ -155,6 +175,57 @@ export async function createCheckoutForPlan(opts: {
   return { url: session.checkout_url, sessionId: session.session_id };
 }
 
+/**
+ * Create a hosted checkout for a custom-dollar credit purchase. The amount (in
+ * cents) is passed on the pay-what-you-want line item; `credits` is carried in
+ * metadata and granted when the `payment.succeeded` webhook arrives.
+ */
+export async function createCreditCheckout(opts: {
+  user: CheckoutUser;
+  amountCents: number;
+  credits: number;
+  returnUrl: string;
+  cancelUrl?: string;
+}): Promise<{ url: string; sessionId: string }> {
+  const productId = getCreditsProductId();
+  if (!productId) {
+    throw new Error("No Dodo product is configured for credit purchases.");
+  }
+  const client = getDodoClient();
+
+  const customer = opts.user.dodoCustomerId
+    ? { customer_id: opts.user.dodoCustomerId }
+    : { email: opts.user.email, name: opts.user.name || opts.user.email };
+
+  const session = await client.checkoutSessions.create({
+    product_cart: [
+      { product_id: productId, quantity: 1, amount: opts.amountCents },
+    ],
+    customer: customer as any,
+    return_url: opts.returnUrl,
+    ...(opts.cancelUrl ? { cancel_url: opts.cancelUrl } : {}),
+    customization: {
+      ...BRAND_CHECKOUT_CUSTOMIZATION,
+      theme_config: {
+        ...BRAND_CHECKOUT_CUSTOMIZATION.theme_config,
+        pay_button_text: "Buy credits",
+      },
+    },
+    // Carried back on the payment webhook so we can attribute + grant credits.
+    metadata: {
+      userId: opts.user.id,
+      kind: "credits",
+      credits: String(opts.credits),
+      amountCents: String(opts.amountCents),
+    },
+  });
+
+  if (!session.checkout_url) {
+    throw new Error("Dodo Payments did not return a checkout URL.");
+  }
+  return { url: session.checkout_url, sessionId: session.session_id };
+}
+
 /** Create a Dodo Customer Portal session so the user can manage/cancel billing. */
 export async function createPortalSession(
   customerId: string,
@@ -203,9 +274,81 @@ export async function handleWebhookEvent(
   event: DodoWebhookEvent,
 ): Promise<void> {
   const type = event.type;
+
+  // One-time credit purchases (web pay-as-you-go). Grant credits idempotently
+  // keyed by the payment id once the payment actually succeeds.
+  if (type === "payment.succeeded") {
+    const pay = event.data as any;
+    if (pay?.metadata?.kind !== "credits") {
+      logger.info({ type }, "Dodo payment.succeeded ignored (not a credit buy)");
+      return;
+    }
+    const creditsProductId = getCreditsProductId();
+    // Authoritative product gate: the settled payment MUST actually contain our
+    // credits product. Never grant on metadata alone (it is attacker-influenced).
+    const cart: Array<{ product_id?: string }> = Array.isArray(pay?.product_cart)
+      ? pay.product_cart
+      : [];
+    if (!creditsProductId || !cart.some((i) => i?.product_id === creditsProductId)) {
+      logger.warn(
+        { type, paymentId: pay?.payment_id },
+        "Dodo credit buy: settled payment does not contain the credits product",
+      );
+      return;
+    }
+    const userId: string | undefined = pay?.metadata?.userId;
+    const paymentId: string | undefined = pay?.payment_id;
+    const customerId: string | undefined = pay?.customer?.customer_id;
+
+    // Derive credits from the AUTHORITATIVE settled amount, not metadata. For USD
+    // we recompute from the pre-tax charged amount (total_amount includes tax);
+    // metadata.credits is only a cross-check / non-USD fallback.
+    let credits = Number(pay?.metadata?.credits);
+    const currency: string | undefined = pay?.currency;
+    const totalCents = Number(pay?.total_amount);
+    const taxCents = Number(pay?.tax ?? 0);
+    if (currency === "USD" && Number.isFinite(totalCents)) {
+      const netCents = Math.max(
+        0,
+        totalCents - (Number.isFinite(taxCents) ? taxCents : 0),
+      );
+      const computed = Math.round((netCents / 100) * CREDITS_PER_USD);
+      if (Number.isFinite(credits) && Math.abs(computed - credits) > 1) {
+        logger.warn(
+          { paymentId, metadataCredits: credits, computed, netCents },
+          "Dodo credit buy: metadata credits disagree with settled amount; using settled",
+        );
+      }
+      credits = computed;
+    }
+    if (!userId || !paymentId || !Number.isFinite(credits) || credits <= 0) {
+      logger.warn({ type, userId, paymentId, credits }, "Dodo credit buy: bad metadata");
+      return;
+    }
+    const user = await resolveUser(userId, customerId);
+    if (!user) {
+      logger.warn({ type, userId, customerId }, "Dodo credit buy: no matching user");
+      return;
+    }
+    const grant = await storage.grantCreditsForPurchase(
+      user.id,
+      paymentId,
+      getCreditsProductId() ?? "credits",
+      credits,
+    );
+    // Keep the Dodo customer attached so future buys/portal reuse one record.
+    if (customerId && !(user as any).dodoCustomerId) {
+      await storage.updateUserDodoRefs(user.id, { dodoCustomerId: customerId });
+    }
+    logger.info(
+      { userId: user.id, paymentId, credits, granted: Boolean(grant) },
+      grant ? "Dodo credits granted" : "Dodo credits already granted (idempotent)",
+    );
+    return;
+  }
+
   if (!type.startsWith("subscription.")) {
-    // We only act on subscription lifecycle today. One-time payments / credits
-    // are handled on mobile via RevenueCat.
+    // Other one-time/payment events aren't acted on here.
     logger.info({ type }, "Dodo webhook ignored (not a subscription event)");
     return;
   }

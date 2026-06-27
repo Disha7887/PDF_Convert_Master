@@ -71,9 +71,30 @@ export function openBillingPortal(): Promise<string> {
   }).then((r) => r.data.url);
 }
 
+/** Start a hosted Dodo checkout to buy a custom $ amount of credits. */
+export function startCreditsCheckout(amountUsd: number): Promise<string> {
+  return authedJson<{ data: { url: string } }>("/api/billing/credits-checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amountUsd }),
+  }).then((r) => r.data.url);
+}
+
+export interface CreditsConfig {
+  enabled: boolean;
+  creditsPerUsd: number;
+  minUsd: number;
+  maxUsd: number;
+}
+
+export interface BillingConfig {
+  enabled: boolean;
+  credits: CreditsConfig;
+}
+
 /** Whether the web billing flow is configured and live. */
-export function fetchBillingConfig(): Promise<{ enabled: boolean }> {
-  return authedJson<{ data: { enabled: boolean } }>("/api/billing/config").then(
+export function fetchBillingConfig(): Promise<BillingConfig> {
+  return authedJson<{ data: BillingConfig }>("/api/billing/config").then(
     (r) => r.data,
   );
 }

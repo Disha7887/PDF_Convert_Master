@@ -24,11 +24,16 @@ import { PLANS, getPlan } from "./plans";
 import { syncRevenueCatCustomer } from "./revenuecat";
 import {
   createCheckoutForPlan,
+  createCreditCheckout,
   createPortalSession,
   verifyWebhook,
   handleWebhookEvent,
   isBillingConfigured,
+  isCreditsConfigured,
   getProductIdForPlan,
+  CREDITS_PER_USD,
+  MIN_CREDITS_USD,
+  MAX_CREDITS_USD,
 } from "./dodo";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
@@ -3908,7 +3913,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Whether the web billing flow is live (api key + at least one product id set).
   app.get("/api/billing/config", (_req, res) => {
-    return res.json({ success: true, data: { enabled: isBillingConfigured() } });
+    return res.json({
+      success: true,
+      data: {
+        enabled: isBillingConfigured(),
+        credits: {
+          enabled: isCreditsConfigured(),
+          creditsPerUsd: CREDITS_PER_USD,
+          minUsd: MIN_CREDITS_USD,
+          maxUsd: MAX_CREDITS_USD,
+        },
+      },
+    });
+  });
+
+  // Start a hosted Dodo checkout to buy a custom-dollar amount of credits.
+  // Credits are granted only when Dodo's payment.succeeded webhook fires.
+  app.post("/api/billing/credits-checkout", authenticateUser, async (req, res) => {
+    try {
+      if (!isCreditsConfigured()) {
+        return res.status(503).json({
+          success: false,
+          error: "Credit purchases are not configured yet.",
+        });
+      }
+      const userId = (req as any).user.id as string;
+      const amountUsd = Number(req.body?.amountUsd);
+      if (!Number.isFinite(amountUsd) || amountUsd < MIN_CREDITS_USD) {
+        return res.status(400).json({
+          success: false,
+          error: `Enter an amount of at least $${MIN_CREDITS_USD}.`,
+        });
+      }
+      if (amountUsd > MAX_CREDITS_USD) {
+        return res.status(400).json({
+          success: false,
+          error: `The maximum per purchase is $${MAX_CREDITS_USD}.`,
+        });
+      }
+      // Round to whole cents; credits scale with the exact dollar amount.
+      const amountCents = Math.round(amountUsd * 100);
+      const credits = Math.round((amountCents / 100) * CREDITS_PER_USD);
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: "User not found" });
+      }
+      const origin = appOrigin(req);
+      const { url } = await createCreditCheckout({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? null,
+          dodoCustomerId: (user as any).dodoCustomerId ?? null,
+        },
+        amountCents,
+        credits,
+        returnUrl: `${origin}/dashboard/manage-plans?checkout=credits-success`,
+        cancelUrl: `${origin}/dashboard/manage-plans?checkout=cancelled`,
+      });
+      return res.json({ success: true, data: { url } });
+    } catch (error) {
+      console.error("Error creating credits checkout:", error);
+      return res
+        .status(502)
+        .json({ success: false, error: "Could not start checkout." });
+    }
   });
 
   // Start a hosted Dodo checkout for a paid plan. Returns the checkout URL the
