@@ -126,6 +126,28 @@ interface CreditPackConfig {
 
 const CREDIT_PACKS: CreditPackConfig[] = [
   {
+    identifier: "credits_10",
+    displayName: "10 Credits",
+    title: "10 Conversion Credits",
+    credits: 10,
+    packageLookupKey: "credits_10",
+    prices: [
+      { amount_micros: 490000, currency: "USD" },
+      { amount_micros: 490000, currency: "EUR" },
+    ],
+  },
+  {
+    identifier: "credits_50",
+    displayName: "50 Credits",
+    title: "50 Conversion Credits",
+    credits: 50,
+    packageLookupKey: "credits_50",
+    prices: [
+      { amount_micros: 990000, currency: "USD" },
+      { amount_micros: 990000, currency: "EUR" },
+    ],
+  },
+  {
     identifier: "credits_100",
     displayName: "100 Credits",
     title: "100 Conversion Credits",
@@ -134,6 +156,17 @@ const CREDIT_PACKS: CreditPackConfig[] = [
     prices: [
       { amount_micros: 1990000, currency: "USD" },
       { amount_micros: 1990000, currency: "EUR" },
+    ],
+  },
+  {
+    identifier: "credits_250",
+    displayName: "250 Credits",
+    title: "250 Conversion Credits",
+    credits: 250,
+    packageLookupKey: "credits_250",
+    prices: [
+      { amount_micros: 4490000, currency: "USD" },
+      { amount_micros: 4490000, currency: "EUR" },
     ],
   },
   {

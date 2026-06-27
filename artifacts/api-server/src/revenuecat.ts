@@ -15,10 +15,28 @@ import { logger } from "./lib/logger";
 // client never gets to decide. Keep in sync with the seeded products
 // (scripts/src/seedRevenueCat.ts).
 const CREDITS_BY_STORE_ID: Record<string, number> = {
+  credits_10: 10,
+  credits_50: 50,
   credits_100: 100,
+  credits_250: 250,
   credits_500: 500,
   credits_1000: 1000,
 };
+
+// Resolve how many credits a credit-pack store product grants. Prefer the
+// explicit map above; otherwise fall back to parsing the "credits_<N>" naming
+// convention, so any new pack created in the stores (e.g. credits_2500) grants
+// the right amount with no code change. Returns null for non-credit products.
+function creditsForStoreIdentifier(storeIdentifier: string): number | null {
+  const explicit = CREDITS_BY_STORE_ID[storeIdentifier];
+  if (explicit != null) return explicit;
+  const m = /^credits_(\d+)$/.exec(storeIdentifier);
+  if (m) {
+    const n = Number(m[1]);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
 
 // Entitlement lookup keys mapped to our internal plan ids, highest tier first.
 // A customer who somehow holds both keeps the higher tier.
@@ -90,7 +108,7 @@ async function getCreditProductMap(
     }
 
     for (const product of data.items) {
-      const credits = CREDITS_BY_STORE_ID[product.store_identifier];
+      const credits = creditsForStoreIdentifier(product.store_identifier);
       if (credits != null) {
         map.set(product.id, credits);
       }

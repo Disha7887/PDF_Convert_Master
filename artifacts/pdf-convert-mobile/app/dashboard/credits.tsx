@@ -81,7 +81,9 @@ export default function CreditsScreen() {
     details: PurchaseConfirmDetails;
   } | null>(null);
 
-  const creditPackages = creditsOffering?.availablePackages ?? [];
+  const creditPackages = [...(creditsOffering?.availablePackages ?? [])].sort(
+    (a, b) => (packCreditAmount(a) ?? 0) - (packCreditAmount(b) ?? 0),
+  );
 
   const handleBuyCredits = (pkg: PurchasesPackage) => {
     setError(null);
