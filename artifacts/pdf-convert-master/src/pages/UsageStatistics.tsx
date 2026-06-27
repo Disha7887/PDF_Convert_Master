@@ -7,7 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { authedJson } from "@/lib/authedFetch";
 
 import { useLocation } from "wouter";
-import { Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Download, Loader2 } from "lucide-react";
+import { Search, FileText, Activity, ArrowDown, Check, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowRight, Download } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { downloadFromUrl } from "@/lib/download";
 import { getOutputFormatByServerType, getToolConfigByServerType } from "@/lib/toolConfig";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
@@ -426,7 +427,7 @@ export const UsageStatistics: React.FC = () => {
                                 data-testid={`download-usage-${job.id}`}
                               >
                                 {downloadingId === job.id
-                                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                                  ? <ProcessingSpinner size={16} />
                                   : <Download className="w-4 h-4" />}
                               </Button>
                             )}

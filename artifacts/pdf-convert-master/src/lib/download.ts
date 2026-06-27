@@ -1,4 +1,4 @@
-// Robust file download helper. The server returns converted files from
+// Robust file download helpers. The server returns converted files from
 // `/api/download/:jobId` with `Content-Disposition: attachment`. Triggering the
 // download by navigating an <a href> to that URL (or `window.open`) is
 // unreliable: inside the Replit preview / canvas iframe those navigations and
@@ -40,22 +40,17 @@ function filenameFromDisposition(header: string | null): string | null {
 }
 
 /**
- * Download the file at `url` to the user's device. Resolves once the download
- * has been triggered; rejects if the request fails (e.g. the converted file is
- * no longer available on the server).
+ * Fetches the file at `url` as a Blob, sending the signed-in user's token for
+ * same-origin API downloads so the backend can authorize access to files owned
+ * by that user (`/api/download` only serves a user-owned job to its owner).
+ * Guest downloads send no token. Strict origin check (via URL parsing, not
+ * prefix matching) so the bearer token is never leaked to a look-alike origin.
  *
- * @param url           Same-origin URL of the file (e.g. `/api/download/123`).
- * @param fallbackName  Filename to use if the server sends no Content-Disposition.
+ * Rejects with a clear, actionable message if the request fails.
  */
-export async function downloadFromUrl(
+export async function fetchFileBlob(
   url: string,
-  fallbackName?: string,
-): Promise<void> {
-  // Attach the signed-in user's token for same-origin API downloads so the
-  // backend can authorize access to files owned by that user (`/api/download`
-  // only serves a user-owned job to its owner). Guest downloads send no token.
-  // Strict origin check (via URL parsing, not prefix matching) so the bearer
-  // token is never leaked to a look-alike third-party origin.
+): Promise<{ blob: Blob; name: string | null }> {
   const token = getAuthToken();
   let sameOrigin = false;
   try {
@@ -81,17 +76,17 @@ export async function downloadFromUrl(
         : `Download failed (${res.status})`,
     );
   }
-
   const blob = await res.blob();
-  const name =
-    filenameFromDisposition(res.headers.get("Content-Disposition")) ||
-    fallbackName ||
-    url.split("/").pop() ||
-    "download";
+  return { blob, name: filenameFromDisposition(res.headers.get("Content-Disposition")) };
+}
 
+/**
+ * Saves an already-fetched Blob to the user's device under `name`. On iOS the
+ * native share sheet is used (the <a download> path silently opens the file
+ * inline instead of saving it); everywhere else a temporary object-URL anchor.
+ */
+export async function downloadBlob(blob: Blob, name: string): Promise<void> {
   // iOS: open the native share sheet so the user can "Save to Files"/Photos.
-  // The <a download> path below silently fails on iOS Safari (opens the file
-  // inline instead of saving), which is the reported bug.
   if (isIOS() && typeof navigator !== "undefined") {
     const file = new File([blob], name, {
       type: blob.type || "application/octet-stream",
@@ -118,4 +113,22 @@ export async function downloadFromUrl(
   a.remove();
   // Revoke after a tick so the browser has started the download.
   setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+/**
+ * Download the file at `url` to the user's device. Resolves once the download
+ * has been triggered; rejects if the request fails (e.g. the converted file is
+ * no longer available on the server).
+ *
+ * @param url           Same-origin URL of the file (e.g. `/api/download/123`).
+ * @param fallbackName  Filename to use if the server sends no Content-Disposition.
+ */
+export async function downloadFromUrl(
+  url: string,
+  fallbackName?: string,
+): Promise<void> {
+  const { blob, name } = await fetchFileBlob(url);
+  const finalName =
+    fallbackName || name || url.split("/").pop() || "download";
+  await downloadBlob(blob, finalName);
 }

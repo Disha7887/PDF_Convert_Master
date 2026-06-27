@@ -1,15 +1,13 @@
-import { Loader2Icon } from "lucide-react"
-
+import { ProcessingSpinner } from "@/components/processing-spinner"
 import { cn } from "@/lib/utils"
 
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+// The shared loading indicator. Renders the app's "processing" Lottie animation
+// so every loading state looks the same (replaces the old lucide spin icon).
+function Spinner({ className }: { className?: string }) {
   return (
-    <Loader2Icon
-      role="status"
-      aria-label="Loading"
-      className={cn("size-4 animate-spin", className)}
-      {...props}
-    />
+    <span role="status" aria-label="Loading" className="inline-flex">
+      <ProcessingSpinner size={16} className={cn(className)} />
+    </span>
   )
 }
 

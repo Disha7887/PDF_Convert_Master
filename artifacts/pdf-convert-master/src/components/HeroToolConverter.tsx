@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { authedFetch, getAuthError, AuthError } from "@/lib/authedFetch";
-import { downloadFromUrl } from "@/lib/download";
 import { addGuestDownload, isGuest } from "@/lib/guestDownloads";
+import {
+  getDownloadFormats,
+  produceDownload,
+  sanitizeName,
+  fetchOcrText,
+  type DownloadOption,
+} from "@/lib/downloadFormats";
+import DownloadFormatModal from "@/components/DownloadFormatModal";
 import { GuestRecentDownloads } from "@/components/GuestRecentDownloads";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +34,17 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
   const [authError, setAuthError] = useState<AuthError | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [outputName, setOutputName] = useState("");
+  const [jobId, setJobId] = useState<number | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formats, setFormats] = useState<DownloadOption[]>([]);
+  const [selectedFormatId, setSelectedFormatId] = useState("");
+  const [baseName, setBaseName] = useState("");
+  const [downloading, setDownloading] = useState(false);
   const mountedRef = useRef(true);
+  // Holds the current input filename so pollJob (whose closure captures a
+  // possibly-stale `fileName` state) always has the up-to-date name to fall
+  // back to when the backend omits the produced output filename.
+  const fileNameRef = useRef("");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // "Images to PDF" combines MULTIPLE images into ONE PDF, so the hero card
@@ -52,6 +69,12 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     setError(null);
     setAuthError(null);
     setDownloadUrl(null);
+    setJobId(null);
+    setModalOpen(false);
+    setFormats([]);
+    setSelectedFormatId("");
+    setBaseName("");
+    setDownloading(false);
   };
 
   const pollJob = (jobId: number) =>
@@ -70,6 +93,10 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
           const job = d.data;
           if (job.status === "completed") {
             setDownloadUrl(`/api/download/${jobId}`);
+            setJobId(jobId);
+            // The real produced filename (e.g. "report.docx", "pages.zip") drives
+            // the chooser's default name + correct extension; fall back to input.
+            setOutputName(job.outputFilename || fileNameRef.current);
             setStage("done");
             // Guests have no dashboard history; persist so they can re-download
             // after a refresh (the file lives in durable server storage).
@@ -105,6 +132,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     setError(null);
     setAuthError(null);
     setFileName(f.name);
+    fileNameRef.current = f.name;
     setDownloadUrl(null);
     try {
       const fd = new FormData();
@@ -133,6 +161,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     setError(null);
     setAuthError(null);
     setFileName(fs.length === 1 ? fs[0].name : `${fs.length} images`);
+    fileNameRef.current = fs.length === 1 ? fs[0].name : "images";
     setOutputName("images.pdf");
     setDownloadUrl(null);
     try {
@@ -152,13 +181,45 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
     }
   };
 
-  const handleDownload = async () => {
-    if (!downloadUrl) return;
+  // Opens the shared "pick an output format" chooser. We only ever offer formats
+  // we can honestly produce from the result, so for OCR we first check whether
+  // recognized text is actually available before listing the text export options.
+  const openChooser = async () => {
+    if (jobId == null) return;
+    const serverToolType = getServerToolType(tool);
+    let hasOcrText = false;
+    if (serverToolType === "ocr_pdf") {
+      const pages = await fetchOcrText(jobId);
+      hasOcrText = pages.length > 0;
+    }
+    const opts = getDownloadFormats({
+      serverToolType,
+      outputFormat: tool.outputFormat,
+      outputName,
+      hasOcrText,
+    });
+    setFormats(opts);
+    setSelectedFormatId(opts[0]?.id ?? "");
+    const src = outputName || fileName || "output";
+    setBaseName(src.replace(/\.[^./]+$/, "") || "output");
+    setModalOpen(true);
+  };
+
+  const handleConfirmDownload = async () => {
+    const selected = formats.find((f) => f.id === selectedFormatId);
+    if (!selected || jobId == null || !downloadUrl) return;
+    setDownloading(true);
     try {
-      await downloadFromUrl(downloadUrl, outputName || fileName || undefined);
+      const base = sanitizeName(baseName);
+      const fullName = `${base}.${selected.ext}`;
+      await produceDownload(selected, { downloadUrl, jobId, baseName: base, fullName });
+      setModalOpen(false);
     } catch (e) {
+      setModalOpen(false);
       setError(e instanceof Error ? e.message : "Download failed");
       setStage("error");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -213,7 +274,7 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
           </p>
           <button
             type="button"
-            onClick={handleDownload}
+            onClick={openChooser}
             className="inline-flex items-center justify-center h-[57px] px-12 rounded-full bg-[#f7433d] hover:bg-[#e23a34] text-white font-semibold mb-4 shadow-[0px_10px_15px_-3px_#0000001a,0px_4px_6px_-4px_#0000001a] transition-colors"
             data-testid={`button-hero-download-${tool.id}`}
           >
@@ -262,6 +323,24 @@ export const HeroToolConverter = ({ tool }: { tool: ToolConfig }): JSX.Element =
           </Button>
         </div>
       )}
+
+      <DownloadFormatModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        subtitle={`Your ${tool.title} result is ready.`}
+        formats={formats}
+        selectedId={selectedFormatId}
+        onSelect={setSelectedFormatId}
+        onConfirm={handleConfirmDownload}
+        busy={downloading}
+        fileName={baseName}
+        onChangeFileName={setBaseName}
+        previewName={
+          selectedFormatId
+            ? `${sanitizeName(baseName)}.${formats.find((f) => f.id === selectedFormatId)?.ext ?? ""}`
+            : undefined
+        }
+      />
     </Card>
   );
 };

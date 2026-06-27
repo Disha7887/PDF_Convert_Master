@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Code2, Archive, FileImage, Loader2, Zap, CreditCard } from "lucide-react";
+import { Check, Code2, Archive, FileImage, Zap, CreditCard } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -209,7 +210,7 @@ export const PlansManager: React.FC = () => {
                     data-testid="button-manage-billing"
                   >
                     {portalBusy ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <ProcessingSpinner size={16} className="mr-2" />
                     ) : (
                       <CreditCard className="w-4 h-4 mr-2" />
                     )}
@@ -386,7 +387,7 @@ export const PlansManager: React.FC = () => {
                     data-testid={`button-plan-${plan.id}`}
                   >
                     {isPending && (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <ProcessingSpinner size={16} tone="light" className="mr-2" />
                     )}
                     {label}
                   </Button>

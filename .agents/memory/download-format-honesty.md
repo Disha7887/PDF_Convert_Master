@@ -22,3 +22,14 @@ ZIP URI as a bitmap, which fails. Fuzzy outputFormat matching also misclassified
 **How to apply:** when adding a tool or changing its output, decide its produce-kind
 (passthrough / reencode / ocrText) explicitly. Never route a non-single-image payload
 into the image re-encoder.
+
+**Web mirror (pdf-convert-master):** `src/lib/downloadFormats.ts` +
+`src/components/DownloadFormatModal.tsx` port this same chooser to the web hero flow
+(HeroToolConverter only — multi-file ConversionWorkflow batch download is unchanged).
+Same produce-kinds: passthrough (fetchFileBlob+downloadBlob so the EDITED filename wins
+over the server Content-Disposition), reencode (canvas), ocrText (fetch /api/ocr-text/:jobId).
+**Web is stricter than mobile on the OCR fallback:** if recognized text is gone at confirm
+time, THROW ("recognized text isn't available… download the PDF instead") — never
+downloadFromUrl under the selected .doc/.txt name (that saves PDF bytes with a lying
+extension). Output extension/default name comes from `job.outputFilename`; fall back to a
+`fileNameRef` (NOT the closure-stale `fileName` state) since pollJob captures an old render.
