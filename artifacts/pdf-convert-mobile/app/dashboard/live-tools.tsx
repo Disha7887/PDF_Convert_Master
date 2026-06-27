@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { SignInRequiredIcon } from "@/components/SignInRequiredIcon";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -20,7 +21,7 @@ function SignInGate() {
   return (
     <View style={styles.gate}>
       <View style={styles.gateIcon}>
-        <Feather name="lock" size={28} color={C.primary} />
+        <SignInRequiredIcon />
       </View>
       <Text style={styles.gateTitle}>Sign in required</Text>
       <Text style={styles.gateText}>Sign in to access the live PDF tools.</Text>

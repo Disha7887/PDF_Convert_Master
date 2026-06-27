@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { SignInRequiredIcon } from "@/components/SignInRequiredIcon";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -85,7 +86,7 @@ function SignInGate() {
   return (
     <View style={styles.gate}>
       <View style={styles.gateIcon}>
-        <Feather name="lock" size={28} color={C.primary} />
+        <SignInRequiredIcon />
       </View>
       <Text style={styles.gateTitle}>Sign in required</Text>
       <Text style={styles.gateText}>Sign in to view your workspace dashboard.</Text>

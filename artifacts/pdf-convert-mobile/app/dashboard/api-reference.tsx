@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { SignInRequiredIcon } from "@/components/SignInRequiredIcon";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
@@ -112,7 +113,7 @@ function AuthGate() {
   return (
     <View style={styles.gate}>
       <View style={styles.gateIcon}>
-        <Feather name="lock" size={28} color={C.primary} />
+        <SignInRequiredIcon />
       </View>
       <Text style={styles.gateTitle}>Sign in required</Text>
       <Text style={styles.gateText}>Sign in to view the API reference and your endpoints.</Text>
