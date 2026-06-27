@@ -127,6 +127,28 @@ export async function uploadAvatar(
   }
 }
 
+/** Remove the signed-in user's profile picture. */
+export async function deleteAvatar(
+  token: string | null,
+): Promise<ProfileResult> {
+  if (USE_MOCK_DATA) {
+    return mockApi.deleteAvatar();
+  }
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/avatar`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    });
+    const data = await parseJson(res);
+    if (res.ok && data?.success) {
+      return { success: true, user: data.data?.user };
+    }
+    return { success: false, error: data?.error ?? "Could not remove your photo." };
+  } catch {
+    return { success: false, error: "Network error. Please try again." };
+  }
+}
+
 /** Resolve a stored (origin-relative) avatar URL to a fully-qualified src. */
 export function avatarSrc(url?: string | null): string | null {
   if (!url) return null;

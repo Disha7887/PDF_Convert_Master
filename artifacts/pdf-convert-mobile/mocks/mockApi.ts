@@ -99,6 +99,11 @@ export const mockApi = {
     return { success: true, user: { ...DEMO_USER, profilePictureUrl }, profilePictureUrl };
   },
 
+  async deleteAvatar(): Promise<AuthResult> {
+    await mockDelay(null, MOCK_LATENCY_MS);
+    return { success: true, user: { ...DEMO_USER, profilePictureUrl: "" } };
+  },
+
   async forgotPassword(_email: string): Promise<{ success: boolean }> {
     await mockDelay(null, MOCK_LATENCY_MS);
     // Always succeed (no account enumeration), mirroring the real backend.

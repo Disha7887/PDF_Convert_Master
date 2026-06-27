@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile, changePassword, uploadAvatar } from "@/lib/profile";
+import { updateProfile, changePassword, uploadAvatar, deleteAvatar } from "@/lib/profile";
 import { Camera, User as UserIcon, Lock, Check } from "lucide-react";
 
 export const Profile: React.FC = () => {
@@ -98,6 +98,19 @@ export const Profile: React.FC = () => {
     }
   };
 
+  const handleAvatarRemove = async () => {
+    setUploadingAvatar(true);
+    setProfileMsg(null);
+    try {
+      const { user: updated } = await deleteAvatar();
+      updateUser(updated);
+    } catch (err) {
+      setProfileMsg({ type: "err", text: err instanceof Error ? err.message : "Could not remove photo" });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
       <div>
@@ -145,8 +158,17 @@ export const Profile: React.FC = () => {
             <div>
               <p className="font-medium text-gray-900">{user?.name || user?.email}</p>
               <p className="text-sm text-gray-500">
-                {uploadingAvatar ? "Uploading..." : "Tap the camera to change your picture"}
+                {uploadingAvatar ? "Working..." : "Tap the camera to change your picture"}
               </p>
+              {user?.profilePictureUrl && !uploadingAvatar && (
+                <button
+                  type="button"
+                  onClick={handleAvatarRemove}
+                  className="mt-1 text-sm font-medium text-red-600 hover:text-red-700"
+                >
+                  Remove photo
+                </button>
+              )}
             </div>
           </div>
 

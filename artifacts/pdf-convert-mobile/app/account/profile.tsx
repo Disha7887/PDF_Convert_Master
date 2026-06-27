@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   avatarSrc,
   changePassword,
+  deleteAvatar,
   updateProfile,
   uploadAvatar,
 } from "@/services/profile";
@@ -79,6 +80,32 @@ export default function ProfileSettingsScreen() {
     } finally {
       setUploadingAvatar(false);
     }
+  };
+
+  const removeAvatar = () => {
+    Alert.alert("Remove photo", "Remove your profile picture?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          setProfileError(null);
+          setProfileOk(null);
+          setUploadingAvatar(true);
+          try {
+            const result = await deleteAvatar(token);
+            if (result.success) {
+              await updateUser({ profilePictureUrl: "" });
+              setProfileOk("Profile picture removed.");
+            } else {
+              setProfileError(result.error ?? "Could not remove your photo.");
+            }
+          } finally {
+            setUploadingAvatar(false);
+          }
+        },
+      },
+    ]);
   };
 
   const saveProfile = async () => {
@@ -163,11 +190,18 @@ export default function ProfileSettingsScreen() {
             <Feather name={uploadingAvatar ? "loader" : "camera"} size={15} color="#fff" />
           </View>
         </Pressable>
-        <Pressable onPress={pickAvatar} disabled={uploadingAvatar} hitSlop={8}>
-          <Text style={styles.changePhoto}>
-            {uploadingAvatar ? "Uploading…" : "Change photo"}
-          </Text>
-        </Pressable>
+        <View style={styles.avatarActions}>
+          <Pressable onPress={pickAvatar} disabled={uploadingAvatar} hitSlop={8}>
+            <Text style={styles.changePhoto}>
+              {uploadingAvatar ? "Working…" : "Change photo"}
+            </Text>
+          </Pressable>
+          {imageSrc && !uploadingAvatar && (
+            <Pressable onPress={removeAvatar} hitSlop={8}>
+              <Text style={styles.removePhoto}>Remove photo</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Account details */}
@@ -278,6 +312,8 @@ const styles = StyleSheet.create({
     borderColor: C.background,
   },
   changePhoto: { fontSize: 14, color: C.primary, fontFamily: fonts.bodySemibold },
+  avatarActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  removePhoto: { fontSize: 14, color: "#dc2626", fontFamily: fonts.bodySemibold },
   cardTitle: { fontSize: 17, color: C.foreground, fontFamily: fonts.headingSemibold },
   error: { fontSize: 13, color: C.destructive, fontFamily: fonts.body },
   ok: { fontSize: 13, color: "#16a34a", fontFamily: fonts.body },

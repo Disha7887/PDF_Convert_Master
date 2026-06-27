@@ -15,7 +15,7 @@ import { promisify } from "util";
 import sharp from "sharp";
 import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword, googleAuth, googleConfig, googleMobileStart, googleMobileCallback } from "./auth";
 import { notifyUser, ensureWelcomeNotification } from "./notify";
-import { saveAvatar, getAvatar } from "./lib/avatarStorage";
+import { saveAvatar, getAvatar, deleteAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
 import { generateApiKey, hashApiKey } from "./utils/generateApiKey";
@@ -3412,6 +3412,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
+  // Remove the signed-in user's avatar: delete the stored image and clear the
+  // profile_picture_url column so clients fall back to the initials placeholder.
+  app.delete("/api/auth/avatar", authenticateUser, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      await deleteAvatar(userId);
+      const updated = await storage.updateUserProfilePicture(userId, "");
+      if (!updated) {
+        return res.status(404).json({ success: false, error: "User not found" });
+      }
+      const { passwordHash: _, ...userWithoutPassword } = updated;
+      return res.status(200).json({
+        success: true,
+        data: { user: userWithoutPassword },
+        message: "Profile picture removed",
+      });
+    } catch (error) {
+      req.log?.error?.({ err: error }, "Avatar delete failed");
+      return res.status(500).json({ success: false, error: "Failed to remove avatar" });
+    }
+  });
 
   // Serve a user's avatar image (public read — low-sensitivity profile picture).
   app.get("/api/auth/avatar/:userId", async (req, res) => {

@@ -6,7 +6,7 @@
  * clients through an api-server route that streams the stored bytes (see
  * `/api/auth/avatar/:userId`).
  */
-import { putObject, getObject } from "./s3Storage";
+import { putObject, getObject, deleteObject } from "./s3Storage";
 
 function objectNameFor(userId: string): string {
   return `avatars/${userId}`;
@@ -26,4 +26,9 @@ export async function getAvatar(
   userId: string,
 ): Promise<{ buffer: Buffer; contentType: string } | null> {
   return getObject(objectNameFor(userId));
+}
+
+/** Removes a user's avatar from storage. Idempotent (no-op if none exists). */
+export async function deleteAvatar(userId: string): Promise<void> {
+  await deleteObject(objectNameFor(userId));
 }

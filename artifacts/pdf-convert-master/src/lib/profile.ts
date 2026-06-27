@@ -64,6 +64,13 @@ export async function uploadAvatar(file: File): Promise<{ user: User; profilePic
   return body.data!;
 }
 
+/** Remove the signed-in user's avatar. Returns the updated user. */
+export async function deleteAvatar(): Promise<{ user: User }> {
+  const res = await authedFetch("/api/auth/avatar", { method: "DELETE" });
+  const body = await parse<{ user: User }>(res);
+  return body.data!;
+}
+
 /** Request a password reset code by email. Always resolves (no account leak). */
 export async function requestPasswordReset(email: string): Promise<string | undefined> {
   const res = await fetch("/api/auth/forgot-password", {
