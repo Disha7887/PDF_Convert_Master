@@ -21,6 +21,7 @@ const C = colors.light;
 // Animated credit coin used in the balance hero. Bundled as a real asset (no
 // placeholder) so it renders identically in the production build.
 const creditAnimation = require("../../assets/lottie/credit.json");
+const lockAnimation = require("../../assets/lottie/lock.json");
 
 // Pull the credit count out of a pack's store identifier (e.g. "credits_500" ->
 // 500) so each box can show "+500" even before the store title loads. Falls back
@@ -38,7 +39,12 @@ function AuthGate() {
   return (
     <View style={styles.gate}>
       <View style={styles.gateIcon}>
-        <Feather name="lock" size={28} color={C.primary} />
+        <LottieView
+          source={lockAnimation as never}
+          autoPlay
+          loop
+          style={styles.gateLottie}
+        />
       </View>
       <Text style={styles.gateTitle}>Sign in required</Text>
       <Text style={styles.gateText}>
@@ -424,6 +430,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
+    overflow: "hidden",
+  },
+  gateLottie: {
+    width: 48,
+    height: 48,
   },
   gateTitle: {
     fontSize: 18,
