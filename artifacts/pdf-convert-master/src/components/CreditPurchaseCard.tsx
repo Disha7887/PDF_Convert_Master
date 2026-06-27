@@ -206,13 +206,6 @@ export const CreditPurchaseCard: React.FC<{ className?: string }> = ({
             </p>
           </div>
         )}
-
-        {!creditsEnabled && (
-          <p className="text-xs text-gray-500 mt-6 pt-6 border-t border-gray-100">
-            Buying credits on the web isn't available right now. You can top up
-            credit packs in the PDF Genius mobile app.
-          </p>
-        )}
       </div>
     </Card>
   );
