@@ -5,8 +5,10 @@ import { Label } from "@/components/ui/label";
 import { useLocation } from "wouter";
 import { requestPasswordReset } from "@/lib/profile";
 import { Mail, ArrowLeft, KeyRound } from "lucide-react";
+import { useSeo } from "@/lib/useSeo";
 
 export const ForgotPassword: React.FC = () => {
+  useSeo({ title: "Forgot Password", canonicalPath: "/forgot-password", noindex: true });
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -1,8 +1,15 @@
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlansManager } from "@/components/PlansManager";
+import { useSeo } from "@/lib/useSeo";
 
 export const Pricing: React.FC = () => {
+  useSeo({
+    title: "Pricing — Free PDF Tools & Developer API",
+    description:
+      "Every PDF Genius web tool is free, no account required. Pricing unlocks our developer API for programmatic PDF conversion at scale.",
+    canonicalPath: "/pricing",
+  });
   const { isAuthenticated } = useAuth();
 
   return (

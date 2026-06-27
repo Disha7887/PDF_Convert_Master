@@ -6,8 +6,10 @@ import { useLocation } from "wouter";
 import { resetPassword, requestPasswordReset } from "@/lib/profile";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck } from "lucide-react";
 import AuthResultIcon from "@/components/AuthResultIcon";
+import { useSeo } from "@/lib/useSeo";
 
 export const ResetPassword: React.FC = () => {
+  useSeo({ title: "Reset Password", canonicalPath: "/reset-password", noindex: true });
   const [, setLocation] = useLocation();
   const initialEmail = new URLSearchParams(window.location.search).get("email") || "";
 

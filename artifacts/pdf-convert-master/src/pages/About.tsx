@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useLocation } from "wouter";
+import { useSeo } from "@/lib/useSeo";
 import { 
   Shield, 
   Zap, 
@@ -15,6 +16,12 @@ import {
 } from "lucide-react";
 
 export const About = (): JSX.Element => {
+  useSeo({
+    title: "About PDF Genius",
+    description:
+      "Learn about PDF Genius — the free, secure, browser-based suite of PDF and image tools trusted by millions to convert, edit and manage documents.",
+    canonicalPath: "/about",
+  });
   const [, setLocation] = useLocation();
 
   const coreValues = [

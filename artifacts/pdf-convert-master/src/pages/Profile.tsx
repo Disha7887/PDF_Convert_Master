@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile, changePassword, uploadAvatar, deleteAvatar } from "@/lib/profile";
 import { Camera, User as UserIcon, Lock, Check } from "lucide-react";
+import { useSeo } from "@/lib/useSeo";
 
 export const Profile: React.FC = () => {
+  useSeo({ title: "My Profile", canonicalPath: "/dashboard/profile", noindex: true });
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 

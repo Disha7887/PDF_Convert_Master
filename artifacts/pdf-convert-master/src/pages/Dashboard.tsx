@@ -10,6 +10,7 @@ import { authedJson } from "@/lib/authedFetch";
 import { useLocation } from "wouter";
 import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Trash2 } from "lucide-react";
 import { ProcessingSpinner } from "@/components/processing-spinner";
+import { useSeo } from "@/lib/useSeo";
 import { downloadFromUrl } from "@/lib/download";
 import { getOutputFormatByServerType, getToolConfigByServerType } from "@/lib/toolConfig";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
@@ -161,6 +162,7 @@ const ActivityItem: React.FC<{
 };
 
 export const Dashboard: React.FC = () => {
+  useSeo({ title: "Dashboard", canonicalPath: "/dashboard", noindex: true });
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();

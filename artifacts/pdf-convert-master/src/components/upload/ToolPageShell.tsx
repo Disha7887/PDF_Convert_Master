@@ -1,6 +1,7 @@
 import React from "react";
 import { ShieldCheck } from "lucide-react";
 import { AnimatedBackground } from "@/components/ui/animated-background";
+import { useSeo } from "@/lib/useSeo";
 
 export interface ToolPageShellProps {
   /** Page heading. */
@@ -43,6 +44,22 @@ export const ToolPageShell: React.FC<ToolPageShellProps> = ({
   showHeader = true,
   children,
 }) => {
+  const jsonLd = React.useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: `${title} | PDF Genius`,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Any (web-based)",
+      browserRequirements: "Requires JavaScript. Runs in any modern browser.",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      description,
+    }),
+    [title, description],
+  );
+
+  useSeo({ title, description, jsonLd });
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-white">
       <AnimatedBackground particleCount={particleCount} className="opacity-60" />

@@ -7,8 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Phone, Mail, MessageSquare, HeadphonesIcon, MapPin, Clock, Car, Train, Shield, Cloud, Lock, CheckCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSeo } from "@/lib/useSeo";
 
 export const Contact = (): JSX.Element => {
+  useSeo({
+    title: "Contact & Support",
+    description:
+      "Get in touch with the PDF Genius team. Questions, feedback or support for our free online PDF and image tools — we're here to help.",
+    canonicalPath: "/contact",
+  });
   const [selectedPriority, setSelectedPriority] = useState("medium");
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0); // First FAQ expanded by default
   const [selectedCategory, setSelectedCategory] = useState("technical");

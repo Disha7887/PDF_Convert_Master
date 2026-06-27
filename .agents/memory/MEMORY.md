@@ -78,3 +78,4 @@
 - [Conversion delete purges durable copy](conversion-delete-purge.md) — DELETE /api/download/:jobId removes S3+DB+memory; S3 delete is authoritative (fail→500, don't orphan); web toast / mobile best-effort; jobId on both History+Files entries.
 - [Avatar storage](avatar-storage.md) — profile photos stay in Backblaze (key `avatars/<userId>`), NOT Supabase (user-confirmed); DELETE /api/auth/avatar clears url to "".
 - [Mobile edited-filename persist](mobile-edited-filename-persist.md) — History/Files written at conversion time w/ original name; rename is PATCHED on download-confirm via savedEntryRef, don't move the persist.
+- [Per-route SEO (web SPA)](web-seo-per-route.md) — useSeo hook drives head tags client-side per route; public=index, auth/account=noindex; code SEO won't index instantly (needs Search Console + sitemap submit).

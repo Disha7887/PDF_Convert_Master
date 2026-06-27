@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
+import { useSeo } from "@/lib/useSeo";
 import {
   Upload,
   Download,
@@ -1015,6 +1016,12 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
 };
 
 export const Tools: React.FC = () => {
+  useSeo({
+    title: "All PDF & Image Tools — Free Online",
+    description:
+      "Browse every free PDF Genius tool: convert, merge, split, compress, rotate, sign, OCR PDFs plus resize, crop and convert images. No signup, no watermarks.",
+    canonicalPath: "/tools",
+  });
   const [activeFilter, setActiveFilter] = useState("All Tools");
 
   const mainToolKeys = [

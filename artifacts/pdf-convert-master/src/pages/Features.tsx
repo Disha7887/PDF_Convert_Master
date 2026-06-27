@@ -2,8 +2,15 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Play, ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
+import { useSeo } from "@/lib/useSeo";
 
 export const Features: React.FC = () => {
+  useSeo({
+    title: "Features — Fast, Secure PDF & Image Tools",
+    description:
+      "Discover PDF Genius features: convert, edit, merge, split, compress, sign, OCR and more. Fast, private, browser-based processing with no watermarks.",
+    canonicalPath: "/features",
+  });
   const [, setLocation] = useLocation();
 
   const features = [
