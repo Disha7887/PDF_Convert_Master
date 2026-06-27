@@ -7,9 +7,9 @@ import { useSeo } from "@/lib/useSeo";
 
 export const Body = (): JSX.Element => {
   useSeo({
-    title: "PDF Genius — Free Online PDF Converter, Editor & Tools",
+    title: "PDF Genius — Free Online PDF Converter & Editor, No Signup",
     description:
-      "Convert, edit, merge, split, compress, sign and OCR PDFs free in your browser. 27+ fast, secure PDF and image tools — no signup, no watermarks.",
+      "Convert, edit, merge, split & compress PDFs free in your browser. 100% free — no signup, no email, no credit card. Fast, secure, unlimited PDF tools.",
     canonicalPath: "/",
     jsonLd: {
       "@context": "https://schema.org",

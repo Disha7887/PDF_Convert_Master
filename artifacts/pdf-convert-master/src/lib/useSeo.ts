@@ -12,9 +12,9 @@ import { useLocation } from "wouter";
 
 const SITE_URL = "https://pdfgenius.app";
 const BRAND = "PDF Genius";
-const DEFAULT_TITLE = `${BRAND} — Convert, Edit & Manage PDFs Effortlessly`;
+const DEFAULT_TITLE = `${BRAND} — Free Online PDF Converter & Editor, No Signup`;
 const DEFAULT_DESCRIPTION =
-  "PDF Genius lets you convert, edit, merge, split, compress, and manage PDFs right in your browser — fast, secure, and effortless.";
+  "Convert, edit, merge, split & compress PDFs free in your browser. 100% free — no signup, no email, no credit card. Fast, secure, unlimited PDF tools.";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 
 export interface SeoOptions {
