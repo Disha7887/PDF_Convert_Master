@@ -67,6 +67,7 @@ function RootLayoutNav() {
       <Stack.Screen name="history" options={{ title: "History" }} />
 
       {/* Auth — popup over the current screen */}
+      <Stack.Screen name="auth/index" options={{ headerShown: false }} />
       <Stack.Screen
         name="auth/sign-in"
         options={{
