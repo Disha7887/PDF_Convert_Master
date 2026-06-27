@@ -2494,6 +2494,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mimeType: result.mimeType || "application/pdf",
           filename: outputFilename
         });
+
+        // Persist to durable object storage so the merged file can be
+        // re-downloaded anytime — even after the in-memory copy is purged or the
+        // server restarts. Best-effort: a storage failure must not fail the job.
+        try {
+          await saveConvertedFile(job.id, result.convertedBuffer, result.mimeType || "application/pdf");
+        } catch (storageError) {
+          console.error(`Failed to persist merged file for job ${job.id} to object storage:`, storageError);
+        }
+
         await storage.updateConversionJobStatus(
           job.id,
           "completed",

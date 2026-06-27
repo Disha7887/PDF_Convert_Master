@@ -24,8 +24,8 @@ import FileBrokenIcon from "@/components/FileBrokenIcon";
 import { Button, Card, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
-import { addFile } from "@/constants/files";
-import { addHistory } from "@/constants/history";
+import { addFile, updateFile } from "@/constants/files";
+import { addHistory, updateHistory } from "@/constants/history";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts } from "@/constants/theme";
@@ -395,6 +395,9 @@ export default function ConvertScreen() {
       // LoginRequiredModal in history/files), after which they're asked to log
       // in. The createdAt/timestamp recorded here anchors that window.
       const createdAt = Date.now();
+      // Remember which history/files entries this conversion created so a later
+      // rename in the download modal can patch them (see onConfirmDownload).
+      savedEntryRef.current = { historyId: `h_${createdAt}`, fileId: `f_${createdAt}` };
       await addHistory({
         id: `h_${createdAt}`,
         toolId: tool.id,
@@ -482,6 +485,10 @@ export default function ConvertScreen() {
   // while the format modal is still animating out makes iOS silently drop it.
   const pendingActionRef = useRef<(() => void | Promise<void>) | null>(null);
 
+  // The history/files entry ids created for the current conversion, so a rename
+  // in the download modal can patch their stored name to match what was saved.
+  const savedEntryRef = useRef<{ historyId: string; fileId: string } | null>(null);
+
   const onConfirmDownload = useCallback(async () => {
     if (!tool || !output) return;
     const formats = getDownloadFormats(tool, {
@@ -491,6 +498,15 @@ export default function ConvertScreen() {
     const fmt = formats.find((f) => f.id === selectedFormat) ?? formats[0];
     const base = (fileName.trim() || "output").replace(/\.[^./]+$/, "") || "output";
     const fullName = `${base}.${fmt.ext}`;
+
+    // Commit the user-edited name (and chosen extension) to the already-saved
+    // history/files entries so the Files and History tabs show what was actually
+    // downloaded, not the original server output name.
+    const saved = savedEntryRef.current;
+    if (saved) {
+      await updateHistory(saved.historyId, { fileName: fullName, outputFormat: fmt.ext.toUpperCase() });
+      await updateFile(saved.fileId, { name: fullName, outputFormat: fmt.ext.toUpperCase() });
+    }
 
     const prepareUri = async (): Promise<string> => {
       switch (fmt.produce.kind) {

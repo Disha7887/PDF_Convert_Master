@@ -41,6 +41,20 @@ export async function addHistory(entry: HistoryEntry): Promise<void> {
   }
 }
 
+/** Patches an existing history entry (e.g. the user-edited file name). */
+export async function updateHistory(
+  id: string,
+  patch: Partial<HistoryEntry>,
+): Promise<void> {
+  try {
+    const current = await loadHistory();
+    const next = current.map((e) => (e.id === id ? { ...e, ...patch } : e));
+    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+  } catch {
+    // best-effort; history is non-critical
+  }
+}
+
 export async function clearHistory(): Promise<void> {
   try {
     await AsyncStorage.removeItem(HISTORY_KEY);

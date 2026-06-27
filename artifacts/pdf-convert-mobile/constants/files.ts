@@ -49,6 +49,20 @@ export async function addFile(entry: StoredFileEntry): Promise<void> {
   }
 }
 
+/** Patches an existing file entry (e.g. the user-edited display name). */
+export async function updateFile(
+  id: string,
+  patch: Partial<StoredFileEntry>,
+): Promise<void> {
+  try {
+    const current = await loadFiles();
+    const next = current.map((f) => (f.id === id ? { ...f, ...patch } : f));
+    await AsyncStorage.setItem(FILES_KEY, JSON.stringify(next));
+  } catch {
+    // best-effort; the file list is non-critical local state
+  }
+}
+
 export async function removeFile(id: string): Promise<void> {
   try {
     const current = await loadFiles();
