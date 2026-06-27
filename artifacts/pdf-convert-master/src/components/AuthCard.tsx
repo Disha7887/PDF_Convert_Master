@@ -70,11 +70,11 @@ export function AuthCard({ mode }: { mode: Mode }) {
     [mode],
   );
 
-  // Bounce an already-signed-in visitor home, but never mid-submit
-  // or while the welcome animation is playing.
+  // Bounce an already-signed-in visitor to their dashboard home, but never
+  // mid-submit or while the welcome animation is playing.
   useEffect(() => {
     if (isAuthenticated && !loading && !isSubmitting && !result) {
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [isAuthenticated, loading, isSubmitting, result, setLocation]);
 
@@ -99,7 +99,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
       const res = await googleSignin(code);
       if (res.success) {
         setResult(res.isNewUser ? "signup-success" : "signin-success");
-        redirectTimer.current = setTimeout(() => setLocation("/"), REDIRECT_DELAY);
+        redirectTimer.current = setTimeout(() => setLocation("/dashboard"), REDIRECT_DELAY);
       } else {
         setResult("error");
         setError(res.error || "Google sign-in failed");
@@ -166,7 +166,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
           setInfo("We sent a 6-digit code to your email.");
         } else {
           setResult("signin-success");
-          redirectTimer.current = setTimeout(() => setLocation("/"), REDIRECT_DELAY);
+          redirectTimer.current = setTimeout(() => setLocation("/dashboard"), REDIRECT_DELAY);
         }
       } else {
         setResult("error");
@@ -195,7 +195,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
       const res = await verifySignupOtp(email, code);
       if (res.success) {
         setResult("signup-success");
-        redirectTimer.current = setTimeout(() => setLocation("/"), REDIRECT_DELAY);
+        redirectTimer.current = setTimeout(() => setLocation("/dashboard"), REDIRECT_DELAY);
       } else {
         setError(res.error || "Invalid or expired code");
       }
