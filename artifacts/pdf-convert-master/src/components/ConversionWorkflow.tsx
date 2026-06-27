@@ -5,6 +5,7 @@ import { addGuestDownload, isGuest } from "@/lib/guestDownloads";
 import { GuestRecentDownloads } from "@/components/GuestRecentDownloads";
 import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
+import { LoginRequiredDialog } from "@/components/LoginRequiredDialog";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -63,6 +64,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   const [isConverting, setIsConverting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<AuthError | null>(null);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [password, setPassword] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -446,9 +448,14 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         description: `${file.file.name} is being downloaded`,
       });
     } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not download the file.";
+      if (/log in/i.test(message)) {
+        setLoginDialogOpen(true);
+        return;
+      }
       toast({
         title: "Download failed",
-        description: err instanceof Error ? err.message : "Could not download the file.",
+        description: message,
         variant: "destructive",
       });
     }
@@ -460,16 +467,25 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     void (async () => {
       let succeeded = 0;
       let failed = 0;
+      let loginRequired = false;
       for (const file of completedFiles) {
         if (!file.downloadUrl) continue;
         try {
           await downloadFromUrl(file.downloadUrl, file.file.name);
           succeeded += 1;
-        } catch {
+        } catch (err) {
           failed += 1;
+          if (err instanceof Error && /log in/i.test(err.message)) loginRequired = true;
         }
         // Small gap so the browser doesn't throttle/block rapid downloads.
         await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+
+      // A login-required failure is the actionable case: show the clear,
+      // animated sign-in dialog instead of a generic "downloads failed" toast.
+      if (loginRequired && succeeded === 0) {
+        setLoginDialogOpen(true);
+        return;
       }
 
       if (failed === 0) {
@@ -833,6 +849,7 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
         </div>
       </div>
       )}
+      <LoginRequiredDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
     </ToolPageShell>
   );
 };

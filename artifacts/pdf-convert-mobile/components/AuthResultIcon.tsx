@@ -8,6 +8,7 @@ const welcome = require("../assets/lottie/auth-welcome.json");
 const signup = require("../assets/lottie/signup.json");
 const passwordReset = require("../assets/lottie/password-reset.json");
 const loginRequired = require("../assets/lottie/please-login.json");
+const downloadLoginRequired = require("../assets/lottie/download-login-required.json");
 
 export type AuthResultKind =
   | "success"
@@ -15,7 +16,8 @@ export type AuthResultKind =
   | "welcome"
   | "signup"
   | "password-reset"
-  | "login-required";
+  | "login-required"
+  | "download-login-required";
 
 const MAP: Record<AuthResultKind, unknown> = {
   success,
@@ -24,6 +26,7 @@ const MAP: Record<AuthResultKind, unknown> = {
   signup,
   "password-reset": passwordReset,
   "login-required": loginRequired,
+  "download-login-required": downloadLoginRequired,
 };
 
 export interface AuthResultIconProps {

@@ -25,7 +25,7 @@ export function LoginRequiredModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <AuthResultIcon kind="login-required" size={140} loop />
+          <AuthResultIcon kind="download-login-required" size={140} loop />
           <Text style={styles.title}>Please log in to download</Text>
           <Text style={styles.body}>
             Free downloads stay available for 12 hours. Sign in to keep access to

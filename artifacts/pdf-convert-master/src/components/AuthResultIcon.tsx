@@ -4,8 +4,15 @@ import errorAnim from "@/assets/lottie/auth-error.json";
 import welcomeAnim from "@/assets/lottie/auth-welcome.json";
 import signupAnim from "@/assets/lottie/signup.json";
 import passwordResetAnim from "@/assets/lottie/password-reset.json";
+import downloadLoginRequiredAnim from "@/assets/lottie/download-login-required.json";
 
-export type AuthResultKind = "success" | "error" | "welcome" | "signup" | "password-reset";
+export type AuthResultKind =
+  | "success"
+  | "error"
+  | "welcome"
+  | "signup"
+  | "password-reset"
+  | "download-login-required";
 
 const MAP: Record<AuthResultKind, unknown> = {
   success: successAnim,
@@ -13,6 +20,7 @@ const MAP: Record<AuthResultKind, unknown> = {
   welcome: welcomeAnim,
   signup: signupAnim,
   "password-reset": passwordResetAnim,
+  "download-login-required": downloadLoginRequiredAnim,
 };
 
 export interface AuthResultIconProps {

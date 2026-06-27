@@ -190,7 +190,7 @@ export default function WorkspaceScreen() {
     } catch (err) {
       const status = (err as { status?: number } | null)?.status;
       if (status === 401 || status === 403) {
-        Alert.alert("Sign in required", "Please log in to download this file.");
+        setLoginPromptOpen(true);
       } else if (status === 404) {
         Alert.alert(
           "File unavailable",

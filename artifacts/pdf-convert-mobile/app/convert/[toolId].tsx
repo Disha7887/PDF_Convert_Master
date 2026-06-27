@@ -21,6 +21,7 @@ import {
 import ConverterStatusIcon from "@/components/ConverterStatusIcon";
 import DownloadFormatModal from "@/components/DownloadFormatModal";
 import FileBrokenIcon from "@/components/FileBrokenIcon";
+import LoginRequiredModal from "@/components/LoginRequiredModal";
 import { Button, Card, ScreenScroll } from "@/components/ui";
 import { API_ORIGIN } from "@/constants/api";
 import colors from "@/constants/colors";
@@ -218,6 +219,7 @@ export default function ConvertScreen() {
   const [downloadOpen, setDownloadOpen] = useState(preview === "download");
   const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
   const [fileName, setFileName] = useState("");
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -424,7 +426,17 @@ export default function ConvertScreen() {
         jobId,
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Conversion failed.");
+      const status = (e as { status?: number } | null)?.status;
+      const message = e instanceof Error ? e.message : "Conversion failed.";
+      const loginRequired =
+        status === 401 || status === 403 || /log in/i.test(message);
+      if (loginRequired) {
+        setStage("error");
+        setError("Please log in to download this file.");
+        setLoginPromptOpen(true);
+        return;
+      }
+      setError(message);
       setStage("error");
     }
   }, [tool, files, outputFormat, quality, needsPassword, password, isAuthenticated]);
@@ -1017,6 +1029,10 @@ export default function ConvertScreen() {
         fileName={fileName}
         onChangeFileName={setFileName}
         previewName={previewName}
+      />
+      <LoginRequiredModal
+        visible={loginPromptOpen}
+        onClose={() => setLoginPromptOpen(false)}
       />
     </>
   );
