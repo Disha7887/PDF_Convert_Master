@@ -224,6 +224,28 @@ export const PlansManager: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Deep-link from the dashboard sidebar ("Buy Credits"): scroll the credit card
+  // into view and clean the param so a refresh doesn't re-scroll.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("buy") !== "credits") return;
+    params.delete("buy");
+    const qs = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      window.location.pathname + (qs ? `?${qs}` : ""),
+    );
+    // Wait a tick so the card is mounted before scrolling.
+    const t = setTimeout(() => {
+      document
+        .getElementById("buy-credits")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const meters =
     currentPlan && usage
       ? [
@@ -298,7 +320,7 @@ export const PlansManager: React.FC = () => {
           </Card>
 
           {/* Credit Balance + custom-amount purchase (shared across web & mobile) */}
-          <Card className="mb-8">
+          <Card className="mb-8" id="buy-credits">
             <div className="p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-[#f7433d]/10 flex items-center justify-center shrink-0">
