@@ -23,6 +23,7 @@
 - [Google OAuth web](google-oauth-web.md) — GIS popup code flow, redirect_uri "postmessage"; client ID served from backend config endpoint; needs JS origins authorized in Google Cloud.
 - [Google sign-in mobile](google-oauth-mobile.md) — native login = backend-mediated browser OAuth reusing the WEB client; redirect allowlist MUST stay pdfgenius:// only (no exp://) or JWT exfiltrates.
 - [Google sign-in mobile-on-WEB](mobile-web-oauth-popup.md) — Expo-web Google login = top-level popup + BroadcastChannel relay (?popup=1); same-window redirect 403s in iframe, COOP kills window.opener & popup.closed.
+- [Google sign-in mobile PROD base URL](mobile-google-oauth-prod.md) — /mobile/start 503'd on Railway (no PUBLIC_APP_URL/REPLIT_DOMAINS); fallback derives base from x-forwarded host; redirect_uri must be registered in Google Console.
 - [OAuth deep-link +not-found](oauth-deeplink-notfound.md) — Android leaks the `pdfgenius://auth` callback to expo-router → /auth had no index → +not-found; fix = catch route app/auth/index.tsx that redirects post-login.
 - [Mobile convert useCallback deps](mobile-convert-callback-deps.md) — convert callback must list every option-state dep (password etc.) or it sends stale values; deps consts must be declared above the hook + null-safe.
 - [qpdf lock/unlock PDF](qpdf-lock-unlock.md) — node-qpdf2 returned Buffer corrupts binary; use qpdf `output` file path + fs.readFile; needs qpdf system binary; rejects with stderr string.
@@ -35,7 +36,7 @@
 - [vite.config deploy build](vite-config-deploy-build.md) — config must NOT throw on missing PORT/BASE_PATH; deploy build step runs without [services.env]; default port/base, validate only for dev/serve/preview.
 - [Web auth dark-sheet design](web-auth-dark-sheet.md) — web /signin /signup mirror mobile AuthSheet (shared AuthCard, dark #171c28, coral, progressive step, Lottie welcome/error); render standalone (no DynamicLayout); signup auto-logs in.
 - [Conversion output persistence](conversion-output-persistence.md) — outputs persisted to object storage (key `conversions/<jobId>`); /api/download is memory-first then object-storage fallback, keep durable copy; native re-download must check HTTP status.
-- [iOS modal-defer share sheet](ios-modal-defer-share-sheet.md) — present OS Save/Share only from a closing RN modal's onDismiss on iOS (pendingActionRef); Android runs inline. Android SAF failures fall back to shareFile.
+- [iOS modal-defer share sheet](ios-modal-defer-share-sheet.md) — present OS Save/Share only from a closing RN modal's onDismiss on iOS (pendingActionRef); Android runs inline; the download itself succeeds — only the share-sheet presentation races. Android SAF failures fall back to shareFile.
 - [iOS file save / "download"](ios-file-save.md) — iOS Download must use the system Save sheet (expo-sharing); silent Documents copy is invisible in Expo Go; single Download button, defer sheet to modal onDismiss.
 - [Conversion stats pipeline](conversion-stats-pipeline.md) — /api/usage sums per-job output_file_size (set at completion via updateConversionJobStatus); conversions are async + anonymous-by-default; mobile attribution needs a fresh EAS APK.
 - [Mobile file save](mobile-direct-download.md) — one saveFile() entry point: Android SAF picked-once folder, iOS system Save sheet (see ios-file-save.md), web anchor; don't treat SAF write errors as revoked perms.
@@ -43,11 +44,9 @@
 - [Mobile keyboard resize](mobile-keyboard-resize.md) — Android needs softwareKeyboardLayoutMode "resize" (not "pan") or keyboard hides bottom inputs; native change → needs fresh EAS build.
 - [Deploy architecture](deploy-architecture.md) — prod = Railway(api-server co-hosts web build, single origin) + Supabase + Expo EAS; pin pnpm@10 in root pkg for Railpack; mobile uses EXPO_PUBLIC_DOMAIN.
 - [S3 storage + Resend on Railway](storage-email-railway.md) — storage shifted off Replit sidecar to provider-agnostic S3 (s3Storage.ts); email reads RESEND_API_KEY env, connector only as fallback; old objectStorage/objectAcl deleted.
-- [iOS modal-share race](ios-modal-share-race.md) — closing an RN Modal then immediately Sharing.shareAsync silently fails on iOS; defer the share to the Modal's onDismiss.
 - [Web download in iframe](web-download-iframe-blob.md) — converted-file downloads must fetch→blob→`<a download>` (downloadFromUrl); window.open/anchor-nav is blocked in the Replit preview/canvas iframe.
 - [iOS Safari web download](web-ios-download.md) — deployed site on iPhone: <a download> opens blob inline, never saves; use navigator.share({files}) on iOS, anchor elsewhere.
 - [Mobile real-data mode](mobile-real-data-mode.md) — logged-in mobile uses real backend; token bridged via services/authToken.ts; conversions must send Bearer token; dashboard+usage share services/account.ts#fetchUsage.
-- [Liquid Glass material (mobile)](liquid-glass-mobile.md) — glossy look = custom `GlassSurface` (blur+sheen+border), works in Expo Go; needs ambient backdrop behind it; coral accent kept.
 - [Mobile auth dark sheet](auth-sheet-mobile.md) — sign-in/up share AuthSheet (dark sheet over photo); email-first progressive disclosure preserves mock password auth; Google/Apple are honest placeholders.
 - [Shared format chooser (mobile)](shared-format-chooser.md) — one DownloadFormatModal drives BOTH tool Download and scanner Save; select-then-confirm; context wording via props.
 - [Capture layer blocks editing](capture-layer-blocks-editing.md) — capture-tool overlay must render BELOW elements + keep elements interactive, or existing highlight/whiteout can't be moved while tool active; gesture machinery was a red herring.
