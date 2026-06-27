@@ -31,4 +31,15 @@ Double-handling (both paths firing on non-leaking devices) is idempotent — sam
 Bound the `/auth/user` fetch with an AbortController timeout so a hung request can't spin forever; the
 8s welcome→sign-in timeout now applies ONLY when no token/error param is present.
 
+**Capturing the token still isn't enough — navigation must be single-authority.** After capture worked,
+login succeeded but the app bounced BACK to sign-in. Two causes: (1) `<Redirect>` to `dashboardHome`,
+but `dashboard/index.tsx` renders its OWN sign-in gate while `!isAuthenticated`, so the brief auth-state
+propagation race showed that gate; (2) AuthSheet's "bounce already-signed-in visitor" effect + `onGoogle`
+raced the same navigation from the (still-stacked) transparentModal sign-in sheet. **Fix:** `auth/index`
+navigates IMPERATIVELY once (ref-guarded): `router.canDismiss?.() && router.dismissAll()` (try/catch) to
+tear down the auth modal stack, then `router.replace(ROUTES.home)` — the gate-free home TAB, never the
+gated dashboard. AuthSheet gets an `oauthHandoffRef` (set true at `onGoogle` start, cleared only on a
+genuine non-cancelled error) that suppresses its auto-bounce effect so it can't compete with the
+deep-link callback. Land OAuth on a gate-free route; let ONE screen own post-login navigation.
+
 **Build:** JS-only, so it works in Expo Go but Play testers need a fresh EAS build to verify.

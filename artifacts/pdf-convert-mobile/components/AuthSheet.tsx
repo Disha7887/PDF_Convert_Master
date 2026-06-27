@@ -67,6 +67,11 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
     "signup-success" | "signin-success" | "error" | "unavailable" | null
   >(null);
   const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set once a Google sign-in is launched. On Android the OAuth redirect deep
+  // link is handled by the /auth callback screen, which owns navigation after
+  // login — so this sheet must NOT also auto-bounce to the dashboard (that race
+  // is what dumped users back on the sign-in page). Cleared only on a real error.
+  const oauthHandoffRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -98,7 +103,14 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
     // celebration) is playing. signin() flips isAuthenticated before its promise
     // resolves, so without the isSubmitting/result gate this effect would fire
     // first and skip the welcome animation.
-    if (isAuthenticated && !loading && !isSubmitting && !googleLoading && !result) {
+    if (
+      isAuthenticated &&
+      !loading &&
+      !isSubmitting &&
+      !googleLoading &&
+      !result &&
+      !oauthHandoffRef.current
+    ) {
       router.replace(ROUTES.dashboardHome as never);
     }
   }, [isAuthenticated, loading, isSubmitting, googleLoading, result, router]);
@@ -112,6 +124,9 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
     setError(null);
     setInfo(null);
     if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    // Hand navigation off to the /auth deep-link callback screen (Android) so
+    // this sheet's auto-bounce effect doesn't race it back onto sign-in.
+    oauthHandoffRef.current = true;
     setGoogleLoading(true);
     try {
       const res = await googleSignin();
@@ -122,6 +137,8 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
           2600,
         );
       } else if (!res.cancelled) {
+        // A genuine failure — let the user retry from this sheet.
+        oauthHandoffRef.current = false;
         setResult("error");
         setError(res.error || "Google sign-in failed");
       }

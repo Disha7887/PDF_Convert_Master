@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -22,10 +22,12 @@ const C = colors.light;
  * redirect on `isAuthenticated`).
  */
 export default function AuthRedirectScreen() {
+  const router = useRouter();
   const { user, isAuthenticated, completeGoogleLogin } = useAuth();
   const params = useLocalSearchParams<{ token?: string; error?: string }>();
   const [failed, setFailed] = useState(false);
   const handledRef = useRef(false);
+  const navigatedRef = useRef(false);
 
   const tokenParam = typeof params?.token === "string" ? params.token : null;
   const errorParam = typeof params?.error === "string" ? params.error : null;
@@ -54,8 +56,24 @@ export default function AuthRedirectScreen() {
     return () => clearTimeout(t);
   }, [tokenParam, errorParam]);
 
-  if (isAuthenticated) return <Redirect href={ROUTES.dashboardHome as never} />;
-  if (failed) return <Redirect href={ROUTES.signIn as never} />;
+  // Navigate imperatively (once) so we can FIRST tear down the auth modal stack
+  // (the transparent sign-in/sign-up sheet sitting underneath this callback
+  // screen) and THEN land on the gate-free home tab. Using <Redirect> to the
+  // dashboard left that sheet in the stack and could hit the dashboard's own
+  // sign-in gate during auth-state propagation — which is what bounced users
+  // back onto the sign-in page.
+  useEffect(() => {
+    if (navigatedRef.current) return;
+    if (!isAuthenticated && !failed) return;
+    navigatedRef.current = true;
+    const dest = isAuthenticated ? ROUTES.home : ROUTES.signIn;
+    try {
+      if (router.canDismiss?.()) router.dismissAll();
+    } catch {
+      // dismissAll throws if there's nothing to dismiss — safe to ignore.
+    }
+    router.replace(dest as never);
+  }, [isAuthenticated, failed, router]);
 
   const firstName =
     user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "";
