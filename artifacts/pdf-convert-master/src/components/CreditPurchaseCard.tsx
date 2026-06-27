@@ -1,0 +1,219 @@
+import React, { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Zap, CreditCard } from "lucide-react";
+import { ProcessingSpinner } from "@/components/processing-spinner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import {
+  type BillingConfig,
+  fetchBillingConfig,
+  startCreditsCheckout,
+  fetchMe,
+} from "@/lib/plans";
+import type { User } from "@workspace/db";
+
+/**
+ * Self-contained credit balance + custom-amount purchase card. Owns its own
+ * checkout-return handling (`?checkout=credits-success` / `cancelled`) so it can
+ * be dropped on any page (e.g. the dedicated Buy Credits page).
+ */
+export const CreditPurchaseCard: React.FC<{ className?: string }> = ({
+  className = "",
+}) => {
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
+  const [creditAmount, setCreditAmount] = useState("5");
+  const [creditBusy, setCreditBusy] = useState(false);
+
+  const { data: billingConfig } = useQuery<BillingConfig>({
+    queryKey: ["/api/billing/config"],
+    queryFn: fetchBillingConfig,
+  });
+
+  const creditsCfg = billingConfig?.credits;
+  const creditsEnabled = Boolean(creditsCfg?.enabled);
+  const perUsd = creditsCfg?.creditsPerUsd ?? 100;
+  const minUsd = creditsCfg?.minUsd ?? 1;
+  const maxUsd = creditsCfg?.maxUsd ?? 500;
+  const parsedAmount = parseFloat(creditAmount);
+  const amountValid =
+    Number.isFinite(parsedAmount) &&
+    parsedAmount >= minUsd &&
+    parsedAmount <= maxUsd;
+  const creditsToReceive = amountValid ? Math.round(parsedAmount * perUsd) : 0;
+
+  // Redirect the browser into a Dodo checkout for a custom $ amount of credits.
+  const handleBuyCredits = async () => {
+    if (!amountValid) {
+      toast({
+        title: "Enter a valid amount",
+        description: `Choose between $${minUsd} and $${maxUsd}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setCreditBusy(true);
+    try {
+      const url = await startCreditsCheckout(parsedAmount);
+      window.location.href = url;
+    } catch (err: any) {
+      toast({
+        title: "Could not start checkout",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+      setCreditBusy(false);
+    }
+  };
+
+  // Handle the return from a Dodo credits checkout. Credits land via the payment
+  // webhook, which may arrive a moment after the redirect, so poll a few times.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("checkout");
+    if (status !== "credits-success" && status !== "cancelled") return;
+    // Clean the URL so a refresh doesn't re-trigger the toast/poll.
+    window.history.replaceState({}, "", window.location.pathname);
+
+    if (status === "cancelled") {
+      toast({
+        title: "Checkout cancelled",
+        description: "No changes were made.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Payment successful",
+      description: "Your credits are being added…",
+    });
+    const before = user?.credits ?? 0;
+    let tries = 0;
+    const poll = async () => {
+      tries++;
+      try {
+        const me = await fetchMe();
+        updateUser(me as User);
+        if ((me?.credits ?? 0) > before) {
+          toast({
+            title: "Credits added",
+            description: `Your balance is now ${(me.credits ?? 0).toLocaleString()} credits.`,
+          });
+          return;
+        }
+      } catch {
+        // ignore and retry
+      }
+      if (tries < 8) setTimeout(poll, 2000);
+    };
+    poll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Card className={className}>
+      <div className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-[#f7433d]/10 flex items-center justify-center shrink-0">
+            <Zap className="w-6 h-6 text-[#f7433d]" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-gray-900">
+              Credit Balance
+            </h3>
+            <p className="text-sm text-gray-600">
+              Top up any amount — your balance is shared across web and mobile.
+            </p>
+          </div>
+          <span
+            className="text-3xl font-bold text-[#f7433d]"
+            data-testid="text-credit-balance"
+          >
+            {(user?.credits ?? 0).toLocaleString()}
+          </span>
+        </div>
+
+        {creditsEnabled && (
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+              Buy credits
+            </h4>
+            {/* Quick-pick dollar presets */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[5, 10, 25, 50, 100].map((amt) => {
+                const active = parseFloat(creditAmount) === amt;
+                return (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setCreditAmount(String(amt))}
+                    disabled={creditBusy}
+                    data-testid={`button-credit-preset-${amt}`}
+                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                      active
+                        ? "border-[#f7433d] bg-[#f7433d]/5 text-[#f7433d]"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Custom dollar amount */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="relative flex-1 max-w-[220px]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                  $
+                </span>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min={minUsd}
+                  max={maxUsd}
+                  step="1"
+                  value={creditAmount}
+                  onChange={(e) => setCreditAmount(e.target.value)}
+                  disabled={creditBusy}
+                  className="pl-7"
+                  placeholder="Enter amount"
+                  data-testid="input-credit-amount"
+                />
+              </div>
+              <Button
+                className="bg-[#f7433d] hover:bg-[#d93832] text-white"
+                onClick={handleBuyCredits}
+                disabled={creditBusy || !amountValid}
+                data-testid="button-buy-credits"
+              >
+                {creditBusy ? (
+                  <ProcessingSpinner size={16} tone="light" className="mr-2" />
+                ) : (
+                  <CreditCard className="w-4 h-4 mr-2" />
+                )}
+                {amountValid
+                  ? `Buy ${creditsToReceive.toLocaleString()} credits`
+                  : "Buy credits"}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              ${1} = {perUsd.toLocaleString()} credits • min ${minUsd}, max $
+              {maxUsd.toLocaleString()}. Secure checkout via Dodo Payments.
+            </p>
+          </div>
+        )}
+
+        {!creditsEnabled && (
+          <p className="text-xs text-gray-500 mt-6 pt-6 border-t border-gray-100">
+            Buying credits on the web isn't available right now. You can top up
+            credit packs in the PDF Genius mobile app.
+          </p>
+        )}
+      </div>
+    </Card>
+  );
+};
