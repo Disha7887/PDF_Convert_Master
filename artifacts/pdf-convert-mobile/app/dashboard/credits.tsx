@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
 import React, { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -16,6 +17,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/lib/revenuecat";
 
 const C = colors.light;
+
+// Animated credit coin used in the balance hero. Bundled as a real asset (no
+// placeholder) so it renders identically in the production build.
+const creditAnimation = require("../../assets/lottie/credit.json");
+
+// Pull the credit count out of a pack's store identifier (e.g. "credits_500" ->
+// 500) so each box can show "+500" even before the store title loads. Falls back
+// to null when the identifier doesn't encode an amount.
+function packCreditAmount(pkg: PurchasesPackage): number | null {
+  const id = `${pkg.product.identifier ?? pkg.identifier ?? ""}`;
+  const match = id.match(/(\d[\d,]*)/);
+  if (!match) return null;
+  const n = Number(match[1].replace(/,/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 function AuthGate() {
   const router = useRouter();
@@ -139,7 +155,12 @@ export default function CreditsScreen() {
       {/* Balance */}
       <View style={styles.balanceCard}>
         <View style={styles.balanceIcon}>
-          <Feather name="zap" size={26} color="#ffffff" />
+          <LottieView
+            source={creditAnimation as never}
+            autoPlay
+            loop
+            style={styles.balanceLottie}
+          />
         </View>
         <Text style={styles.balanceValue} testID="text-credit-balance">
           {credits.toLocaleString()}
@@ -155,35 +176,40 @@ export default function CreditsScreen() {
       {available && creditPackages.length > 0 ? (
         <>
           <Text style={styles.sectionTitle}>Credit Packs</Text>
-          <View style={{ gap: 12 }}>
-            {creditPackages.map((pkg) => (
-              <View
-                key={pkg.identifier}
-                style={styles.packRow}
-                testID={`pack-${pkg.identifier}`}
-              >
-                <View style={styles.packIcon}>
-                  <Feather name="zap" size={18} color={C.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.packTitle}>
-                    {pkg.product.title || pkg.product.identifier}
+          {/* Box / grid view — at least two packs per row so the options read as
+              selectable tiles. Each tile maps to a real store product. */}
+          <View style={styles.packGrid}>
+            {creditPackages.map((pkg) => {
+              const amount = packCreditAmount(pkg);
+              return (
+                <View
+                  key={pkg.identifier}
+                  style={styles.packBox}
+                  testID={`pack-${pkg.identifier}`}
+                >
+                  <View style={styles.packIcon}>
+                    <Feather name="zap" size={20} color={C.primary} />
+                  </View>
+                  <Text style={styles.packAmount}>
+                    {amount ? `+${amount.toLocaleString()}` : pkg.product.title || "Credits"}
                   </Text>
+                  <Text style={styles.packCaption}>credits</Text>
                   {pkg.product.description ? (
                     <Text style={styles.packDesc} numberOfLines={2}>
                       {pkg.product.description}
                     </Text>
                   ) : null}
+                  <Button
+                    label={pkg.product.priceString}
+                    variant="primary"
+                    size="sm"
+                    onPress={() => handleBuyCredits(pkg)}
+                    style={styles.packBuyBtn}
+                    testID={`button-buy-${pkg.identifier}`}
+                  />
                 </View>
-                <Button
-                  label={pkg.product.priceString}
-                  variant="primary"
-                  size="sm"
-                  onPress={() => handleBuyCredits(pkg)}
-                  testID={`button-buy-${pkg.identifier}`}
-                />
-              </View>
-            ))}
+              );
+            })}
           </View>
 
           <Button
@@ -275,13 +301,18 @@ const styles = StyleSheet.create({
     backgroundColor: C.primary,
   },
   balanceIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 14,
+    overflow: "hidden",
+  },
+  balanceLottie: {
+    width: 60,
+    height: 60,
   },
   balanceValue: {
     fontSize: 48,
@@ -311,36 +342,54 @@ const styles = StyleSheet.create({
     fontFamily: fonts.headingBold,
     marginBottom: 12,
   },
-  packRow: {
+  packGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 12,
+  },
+  packBox: {
+    width: "48.5%",
     alignItems: "center",
-    gap: 12,
     backgroundColor: C.card,
     borderWidth: 1,
     borderColor: C.border,
     borderRadius: 16,
-    padding: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
     ...cardShadow,
   },
   packIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: C.accent,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 10,
   },
-  packTitle: {
-    fontSize: 15,
+  packAmount: {
+    fontSize: 22,
     color: C.foreground,
-    fontFamily: fonts.bodySemibold,
+    fontFamily: fonts.headingBold,
+  },
+  packCaption: {
+    fontSize: 12,
+    color: C.mutedForeground,
+    fontFamily: fonts.bodyMedium,
+    marginTop: 1,
   },
   packDesc: {
-    fontSize: 12.5,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: "center",
     color: C.mutedForeground,
     fontFamily: fonts.body,
-    marginTop: 2,
+    marginTop: 6,
+  },
+  packBuyBtn: {
+    alignSelf: "stretch",
+    marginTop: 12,
   },
 
   unavailable: {
