@@ -45,6 +45,15 @@ interface AuthContextType {
   signout: () => void;
   /** Google sign-in via the system browser (backend-mediated OAuth). */
   googleSignin: () => Promise<{ success: boolean; error?: string; cancelled?: boolean }>;
+  /**
+   * Finish a Google sign-in from a token captured off the OAuth redirect deep
+   * link. On Android the `pdfgenius://auth?token=...` callback is often consumed
+   * by the router before `openAuthSessionAsync` can read it, so the `/auth`
+   * screen captures the token and calls this to load + persist the session.
+   */
+  completeGoogleLogin: (
+    token: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   /** Merge partial fields into the signed-in user and persist them locally. */
   updateUser: (updates: Partial<MockUser>, newToken?: string) => Promise<void>;
   /**
@@ -180,6 +189,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  // Load the account a token belongs to and persist the session. Shared by the
+  // in-app browser flow (googleSignin) and the deep-link callback screen.
+  const completeGoogleLogin = useCallback(
+    async (newToken: string) => {
+      if (!newToken) {
+        return { success: false, error: "Google sign-in failed. Please try again." };
+      }
+      // Bound the request so a hung connection can't leave the callback screen
+      // spinning on the welcome animation forever.
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/user`, {
+          headers: { Authorization: `Bearer ${newToken}` },
+          signal: controller.signal,
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.success || !data?.data?.user) {
+          return { success: false, error: "Could not load your account. Please try again." };
+        }
+        await persist(data.data.user, newToken);
+        return { success: true };
+      } catch {
+        return { success: false, error: "Network error. Please try again." };
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+    [persist],
+  );
+
   // Native Google sign-in. Opens the backend's OAuth start endpoint in the
   // system browser; the backend bounces through Google and redirects back to our
   // deep link with ?token=... (or ?error=...). We then load the account and
@@ -214,19 +254,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // We hold a valid session token; load the account it belongs to so the UI
       // has the user's name / plan / credits immediately.
-      const res = await fetch(`${API_BASE_URL}/auth/user`, {
-        headers: { Authorization: `Bearer ${newToken}` },
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.success || !data?.data?.user) {
-        return { success: false, error: "Could not load your account. Please try again." };
-      }
-      await persist(data.data.user, newToken);
-      return { success: true };
+      return completeGoogleLogin(newToken);
     } catch {
       return { success: false, error: "Network error. Please try again." };
     }
-  }, [persist]);
+  }, [completeGoogleLogin]);
 
   const updateUser = useCallback(
     async (updates: Partial<MockUser>, newToken?: string) => {
@@ -290,11 +322,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verifySignupOtp,
       signout,
       googleSignin,
+      completeGoogleLogin,
       updateUser,
       refreshUser,
       isAuthenticated: !!user && !!token,
     }),
-    [user, token, loading, signin, signup, verifySignupOtp, signout, googleSignin, updateUser, refreshUser],
+    [user, token, loading, signin, signup, verifySignupOtp, signout, googleSignin, completeGoogleLogin, updateUser, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

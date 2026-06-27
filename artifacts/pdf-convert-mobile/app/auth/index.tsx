@@ -1,5 +1,5 @@
 import { Redirect, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import AuthResultIcon from "@/components/AuthResultIcon";
@@ -10,23 +10,52 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const C = colors.light;
 
+/**
+ * Google OAuth callback landing screen.
+ *
+ * The backend redirects native sign-in to `pdfgenius://auth?token=...` (or
+ * `?error=...`). On Android the OS frequently hands that deep link to the
+ * router instead of the waiting `openAuthSessionAsync` call, so this screen is
+ * the reliable place to finish the login: we read the token straight off the
+ * URL, persist the session, and forward to the workspace. We also handle the
+ * happy path where `googleSignin` already persisted the session (then we just
+ * redirect on `isAuthenticated`).
+ */
 export default function AuthRedirectScreen() {
-  const { user, isAuthenticated } = useAuth();
-  const params = useLocalSearchParams<{ error?: string }>();
-  const [timedOut, setTimedOut] = useState(false);
+  const { user, isAuthenticated, completeGoogleLogin } = useAuth();
+  const params = useLocalSearchParams<{ token?: string; error?: string }>();
+  const [failed, setFailed] = useState(false);
+  const handledRef = useRef(false);
 
-  // Safety net: the only way to reach /auth is the leaked Google OAuth deep
-  // link, so we wait for googleSignin's token fetch + persist to flip
-  // isAuthenticated. If it never settles (no token, no error param), fall back
-  // to sign-in rather than spinning forever.
+  const tokenParam = typeof params?.token === "string" ? params.token : null;
+  const errorParam = typeof params?.error === "string" ? params.error : null;
+
+  // Finish the login from the token carried on the deep link. Runs once.
   useEffect(() => {
-    const t = setTimeout(() => setTimedOut(true), 8000);
-    return () => clearTimeout(t);
-  }, []);
+    if (handledRef.current) return;
+    if (errorParam) {
+      handledRef.current = true;
+      setFailed(true);
+      return;
+    }
+    if (tokenParam && !isAuthenticated) {
+      handledRef.current = true;
+      completeGoogleLogin(tokenParam).then((res) => {
+        if (!res.success) setFailed(true);
+      });
+    }
+  }, [tokenParam, errorParam, isAuthenticated, completeGoogleLogin]);
 
-  if (params?.error) return <Redirect href={ROUTES.signIn as never} />;
+  // Safety net: if there is no token and no session ever settles (e.g. a stray
+  // visit to /auth), fall back to sign-in rather than spinning forever.
+  useEffect(() => {
+    if (tokenParam || errorParam) return;
+    const t = setTimeout(() => setFailed(true), 8000);
+    return () => clearTimeout(t);
+  }, [tokenParam, errorParam]);
+
   if (isAuthenticated) return <Redirect href={ROUTES.dashboardHome as never} />;
-  if (timedOut) return <Redirect href={ROUTES.signIn as never} />;
+  if (failed) return <Redirect href={ROUTES.signIn as never} />;
 
   const firstName =
     user?.name?.trim().split(" ")[0] || user?.email?.split("@")[0] || "";
