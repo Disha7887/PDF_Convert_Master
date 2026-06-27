@@ -9,6 +9,8 @@ import React, {
   type ReactNode,
 } from "react";
 
+import { Platform } from "react-native";
+
 import { USE_MOCK_DATA } from "@/constants/config";
 import { API_BASE_URL } from "@/constants/api";
 import { clearHistory } from "@/constants/history";
@@ -228,11 +230,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!API_BASE_URL) {
       return { success: false, error: "Google sign-in isn't available in this build." };
     }
+    const redirectUrl = Linking.createURL("auth");
+    const startUrl = `${API_BASE_URL}/auth/google/mobile/start?redirect=${encodeURIComponent(
+      redirectUrl,
+    )}`;
+
+    // Web (Expo web preview / browser): a popup-based auth session finishes the
+    // login INSIDE the popup and never hands control back to the opener, so the
+    // app sits stuck on "Connecting…". Do a same-window full-page redirect
+    // instead — Google bounces back to /auth?token=... in THIS tab and the
+    // callback screen (app/auth/index.tsx) completes the login on cold boot.
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined") window.location.assign(startUrl);
+      // The page is navigating away; nothing more to do in this call.
+      return { success: false, cancelled: true };
+    }
+
     try {
-      const redirectUrl = Linking.createURL("auth");
-      const startUrl = `${API_BASE_URL}/auth/google/mobile/start?redirect=${encodeURIComponent(
-        redirectUrl,
-      )}`;
       const result = await WebBrowser.openAuthSessionAsync(startUrl, redirectUrl);
 
       if (result.type === "cancel" || result.type === "dismiss") {

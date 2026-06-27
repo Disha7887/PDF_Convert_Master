@@ -83,7 +83,7 @@ export default function AuthRedirectScreen() {
     <View style={styles.screen}>
       <AuthResultIcon kind="welcome" size={260} loop={false} />
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.sub}>Taking you to your workspace…</Text>
+      <Text style={styles.sub}>Taking you home…</Text>
     </View>
   );
 }

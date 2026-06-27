@@ -111,7 +111,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
       !result &&
       !oauthHandoffRef.current
     ) {
-      router.replace(ROUTES.dashboardHome as never);
+      router.replace(ROUTES.home as never);
     }
   }, [isAuthenticated, loading, isSubmitting, googleLoading, result, router]);
 
@@ -133,7 +133,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
       if (res.success) {
         setResult("signin-success");
         redirectTimer.current = setTimeout(
-          () => router.replace(ROUTES.dashboardHome as never),
+          () => router.replace(ROUTES.home as never),
           2600,
         );
       } else if (!res.cancelled) {
@@ -214,7 +214,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
         if (res.success) {
           setResult("signin-success");
           redirectTimer.current = setTimeout(
-            () => router.replace(ROUTES.dashboardHome as never),
+            () => router.replace(ROUTES.home as never),
             2600,
           );
         } else {
@@ -246,7 +246,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
       if (res.success) {
         setResult("signup-success");
         redirectTimer.current = setTimeout(
-          () => router.replace(ROUTES.dashboardHome as never),
+          () => router.replace(ROUTES.home as never),
           2600,
         );
       } else {
@@ -307,7 +307,7 @@ export default function AuthSheet({ mode }: { mode: Mode }) {
           style={styles.welcomeIcon}
         />
         <Text style={styles.welcomeTitle}>{title}</Text>
-        <Text style={styles.welcomeSub}>Taking you to your workspace…</Text>
+        <Text style={styles.welcomeSub}>Taking you home…</Text>
       </View>
     );
   }
