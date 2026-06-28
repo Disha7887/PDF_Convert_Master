@@ -33,6 +33,7 @@ const BuyCredits = named(() => import("@/pages/BuyCredits"), "BuyCredits");
 const LiveTools = named(() => import("@/pages/LiveTools"), "LiveTools");
 const TermsOfService = named(() => import("@/pages/TermsOfService"), "TermsOfService");
 const PrivacyPolicy = named(() => import("@/pages/PrivacyPolicy"), "PrivacyPolicy");
+const RefundPolicy = named(() => import("@/pages/RefundPolicy"), "RefundPolicy");
 const DataSafety = named(() => import("@/pages/DataSafety"), "DataSafety");
 const Support = named(() => import("@/pages/Support"), "Support");
 const SignUp = named(() => import("@/pages/SignUp"), "SignUp");
@@ -242,6 +243,12 @@ function Router() {
       <Route path="/privacy-policy">
         <DynamicLayout>
           <PrivacyPolicy />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/refund-policy">
+        <DynamicLayout>
+          <RefundPolicy />
         </DynamicLayout>
       </Route>
 

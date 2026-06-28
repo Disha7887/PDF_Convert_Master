@@ -73,7 +73,7 @@ export const TermsOfService = (): JSX.Element => {
     {
       id: "payment-terms",
       title: "Payment Terms",
-      content: "Free Services: Basic conversion services are provided free of charge with usage limitations. Premium Services: Enhanced features, higher processing limits, and priority support are available through paid subscriptions. Billing: Subscription fees are billed in advance on a recurring basis. All fees are non-refundable except as required by law. Price Changes: We may modify subscription prices with 30 days' written notice to existing subscribers. Taxes: You are responsible for any applicable taxes, duties, or government charges.",
+      content: "Free Services: Basic conversion services are provided free of charge with usage limitations. Premium Services: Enhanced features, higher processing limits, and priority support are available through paid subscriptions and one-time credit packs. Merchant of Record: Web payments are processed by our authorised reseller and Merchant of Record, Paddle.com Market Limited (Paddle) or Dodo Payments, who act as the seller of record and handle billing, payment processing, sales tax and VAT, invoicing, and refunds on our behalf. Your statement may show the name of the Merchant of Record rather than PDF Genius. Mobile in-app purchases are processed by the Apple App Store or Google Play under their terms. Billing: Subscription fees are billed in advance on a recurring basis and renew automatically until cancelled. You may cancel at any time, and your plan remains active until the end of the current paid period. Refunds: Cancellations and refunds are governed by our Refund Policy, including a 14-day statutory right to cancel for eligible consumers in the UK, EU, EEA, and Switzerland. Nothing in these Terms limits your mandatory consumer rights. Price Changes: We may modify subscription prices with 30 days' written notice to existing subscribers. Taxes: Applicable taxes, duties, or government charges are collected and remitted by the Merchant of Record where required.",
       category: "Billing"
     },
     {
@@ -433,10 +433,12 @@ export const TermsOfService = (): JSX.Element => {
                   </h2>
                   <div className="text-gray-700 leading-relaxed space-y-3">
                     <p><strong>Free Services:</strong> Basic conversion services are provided free of charge with usage limitations.</p>
-                    <p><strong>Premium Services:</strong> Enhanced features, higher processing limits, and priority support are available through paid subscriptions.</p>
-                    <p><strong>Billing:</strong> Subscription fees are billed in advance on a recurring basis. All fees are non-refundable except as required by law.</p>
+                    <p><strong>Premium Services:</strong> Enhanced features, higher processing limits, and priority support are available through paid subscriptions and one-time credit packs.</p>
+                    <p><strong>Merchant of Record:</strong> Web payments are processed by our authorised reseller and Merchant of Record, Paddle.com Market Limited ("Paddle") or Dodo Payments, who act as the seller of record and handle billing, payment processing, sales tax/VAT, invoicing, and refunds on our behalf. Your statement may show the name of the Merchant of Record rather than "PDF Genius". Mobile in-app purchases are processed by the Apple App Store or Google Play under their terms.</p>
+                    <p><strong>Billing:</strong> Subscription fees are billed in advance on a recurring basis and renew automatically until cancelled. You may cancel at any time, and your plan remains active until the end of the current paid period.</p>
+                    <p><strong>Refunds:</strong> Cancellations and refunds are governed by our <a href="/refund-policy" className="text-blue-600 hover:underline">Refund Policy</a>, including a 14-day statutory right to cancel for eligible consumers in the UK, EU, EEA, and Switzerland. Nothing in these Terms limits your mandatory consumer rights.</p>
                     <p><strong>Price Changes:</strong> We may modify subscription prices with 30 days' written notice to existing subscribers.</p>
-                    <p><strong>Taxes:</strong> You are responsible for any applicable taxes, duties, or government charges.</p>
+                    <p><strong>Taxes:</strong> Applicable taxes, duties, or government charges are collected and remitted by the Merchant of Record where required.</p>
                   </div>
                 </section>
 
