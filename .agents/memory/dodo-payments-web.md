@@ -30,8 +30,17 @@ mirrors it. The DB tracks `dodoCustomerId` + `dodoSubscriptionId` on users
   downgrade to free if the event's `subscription_id` equals the user's tracked
   `dodoSubscriptionId` — otherwise a delayed/out-of-order cancel for a replaced
   sub would wrongly revoke paid access.
-**Why:** both bugs were caught in architect review; without them stale events
-corrupt plan state.
+- **Grant on subscription STATUS, never event type.** Plan changes are driven by
+  the payload's top-level `sub.status` (`pending|active|on_hold|cancelled|failed|
+  expired`), NOT by `event.type`. Only `active` grants/keeps a paid plan;
+  cancelled/expired/failed downgrade (with the trackedSub guard above);
+  pending/on_hold/unknown do nothing. **Why:** Dodo fires `subscription.active`/
+  `subscription.updated` during creation and payment retries even when the first
+  charge has NOT settled — keying on event type handed paid access to users whose
+  payment FAILED (real reported billing bug). Cancel-at-period-end stays correct:
+  access is retained while status remains `active`.
+**Why (overall):** these guards were caught in architect review / production bug
+reports; without them stale or unsettled events corrupt plan state.
 
 ## Config (env vars, not secret except keys)
 - Secrets: `DODO_PAYMENTS_API_KEY`, `DODO_PAYMENTS_WEBHOOK_KEY`.

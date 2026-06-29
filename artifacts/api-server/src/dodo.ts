@@ -359,19 +359,28 @@ export async function handleWebhookEvent(
   const customerId: string | undefined = sub?.customer?.customer_id;
   const subscriptionId: string | undefined = sub?.subscription_id;
   const productId: string | undefined = sub?.product_id;
+  // The AUTHORITATIVE signal is the subscription's own status, NOT the event
+  // type. Dodo emits subscription.active / subscription.updated events while a
+  // subscription is being created and during payment retries, even when the
+  // first charge has NOT settled (status: "pending" | "on_hold" | "failed").
+  // Granting on event type alone therefore handed paid access to users whose
+  // payment FAILED. We only ever grant a plan for a genuinely "active"
+  // subscription. Dodo statuses: pending | active | on_hold | cancelled |
+  // failed | expired.
+  const status: string | undefined =
+    typeof sub?.status === "string" ? sub.status.toLowerCase() : undefined;
 
   const user = await resolveUser(userId, customerId);
   if (!user) {
-    logger.warn({ type, userId, customerId }, "Dodo webhook: no matching user");
+    logger.warn({ type, userId, customerId, status }, "Dodo webhook: no matching user");
     return;
   }
 
-  if (
-    type === "subscription.active" ||
-    type === "subscription.renewed" ||
-    type === "subscription.plan_changed" ||
-    type === "subscription.updated"
-  ) {
+  const isActive = status === "active";
+  const isEnded =
+    status === "cancelled" || status === "expired" || status === "failed";
+
+  if (isActive) {
     // The subscription's product is the authoritative tier — metadata.planId can
     // be stale after a portal-driven plan switch, so it is only a fallback.
     const planId =
@@ -386,36 +395,35 @@ export async function handleWebhookEvent(
       dodoSubscriptionId: subscriptionId ?? (user as any).dodoSubscriptionId ?? null,
     });
     logger.info(
-      { userId: user.id, plan: planId, type },
-      "Dodo subscription activated/updated",
+      { userId: user.id, plan: planId, type, status },
+      "Dodo subscription active -> plan granted",
     );
-  } else if (
-    type === "subscription.cancelled" ||
-    type === "subscription.expired" ||
-    type === "subscription.failed"
-  ) {
+  } else if (isEnded) {
     // Only act if this event is for the user's *currently tracked* subscription.
     // A delayed/out-of-order cancel for a subscription they already replaced (or
     // a different one) must not revoke their active paid access.
     const trackedSub = (user as any).dodoSubscriptionId as string | null;
     if (trackedSub && subscriptionId && trackedSub !== subscriptionId) {
       logger.info(
-        { userId: user.id, type, subscriptionId, trackedSub },
-        "Dodo cancel for non-active subscription ignored",
+        { userId: user.id, type, status, subscriptionId, trackedSub },
+        "Dodo end event for non-active subscription ignored",
       );
       return;
     }
     await storage.updateUserPlan(user.id, "free");
     await storage.updateUserDodoRefs(user.id, { dodoSubscriptionId: null });
     logger.info(
-      { userId: user.id, type },
+      { userId: user.id, type, status },
       "Dodo subscription ended -> downgraded to free",
     );
   } else {
-    // on_hold / paused — leave the plan intact; a payment retry may recover it.
+    // pending (first charge not settled), on_hold / paused (retry in progress),
+    // or an unknown status. Do NOT grant a plan — a failed or not-yet-settled
+    // payment must never hand out paid access. Leave any existing plan intact so
+    // an in-flight retry can still recover via a later "active" event.
     logger.info(
-      { userId: user.id, type },
-      "Dodo subscription state change (no plan action)",
+      { userId: user.id, type, status },
+      "Dodo subscription non-active status -> no plan grant",
     );
   }
 }
