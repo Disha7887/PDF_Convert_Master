@@ -17,3 +17,9 @@ id = "6SoaTwaXpH63C7ROg8cR6"
 uri = "file://play-store/data-safety.csv"
 type = "table"
 title = "Google Play Data Safety (import-ready) — PDF Genius"
+
+[[outputs]]
+id = "f2QFbrpFEGFgVLaECS-sj"
+uri = "file://docs/PDF-Genius-TestSprite-PRD.md"
+type = "text"
+title = "PDF Genius — TestSprite PRD"
