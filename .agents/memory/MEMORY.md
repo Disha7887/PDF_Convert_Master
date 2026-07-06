@@ -79,3 +79,4 @@
 - [Avatar storage](avatar-storage.md) — profile photos stay in Backblaze (key `avatars/<userId>`), NOT Supabase (user-confirmed); DELETE /api/auth/avatar clears url to "".
 - [Mobile edited-filename persist](mobile-edited-filename-persist.md) — History/Files written at conversion time w/ original name; rename is PATCHED on download-confirm via savedEntryRef, don't move the persist.
 - [Per-route SEO (web SPA)](web-seo-per-route.md) — useSeo hook drives head tags client-side per route; public=index, auth/account=noindex; code SEO won't index instantly (needs Search Console + sitemap submit).
+- [api-server in-memory buffer OOM](api-memory-oom.md) — job Buffer maps need touch/purge/TTL-sweep lifecycle + free input after conversion, or Railway OOM-kills prod; eviction safe via S3 fallback.

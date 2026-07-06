@@ -22,7 +22,8 @@ mirrors it. The DB tracks `dodoCustomerId` + `dodoSubscriptionId` on users
 ## Webhook (`/api/billing/dodo/webhook`)
 - No auth; authenticity = Standard-Webhooks HMAC verified against
   `DODO_PAYMENTS_WEBHOOK_KEY` over the RAW body (captured in app.ts express.json `verify`).
-- Only `subscription.*` events are acted on (one-time/credit packs are mobile/RevenueCat).
+- Acted-on events: `subscription.*` (plan state) AND `payment.succeeded` (web credit
+  purchases — see Buy Credits below). Mobile credit packs stay on RevenueCat.
 - **Plan tier = product id, not metadata.** `getPlanForProductId(product_id)` is
   authoritative; `metadata.planId` is only a fallback (it goes stale after a
   portal plan switch).

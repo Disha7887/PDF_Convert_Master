@@ -2029,6 +2029,55 @@ const convertedFileStorage = new Map<number, { buffer: Buffer; mimeType: string;
 // OCR recognized text, per page, keyed by job id — surfaced via /api/ocr-text/:jobId.
 const ocrTextStorage = new Map<number, string[]>();
 
+// ---------------------------------------------------------------------------
+// In-memory job buffer lifecycle. These maps hold raw file bytes in RAM and,
+// before this sweeper existed, entries were only freed when the user downloaded
+// or deleted the job. Jobs that were never downloaded accumulated their input
+// AND output buffers forever, which OOM-crashed the production container under
+// sustained traffic. Eviction is safe: completed results (and OCR text) are
+// persisted to durable object storage at completion, and /api/download falls
+// back to that durable copy when the in-memory copy is gone.
+// ---------------------------------------------------------------------------
+const JOB_BUFFER_TTL_MS = 30 * 60 * 1000; // keep in-memory copies for 30 min
+const JOB_BUFFER_SWEEP_INTERVAL_MS = 5 * 60 * 1000;
+const jobBufferTouchedAt = new Map<number, number>();
+
+function touchJobBuffers(jobId: number): void {
+  jobBufferTouchedAt.set(jobId, Date.now());
+}
+
+function purgeJobBuffers(jobId: number): void {
+  fileStorage.delete(jobId);
+  convertedFileStorage.delete(jobId);
+  ocrTextStorage.delete(jobId);
+  jobBufferTouchedAt.delete(jobId);
+}
+
+setInterval(() => {
+  const cutoff = Date.now() - JOB_BUFFER_TTL_MS;
+  let purged = 0;
+  for (const [jobId, touchedAt] of jobBufferTouchedAt) {
+    if (touchedAt < cutoff) {
+      purgeJobBuffers(jobId);
+      purged++;
+    }
+  }
+  // Defensive: purge any orphaned entries that never got a touch timestamp so
+  // no code path can reintroduce an unbounded buffer leak.
+  for (const jobId of fileStorage.keys()) {
+    if (!jobBufferTouchedAt.has(jobId)) { purgeJobBuffers(jobId); purged++; }
+  }
+  for (const jobId of convertedFileStorage.keys()) {
+    if (!jobBufferTouchedAt.has(jobId)) { purgeJobBuffers(jobId); purged++; }
+  }
+  for (const jobId of ocrTextStorage.keys()) {
+    if (!jobBufferTouchedAt.has(jobId)) { purgeJobBuffers(jobId); purged++; }
+  }
+  if (purged > 0) {
+    console.log(`Job buffer sweep: purged in-memory copies for ${purged} job(s)`);
+  }
+}, JOB_BUFFER_SWEEP_INTERVAL_MS).unref();
+
 // Text-derived OCR export formats the client can request via /api/download?format=.
 type OcrExportFormat = "txt" | "doc" | "html" | "md";
 const OCR_EXPORT_FORMATS = new Set<string>(["txt", "doc", "html", "md"]);
@@ -2553,6 +2602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mimeType: result.mimeType || "application/pdf",
           filename: outputFilename
         });
+        touchJobBuffers(job.id);
 
         // Persist to durable object storage so the merged file can be
         // re-downloaded anytime — even after the in-memory copy is purged or the
@@ -2652,6 +2702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mimeType: result.mimeType || "application/pdf",
           filename: outputFilename,
         });
+        touchJobBuffers(job.id);
         // Best-effort durable copy so the result survives an in-memory purge or
         // a server restart (a storage failure must not fail the job).
         try {
@@ -2829,6 +2880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store the file buffer for actual conversion
       fileStorage.set(jobId, file.buffer);
+      touchJobBuffers(jobId);
       
       // Simulate realistic conversion with progress updates (shortened)
       await simulateConversionWithProgress(jobId, Math.min(processingTime, 3000), fileSizeMB);
@@ -2861,7 +2913,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         outputFilename,
         options
       );
-      
+
+      // The raw input bytes are never read again after conversion — free them
+      // immediately instead of letting them sit in RAM until download/TTL.
+      fileStorage.delete(jobId);
+
       if (!conversionResult.success) {
         throw new Error(conversionResult.error || 'Conversion failed');
       }
@@ -2873,6 +2929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mimeType: conversionResult.mimeType,
           filename: outputFilename
         });
+        touchJobBuffers(jobId);
 
         // Also persist to durable object storage so the user can re-download
         // their result anytime — even after the in-memory copy is purged or the
@@ -2893,6 +2950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // PDF bytes under a .txt name (a broken file).
       if (conversionResult.pages) {
         ocrTextStorage.set(jobId, conversionResult.pages);
+        touchJobBuffers(jobId);
         try {
           await saveOcrText(jobId, conversionResult.pages);
         } catch (storageError) {
@@ -2917,6 +2975,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error(`Error processing job ${jobId}:`, error);
+      // A failed job's buffers are useless — free them right away instead of
+      // waiting for the TTL sweep.
+      purgeJobBuffers(jobId);
       await storage.updateConversionJobStatus(
         jobId,
         "failed",
@@ -3165,9 +3226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Free the in-memory copies after serving. The durable object-storage copy
       // is intentionally KEPT so the user can download this result again later.
-      fileStorage.delete(jobId);
-      convertedFileStorage.delete(jobId);
-      ocrTextStorage.delete(jobId);
+      purgeJobBuffers(jobId);
 
     } catch (error) {
       console.error("Error downloading file:", error);
@@ -3210,9 +3269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // object (no-op), so an already-gone durable copy still succeeds here.
       await deleteConvertedFile(jobId);
 
-      fileStorage.delete(jobId);
-      convertedFileStorage.delete(jobId);
-      ocrTextStorage.delete(jobId);
+      purgeJobBuffers(jobId);
       await storage.deleteConversionJob(jobId);
 
       res.json({ success: true });
