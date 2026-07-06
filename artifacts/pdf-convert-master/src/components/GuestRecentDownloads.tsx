@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Download } from "lucide-react";
 
+import { LoginRequiredDialog } from "@/components/LoginRequiredDialog";
 import { downloadFromUrl } from "@/lib/download";
 import {
   isGuest,
@@ -20,6 +21,7 @@ export function GuestRecentDownloads({
   toolType?: string;
 }): JSX.Element | null {
   const [items, setItems] = useState<GuestDownload[]>([]);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isGuest()) return;
@@ -30,15 +32,21 @@ export function GuestRecentDownloads({
   const onDownload = useCallback(async (d: GuestDownload) => {
     try {
       await downloadFromUrl(`/api/download/${d.jobId}`, d.fileName);
-    } catch {
-      // The file may have expired from server storage; the download helper
-      // surfaces its own error. Keep the list as-is.
+    } catch (err) {
+      // A login-required failure is the actionable case: show the clear,
+      // animated sign-in dialog instead of failing silently. Other errors
+      // (e.g. the file expired from server storage) are surfaced by the
+      // download helper itself.
+      if (err instanceof Error && /log in/i.test(err.message)) {
+        setLoginDialogOpen(true);
+      }
     }
   }, []);
 
   if (items.length === 0) return null;
 
   return (
+    <>
     <div className="w-full max-w-4xl mx-auto mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <p className="text-sm font-semibold text-gray-900 mb-3">Your recent files</p>
       <div className="space-y-2">
@@ -60,6 +68,8 @@ export function GuestRecentDownloads({
         ))}
       </div>
     </div>
+    <LoginRequiredDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
+    </>
   );
 }
 
