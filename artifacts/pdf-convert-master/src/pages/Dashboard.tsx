@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { authedJson } from "@/lib/authedFetch";
 
 import { useLocation } from "wouter";
-import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Wallet, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Trash2 } from "lucide-react";
+import { Search, FileText, Activity, Link as LinkIcon, Home, BarChart3, Settings, Book, GitBranch, Wrench, Wallet, Upload, Clock, ArrowUp, ArrowDown, Check, X, RefreshCw, Download, Trash2, HelpCircle } from "lucide-react";
 import { ProcessingSpinner } from "@/components/processing-spinner";
 import { useSeo } from "@/lib/useSeo";
 import { downloadFromUrl } from "@/lib/download";
@@ -338,6 +338,21 @@ export const Dashboard: React.FC = () => {
                 <div className="text-left flex-1">
                   <p className="text-sm font-medium text-gray-700">Live Tools</p>
                   <p className="text-xs text-gray-500">PDF conversion tools</p>
+                </div>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start p-3"
+                onClick={() => handleNavigation('/dashboard/billing-help')}
+                data-testid="nav-billing-help"
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3">
+                  <HelpCircle className="w-5 h-5 text-gray-600" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="text-sm font-medium text-gray-700">Billing Help</p>
+                  <p className="text-xs text-gray-500">Payments &amp; refunds</p>
                 </div>
               </Button>
             </nav>

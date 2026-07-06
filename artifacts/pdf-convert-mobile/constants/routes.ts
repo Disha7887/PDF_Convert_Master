@@ -43,4 +43,5 @@ export const ROUTES = {
   managePlans: "/dashboard/manage-plans",
   credits: "/dashboard/credits",
   liveTools: "/dashboard/live-tools",
+  billingHelp: "/dashboard/billing-help",
 } as const;

@@ -140,6 +140,7 @@ export default function SettingsScreen() {
       <Text style={styles.sectionTitle}>Purchases</Text>
       <View style={[styles.group, cardShadow]}>
         <SettingRow icon="shopping-bag" label="Purchases" onPress={() => go(ROUTES.managePlans)} />
+        <SettingRow icon="help-circle" label="Payments & Billing Help" onPress={() => go(ROUTES.billingHelp)} divider />
         <SettingRow icon="refresh-cw" label="Restore Purchases" onPress={restorePurchases} divider />
       </View>
 

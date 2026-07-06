@@ -108,6 +108,7 @@ function RootLayoutNav() {
       <Stack.Screen name="dashboard/api-setup" options={{ title: "API Setup" }} />
       <Stack.Screen name="dashboard/api-reference" options={{ title: "API Reference" }} />
       <Stack.Screen name="dashboard/manage-plans" options={{ title: "Manage Plans" }} />
+      <Stack.Screen name="dashboard/billing-help" options={{ title: "Payments & Billing Help" }} />
       <Stack.Screen name="dashboard/credits" options={{ title: "My Credits" }} />
       <Stack.Screen name="dashboard/live-tools" options={{ title: "Live Tools" }} />
     </Stack>

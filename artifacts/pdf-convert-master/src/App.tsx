@@ -29,6 +29,7 @@ const UsageStatistics = named(() => import("@/pages/UsageStatistics"), "UsageSta
 const APISetup = named(() => import("@/pages/APISetup"), "APISetup");
 const APIReference = named(() => import("@/pages/APIReference"), "APIReference");
 const ManagePlans = named(() => import("@/pages/ManagePlans"), "ManagePlans");
+const PaymentsBillingHelp = named(() => import("@/pages/PaymentsBillingHelp"), "PaymentsBillingHelp");
 const BuyCredits = named(() => import("@/pages/BuyCredits"), "BuyCredits");
 const LiveTools = named(() => import("@/pages/LiveTools"), "LiveTools");
 const TermsOfService = named(() => import("@/pages/TermsOfService"), "TermsOfService");
@@ -171,6 +172,14 @@ function Router() {
         <ProtectedRoute>
           <DynamicLayout isDashboardPage={true}>
             <ManagePlans />
+          </DynamicLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/billing-help">
+        <ProtectedRoute>
+          <DynamicLayout isDashboardPage={true}>
+            <PaymentsBillingHelp />
           </DynamicLayout>
         </ProtectedRoute>
       </Route>

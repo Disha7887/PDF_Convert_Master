@@ -1,0 +1,54 @@
+You are working INSIDE my existing PDF Genius codebase — both the web app and the mobile app (pdfgenius.app, by FLEXO AI LLC). Do NOT scaffold a new standalone project and do NOT invent any values, numbers, colors, emails, or policies. Reuse what already exists in the repo.
+
+GOAL
+Add a new authenticated "Payments & Billing Help" screen/route to BOTH the web app and the mobile app, reachable from the existing account/settings/billing menu. I use TWO Merchant-of-Record gateways at checkout: Dodo Payments and Paddle. Because they are different companies with different customer portals, the screen must separate their content behind two menu/toggle buttons named after each merchant.
+
+MATCH MY EXISTING DESIGN — do not create new styles
+- Reuse my existing theme: the same Tailwind config / design tokens / CSS variables, color palette, dark/light mode, fonts, spacing, border radius, and shadows already used across PDF Genius. The new screen must look native to the app.
+- Reuse my existing UI components (buttons, cards, tabs, accordions, headers, containers, icons) and existing navigation patterns. On mobile, use the same navigation, screen structure, and component library already in the app.
+- Reuse my existing brand assets (PDF Genius logo, name, colors). No new brand elements.
+
+PULL REAL VALUES FROM THE REPO — never use placeholders or lorem/mock data
+- Support/contact email: use the one already configured in the app (contact page, config, or env). Do not type a fake email.
+- Refund window and refund conditions: read them from my existing Terms/Refund policy page or legal config and reuse the exact wording. Do not invent a number of days.
+- Product/brand names, company name (FLEXO AI LLC): use the real ones already in the codebase.
+- If a required real value genuinely does not exist anywhere in the repo, leave that single sentence out rather than inventing it, and list what was missing at the end so I can add it.
+
+LAYOUT
+- Screen title: "Payments & Billing Help". Subtitle explaining it covers all PDF Genius payments.
+- Two large, prominent toggle buttons side by side, styled with my existing button component:
+   • "Dodo Payments" — subtitle "If your charge shows as Dodo Payments"
+   • "Paddle" — subtitle "If your charge shows as Paddle"
+  Clicking one switches the ENTIRE content below to that merchant's section. Default to Dodo Payments. On web, persist selection in the URL (#dodo / #paddle) so links are shareable; on mobile, keep it in screen state.
+- Web: sticky in-page section nav (sidebar or top anchors) that highlights the active section on scroll. Mobile: collapsible/accordion sections for the same content. Add an in-page search/filter on web if my app already has a search component to reuse.
+
+CONTENT — repeat these sections inside BOTH merchant tabs. Every statement below is factual; do NOT add invented statistics or counts.
+
+1. Overview & Merchant of Record — explain in plain, friendly language that this gateway is the official Merchant of Record: they are the legal seller for the transaction and handle payment processing, tax, and compliance on PDF Genius's behalf, which is why their name may appear instead of ours.
+
+2. What appears on your statement (place HIGH on the page — most common question)
+   • Dodo tab: the charge appears under the "Dodo Payments" name. Reassure it is a legitimate PDF Genius charge.
+   • Paddle tab: the charge appears under the "Paddle" / "Paddle.net" name. Tell customers they can look up and manage any charge at https://paddle.net and read https://www.paddle.com/about/why-has-paddle-charged-me
+
+3. Accepted payment methods — both support major cards and common wallets (Apple Pay, Google Pay) plus regional/local methods. Do not state a specific count of methods or countries.
+
+4. Receipts & invoices — a receipt is emailed automatically after every payment; explain how to find it and request a copy. Dodo: via the customer billing portal linked in the receipt email. Paddle: retrievable at https://paddle.net using the purchase email.
+
+5. Manage or cancel subscription — Dodo: via the customer portal link in the receipt email, or by contacting PDF Genius support. Paddle: self-serve anytime at https://paddle.net using the purchase email.
+
+6. Refunds — use my real refund policy from the repo. Dodo: request via PDF Genius support (real email) or Dodo support. Paddle: request via https://paddle.net or PDF Genius support.
+
+7. Update payment method — explain how to update an expired/failed card so subscriptions renew, through each gateway's customer portal.
+
+8. Taxes (VAT / GST / sales tax) — explain that, as Merchant of Record, the gateway automatically calculates and adds any applicable tax based on the customer's location, shown as a separate line on the receipt.
+
+9. Failed & declined payments — explain automatic retries/dunning over several days with email notifications, and how to fix a failed renewal.
+
+10. Security & contact — note that these gateways are PCI-DSS compliant and that PDF Genius never stores card details. Contact block using my real support email, plus: Dodo tab → https://dodopayments.com/contact ; Paddle tab → https://paddle.net
+
+EXTRAS
+- End each tab with an FAQ accordion (reuse my existing accordion component) covering: "Why does this name appear on my statement?", "How do I cancel?", "How do I get a refund?", "Was I charged tax?", "I don't recognize this charge."
+- Wire the new screen into existing routing/navigation for both web and mobile, and add a link to it from the account/billing area.
+
+DELIVERABLE
+Give me the full working code integrated into my existing project structure, using my existing components and theme. At the very end, list any real value you could not find in the repo (e.g. support email, refund policy) so I can supply it — do not fabricate it.
