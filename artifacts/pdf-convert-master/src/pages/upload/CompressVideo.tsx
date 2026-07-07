@@ -7,9 +7,9 @@ export const CompressVideoUpload: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <ConversionWorkflow
         toolType="compress-video"
-        toolTitle="MP4 Compressor"
-        toolDescription="Reduce MP4 video file size while keeping good quality. Great for sharing, uploading, and saving storage space."
-        acceptedFormats={[".mp4"]}
+        toolTitle="Video Compressor"
+        toolDescription="Reduce video file size while keeping good quality. Great for sharing, uploading, and saving storage space."
+        acceptedFormats={[".mp4", ".mov", ".mkv", ".avi", ".webm", ".flv", ".wmv", ".m4v", ".mpeg", ".mpg", ".3gp", ".ts", ".m2ts", ".mts", ".ogv"]}
         maxFileSize="200MB"
         outputFormat="Compressed MP4"
         toolIcon={<Video className="w-8 h-8 text-[#f7433d]" />}

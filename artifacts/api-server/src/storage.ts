@@ -335,11 +335,11 @@ export class MemStorage implements IStorage {
       },
       {
         id: 25,
-        name: "MP4 Compressor",
+        name: "Video Compressor",
         type: ToolType.COMPRESS_VIDEO,
         category: ToolCategory.IMAGE_TOOLS,
-        description: "Reduce MP4 video file size while keeping good quality",
-        inputFormats: ["mp4"],
+        description: "Reduce video file size while keeping good quality",
+        inputFormats: ["mp4", "mov", "mkv", "avi", "webm", "flv", "wmv", "m4v", "mpeg", "mpg", "3gp", "ts", "m2ts", "mts", "ogv"],
         outputFormat: "mp4",
         maxFileSize: 200,
         processingTimeEstimate: 60
@@ -1014,11 +1014,11 @@ export class DatabaseStorage implements IStorage {
       },
       {
         id: 25,
-        name: "MP4 Compressor",
+        name: "Video Compressor",
         type: ToolType.COMPRESS_VIDEO,
         category: ToolCategory.IMAGE_TOOLS,
-        description: "Reduce MP4 video file size while keeping good quality",
-        inputFormats: ["mp4"],
+        description: "Reduce video file size while keeping good quality",
+        inputFormats: ["mp4", "mov", "mkv", "avi", "webm", "flv", "wmv", "m4v", "mpeg", "mpg", "3gp", "ts", "m2ts", "mts", "ogv"],
         outputFormat: "mp4",
         maxFileSize: 200,
         processingTimeEstimate: 60

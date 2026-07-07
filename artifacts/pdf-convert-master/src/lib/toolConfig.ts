@@ -398,13 +398,13 @@ export const toolConfigs: Record<string, ToolConfig> = {
   // VIDEO TOOLS
   "compress-video": {
     id: "compress-video",
-    title: "MP4 Compressor",
-    description: "Reduce MP4 video file size while keeping good quality",
-    acceptedFormats: [".mp4"],
+    title: "Video Compressor",
+    description: "Reduce video file size while keeping good quality",
+    acceptedFormats: [".mp4", ".mov", ".mkv", ".avi", ".webm", ".flv", ".wmv", ".m4v", ".mpeg", ".mpg", ".3gp", ".ts", ".m2ts", ".mts", ".ogv"],
     maxFileSize: "200MB",
     buttonText: "Select Video",
-    dropAreaText: "Drop your MP4 video here",
-    fileTypeHint: "Supports: MP4 files up to 200MB",
+    dropAreaText: "Drop your video here",
+    fileTypeHint: "Supports: MP4, MOV, MKV, AVI, WEBM and more up to 200MB",
     outputFormat: "Compressed MP4",
     icon: Video,
     iconColor: "text-[#f7433d]",
