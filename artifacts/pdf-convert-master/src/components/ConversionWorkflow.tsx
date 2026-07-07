@@ -405,13 +405,18 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           reject?.(new Error(job.errorMessage || 'Conversion failed'));
           return;
         } else if (job.status === 'processing') {
-          // Update progress - more responsive progress calculation
-          const baseProgress = 10; // Start at 10%
-          const progressIncrement = Math.min((attempts * 3), 85); // 3% per attempt, max 85%
-          const progress = Math.min(baseProgress + progressIncrement, 95); // Cap at 95% until completion
-          
+          // Asymptotic progress: rises quickly at first, then keeps inching
+          // toward (but never reaching) 99% until the job actually completes.
+          // This avoids a hard plateau that makes a long encode look frozen.
+          const base = 10;
+          const ceiling = 99;
+          const progress = Math.min(
+            ceiling - 1,
+            Math.round(ceiling - (ceiling - base) * Math.exp(-attempts / 40)),
+          );
+
           setSelectedFiles(prev => prev.map(f => 
-            f.id === fileId ? { ...f, progress } : f
+            f.id === fileId ? { ...f, progress: Math.max(f.progress ?? base, progress) } : f
           ));
         }
 

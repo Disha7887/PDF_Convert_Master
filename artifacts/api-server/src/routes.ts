@@ -823,26 +823,22 @@ async function compressVideo(
         // Floor the video bitrate so tiny targets still yield a playable file.
         const videoBitrateKbps = Math.max(64, Math.round(totalKbps - audioKbps));
 
-        // Two-pass VBR gives a far more accurate final size than single-pass.
+        // Single-pass ABR, capped by maxrate/bufsize, hits the target size well
+        // while encoding roughly twice as fast as a two-pass run. The extra
+        // analysis pass was what made longer videos sit near-complete for a long
+        // time and appear stuck.
         await runFfmpeg([
           "-y", "-i", inputPath,
           "-c:v", "libx264",
           "-b:v", `${videoBitrateKbps}k`,
+          "-maxrate", `${Math.round(videoBitrateKbps * 1.5)}k`,
+          "-bufsize", `${Math.round(videoBitrateKbps * 2)}k`,
           "-preset", "veryfast",
-          "-pass", "1", "-passlogfile", passLog,
-          "-an", "-f", "mp4", "/dev/null",
-        ]);
-        await runFfmpeg([
-          "-y", "-i", inputPath,
-          "-c:v", "libx264",
-          "-b:v", `${videoBitrateKbps}k`,
-          "-preset", "veryfast",
-          "-pass", "2", "-passlogfile", passLog,
           "-c:a", "aac", "-b:a", `${audioKbps}k`,
           "-movflags", "+faststart",
           outputPath,
         ]);
-        mode = `level ${level} (target ~${(targetTotalBytes / (1024 * 1024)).toFixed(2)}MB, v${videoBitrateKbps}k a${audioKbps}k)`;
+        mode = `level ${level} single-pass (target ~${(targetTotalBytes / (1024 * 1024)).toFixed(2)}MB, v${videoBitrateKbps}k a${audioKbps}k)`;
       }
     }
 

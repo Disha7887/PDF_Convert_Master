@@ -4,7 +4,11 @@ description: How the video compressor picks a target size, why ratios must stay 
 ---
 
 # Level picker → target size
-3 levels drive target output size = originalBytes * ratio via ffmpeg TWO-PASS VBR.
+3 levels drive target output size = originalBytes * ratio via ffmpeg SINGLE-PASS ABR
+(x264 `-b:v` + `-maxrate` 1.5x + `-bufsize` 2x, `-preset veryfast`). Switched off
+two-pass because the analysis pass doubled encode time and made longer videos sit
+near-complete for a long time (felt "stuck at 95%"); single-pass ABR still lands the
+target size accurately (verified 9.03MB == low-ratio target on a 3min/25MB clip).
 Ratios MUST stay in lockstep across ALL layers or the shown estimate lies:
 backend `VIDEO_LEVEL_RATIOS` (routes.ts), web `VIDEO_LEVELS` (ConversionWorkflow.tsx),
 mobile `VIDEO_LEVELS` ([toolId].tsx). Values: high 0.11, medium 0.226, low 0.342.
