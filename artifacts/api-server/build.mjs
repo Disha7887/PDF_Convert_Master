@@ -105,6 +105,10 @@ async function buildAll() {
       "pdf-parse",
       "tesseract.js",
       "@napi-rs/canvas",
+      // These resolve a bundled binary path relative to their own module
+      // location, so they must stay external (bundling breaks the path).
+      "ffmpeg-static",
+      "ffprobe-static",
     ],
     sourcemap: "linked",
     plugins: [

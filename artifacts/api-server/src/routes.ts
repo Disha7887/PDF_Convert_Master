@@ -13,6 +13,8 @@ import fs from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
+import ffmpegStatic from "ffmpeg-static";
+import ffprobeStatic from "ffprobe-static";
 import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword, googleAuth, googleConfig, googleMobileStart, googleMobileCallback } from "./auth";
 import { notifyUser, ensureWelcomeNotification } from "./notify";
 import { saveAvatar, getAvatar, deleteAvatar } from "./lib/avatarStorage";
@@ -748,10 +750,18 @@ const VIDEO_LEVEL_RATIOS: Record<string, number> = {
 };
 const AUDIO_BITRATE_KBPS = 128;
 
+// Resolve the ffmpeg/ffprobe binaries. Production (Railway) images don't ship
+// these system-wide, so we bundle static builds via npm and use their absolute
+// paths; env overrides win, then the static packages, then a bare PATH lookup.
+const FFMPEG_BIN =
+  process.env.FFMPEG_PATH || (ffmpegStatic as unknown as string) || "ffmpeg";
+const FFPROBE_BIN =
+  process.env.FFPROBE_PATH || ffprobeStatic?.path || "ffprobe";
+
 // Run ffmpeg with the given args, rejecting with trailing stderr on failure.
 function runFfmpeg(args: string[]): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    const proc = spawn("ffmpeg", args);
+    const proc = spawn(FFMPEG_BIN, args);
     let stderr = "";
     proc.stderr.on("data", (d) => {
       stderr += d.toString();
@@ -770,7 +780,7 @@ function runFfmpeg(args: string[]): Promise<void> {
 // Probe a media file's duration in seconds via ffprobe. Returns 0 when unknown.
 function probeDurationSeconds(filePath: string): Promise<number> {
   return new Promise<number>((resolve) => {
-    const proc = spawn("ffprobe", [
+    const proc = spawn(FFPROBE_BIN, [
       "-v", "error",
       "-show_entries", "format=duration",
       "-of", "default=noprint_wrappers=1:nokey=1",
@@ -792,7 +802,7 @@ function probeDurationSeconds(filePath: string): Promise<number> {
 // recordings) don't re-encode to a stretched duration.
 function probeAvgFrameRate(filePath: string): Promise<string> {
   return new Promise<string>((resolve) => {
-    const proc = spawn("ffprobe", [
+    const proc = spawn(FFPROBE_BIN, [
       "-v", "error",
       "-select_streams", "v:0",
       "-show_entries", "stream=avg_frame_rate",
