@@ -6,7 +6,6 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Badge } from "@/components/ui/badge";
 import { DocumentSearch, SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
-import { PageSearch } from "@/components/PageSearch";
 
 export const Support = (): JSX.Element => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -248,14 +247,6 @@ export const Support = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Page Search Component */}
-      <PageSearch
-        sections={searchableSections}
-        onResultClick={handleResultClick}
-        onSearchChange={handleSearchChange}
-        pageType="support"
-      />
-
       {/* Hero Section with Purple Gradient */}
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 py-20 overflow-hidden">
         <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"}></div>

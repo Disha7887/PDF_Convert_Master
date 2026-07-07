@@ -38,7 +38,7 @@ export const useDocumentSearch = (options: UseDocumentSearchOptions) => {
   const handleResultClick = useCallback((sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      // Account for header (65px) + PageSearch component (80px) + extra padding
+      // Account for header (65px) + extra padding
       const headerOffset = 120;
       const elementPosition = element.offsetTop;
       const offsetPosition = Math.max(0, elementPosition - headerOffset);

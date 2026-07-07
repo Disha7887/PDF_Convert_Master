@@ -18,7 +18,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { PageSearch } from "@/components/PageSearch";
 import { SearchableSection } from "@/components/DocumentSearch";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useSeo } from "@/lib/useSeo";
@@ -546,14 +545,6 @@ export const PaymentsBillingHelp = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Reused in-page search */}
-      <PageSearch
-        sections={searchableSections}
-        onResultClick={handleResultClick}
-        onSearchChange={handleSearchChange}
-        pageType="support"
-      />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-10">
