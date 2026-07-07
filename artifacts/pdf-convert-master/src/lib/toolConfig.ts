@@ -20,7 +20,8 @@ import {
   FileMinus,
   ScanText,
   Lock,
-  Unlock
+  Unlock,
+  Video
 } from "lucide-react";
 
 export interface ToolConfig {
@@ -393,6 +394,24 @@ export const toolConfigs: Record<string, ToolConfig> = {
     iconBorderColor: "border-[#f7433d]/20",
     category: "Edit",
     route: "/upload/unlock-pdf"
+  },
+  // VIDEO TOOLS
+  "compress-video": {
+    id: "compress-video",
+    title: "MP4 Compressor",
+    description: "Reduce MP4 video file size while keeping good quality",
+    acceptedFormats: [".mp4"],
+    maxFileSize: "200MB",
+    buttonText: "Select Video",
+    dropAreaText: "Drop your MP4 video here",
+    fileTypeHint: "Supports: MP4 files up to 200MB",
+    outputFormat: "Compressed MP4",
+    icon: Video,
+    iconColor: "text-[#f7433d]",
+    iconBgColor: "bg-[#f7433d]/10",
+    iconBorderColor: "border-[#f7433d]/20",
+    category: "Video Tools",
+    route: "/upload/compress-video"
   },
   "merge-pdfs": {
     id: "merge-pdfs",

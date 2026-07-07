@@ -10,6 +10,7 @@ export const TOOL_CATEGORIES = [
   "Image Tools",
   "Organize",
   "Edit",
+  "Video Tools",
 ] as const;
 
 export type ToolCategory = (typeof TOOL_CATEGORIES)[number];
@@ -558,6 +559,26 @@ export const tools: Tool[] = [
     feather: "archive",
     route: "/upload/compress-pdf",
     serverToolType: "compress_pdf",
+    multiFile: false,
+    isMerge: false,
+    editor: null,
+  },
+  // ─── Video Tools ───────────────────────────────────────────────────────
+  {
+    id: "compress-video",
+    title: "MP4 Compressor",
+    description: "Reduce MP4 video file size while keeping good quality",
+    acceptedFormats: [".mp4"],
+    maxFileSize: "200MB",
+    maxFileSizeMB: 200,
+    buttonText: "Select Video",
+    dropAreaText: "Drop your MP4 video here",
+    fileTypeHint: "Supports: MP4 files up to 200MB",
+    outputFormat: "Compressed MP4",
+    category: "Video Tools",
+    feather: "video",
+    route: "/upload/compress-video",
+    serverToolType: "compress_video",
     multiFile: false,
     isMerge: false,
     editor: null,

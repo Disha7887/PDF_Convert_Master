@@ -58,6 +58,7 @@ const toolTypeMap: Record<string, string> = {
   "split-pdf": "split_pdf",
   "compress-pdf": "compress_pdf",
   "rotate-pdf": "rotate_pdf",
+  "compress-video": "compress_video",
 };
 
 // These three tools are handled entirely in the browser with a manual-options
@@ -1052,6 +1053,7 @@ export const Tools: React.FC = () => {
     "add-image-pdf",
     "delete-pages-pdf",
     "ocr-pdf",
+    "compress-video",
   ];
 
   const toolsData = mainToolKeys.map((key) => toolConfigs[key]).filter(Boolean);
@@ -1063,6 +1065,7 @@ export const Tools: React.FC = () => {
     "Organize",
     "Security",
     "Image Tools",
+    "Video Tools",
   ];
 
   const filteredTools =

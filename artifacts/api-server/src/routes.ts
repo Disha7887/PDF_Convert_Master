@@ -37,7 +37,7 @@ import {
 } from "./dodo";
 import mammoth from "mammoth";
 import * as xlsx from "xlsx";
-import { execSync } from "child_process";
+import { execSync, spawn } from "child_process";
 import puppeteer from "puppeteer";
 import { PDFParse } from "pdf-parse";
 import { Document, Packer, Paragraph, TextRun, PageBreak } from "docx";
@@ -72,6 +72,7 @@ const MIME_TYPES: { [key: string]: string } = {
   'webp': 'image/webp',
   'tiff': 'image/tiff',
   'tif': 'image/tiff',
+  'mp4': 'video/mp4',
   'avif': 'image/avif',
   'zip': 'application/zip'
 };
@@ -404,6 +405,9 @@ async function performActualConversion(
       case 'compress_image':
         return await compressImage(fileBuffer, inputExtension, outputFilename, options);
         
+      case 'compress_video':
+        return await compressVideo(fileBuffer, inputExtension, outputFilename, options);
+        
       case 'resize_image':
         return await resizeImage(fileBuffer, inputExtension, outputFilename, options);
         
@@ -728,6 +732,70 @@ async function compressImage(imageBuffer: Buffer, inputExt: string | undefined, 
     };
   } catch (error) {
     throw new Error(`Image compression failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Compress an MP4 video with ffmpeg (system binary). We round-trip through temp
+// files because ffmpeg streams to/from disk rather than in-memory buffers.
+// `options.quality` (10-100) maps to an H.264 CRF: higher quality = lower CRF =
+// larger file. Defaults to a balanced 28 CRF (~medium compression).
+async function compressVideo(
+  videoBuffer: Buffer,
+  inputExt: string | undefined,
+  outputFilename: string,
+  options: Record<string, any> = {},
+) {
+  const quality = Math.min(100, Math.max(10, Math.round(Number(options.quality)) || 60));
+  // Map quality 10..100 -> CRF 34..20 (lower CRF = higher quality/larger file).
+  const crf = Math.round(34 - ((quality - 10) / 90) * 14);
+
+  const inExt = (inputExt && /^[a-z0-9]+$/i.test(inputExt)) ? inputExt.toLowerCase() : "mp4";
+  const inputPath = path.join(os.tmpdir(), `vid-in-${randomUUID()}.${inExt}`);
+  const outputPath = path.join(os.tmpdir(), `vid-out-${randomUUID()}.mp4`);
+
+  try {
+    await fs.writeFile(inputPath, videoBuffer);
+
+    await new Promise<void>((resolve, reject) => {
+      const args = [
+        "-i", inputPath,
+        "-vcodec", "libx264",
+        "-crf", String(crf),
+        "-preset", "medium",
+        "-acodec", "aac",
+        "-b:a", "128k",
+        "-movflags", "+faststart",
+        "-y", outputPath,
+      ];
+      const proc = spawn("ffmpeg", args);
+      let stderr = "";
+      proc.stderr.on("data", (d) => {
+        stderr += d.toString();
+        if (stderr.length > 20000) stderr = stderr.slice(-20000);
+      });
+      proc.on("error", (err) => {
+        reject(new Error(`Failed to start ffmpeg: ${err instanceof Error ? err.message : String(err)}`));
+      });
+      proc.on("close", (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`ffmpeg exited with code ${code}: ${stderr.slice(-500)}`));
+      });
+    });
+
+    const processedBuffer = await fs.readFile(outputPath);
+    const compressionRatio = ((videoBuffer.length - processedBuffer.length) / videoBuffer.length * 100).toFixed(1);
+    console.log(`Video compressed: ${compressionRatio}% size reduction (crf ${crf}, quality ${quality})`);
+
+    return {
+      success: true,
+      convertedBuffer: processedBuffer,
+      mimeType: "video/mp4",
+    };
+  } catch (error) {
+    throw new Error(`Video compression failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+  } finally {
+    await fs.unlink(inputPath).catch(() => {});
+    await fs.unlink(outputPath).catch(() => {});
   }
 }
 

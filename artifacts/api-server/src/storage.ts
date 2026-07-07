@@ -334,6 +334,17 @@ export class MemStorage implements IStorage {
         processingTimeEstimate: 35
       },
       {
+        id: 25,
+        name: "MP4 Compressor",
+        type: ToolType.COMPRESS_VIDEO,
+        category: ToolCategory.IMAGE_TOOLS,
+        description: "Reduce MP4 video file size while keeping good quality",
+        inputFormats: ["mp4"],
+        outputFormat: "mp4",
+        maxFileSize: 200,
+        processingTimeEstimate: 60
+      },
+      {
         id: 20,
         name: "Rotate PDF",
         type: ToolType.ROTATE_PDF,
@@ -1000,6 +1011,17 @@ export class DatabaseStorage implements IStorage {
         outputFormat: "pdf",
         maxFileSize: 200,
         processingTimeEstimate: 35
+      },
+      {
+        id: 25,
+        name: "MP4 Compressor",
+        type: ToolType.COMPRESS_VIDEO,
+        category: ToolCategory.IMAGE_TOOLS,
+        description: "Reduce MP4 video file size while keeping good quality",
+        inputFormats: ["mp4"],
+        outputFormat: "mp4",
+        maxFileSize: 200,
+        processingTimeEstimate: 60
       },
       {
         id: 20,

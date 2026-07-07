@@ -37,6 +37,8 @@ const TOOL_ACTION_LABELS: Record<string, ToolActionLabels> = {
   "rotate-images": ROTATE,
   "compress-images": COMPRESS,
   "compress-image": COMPRESS,
+  // Video tools
+  "compress-video": COMPRESS,
   "upscale-images": { progress: "Upscaling", done: "Upscaled", base: "upscale" },
   "remove-background": { progress: "Removing Background", done: "Processed", base: "process" },
   // PDF management

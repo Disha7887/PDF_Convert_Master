@@ -53,6 +53,7 @@ const ImagesToPdfUpload = named(() => import("@/pages/upload/ImagesToPdf"), "Ima
 const HtmlToPdfUpload = named(() => import("@/pages/upload/HtmlToPdf"), "HtmlToPdfUpload");
 const SplitPdfUpload = named(() => import("@/pages/upload/SplitPdf"), "SplitPdfUpload");
 const CompressPdfUpload = named(() => import("@/pages/upload/CompressPdf"), "CompressPdfUpload");
+const CompressVideoUpload = named(() => import("@/pages/upload/CompressVideo"), "CompressVideoUpload");
 const RotatePdfUpload = named(() => import("@/pages/upload/RotatePdf"), "RotatePdfUpload");
 const ResizeImageUpload = named(() => import("@/pages/upload/ResizeImage"), "ResizeImageUpload");
 const CropImageUpload = named(() => import("@/pages/upload/CropImage"), "CropImageUpload");
@@ -399,6 +400,12 @@ function Router() {
       <Route path="/upload/compress-pdf">
         <DynamicLayout>
           <CompressPdfUpload />
+        </DynamicLayout>
+      </Route>
+
+      <Route path="/upload/compress-video">
+        <DynamicLayout>
+          <CompressVideoUpload />
         </DynamicLayout>
       </Route>
 

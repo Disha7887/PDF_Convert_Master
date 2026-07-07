@@ -228,7 +228,10 @@ export enum ToolType {
   OCR_PDF = "ocr_pdf",
   RESTORE_DOCUMENT = "restore_document",
   LOCK_PDF = "lock_pdf",
-  UNLOCK_PDF = "unlock_pdf"
+  UNLOCK_PDF = "unlock_pdf",
+
+  // Video Tools
+  COMPRESS_VIDEO = "compress_video"
 }
 
 // Conversion jobs table  
