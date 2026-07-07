@@ -81,3 +81,4 @@
 - [Per-route SEO (web SPA)](web-seo-per-route.md) — useSeo hook drives head tags client-side per route; public=index, auth/account=noindex; code SEO won't index instantly (needs Search Console + sitemap submit).
 - [Adding a conversion tool — sync points](adding-a-tool-sync-points.md) — new tool needs enum + BOTH storage tool registries + MIME + switch (backend) + web toolTypeMap/toolConfig/route/Tools + mobile tools.ts; each is a silent failure point.
 - [api-server in-memory buffer OOM](api-memory-oom.md) — job Buffer maps need touch/purge/TTL-sweep lifecycle + free input after conversion, or Railway OOM-kills prod; eviction safe via S3 fallback.
+- [Compress Video (MP4) levels](compress-video-levels.md) — 3-level target-size two-pass; ratios lockstep web/mobile/backend (0.11/0.226/0.342); audio=20% share; corrupt-input friendly error; done-screen failure gates on status `failed`.

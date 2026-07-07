@@ -872,7 +872,15 @@ async function compressVideo(
       mimeType: "video/mp4",
     };
   } catch (error) {
-    throw new Error(`Video compression failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    const raw = error instanceof Error ? error.message : "Unknown error";
+    // ffmpeg couldn't parse the container (truncated/incomplete upload or a
+    // non-video file). Surface a friendly message instead of the raw banner.
+    if (/moov atom not found|invalid data found|error opening input/i.test(raw)) {
+      throw new Error(
+        "This video file appears to be corrupted or incomplete, so it couldn't be compressed. Please re-export the video and try uploading it again.",
+      );
+    }
+    throw new Error(`Video compression failed: ${raw}`);
   } finally {
     await fs.unlink(inputPath).catch(() => {});
     await fs.unlink(outputPath).catch(() => {});

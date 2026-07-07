@@ -556,21 +556,28 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       setBatchProgress(100);
       setIsConverting(false);
       
-      // Show completion toast with actual counts
-      toast({
-        title: "Conversions Complete!",
-        description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully. Download buttons are now available.`,
-      });
-      
-      if (failedFiles.length > 0) {
-        // Also show failure notification if some failed
-        setTimeout(() => {
-          toast({
-            title: "Some files failed",
-            description: `${failedFiles.length} file${failedFiles.length !== 1 ? 's' : ''} could not be converted`,
-            variant: "destructive",
-          });
-        }, 1000);
+      // Show completion toast with actual counts. When nothing succeeded, show a
+      // failure toast instead of implying downloads are available.
+      if (completedFiles.length > 0) {
+        toast({
+          title: "Conversions Complete!",
+          description: `${completedFiles.length} file${completedFiles.length !== 1 ? 's' : ''} converted successfully. Download buttons are now available.`,
+        });
+        if (failedFiles.length > 0) {
+          setTimeout(() => {
+            toast({
+              title: "Some files failed",
+              description: `${failedFiles.length} file${failedFiles.length !== 1 ? 's' : ''} could not be converted`,
+              variant: "destructive",
+            });
+          }, 1000);
+        }
+      } else {
+        toast({
+          title: "Conversion failed",
+          description: `${failedFiles.length} file${failedFiles.length !== 1 ? 's' : ''} could not be converted. Please check the details and try again.`,
+          variant: "destructive",
+        });
       }
     }
   };
@@ -587,8 +594,13 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
   const validFilesCount = selectedFiles.filter(f => f.status === 'valid').length;
   const completedFilesCount = selectedFiles.filter(f => f.status === 'completed').length;
+  const failedFilesCount = selectedFiles.filter(f => f.status === 'failed').length;
   const hasValidFiles = validFilesCount > 0;
   const hasCompletedFiles = completedFilesCount > 0;
+  // On the "done" screen, only celebrate when at least one file actually
+  // succeeded. If every file failed (e.g. a corrupt video), show a failure
+  // state instead of a misleading green "successfully ..." header.
+  const allFilesFailed = completedFilesCount === 0 && failedFilesCount > 0;
 
   return (
     <ToolPageShell
@@ -804,11 +816,25 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           {stage === 'completed' && (
             <div className="text-center space-y-6">
               <div className="flex justify-center">
-                <ConverterStatusIcon status="success" size={88} />
+                <ConverterStatusIcon status={allFilesFailed ? 'error' : 'success'} size={88} />
               </div>
               <div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Files {actionLabels.done}!</h3>
-                <p className="text-gray-600">Your files have been successfully {actionLabels.done.toLowerCase()}</p>
+                {allFilesFailed ? (
+                  <>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                      {actionLabels.done} failed
+                    </h3>
+                    <p className="text-gray-600">
+                      We couldn&apos;t {actionLabels.base.toLowerCase()} your file
+                      {failedFilesCount !== 1 ? 's' : ''}. See the details below.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-2xl font-semibold text-gray-900 mb-2">Files {actionLabels.done}!</h3>
+                    <p className="text-gray-600">Your files have been successfully {actionLabels.done.toLowerCase()}</p>
+                  </>
+                )}
               </div>
               
               {/* File List After Completion */}
