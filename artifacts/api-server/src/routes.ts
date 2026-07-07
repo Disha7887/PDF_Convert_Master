@@ -2611,6 +2611,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Diagnostic: compare the bytes we actually received against the size the
+      // client claims. A large mismatch means the upload was truncated in
+      // transit (not a corrupt source file).
+      console.log(
+        `Upload received: ${req.file.originalname} claimed=${req.body.fileSize ?? "?"} received=${req.file.size} bytes`,
+      );
+
       const requestData = {
         toolType: req.body.toolType,
         fileName: req.body.fileName || req.file.originalname,
