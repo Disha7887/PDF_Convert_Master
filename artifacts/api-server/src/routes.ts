@@ -737,54 +737,134 @@ async function compressImage(imageBuffer: Buffer, inputExt: string | undefined, 
 
 // Compress an MP4 video with ffmpeg (system binary). We round-trip through temp
 // files because ffmpeg streams to/from disk rather than in-memory buffers.
-// `options.quality` (10-100) maps to an H.264 CRF: higher quality = lower CRF =
-// larger file. Defaults to a balanced 28 CRF (~medium compression).
+// Target output size, as a fraction of the original, for each compression level
+// the user picks in the "Compress Video" popup. These ratios drive BOTH the
+// estimate shown to the user (client-side) and the actual encode target here,
+// so the produced file lands close to the estimated size.
+const VIDEO_LEVEL_RATIOS: Record<string, number> = {
+  high: 0.11, // Smallest size, standard quality
+  medium: 0.226, // Medium size, better quality
+  low: 0.342, // Larger size, highest quality
+};
+const AUDIO_BITRATE_KBPS = 128;
+
+// Run ffmpeg with the given args, rejecting with trailing stderr on failure.
+function runFfmpeg(args: string[]): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const proc = spawn("ffmpeg", args);
+    let stderr = "";
+    proc.stderr.on("data", (d) => {
+      stderr += d.toString();
+      if (stderr.length > 20000) stderr = stderr.slice(-20000);
+    });
+    proc.on("error", (err) => {
+      reject(new Error(`Failed to start ffmpeg: ${err instanceof Error ? err.message : String(err)}`));
+    });
+    proc.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`ffmpeg exited with code ${code}: ${stderr.slice(-500)}`));
+    });
+  });
+}
+
+// Probe a media file's duration in seconds via ffprobe. Returns 0 when unknown.
+function probeDurationSeconds(filePath: string): Promise<number> {
+  return new Promise<number>((resolve) => {
+    const proc = spawn("ffprobe", [
+      "-v", "error",
+      "-show_entries", "format=duration",
+      "-of", "default=noprint_wrappers=1:nokey=1",
+      filePath,
+    ]);
+    let out = "";
+    proc.stdout.on("data", (d) => { out += d.toString(); });
+    proc.on("error", () => resolve(0));
+    proc.on("close", () => {
+      const secs = parseFloat(out.trim());
+      resolve(Number.isFinite(secs) && secs > 0 ? secs : 0);
+    });
+  });
+}
+
 async function compressVideo(
   videoBuffer: Buffer,
   inputExt: string | undefined,
   outputFilename: string,
   options: Record<string, any> = {},
 ) {
-  const quality = Math.min(100, Math.max(10, Math.round(Number(options.quality)) || 60));
-  // Map quality 10..100 -> CRF 34..20 (lower CRF = higher quality/larger file).
-  const crf = Math.round(34 - ((quality - 10) / 90) * 14);
-
   const inExt = (inputExt && /^[a-z0-9]+$/i.test(inputExt)) ? inputExt.toLowerCase() : "mp4";
-  const inputPath = path.join(os.tmpdir(), `vid-in-${randomUUID()}.${inExt}`);
-  const outputPath = path.join(os.tmpdir(), `vid-out-${randomUUID()}.mp4`);
+  const uid = randomUUID();
+  const inputPath = path.join(os.tmpdir(), `vid-in-${uid}.${inExt}`);
+  const outputPath = path.join(os.tmpdir(), `vid-out-${uid}.mp4`);
+  // ffmpeg two-pass writes "<passlog>-0.log" and "<passlog>-0.log.mbtree".
+  const passLog = path.join(os.tmpdir(), `vid-pass-${uid}`);
+
+  // A level (high/medium/low) targets a specific output size; the legacy
+  // quality option keeps working for API callers via a CRF encode.
+  const level = typeof options.level === "string" ? options.level.toLowerCase() : "";
+  const ratio = VIDEO_LEVEL_RATIOS[level];
 
   try {
     await fs.writeFile(inputPath, videoBuffer);
 
-    await new Promise<void>((resolve, reject) => {
-      const args = [
-        "-i", inputPath,
-        "-vcodec", "libx264",
+    let mode = "";
+    if (ratio) {
+      const duration = await probeDurationSeconds(inputPath);
+      if (duration > 0) {
+        // Total bitrate (kbps) the target size allows over this duration.
+        const targetTotalBytes = videoBuffer.length * ratio;
+        const totalKbps = (targetTotalBytes * 8) / duration / 1000;
+        // Give audio a bounded share so it never eats the whole budget on
+        // small targets, but still uses full quality (128k) when there's room.
+        const audioKbps = Math.min(
+          AUDIO_BITRATE_KBPS,
+          Math.max(48, Math.round(totalKbps * 0.2)),
+        );
+        // Floor the video bitrate so tiny targets still yield a playable file.
+        const videoBitrateKbps = Math.max(64, Math.round(totalKbps - audioKbps));
+
+        // Two-pass VBR gives a far more accurate final size than single-pass.
+        await runFfmpeg([
+          "-y", "-i", inputPath,
+          "-c:v", "libx264",
+          "-b:v", `${videoBitrateKbps}k`,
+          "-preset", "medium",
+          "-pass", "1", "-passlogfile", passLog,
+          "-an", "-f", "mp4", "/dev/null",
+        ]);
+        await runFfmpeg([
+          "-y", "-i", inputPath,
+          "-c:v", "libx264",
+          "-b:v", `${videoBitrateKbps}k`,
+          "-preset", "medium",
+          "-pass", "2", "-passlogfile", passLog,
+          "-c:a", "aac", "-b:a", `${audioKbps}k`,
+          "-movflags", "+faststart",
+          outputPath,
+        ]);
+        mode = `level ${level} (target ~${(targetTotalBytes / (1024 * 1024)).toFixed(2)}MB, v${videoBitrateKbps}k a${audioKbps}k)`;
+      }
+    }
+
+    if (!mode) {
+      // Fallback: quality -> CRF single-pass (API callers / unknown level).
+      const quality = Math.min(100, Math.max(10, Math.round(Number(options.quality)) || 60));
+      const crf = Math.round(34 - ((quality - 10) / 90) * 14);
+      await runFfmpeg([
+        "-y", "-i", inputPath,
+        "-c:v", "libx264",
         "-crf", String(crf),
         "-preset", "medium",
-        "-acodec", "aac",
-        "-b:a", "128k",
+        "-c:a", "aac", "-b:a", `${AUDIO_BITRATE_KBPS}k`,
         "-movflags", "+faststart",
-        "-y", outputPath,
-      ];
-      const proc = spawn("ffmpeg", args);
-      let stderr = "";
-      proc.stderr.on("data", (d) => {
-        stderr += d.toString();
-        if (stderr.length > 20000) stderr = stderr.slice(-20000);
-      });
-      proc.on("error", (err) => {
-        reject(new Error(`Failed to start ffmpeg: ${err instanceof Error ? err.message : String(err)}`));
-      });
-      proc.on("close", (code) => {
-        if (code === 0) resolve();
-        else reject(new Error(`ffmpeg exited with code ${code}: ${stderr.slice(-500)}`));
-      });
-    });
+        outputPath,
+      ]);
+      mode = `crf ${crf} (quality ${quality})`;
+    }
 
     const processedBuffer = await fs.readFile(outputPath);
     const compressionRatio = ((videoBuffer.length - processedBuffer.length) / videoBuffer.length * 100).toFixed(1);
-    console.log(`Video compressed: ${compressionRatio}% size reduction (crf ${crf}, quality ${quality})`);
+    console.log(`Video compressed: ${compressionRatio}% size reduction (${mode})`);
 
     return {
       success: true,
@@ -796,6 +876,8 @@ async function compressVideo(
   } finally {
     await fs.unlink(inputPath).catch(() => {});
     await fs.unlink(outputPath).catch(() => {});
+    await fs.unlink(`${passLog}-0.log`).catch(() => {});
+    await fs.unlink(`${passLog}-0.log.mbtree`).catch(() => {});
   }
 }
 

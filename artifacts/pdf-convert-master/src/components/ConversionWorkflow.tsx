@@ -14,8 +14,15 @@ import {
   FileCheck,
   Settings,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Check
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { EnhancedUploadArea } from "@/components/ui/enhanced-upload-area";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { ToolPageShell } from "@/components/upload/ToolPageShell";
@@ -47,6 +54,17 @@ interface FileUpload {
 
 type ConversionStage = 'upload' | 'files-selected' | 'converting' | 'completed' | 'error';
 
+// MP4 Compressor levels. `ratio` is the target output size as a fraction of the
+// original — kept in lockstep with the server's VIDEO_LEVEL_RATIOS so the shown
+// estimate matches the produced file.
+const VIDEO_LEVELS = [
+  { id: 'high', label: 'High', sub: 'Smallest size, standard quality', ratio: 0.11 },
+  { id: 'medium', label: 'Medium', sub: 'Medium size, better quality', ratio: 0.226 },
+  { id: 'low', label: 'Low', sub: 'Larger size, highest quality', ratio: 0.342 },
+] as const;
+
+const formatMB = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+
 export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   toolType,
   toolTitle,
@@ -73,6 +91,13 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   // password field for them and ship it through as options.password.
   const needsPassword = toolType === 'lock-pdf' || toolType === 'unlock-pdf';
   const passwordReady = !needsPassword || password.trim().length > 0;
+
+  // MP4 Compressor: user picks a compression level in a popup after upload.
+  // Each level targets a fraction of the original size (shared with the server
+  // encode target so the produced file lands near the shown estimate).
+  const isVideoCompress = toolType === 'compress-video';
+  const [levelModalOpen, setLevelModalOpen] = useState(false);
+  const [compressionLevel, setCompressionLevel] = useState<'high' | 'medium' | 'low'>('high');
 
   const maxFiles = 10;
   const maxSizeInBytes = parseFloat(maxFileSize) * 1024 * 1024;
@@ -158,6 +183,12 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
     setSelectedFiles(prev => [...prev, ...validatedFiles]);
     setStage('files-selected');
     setErrorMessage(null);
+
+    // MP4 Compressor: surface the level-picker popup as soon as a valid video
+    // is added, so the user picks a target size before compressing.
+    if (isVideoCompress && validatedFiles.some(f => f.status === 'valid')) {
+      setLevelModalOpen(true);
+    }
     
     const validCount = validatedFiles.filter(f => f.status === 'valid').length;
     const invalidCount = validatedFiles.filter(f => f.status === 'invalid').length;
@@ -262,7 +293,10 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
           formData.append('toolType', toolType.replace(/-/g, '_'));
           formData.append('fileName', fileUpload.file.name);
           formData.append('fileSize', fileUpload.file.size.toString());
-          formData.append('options', JSON.stringify(needsPassword ? { password: password.trim() } : {}));
+          const convertOptions: Record<string, unknown> = {};
+          if (needsPassword) convertOptions.password = password.trim();
+          if (isVideoCompress) convertOptions.level = compressionLevel;
+          formData.append('options', JSON.stringify(convertOptions));
 
           // Start conversion job with file upload
           const response = await authedFetch('/api/convert', {
@@ -710,12 +744,14 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
               {hasValidFiles && (
                 <div className="flex justify-center space-x-4 pt-4">
                   <Button
-                    onClick={startBatchConversion}
+                    onClick={isVideoCompress ? () => setLevelModalOpen(true) : startBatchConversion}
                     className="bg-[#f7433d] hover:bg-[#e03a35] text-white px-8 py-3"
                     disabled={isConverting || !passwordReady}
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Convert {validFilesCount} File{validFilesCount !== 1 ? 's' : ''} to {outputFormat.toUpperCase()}
+                    {isVideoCompress
+                      ? `Compress ${validFilesCount} Video${validFilesCount !== 1 ? 's' : ''}`
+                      : `Convert ${validFilesCount} File${validFilesCount !== 1 ? 's' : ''} to ${outputFormat.toUpperCase()}`}
                   </Button>
                   <Button
                     onClick={resetWorkflow}
@@ -850,6 +886,77 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       </div>
       )}
       <LoginRequiredDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
+
+      {/* MP4 Compressor — compression level picker popup */}
+      {isVideoCompress && (() => {
+        const validForEstimate = selectedFiles.filter(f => f.status === 'valid');
+        const totalBytes = validForEstimate.reduce((sum, f) => sum + f.file.size, 0);
+        const displayName = validForEstimate.length === 1
+          ? validForEstimate[0].file.name
+          : `${validForEstimate.length} videos`;
+        return (
+          <Dialog open={levelModalOpen} onOpenChange={setLevelModalOpen}>
+            <DialogContent className="sm:max-w-2xl">
+              <DialogTitle className="text-center text-3xl font-extrabold text-gray-900">
+                Compress Video
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                Select a compression level for your video
+              </DialogDescription>
+
+              <div className="flex items-center justify-between border-b border-gray-200 pb-3 text-sm">
+                <span className="truncate pr-4 text-gray-500">{displayName}</span>
+                <span className="shrink-0 font-medium text-gray-900">{formatMB(totalBytes)}</span>
+              </div>
+
+              <p className="pt-1 text-sm font-medium text-gray-500">Select compression level:</p>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {VIDEO_LEVELS.map((lvl) => {
+                  const selected = compressionLevel === lvl.id;
+                  return (
+                    <button
+                      key={lvl.id}
+                      type="button"
+                      onClick={() => setCompressionLevel(lvl.id)}
+                      data-testid={`button-level-${lvl.id}`}
+                      className={`relative rounded-xl border p-4 text-left transition-colors ${
+                        selected
+                          ? 'border-[#f7433d] ring-1 ring-[#f7433d]/30'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border ${
+                          selected ? 'border-[#f7433d] bg-[#f7433d] text-white' : 'border-gray-300'
+                        }`}
+                      >
+                        {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                      </span>
+                      <h4 className="text-lg font-bold text-gray-900">{lvl.label}</h4>
+                      <p className="mt-1 text-xs text-gray-500">{lvl.sub}</p>
+                      <div className="mt-3 inline-block rounded-md bg-gray-100 px-2.5 py-1 text-sm text-gray-700">
+                        Final size <span className="font-bold text-gray-900">~{formatMB(totalBytes * lvl.ratio)}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  onClick={() => { setLevelModalOpen(false); startBatchConversion(); }}
+                  disabled={isConverting || validForEstimate.length === 0}
+                  className="w-full bg-[#f7433d] py-6 text-base font-semibold text-white hover:bg-[#e03a35]"
+                  data-testid="button-compress-video"
+                >
+                  Compress
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </ToolPageShell>
   );
 };

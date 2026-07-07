@@ -73,6 +73,24 @@ const QUALITY_OPTIONS = [
   { label: "Small", value: 50 },
 ] as const;
 
+/**
+ * Compression levels for the "Compress Video" (MP4 Compressor) tool. `ratio` is
+ * the fraction of the original size the two-pass encode targets, and MUST stay
+ * in lockstep with the backend VIDEO_LEVEL_RATIOS (api-server routes.ts).
+ */
+const VIDEO_LEVELS = [
+  { id: "high", label: "High", sub: "Smallest size, standard quality", ratio: 0.11 },
+  { id: "medium", label: "Medium", sub: "Medium size, better quality", ratio: 0.226 },
+  { id: "low", label: "Low", sub: "Larger size, highest quality", ratio: 0.342 },
+] as const;
+
+type VideoLevel = (typeof VIDEO_LEVELS)[number]["id"];
+
+/** Formats a byte count as an "~X.X MB" estimate for the level cards. */
+function formatMB(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 type Stage = "select" | "converting" | "done" | "error" | "unsupported";
 
 // ── helpers (module scope) ───────────────────────────────────────────────────
@@ -204,6 +222,7 @@ export default function ConvertScreen() {
   );
   const [outputFormat, setOutputFormat] = useState<string>("png");
   const [quality, setQuality] = useState<number>(75);
+  const [videoLevel, setVideoLevel] = useState<VideoLevel>("high");
   const [password, setPassword] = useState<string>("");
   const [ocrPages, setOcrPages] = useState<string[] | null>(
     previewStage === "done" && tool?.serverToolType === "ocr_pdf"
@@ -370,6 +389,7 @@ export default function ConvertScreen() {
       const options: ConversionOptions = {};
       if (tool.id === "convert-image-format") options.outputFormat = outputFormat;
       if (tool.id === "compress-images") options.quality = quality;
+      if (tool.id === "compress-video") options.level = videoLevel;
       if (needsPassword) options.password = password.trim();
 
       const { jobId } = await startConversion(tool.id, files, options);
@@ -439,7 +459,7 @@ export default function ConvertScreen() {
       setError(message);
       setStage("error");
     }
-  }, [tool, files, outputFormat, quality, needsPassword, password, isAuthenticated]);
+  }, [tool, files, outputFormat, quality, videoLevel, needsPassword, password, isAuthenticated]);
 
   const reset = useCallback(() => {
     setFiles([]);
@@ -745,6 +765,46 @@ export default function ConvertScreen() {
                   </View>
                 </View>
               )}
+
+              {tool.id === "compress-video" && (() => {
+                const totalBytes = files.reduce((sum, f) => sum + (f.size ?? 0), 0);
+                return (
+                  <View style={styles.optionBlock}>
+                    <Text style={styles.optionLabel}>Select compression level</Text>
+                    <View style={styles.levelList}>
+                      {VIDEO_LEVELS.map((lvl) => {
+                        const active = videoLevel === lvl.id;
+                        return (
+                          <Pressable
+                            key={lvl.id}
+                            onPress={() => setVideoLevel(lvl.id)}
+                            style={[styles.levelCard, active && styles.levelCardActive]}
+                            testID={`card-level-${lvl.id}`}
+                          >
+                            <View style={styles.levelHeader}>
+                              <Text style={styles.levelTitle}>{lvl.label}</Text>
+                              <View
+                                style={[styles.levelRadio, active && styles.levelRadioActive]}
+                              >
+                                {active && <Feather name="check" size={12} color="#fff" />}
+                              </View>
+                            </View>
+                            <Text style={styles.levelSub}>{lvl.sub}</Text>
+                            {totalBytes > 0 && (
+                              <Text style={styles.levelEstimate}>
+                                Final size ~
+                                <Text style={styles.levelEstimateStrong}>
+                                  {formatMB(totalBytes * lvl.ratio)}
+                                </Text>
+                              </Text>
+                            )}
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+                );
+              })()}
 
               {needsPassword && (
                 <View style={styles.optionBlock}>
@@ -1254,6 +1314,31 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: C.primary, borderColor: C.primary },
   chipText: { fontSize: 13, color: C.foreground, fontFamily: fonts.bodyMedium },
   chipTextActive: { color: C.primaryForeground },
+
+  levelList: { gap: 10 },
+  levelCard: {
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 14,
+    padding: 14,
+    backgroundColor: C.surfaceAlt,
+  },
+  levelCardActive: { borderColor: C.primary, backgroundColor: C.background },
+  levelHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  levelTitle: { fontSize: 16, color: C.foreground, fontFamily: fonts.bodySemibold },
+  levelRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: C.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  levelRadioActive: { backgroundColor: C.primary, borderColor: C.primary },
+  levelSub: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 3 },
+  levelEstimate: { fontSize: 13, color: C.mutedForeground, fontFamily: fonts.body, marginTop: 8 },
+  levelEstimateStrong: { color: C.foreground, fontFamily: fonts.bodySemibold },
 
   errorText: { fontSize: 13, color: C.destructive, fontFamily: fonts.body, textAlign: "center", marginTop: 4 },
   acceptedText: { fontSize: 12.5, color: C.mutedForeground, fontFamily: fonts.bodyMedium, textAlign: "center", marginTop: 2 },
