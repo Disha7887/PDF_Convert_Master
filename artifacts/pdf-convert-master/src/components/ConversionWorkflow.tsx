@@ -335,7 +335,10 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
 
   const pollJobStatus = async (fileId: string, jobId: number, resolve?: () => void, reject?: (error: any) => void) => {
     let attempts = 0;
-    const maxAttempts = 60; // 90 seconds max (optimized for faster processing)
+    // Video compression (two-pass encode) legitimately takes longer than the
+    // other tools, so give it a much wider window before giving up.
+    const isVideo = toolType === 'compress-video';
+    const maxAttempts = isVideo ? 400 : 60; // ~600s for video, 90s otherwise
     
     const poll = async (): Promise<void> => {
       try {
