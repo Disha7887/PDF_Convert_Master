@@ -28,6 +28,16 @@ are rejected unless the extension is in the allowlist. Four allowlists must matc
 - mobile `acceptedFormats` in constants/tools.ts.
 **Why:** expanding only the frontend still 400s at the server registry.
 
+# VFR duration stretch (output longer than source)
+Variable-frame-rate inputs (screen/phone recordings) re-encoded without an explicit
+output frame rate can come out with a stretched duration (real case: 5-min source →
+15-min output, ~3x). Fix: `probeAvgFrameRate()` (ffprobe `avg_frame_rate`, sane
+1–120fps guard) → inject `-fps_mode cfr -r <avg>` into EVERY compressVideo ffmpeg
+command (level single-pass AND CRF fallback). avg_frame_rate = frames/duration, so
+forcing CFR at that rate reproduces the true duration. Harmless on CFR sources
+(180s stays 180s). Note: a plain CFR test clip won't reproduce the bug — ffmpeg 6.1
+handles simple VFR fine; the cure is still the standard one.
+
 # Corrupt-video UX
 ffmpeg "moov atom not found / invalid data found / error opening input" = a
 corrupt/incomplete upload (NOT a size limit; server accepts 85MB+). compressVideo()

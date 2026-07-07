@@ -786,6 +786,36 @@ function probeDurationSeconds(filePath: string): Promise<number> {
   });
 }
 
+// Returns the video's average frame rate as an ffmpeg fraction string
+// (e.g. "30000/1001"), or "" if it can't be determined or looks bogus.
+// Used to force CFR output so variable-frame-rate inputs (screen/phone
+// recordings) don't re-encode to a stretched duration.
+function probeAvgFrameRate(filePath: string): Promise<string> {
+  return new Promise<string>((resolve) => {
+    const proc = spawn("ffprobe", [
+      "-v", "error",
+      "-select_streams", "v:0",
+      "-show_entries", "stream=avg_frame_rate",
+      "-of", "default=noprint_wrappers=1:nokey=1",
+      filePath,
+    ]);
+    let out = "";
+    proc.stdout.on("data", (d) => { out += d.toString(); });
+    proc.on("error", () => resolve(""));
+    proc.on("close", () => {
+      const raw = out.trim();
+      const m = raw.match(/^(\d+)\/(\d+)$/);
+      if (!m) { resolve(""); return; }
+      const num = Number(m[1]);
+      const den = Number(m[2]);
+      if (!num || !den) { resolve(""); return; }
+      const fps = num / den;
+      // Only trust sane playback rates; ignore missing/extreme values.
+      resolve(fps >= 1 && fps <= 120 ? raw : "");
+    });
+  });
+}
+
 async function compressVideo(
   videoBuffer: Buffer,
   inputExt: string | undefined,
@@ -806,6 +836,13 @@ async function compressVideo(
 
   try {
     await fs.writeFile(inputPath, videoBuffer);
+
+    // Force constant-frame-rate output at the source's true average rate so
+    // variable-frame-rate inputs (screen/phone recordings) keep their real
+    // duration instead of coming out stretched (e.g. a 5-min clip re-encoded
+    // to 15 min).
+    const avgFps = await probeAvgFrameRate(inputPath);
+    const fpsArgs = avgFps ? ["-fps_mode", "cfr", "-r", avgFps] : [];
 
     let mode = "";
     if (ratio) {
@@ -834,6 +871,7 @@ async function compressVideo(
           "-maxrate", `${Math.round(videoBitrateKbps * 1.5)}k`,
           "-bufsize", `${Math.round(videoBitrateKbps * 2)}k`,
           "-preset", "veryfast",
+          ...fpsArgs,
           "-c:a", "aac", "-b:a", `${audioKbps}k`,
           "-movflags", "+faststart",
           outputPath,
@@ -851,6 +889,7 @@ async function compressVideo(
         "-c:v", "libx264",
         "-crf", String(crf),
         "-preset", "veryfast",
+        ...fpsArgs,
         "-c:a", "aac", "-b:a", `${AUDIO_BITRATE_KBPS}k`,
         "-movflags", "+faststart",
         outputPath,
