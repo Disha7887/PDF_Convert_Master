@@ -12,7 +12,11 @@
   "private": true,
   "pnpm": {
     "onlyBuiltDependencies": [
-      "ffmpeg-static"
+      "bcrypt",
+      "esbuild",
+      "ffmpeg-static",
+      "puppeteer",
+      "tesseract.js"
     ]
   },
   "devDependencies": {
