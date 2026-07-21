@@ -18,13 +18,17 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "pdfgenius.app"
+        "EXPO_PUBLIC_DOMAIN": "pdfgenius.app",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY": "goog_YrXDsAKQIqhKsfXJFwTvakuuNPn",
+        "EXPO_PUBLIC_REVENUECAT_IOS_API_KEY": "appl_MINawVvBuAxlRqPhbfsOPkyrAEs"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "pdfgenius.app"
+        "EXPO_PUBLIC_DOMAIN": "pdfgenius.app",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY": "goog_YrXDsAKQIqhKsfXJFwTvakuuNPn",
+        "EXPO_PUBLIC_REVENUECAT_IOS_API_KEY": "appl_MINawVvBuAxlRqPhbfsOPkyrAEs"
       }
     }
   },
