@@ -195,6 +195,46 @@ export const FooterSection = (): JSX.Element => {
           </div>
         </div>
 
+        {/* Get the App */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
+            <div className="flex-1 text-center sm:text-left">
+              <h4 className="text-gray-900 font-semibold text-base mb-2">Get the App</h4>
+              <p className="text-gray-600 text-sm mb-4 max-w-md">
+                Convert files on the go — download PDF Genius from Google Play, or scan the QR code with your phone.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.pdfgenius.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Get it on Google Play"
+                  className="inline-block"
+                >
+                  <img
+                    src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+                    alt="Get it on Google Play"
+                    className="h-14 w-auto"
+                    loading="lazy"
+                  />
+                </a>
+                <span className="inline-flex items-center h-10 sm:h-14 px-4 rounded-lg border border-gray-200 bg-gray-50 text-gray-500 text-xs font-medium whitespace-nowrap">
+                  iOS — available soon
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <img
+                src={`${import.meta.env.BASE_URL}play-store-qr.svg`}
+                alt="QR code — scan to download PDF Genius on Google Play"
+                className="w-28 h-28 rounded-lg border border-gray-200 bg-white p-1"
+                loading="lazy"
+              />
+              <span className="text-gray-500 text-xs">Scan to download</span>
+            </div>
+          </div>
+        </div>
+
         {/* Footer Bottom */}
         <div className="mt-12 pt-8 border-t border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
