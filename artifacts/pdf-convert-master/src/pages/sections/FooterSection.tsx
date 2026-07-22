@@ -196,7 +196,7 @@ export const FooterSection = (): JSX.Element => {
         </div>
 
         {/* Get the App */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
+        <div className="mt-12 pt-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
             <div className="flex-1 text-center sm:text-left">
               <h4 className="text-gray-900 font-semibold text-base mb-2">Get the App</h4>
