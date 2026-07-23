@@ -253,7 +253,7 @@ export const FooterSection = (): JSX.Element => {
                   src={`${import.meta.env.BASE_URL}payments/${pm.file}`}
                   alt={pm.alt}
                   title={pm.alt}
-                  className="h-7 w-7"
+                  className="h-10 w-10"
                   loading="lazy"
                 />
               ))}
