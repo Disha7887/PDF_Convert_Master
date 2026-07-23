@@ -1,4 +1,8 @@
 import { Feather } from "@expo/vector-icons";
+import LottieView from "lottie-react-native";
+
+// "Temporarily closed" hanging-board animation shown when a tool is paused.
+const temporarilyClosed = require("../../assets/lottie/temporarily-closed.json");
 import { useQueryClient } from "@tanstack/react-query";
 import { Asset } from "expo-asset";
 import * as Clipboard from "expo-clipboard";
@@ -623,7 +627,12 @@ export default function ConvertScreen() {
       <ScreenScroll insetTop>
         <BackRow onPress={goBack} title={tool.title} />
         <View style={styles.emptyState}>
-          <Feather name="clock" size={40} color={C.border} />
+          <LottieView
+            source={temporarilyClosed as never}
+            autoPlay
+            loop
+            style={{ width: 140, height: 140 }}
+          />
           <Text style={styles.emptyTitle}>
             {tool.maintenance ? (tool.maintenanceLabel ?? "Under maintenance") : "Temporarily unavailable"}
           </Text>

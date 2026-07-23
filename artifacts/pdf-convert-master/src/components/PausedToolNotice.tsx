@@ -1,7 +1,8 @@
 import React from "react";
-import { Clock } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { LottieIcon } from "@/components/ui/lottie-icon";
+import temporarilyClosed from "@/assets/lottie/temporarily-closed.json";
 
 /**
  * Friendly full-card notice shown on a tool's upload page when an admin has
@@ -16,8 +17,8 @@ export const PausedToolNotice: React.FC<{ toolTitle: string }> = ({ toolTitle })
       className="bg-white rounded-2xl shadow-xl border border-gray-200 px-6 py-12 flex flex-col items-center text-center"
       data-testid="notice-tool-paused"
     >
-      <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-amber-50 border border-amber-200 mb-4">
-        <Clock className="w-7 h-7 text-amber-500" />
+      <div className="mb-4">
+        <LottieIcon animationData={temporarilyClosed} size={120} />
       </div>
       <h2 className="text-xl font-bold text-gray-900 mb-2">
         Temporarily unavailable
