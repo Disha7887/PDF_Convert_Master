@@ -13,6 +13,7 @@ import resize from "@/assets/lottie/resize.json";
 import cropTool from "@/assets/lottie/crop-tool.json";
 import rotateImage from "@/assets/lottie/rotate-image.json";
 import compress from "@/assets/lottie/compress.json";
+import videoCompress from "@/assets/lottie/video-compress.json";
 import aiUpscaling from "@/assets/lottie/ai-upscaling.json";
 import removeImage from "@/assets/lottie/remove-image.json";
 import pdfMerger from "@/assets/lottie/pdf_merger.json";
@@ -56,6 +57,7 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "rotate-images": rotateImage,
   "compress-images": compress,
   "compress-image": compress,
+  "compress-video": videoCompress,
   "upscale-images": aiUpscaling,
   "remove-background": removeImage,
   // PDF management

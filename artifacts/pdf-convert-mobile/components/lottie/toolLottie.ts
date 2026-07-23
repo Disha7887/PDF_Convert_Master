@@ -20,6 +20,7 @@ export const TOOL_ANIMATIONS: Record<string, unknown> = {
   "crop-images": require("../../assets/lottie/crop-tool.json"),
   "rotate-images": require("../../assets/lottie/rotate-image.json"),
   "compress-images": require("../../assets/lottie/compress.json"),
+  "compress-video": require("../../assets/lottie/video-compress.json"),
   "upscale-images": require("../../assets/lottie/ai-upscaling.json"),
   "remove-background": require("../../assets/lottie/remove-image.json"),
   // PDF management
