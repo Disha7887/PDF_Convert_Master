@@ -246,7 +246,6 @@ export const FooterSection = (): JSX.Element => {
 
             {/* Payment Methods */}
             <div className="flex items-center gap-2">
-              <span className="text-gray-500 text-sm mr-1">We accept</span>
               {[
                 { file: "visa.svg", alt: "Visa" },
                 { file: "mastercard.svg", alt: "Mastercard" },
