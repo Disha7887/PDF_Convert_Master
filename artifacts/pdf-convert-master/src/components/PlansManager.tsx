@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import {
+  type BillingPeriod,
   type Plan,
   type UsageData,
   fetchPlans,
@@ -33,6 +34,8 @@ export const PlansManager: React.FC = () => {
   const [pendingPlan, setPendingPlan] = useState<string | null>(null);
   // The customer portal opens for management/cancellation; one global flag.
   const [portalBusy, setPortalBusy] = useState(false);
+  // Monthly / yearly billing toggle for the plan cards.
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("month");
 
   const { data: plans = [] } = useQuery<Plan[]>({
     queryKey: ["/api/plans"],
@@ -76,7 +79,7 @@ export const PlansManager: React.FC = () => {
   const handleUpgrade = async (planId: string) => {
     setPendingPlan(planId);
     try {
-      const url = await startCheckout(planId);
+      const url = await startCheckout(planId, billingPeriod);
       window.location.href = url;
     } catch (err: any) {
       toast({
@@ -271,7 +274,43 @@ export const PlansManager: React.FC = () => {
       {/* Available Plans */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Available Plans</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <CardTitle>Available Plans</CardTitle>
+            {/* Monthly / Yearly toggle */}
+            <div
+              className="inline-flex items-center rounded-full bg-gray-100 p-1"
+              role="tablist"
+              aria-label="Billing period"
+            >
+              {(
+                [
+                  { value: "month", label: "Monthly" },
+                  { value: "year", label: "Yearly" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={billingPeriod === opt.value}
+                  onClick={() => setBillingPeriod(opt.value)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    billingPeriod === opt.value
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                  data-testid={`toggle-billing-${opt.value}`}
+                >
+                  {opt.label}
+                  {opt.value === "year" && (
+                    <span className="ml-1.5 text-xs font-semibold text-[#f7433d]">
+                      2 months free
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <div className="p-6 pt-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -337,10 +376,23 @@ export const PlansManager: React.FC = () => {
                     </h3>
                     <div className="flex items-end justify-center mb-2">
                       <span className="text-4xl font-bold text-gray-900">
-                        ${plan.price}
+                        $
+                        {billingPeriod === "year" && !isFree
+                          ? plan.yearlyPrice
+                          : plan.price}
                       </span>
-                      <span className="text-gray-600 ml-1">/month</span>
+                      <span className="text-gray-600 ml-1">
+                        {billingPeriod === "year" && !isFree
+                          ? "/year"
+                          : "/month"}
+                      </span>
                     </div>
+                    {billingPeriod === "year" && !isFree && (
+                      <p className="text-xs text-gray-500 mb-1">
+                        ${(plan.yearlyPrice / 12).toFixed(2)}/month, billed
+                        yearly
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">{plan.description}</p>
                   </div>
                   <ul className="space-y-3 mb-8 flex-grow">

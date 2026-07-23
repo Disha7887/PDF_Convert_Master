@@ -70,22 +70,41 @@ export function isCreditsConfigured(): boolean {
   return Boolean(process.env.DODO_PAYMENTS_API_KEY && getCreditsProductId());
 }
 
-/** Map an internal plan id to its configured Dodo product id (env-driven). */
-export function getProductIdForPlan(planId: string): string | undefined {
-  const map: Record<string, string | undefined> = {
-    pro: process.env.DODO_PRODUCT_PRO,
-    business: process.env.DODO_PRODUCT_BUSINESS,
+export type BillingPeriod = "month" | "year";
+
+/** Map an internal plan id + billing period to its Dodo product id (env-driven). */
+export function getProductIdForPlan(
+  planId: string,
+  period: BillingPeriod = "month",
+): string | undefined {
+  const map: Record<BillingPeriod, Record<string, string | undefined>> = {
+    month: {
+      pro: process.env.DODO_PRODUCT_PRO,
+      business: process.env.DODO_PRODUCT_BUSINESS,
+    },
+    year: {
+      pro: process.env.DODO_PRODUCT_PRO_YEARLY,
+      business: process.env.DODO_PRODUCT_BUSINESS_YEARLY,
+    },
   };
-  return map[planId];
+  return map[period]?.[planId];
 }
 
-/** Reverse lookup: a Dodo product id back to our plan id. */
+/** Reverse lookup: a Dodo product id back to our plan id (tier, any period). */
 export function getPlanForProductId(
   productId: string | undefined | null,
 ): string | undefined {
   if (!productId) return undefined;
-  if (productId === process.env.DODO_PRODUCT_PRO) return "pro";
-  if (productId === process.env.DODO_PRODUCT_BUSINESS) return "business";
+  if (
+    productId === process.env.DODO_PRODUCT_PRO ||
+    productId === process.env.DODO_PRODUCT_PRO_YEARLY
+  )
+    return "pro";
+  if (
+    productId === process.env.DODO_PRODUCT_BUSINESS ||
+    productId === process.env.DODO_PRODUCT_BUSINESS_YEARLY
+  )
+    return "business";
   return undefined;
 }
 
@@ -93,7 +112,10 @@ export function getPlanForProductId(
 export function isBillingConfigured(): boolean {
   return Boolean(
     process.env.DODO_PAYMENTS_API_KEY &&
-      (process.env.DODO_PRODUCT_PRO || process.env.DODO_PRODUCT_BUSINESS),
+      (process.env.DODO_PRODUCT_PRO ||
+        process.env.DODO_PRODUCT_BUSINESS ||
+        process.env.DODO_PRODUCT_PRO_YEARLY ||
+        process.env.DODO_PRODUCT_BUSINESS_YEARLY),
   );
 }
 
@@ -140,13 +162,15 @@ export interface CheckoutUser {
 export async function createCheckoutForPlan(opts: {
   user: CheckoutUser;
   planId: string;
+  period?: BillingPeriod;
   returnUrl: string;
   cancelUrl?: string;
 }): Promise<{ url: string; sessionId: string }> {
-  const productId = getProductIdForPlan(opts.planId);
+  const period: BillingPeriod = opts.period === "year" ? "year" : "month";
+  const productId = getProductIdForPlan(opts.planId, period);
   if (!productId) {
     throw new Error(
-      `No Dodo product is configured for the "${opts.planId}" plan.`,
+      `No Dodo product is configured for the "${opts.planId}" plan (${period}ly billing).`,
     );
   }
   const client = getDodoClient();
@@ -166,7 +190,7 @@ export async function createCheckoutForPlan(opts: {
     customization: BRAND_CHECKOUT_CUSTOMIZATION,
     // Carried back to us on every subscription webhook so we can attribute the
     // subscription to the right user without a DB round-trip.
-    metadata: { userId: opts.user.id, planId: opts.planId },
+    metadata: { userId: opts.user.id, planId: opts.planId, period },
   });
 
   if (!session.checkout_url) {

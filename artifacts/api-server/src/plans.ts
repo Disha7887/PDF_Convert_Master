@@ -21,8 +21,10 @@ export interface PlanLimits {
 export interface Plan {
   id: string;
   name: string;
-  /** Price in whole/decimal currency units for the billing period. */
+  /** Price in whole/decimal currency units per month. */
   price: number;
+  /** Price in whole/decimal currency units per year (0 = no yearly option). */
+  yearlyPrice: number;
   period: "month";
   description: string;
   popular: boolean;
@@ -39,6 +41,7 @@ export const PLANS: Plan[] = [
     id: "free",
     name: "Free",
     price: 0,
+    yearlyPrice: 0,
     period: "month",
     description: "For occasional conversions and trying things out.",
     popular: false,
@@ -56,6 +59,7 @@ export const PLANS: Plan[] = [
     id: "pro",
     name: "Pro",
     price: 9,
+    yearlyPrice: 90,
     period: "month",
     description: "For professionals who convert every day.",
     popular: true,
@@ -73,6 +77,7 @@ export const PLANS: Plan[] = [
     id: "business",
     name: "Business",
     price: 29,
+    yearlyPrice: 290,
     period: "month",
     description: "For teams that need scale, control and an SLA.",
     popular: false,

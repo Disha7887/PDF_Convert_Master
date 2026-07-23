@@ -10,10 +10,14 @@ export interface PlanLimits {
   conversions: number;
 }
 
+export type BillingPeriod = "month" | "year";
+
 export interface Plan {
   id: string;
   name: string;
   price: number;
+  /** Yearly price for the plan (0 = no yearly option). */
+  yearlyPrice: number;
   period: "month";
   description: string;
   popular: boolean;
@@ -56,11 +60,14 @@ export function changePlan(planId: string): Promise<Plan> {
 // --- Dodo Payments billing -------------------------------------------------
 
 /** Start a hosted Dodo checkout for a paid plan; resolves to its checkout URL. */
-export function startCheckout(planId: string): Promise<string> {
+export function startCheckout(
+  planId: string,
+  period: BillingPeriod = "month",
+): Promise<string> {
   return authedJson<{ data: { url: string } }>("/api/billing/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ planId }),
+    body: JSON.stringify({ planId, period }),
   }).then((r) => r.data.url);
 }
 

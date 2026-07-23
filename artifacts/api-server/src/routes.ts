@@ -4255,11 +4255,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req as any).user.id as string;
       const planId = String(req.body?.planId ?? "").trim();
+      const period: "month" | "year" =
+        String(req.body?.period ?? "month").trim().toLowerCase() === "year"
+          ? "year"
+          : "month";
       const plan = getPlan(planId);
       if (!plan || plan.id === "free") {
         return res.status(400).json({ success: false, error: "Choose a paid plan." });
       }
-      if (!getProductIdForPlan(plan.id)) {
+      if (!getProductIdForPlan(plan.id, period)) {
         return res.status(503).json({
           success: false,
           error: "Billing is not configured for this plan yet.",
@@ -4287,6 +4291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dodoCustomerId: (user as any).dodoCustomerId ?? null,
         },
         planId: plan.id,
+        period,
         returnUrl: `${origin}/dashboard/manage-plans?checkout=success`,
         cancelUrl: `${origin}/dashboard/manage-plans?checkout=cancelled`,
       });

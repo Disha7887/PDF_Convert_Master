@@ -83,3 +83,9 @@ Web users can buy a custom $ of credits (was mobile-only before). Rate
 price: dollars*100, currency:"USD", payment_frequency_interval:"Month",
 subscription_period_interval:"Month", ... } })`. Going live = recreate products in
 live_mode and swap the product-id env vars + `DODO_PAYMENTS_ENVIRONMENT=live_mode`.
+
+## Yearly plans
+- Yearly Dodo products exist (live mode): env `DODO_PRODUCT_PRO_YEARLY` / `DODO_PRODUCT_BUSINESS_YEARLY`; Pro $90/yr, Business $290/yr (2 months free vs monthly).
+- `getProductIdForPlan(planId, period)` picks the product; reverse lookup maps yearly product ids to the SAME tier ("pro"/"business") — webhook grants tier, period is metadata-only.
+- `/api/billing/checkout` accepts `{planId, period:"month"|"year"}`; plan catalog carries `yearlyPrice`; web PlansManager has a Monthly/Yearly toggle.
+- These env vars must also be set on Railway prod or yearly checkout 503s there.
