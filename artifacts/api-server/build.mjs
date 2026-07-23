@@ -129,7 +129,40 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
   });
 }
 
-buildAll().catch((err) => {
+// Ensure a Chrome binary exists for Puppeteer when the machine has no system
+// Chromium (e.g. the Railway production image — dev on Replit uses the Nix
+// chromium found via `which`). Puppeteer's install-time download can be
+// skipped by pnpm's side-effects cache and its default cache dir doesn't
+// survive into Railway's runtime image, so we install into the repo-local
+// cache (.puppeteerrc.cjs → <repo>/.puppeteer-cache) during the build.
+async function ensurePuppeteerChrome() {
+  const { execSync } = await import("node:child_process");
+  const { existsSync } = await import("node:fs");
+  try {
+    execSync("which chromium || which chromium-browser", { stdio: "ignore" });
+    return; // system Chromium available (dev) — no download needed
+  } catch {
+    // no system browser — fall through to Puppeteer's bundled Chrome
+  }
+  try {
+    const puppeteer = (await import("puppeteer")).default;
+    // executablePath() is async in this Puppeteer version; it resolves to the
+    // repo-local cache path (.puppeteerrc.cjs) whether or not it's installed.
+    const p = await puppeteer.executablePath();
+    if (p && existsSync(p)) return; // already installed
+  } catch {
+    // executablePath throws when not installed — install below
+  }
+  console.log("No Chromium found — installing Puppeteer Chrome into repo-local cache...");
+  execSync("pnpm exec puppeteer browsers install chrome", {
+    stdio: "inherit",
+    cwd: artifactDir,
+  });
+}
+
+buildAll()
+  .then(ensurePuppeteerChrome)
+  .catch((err) => {
   console.error(err);
   process.exit(1);
 });

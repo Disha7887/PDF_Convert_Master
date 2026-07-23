@@ -79,6 +79,7 @@
 - [Avatar storage](avatar-storage.md) — profile photos stay in Backblaze (key `avatars/<userId>`), NOT Supabase (user-confirmed); DELETE /api/auth/avatar clears url to "".
 - [Mobile edited-filename persist](mobile-edited-filename-persist.md) — History/Files written at conversion time w/ original name; rename is PATCHED on download-confirm via savedEntryRef, don't move the persist.
 - [Per-route SEO (web SPA)](web-seo-per-route.md) — useSeo hook drives head tags client-side per route; public=index, auth/account=noindex; code SEO won't index instantly (needs Search Console + sitemap submit).
+- [Puppeteer Chrome in prod](puppeteer-chrome-prod.md) — repo-local .puppeteer-cache via .puppeteerrc.cjs + build-time install when no system chromium; executablePath() is ASYNC; downloads use contentDisposition() helper.
 - [Prod ffmpeg via static npm](prod-ffmpeg-static.md) — Railway image lacks ffmpeg/ffprobe (bare spawn ENOENT in prod, works in dev); bundle ffmpeg-static+ffprobe-static, allowlist ffmpeg-static in pnpm.onlyBuiltDependencies, keep esbuild-external.
 - [Video compression timeout](compress-video-timeout.md) — "Processing took longer than expected" = slow encode, not corrupt; use x264 `veryfast` (not medium) + 400-poll (~600s) client window for compress-video.
 - [Adding a conversion tool — sync points](adding-a-tool-sync-points.md) — new tool needs enum + BOTH storage tool registries + MIME + switch (backend) + web toolTypeMap/toolConfig/route/Tools + mobile tools.ts; each is a silent failure point.

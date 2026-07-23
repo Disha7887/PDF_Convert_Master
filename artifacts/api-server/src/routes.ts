@@ -10,6 +10,7 @@ import {
 } from "@workspace/db";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import fs from "fs/promises";
+import fsSync from "fs";
 import path from "path";
 import { promisify } from "util";
 import sharp from "sharp";
@@ -86,10 +87,35 @@ function getMimeType(filename: string): string {
   return MIME_TYPES[ext || ''] || 'application/octet-stream';
 }
 
+// Build a safe Content-Disposition header value from a user-influenced
+// filename. Raw interpolation crashes Node's setHeader (ERR_INVALID_CHAR)
+// when the name contains non-ASCII/control characters (accents, emoji, …).
+// We send an ASCII-only fallback in `filename` plus the original name RFC
+// 5987-encoded in `filename*` so browsers save with the real name.
+function contentDisposition(type: 'attachment' | 'inline', filename: string): string {
+  const name = String(filename || '');
+  // ASCII fallback: strip control chars, replace non-ASCII, escape quote/backslash.
+  let fallback = name
+    .replace(/[^\x20-\x7e]/g, '_')
+    .replace(/["\\]/g, '_')
+    .trim();
+  if (!fallback || /^_+(\.[A-Za-z0-9]+)?$/.test(fallback)) {
+    const ext = /\.([A-Za-z0-9]{1,10})$/.exec(fallback || name.replace(/[^\x20-\x7e]/g, ''))?.[1];
+    fallback = ext ? `download.${ext}` : (fallback || 'download');
+  }
+  // Only add filename* when the original differs from the fallback.
+  if (fallback === name || !name) {
+    return `${type}; filename="${fallback}"`;
+  }
+  // RFC 5987 ext-value: percent-encode everything outside attr-char.
+  const encoded = encodeURIComponent(name).replace(/['()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+  return `${type}; filename="${fallback}"; filename*=UTF-8''${encoded}`;
+}
+
 // Resolve the Chromium binary for Puppeteer. The Nix store path changes across
 // rebuilds, so resolve it at runtime via `which` (cached) instead of hardcoding.
 let cachedChromiumPath: string | null | undefined;
-function getChromiumPath(): string | undefined {
+async function getChromiumPath(): Promise<string | undefined> {
   if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
   if (cachedChromiumPath !== undefined) return cachedChromiumPath ?? undefined;
   try {
@@ -97,6 +123,18 @@ function getChromiumPath(): string | undefined {
     cachedChromiumPath = resolved || null;
   } catch {
     cachedChromiumPath = null;
+  }
+  if (!cachedChromiumPath) {
+    // No system Chromium (e.g. the Railway image). Fall back to the Chrome
+    // that Puppeteer downloads into the repo-local cache (.puppeteerrc.cjs);
+    // build.mjs guarantees it is installed when no system browser exists.
+    try {
+      // executablePath() is async in this Puppeteer version (config loading).
+      const bundled = await puppeteer.executablePath();
+      if (bundled && fsSync.existsSync(bundled)) cachedChromiumPath = bundled;
+    } catch {
+      // leave null — puppeteer.launch will surface a clear error
+    }
   }
   return cachedChromiumPath ?? undefined;
 }
@@ -153,7 +191,7 @@ async function htmlToPdfBuffer(html: string): Promise<Buffer> {
   try {
     browser = await puppeteer.launch({
       headless: true,
-      executablePath: getChromiumPath(),
+      executablePath: await getChromiumPath(),
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     });
     const page = await browser.newPage();
@@ -3059,7 +3097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ success: false, error: "Upload not found or expired" });
     }
     res.setHeader('Content-Type', stored.mimeType);
-    res.setHeader('Content-Disposition', `inline; filename="${stored.filename}"`);
+    res.setHeader('Content-Disposition', contentDisposition('inline', stored.filename));
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
     res.setHeader('Cache-Control', 'no-cache');
@@ -3387,7 +3425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const base = (job.outputFilename || `converted_file_${jobId}`).replace(/\.[^./]+$/, "");
           const textFilename = `${base}.${fmt}`;
           const body = Buffer.from(buildOcrContent(fmt, pages, base), "utf-8");
-          res.setHeader('Content-Disposition', `attachment; filename="${textFilename}"`);
+          res.setHeader('Content-Disposition', contentDisposition('attachment', textFilename));
           res.setHeader('Content-Type', OCR_FORMAT_MIME[fmt]);
           res.setHeader('Content-Length', body.length.toString());
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -3445,7 +3483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set headers for proper file download
       const properMimeType = mimeType || getMimeType(safeFilename);
       
-      res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+      res.setHeader('Content-Disposition', contentDisposition('attachment', safeFilename));
       res.setHeader('Content-Type', properMimeType);
       res.setHeader('Content-Length', convertedBuffer.length.toString());
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -3737,7 +3775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set response headers for file download
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${tempFileName}"`);
+      res.setHeader('Content-Disposition', contentDisposition('attachment', tempFileName));
       res.setHeader('Content-Length', pdfBytes.length);
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
@@ -4541,7 +4579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             processingTime: Date.now() - startTime, errorMessage: null,
           });
 
-          res.setHeader("Content-Disposition", `attachment; filename="${outputFilename}"`);
+          res.setHeader("Content-Disposition", contentDisposition('attachment', outputFilename));
           res.setHeader("Content-Type", result.mimeType || "application/pdf");
           res.setHeader("Content-Length", String(result.convertedBuffer.length));
           return res.status(200).send(result.convertedBuffer);
@@ -4600,7 +4638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processingTime: Date.now() - startTime, errorMessage: null,
         });
 
-        res.setHeader("Content-Disposition", `attachment; filename="${outputFilename}"`);
+        res.setHeader("Content-Disposition", contentDisposition('attachment', outputFilename));
         res.setHeader("Content-Type", result.mimeType || getMimeType(outputFilename));
         res.setHeader("Content-Length", String(result.convertedBuffer.length));
         return res.status(200).send(result.convertedBuffer);
