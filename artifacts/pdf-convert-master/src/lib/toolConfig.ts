@@ -375,7 +375,7 @@ export const toolConfigs: Record<string, ToolConfig> = {
     iconColor: "text-[#f7433d]",
     iconBgColor: "bg-[#f7433d]/10",
     iconBorderColor: "border-[#f7433d]/20",
-    category: "Edit",
+    category: "Security",
     route: "/upload/lock-pdf"
   },
   "unlock-pdf": {
@@ -392,7 +392,7 @@ export const toolConfigs: Record<string, ToolConfig> = {
     iconColor: "text-[#f7433d]",
     iconBgColor: "bg-[#f7433d]/10",
     iconBorderColor: "border-[#f7433d]/20",
-    category: "Edit",
+    category: "Security",
     route: "/upload/unlock-pdf"
   },
   // VIDEO TOOLS

@@ -10,6 +10,7 @@ export const TOOL_CATEGORIES = [
   "Image Tools",
   "Organize",
   "Edit",
+  "Security",
   "Video Tools",
 ] as const;
 
@@ -491,7 +492,7 @@ export const tools: Tool[] = [
     dropAreaText: "Drop your PDF here to lock it",
     fileTypeHint: "Supports: PDF up to 100MB",
     outputFormat: "Password-protected PDF",
-    category: "Edit",
+    category: "Security",
     feather: "lock",
     route: "/upload/lock-pdf",
     serverToolType: "lock_pdf",
@@ -511,7 +512,7 @@ export const tools: Tool[] = [
     dropAreaText: "Drop your password-protected PDF here",
     fileTypeHint: "Supports: PDF up to 100MB",
     outputFormat: "Unlocked PDF",
-    category: "Edit",
+    category: "Security",
     feather: "unlock",
     route: "/upload/unlock-pdf",
     serverToolType: "unlock_pdf",
