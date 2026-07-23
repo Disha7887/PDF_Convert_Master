@@ -244,6 +244,27 @@ export const FooterSection = (): JSX.Element => {
               © {new Date().getFullYear()} PDF Genius. All rights reserved.
             </div>
 
+            {/* Payment Methods */}
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-sm mr-1">We accept</span>
+              {[
+                { file: "visa.svg", alt: "Visa" },
+                { file: "mastercard.svg", alt: "Mastercard" },
+                { file: "upi.svg", alt: "UPI" },
+                { file: "apple-pay.svg", alt: "Apple Pay" },
+                { file: "google-pay.svg", alt: "Google Pay" },
+              ].map((pm) => (
+                <img
+                  key={pm.file}
+                  src={`${import.meta.env.BASE_URL}payments/${pm.file}`}
+                  alt={pm.alt}
+                  title={pm.alt}
+                  className="h-7 w-7"
+                  loading="lazy"
+                />
+              ))}
+            </div>
+
             {/* Security Features */}
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               {footerInfoItems.map((item, index) => (
