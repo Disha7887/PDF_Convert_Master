@@ -29,6 +29,8 @@ import { ToolPageShell } from "@/components/upload/ToolPageShell";
 import { FileItem } from "@/components/ui/file-item";
 import { toolConfigs, getToolActionLabel } from "@/lib/toolConfig";
 import { getToolActionLabels } from "@/lib/toolActionLabels";
+import { useToolPaused } from "@/lib/usePausedTools";
+import { PausedToolNotice } from "@/components/PausedToolNotice";
 
 interface ConversionWorkflowProps {
   toolType: string;
@@ -106,6 +108,9 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
   // (e.g. "Convert to Word") and matches every other tool's upload design.
   // Falls back to the tool's own title prop when a toolType has no config entry,
   // so the action button always names the tool (never a generic "Select Files").
+  // Same dash→underscore mapping this workflow uses when submitting jobs, so
+  // the paused check matches exactly what the server would reject.
+  const isPaused = useToolPaused(toolType.replace(/-/g, '_'));
   const cfg = toolConfigs[toolType];
   const uploadTitle = cfg?.dropAreaText;
   const uploadActionLabel = cfg ? getToolActionLabel(cfg) : toolTitle;
@@ -619,8 +624,12 @@ export const ConversionWorkflow: React.FC<ConversionWorkflowProps> = ({
       maxWidth="max-w-4xl"
       showHeader={stage !== "upload"}
     >
+      {/* Paused by an admin: replace the dropzone with a friendly notice so
+          visitors don't upload a file only to have the server reject it. */}
+      {stage === 'upload' && isPaused && <PausedToolNotice toolTitle={toolTitle} />}
+
       {/* Upload Stage — bare dropzone, identical design to every other tool */}
-      {stage === 'upload' && (
+      {stage === 'upload' && !isPaused && (
         <>
           <EnhancedUploadArea
             acceptedFormats={acceptedFormats}

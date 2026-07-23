@@ -47,6 +47,7 @@ import {
   reencodeImage,
   sanitizeName,
 } from "@/services/downloadFormats";
+import { useToolPaused } from "@/services/pausedTools";
 import { saveFile } from "@/services/files";
 import { getAuthToken } from "@/services/authToken";
 
@@ -194,6 +195,9 @@ export default function ConvertScreen() {
   const { isAuthenticated } = useAuth();
   const { toolId, preview } = useLocalSearchParams<{ toolId: string; preview?: string }>();
   const tool = getToolById(toolId);
+  // Live admin pause state — greys the screen out with a friendly notice
+  // before the user picks a file (server rejects paused conversions anyway).
+  const isPaused = useToolPaused(tool?.serverToolType);
 
   // `preview` drives the canvas gallery: it initializes a specific stage so the
   // success / error / processing states can be shown as standalone frames.
@@ -614,15 +618,17 @@ export default function ConvertScreen() {
   // and completion copy names the actual action instead of a generic "Convert".
   const actionLabels = getToolActionLabels(tool.id);
 
-  if (tool.maintenance) {
+  if (tool.maintenance || isPaused) {
     return (
       <ScreenScroll insetTop>
         <BackRow onPress={goBack} title={tool.title} />
         <View style={styles.emptyState}>
           <Feather name="clock" size={40} color={C.border} />
-          <Text style={styles.emptyTitle}>{tool.maintenanceLabel ?? "Under maintenance"}</Text>
+          <Text style={styles.emptyTitle}>
+            {tool.maintenance ? (tool.maintenanceLabel ?? "Under maintenance") : "Temporarily unavailable"}
+          </Text>
           <Text style={styles.emptyText}>
-            {tool.maintenanceNote ??
+            {(tool.maintenance ? tool.maintenanceNote : undefined) ??
               `${tool.title} is temporarily unavailable while we make improvements. Please check back soon.`}
           </Text>
           <Button label="Browse tools" icon="grid" onPress={() => router.replace(ROUTES.tools as never)} />

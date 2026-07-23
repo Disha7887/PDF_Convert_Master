@@ -2451,6 +2451,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public paused-tools probe: lets web/mobile clients grey out paused tools
+  // and show a friendly notice BEFORE the user uploads a file. Exposes only
+  // the paused tool types — no admin data. Must be registered before the
+  // "/api/tools/:toolType" route so "paused" isn't captured as a toolType.
+  app.get("/api/tools/paused", async (_req, res) => {
+    try {
+      const paused = await storage.getPausedToolTypes();
+      res.json({ success: true, data: { paused: Array.from(paused) } });
+    } catch (error) {
+      console.error("Error fetching paused tools:", error);
+      // Fail open: clients treat all tools as active if this probe fails.
+      res.json({ success: true, data: { paused: [] } });
+    }
+  });
+
   // Get tools by category
   app.get("/api/tools/category/:category", async (req, res) => {
     try {

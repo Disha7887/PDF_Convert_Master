@@ -17,6 +17,8 @@ import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { OrderedFileList } from "@/components/OrderedFileList";
 import { ToolPageShell } from "@/components/upload/ToolPageShell";
 import { toolConfigs, getToolActionLabel } from "@/lib/toolConfig";
+import { useToolPaused } from "@/lib/usePausedTools";
+import { PausedToolNotice } from "@/components/PausedToolNotice";
 
 interface ImagesToPdfWorkflowProps {
   toolTitle: string;
@@ -255,6 +257,7 @@ export const ImagesToPdfWorkflow: React.FC<ImagesToPdfWorkflowProps> = ({
   const cfg = toolConfigs["images-to-pdf"];
   const uploadTitle = cfg?.dropAreaText;
   const uploadActionLabel = cfg ? getToolActionLabel(cfg) : toolTitle;
+  const isPaused = useToolPaused("images_to_pdf");
 
   return (
     <ToolPageShell
@@ -265,8 +268,11 @@ export const ImagesToPdfWorkflow: React.FC<ImagesToPdfWorkflowProps> = ({
       maxWidth="max-w-4xl"
       showHeader={stage !== "upload"}
     >
+      {/* Paused by an admin: friendly notice instead of the dropzone. */}
+      {stage === "upload" && isPaused && <PausedToolNotice toolTitle={toolTitle} />}
+
       {/* Upload Stage — bare dropzone, identical design to every other tool */}
-      {stage === "upload" && (
+      {stage === "upload" && !isPaused && (
         <EnhancedUploadArea
           acceptedFormats={acceptedFormats}
           maxFileSize={maxFileSize}

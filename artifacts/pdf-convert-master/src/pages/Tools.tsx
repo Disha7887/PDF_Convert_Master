@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AuthErrorAction } from "@/components/AuthErrorAction";
 import { toolConfigs, type ToolConfig } from "@/lib/toolConfig";
 import { useSeo } from "@/lib/useSeo";
+import { useToolPaused } from "@/lib/usePausedTools";
 import {
   Upload,
   Download,
@@ -157,6 +158,13 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
   const [, setLocation] = useLocation();
   const isNavigateTool = NAVIGATE_TOOL_IDS.has(toolConfig.id);
   const isComingSoon = !!toolConfig.comingSoon;
+  // Admin-paused tools are greyed out just like coming-soon ones, but with a
+  // "Temporarily unavailable" label. Editor tools without a backend toolType
+  // fall back to the dash→underscore form so admin pauses still apply.
+  const isPaused = useToolPaused(
+    toolTypeMap[toolConfig.id] ?? toolConfig.id.replace(/-/g, "_"),
+  );
+  const isDisabled = isComingSoon || isPaused;
   const editUrlRef = useRef<string | null>(null);
   // Bumped on every new edit action (open/apply) and on reset; an async decode
   // whose token no longer matches is stale and must not touch state.
@@ -560,26 +568,26 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
       <>
         <div
           role="button"
-          tabIndex={isComingSoon ? -1 : 0}
-          aria-disabled={isComingSoon || undefined}
+          tabIndex={isDisabled ? -1 : 0}
+          aria-disabled={isDisabled || undefined}
           onClick={() => {
-            if (isComingSoon) return;
+            if (isDisabled) return;
             isNavigateTool ? setLocation(toolConfig.route!) : setUploadOpen(true);
           }}
           onKeyDown={(e) => {
-            if (isComingSoon) return;
+            if (isDisabled) return;
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               isNavigateTool ? setLocation(toolConfig.route!) : setUploadOpen(true);
             }
           }}
-          className={`${cardBase} ${cardIdle} ${isComingSoon ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
+          className={`${cardBase} ${cardIdle} ${isDisabled ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
           data-testid={`card-tool-${toolConfig.id}`}
         >
           <div
             className={`flex flex-col h-full ${isDragOver ? "opacity-80" : ""}`}
             onDragOver={(e) => {
-              if (isComingSoon) return;
+              if (isDisabled) return;
               e.preventDefault();
               setIsDragOver(true);
             }}
@@ -587,7 +595,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
               e.preventDefault();
               setIsDragOver(false);
             }}
-            onDrop={isComingSoon ? undefined : handleDrop}
+            onDrop={isDisabled ? undefined : handleDrop}
           >
             <div className="flex justify-center mb-4">
               <div
@@ -603,6 +611,15 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#f7433d]/10 text-[#f7433d] text-[10px] font-semibold px-2 py-0.5">
                   <Clock className="w-3 h-3" />
                   Coming soon
+                </span>
+              )}
+              {!isComingSoon && isPaused && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-semibold px-2 py-0.5"
+                  data-testid={`badge-paused-${toolConfig.id}`}
+                >
+                  <Clock className="w-3 h-3" />
+                  Unavailable
                 </span>
               )}
             </h3>
@@ -627,6 +644,14 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
               >
                 <Clock className="w-4 h-4" />
                 Coming soon
+              </div>
+            ) : isPaused ? (
+              <div
+                className="w-full h-12 flex items-center justify-center gap-2 rounded-full border-2 border-dashed border-amber-400/50 text-sm font-semibold text-amber-600"
+                data-testid={`hint-paused-${toolConfig.id}`}
+              >
+                <Clock className="w-4 h-4" />
+                Temporarily unavailable
               </div>
             ) : (
               <div

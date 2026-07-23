@@ -17,6 +17,8 @@ import { ConverterStatusIcon } from "@/components/converter-status-icon";
 import { OrderedFileList } from "@/components/OrderedFileList";
 import { ToolPageShell } from "@/components/upload/ToolPageShell";
 import { toolConfigs, getToolActionLabel } from "@/lib/toolConfig";
+import { useToolPaused } from "@/lib/usePausedTools";
+import { PausedToolNotice } from "@/components/PausedToolNotice";
 
 interface PdfMergeWorkflowProps {
   toolTitle: string;
@@ -253,6 +255,7 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
   const cfg = toolConfigs["merge-pdfs"];
   const uploadTitle = cfg?.dropAreaText;
   const uploadActionLabel = cfg ? getToolActionLabel(cfg) : toolTitle;
+  const isPaused = useToolPaused("merge_pdfs");
 
   return (
     <ToolPageShell
@@ -263,8 +266,11 @@ export const PdfMergeWorkflow: React.FC<PdfMergeWorkflowProps> = ({
       maxWidth="max-w-4xl"
       showHeader={stage !== "upload"}
     >
+      {/* Paused by an admin: friendly notice instead of the dropzone. */}
+      {stage === "upload" && isPaused && <PausedToolNotice toolTitle={toolTitle} />}
+
       {/* Upload Stage — bare dropzone, identical design to every other tool */}
-      {stage === "upload" && (
+      {stage === "upload" && !isPaused && (
         <EnhancedUploadArea
           acceptedFormats={acceptedFormats}
           maxFileSize={maxFileSize}

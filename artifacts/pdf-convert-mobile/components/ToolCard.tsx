@@ -10,6 +10,7 @@ import colors from "@/constants/colors";
 import { ROUTES } from "@/constants/routes";
 import { fonts } from "@/constants/theme";
 import type { Tool } from "@/constants/tools";
+import { useToolPaused } from "@/services/pausedTools";
 
 const C = colors.light;
 
@@ -21,7 +22,15 @@ interface ToolCardProps {
 export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
   const router = useRouter();
 
-  const offline = !!tool.maintenance;
+  // A tool is greyed out when it's statically under maintenance OR an admin
+  // has paused it server-side (live /api/tools/paused probe).
+  const paused = useToolPaused(tool.serverToolType);
+  const offline = !!tool.maintenance || paused;
+  const offlineLabel = tool.maintenance
+    ? tool.maintenanceLabel
+    : paused
+      ? "Temporarily unavailable"
+      : undefined;
 
   function handlePress() {
     if (offline) return;
@@ -46,7 +55,7 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
           <Text style={styles.gridTitle} numberOfLines={2}>
             {tool.title}
           </Text>
-          {offline && <MaintenanceBadge label={tool.maintenanceLabel} />}
+          {offline && <MaintenanceBadge label={offlineLabel} />}
         </Pressable>
       </GlassSurface>
     );
@@ -74,7 +83,7 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
           </Text>
           <View style={styles.badgeRow}>
             {offline ? (
-              <MaintenanceBadge label={tool.maintenanceLabel} />
+              <MaintenanceBadge label={offlineLabel} />
             ) : (
               <Text style={styles.badgeText}>→ {tool.outputFormat}</Text>
             )}
