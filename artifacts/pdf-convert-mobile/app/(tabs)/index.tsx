@@ -20,7 +20,9 @@ import colors from "@/constants/colors";
 import { loadFiles, type StoredFileEntry, type StoredFileKind } from "@/constants/files";
 import { ROUTES } from "@/constants/routes";
 import { cardShadow, fonts, heroShadow } from "@/constants/theme";
+import { getToolById } from "@/constants/tools";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePausedTools } from "@/services/pausedTools";
 
 const C = colors.light;
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -87,6 +89,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { width } = useWindowDimensions();
   const [recent, setRecent] = useState<StoredFileEntry[]>([]);
+  const pausedTools = usePausedTools();
 
   const contentWidth = Math.min(width, 640);
   const toolColWidth = contentWidth < 360 ? "100%" : "48%";
@@ -182,25 +185,34 @@ export default function HomeScreen() {
       {/* Tools */}
       <SectionRow title="Tools" onSeeAll={() => router.push(ROUTES.tools as never)} />
       <View style={styles.toolsGrid}>
-        {QUICK_TOOLS.map((t) => (
-          <Pressable
-            key={t.toolId}
-            style={({ pressed }) => [
-              styles.toolCard,
-              { width: toolColWidth },
-              cardShadow,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => router.push(ROUTES.convert(t.toolId) as never)}
-          >
-            <View style={styles.toolIcon}>
-              <ToolLottieIcon toolId={t.toolId} size={34} />
-            </View>
-            <Text style={styles.toolLabel} numberOfLines={1}>
-              {t.label}
-            </Text>
-          </Pressable>
-        ))}
+        {QUICK_TOOLS.map((t) => {
+          // Small hint only — navigation still proceeds; the tool screen
+          // shows the full paused notice (mirrors the web tool grid).
+          const paused = pausedTools.has(getToolById(t.toolId)?.serverToolType ?? "");
+          return (
+            <Pressable
+              key={t.toolId}
+              style={({ pressed }) => [
+                styles.toolCard,
+                { width: toolColWidth },
+                cardShadow,
+                pressed && styles.pressed,
+                paused && styles.toolCardPaused,
+              ]}
+              onPress={() => router.push(ROUTES.convert(t.toolId) as never)}
+            >
+              <View style={styles.toolIcon}>
+                <ToolLottieIcon toolId={t.toolId} size={34} />
+              </View>
+              <View style={{ flexShrink: 1 }}>
+                <Text style={styles.toolLabel} numberOfLines={1}>
+                  {t.label}
+                </Text>
+                {paused && <Text style={styles.toolPausedHint}>Unavailable</Text>}
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
 
       {/* Recent files */}
@@ -402,7 +414,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  toolLabel: { flex: 1, fontSize: 14.5, color: C.foreground, fontFamily: fonts.bodySemibold },
+  toolLabel: { fontSize: 14.5, color: C.foreground, fontFamily: fonts.bodySemibold },
+  toolCardPaused: { opacity: 0.6 },
+  toolPausedHint: {
+    marginTop: 1,
+    fontSize: 10.5,
+    color: C.mutedForeground,
+    fontFamily: fonts.bodySemibold,
+  },
 
   recentList: {
     backgroundColor: C.background,
