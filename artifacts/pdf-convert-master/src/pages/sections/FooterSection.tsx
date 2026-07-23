@@ -71,7 +71,7 @@ export const FooterSection = (): JSX.Element => {
   ];
 
   return (
-    <footer className="bg-white border-t border-gray-200 w-full">
+    <footer className="bg-white w-full">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -236,13 +236,8 @@ export const FooterSection = (): JSX.Element => {
         </div>
 
         {/* Footer Bottom */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
+        <div className="mt-12 pt-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-
-            {/* Copyright */}
-            <div className="text-gray-600 text-sm">
-              © {new Date().getFullYear()} PDF Genius. All rights reserved.
-            </div>
 
             {/* Payment Methods */}
             <div className="flex items-center gap-2">
@@ -278,6 +273,11 @@ export const FooterSection = (): JSX.Element => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="mt-8 text-center text-gray-600 text-sm">
+            © {new Date().getFullYear()} PDF Genius. All rights reserved.
           </div>
         </div>
       </div>
