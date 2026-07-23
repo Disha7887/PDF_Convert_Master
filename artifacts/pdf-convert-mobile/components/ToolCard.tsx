@@ -32,8 +32,13 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
       ? "Temporarily unavailable"
       : undefined;
 
+  // Statically-maintained tools ("Coming soon") stay dead; admin-paused tools
+  // remain tappable so the tool screen can show the full paused notice
+  // (mirrors the web tool grid + home quick tools).
+  const blocked = !!tool.maintenance;
+
   function handlePress() {
-    if (offline) return;
+    if (blocked) return;
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -45,7 +50,7 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
       <GlassSurface radius={18} style={styles.gridWrap}>
         <Pressable
           onPress={handlePress}
-          disabled={offline}
+          disabled={blocked}
           style={({ pressed }) => [
             styles.grid,
             { opacity: offline ? 0.55 : pressed ? 0.85 : 1 },
@@ -65,7 +70,7 @@ export default function ToolCard({ tool, variant = "row" }: ToolCardProps) {
     <GlassSurface radius={18} style={styles.rowWrap}>
       <Pressable
         onPress={handlePress}
-        disabled={offline}
+        disabled={blocked}
         style={({ pressed }) => [
           styles.row,
           { opacity: offline ? 0.6 : pressed ? 0.85 : 1 },
