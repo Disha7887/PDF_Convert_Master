@@ -145,6 +145,77 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
   }
 }
 
+// ---------------------------------------------------------------------------
+// Admin auth. The admin is NOT a normal user account: credentials come from the
+// ADMIN_USERNAME / ADMIN_PASSWORD environment variables, and successful login
+// issues a short-lived JWT with a distinct "admin" scope. Regular user tokens
+// (which have no scope) can never pass requireAdmin, and admin tokens carry no
+// userId so they can't be replayed against user endpoints.
+// ---------------------------------------------------------------------------
+
+interface AdminTokenPayload {
+  scope: "admin";
+  username: string;
+  iat?: number;
+  exp?: number;
+}
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const ha = crypto.createHash("sha256").update(a).digest();
+  const hb = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
+
+export function isAdminConfigured(): boolean {
+  return !!(process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD);
+}
+
+// POST /api/admin/login
+export async function adminLogin(req: Request, res: Response) {
+  try {
+    if (!isAdminConfigured()) {
+      return res.status(503).json({
+        success: false,
+        error: "Admin access is not configured.",
+      });
+    }
+    const { username, password } = req.body ?? {};
+    if (typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).json({ success: false, error: "Username and password are required." });
+    }
+    const okUser = timingSafeEqualStr(username, process.env.ADMIN_USERNAME!);
+    const okPass = timingSafeEqualStr(password, process.env.ADMIN_PASSWORD!);
+    if (!okUser || !okPass) {
+      return res.status(401).json({ success: false, error: "Invalid credentials." });
+    }
+    const payload: AdminTokenPayload = { scope: "admin", username };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "12h" });
+    return res.status(200).json({ success: true, data: { token } });
+  } catch (error) {
+    logger.error({ err: error }, "Admin login error");
+    return res.status(500).json({ success: false, error: "Login failed" });
+  }
+}
+
+// Middleware guarding every admin endpoint. 401 on anything that isn't a valid,
+// unexpired token with the admin scope.
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) {
+    return res.status(401).json({ success: false, error: "Not authorized" });
+  }
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as Partial<AdminTokenPayload>;
+    if (payload?.scope !== "admin") {
+      return res.status(403).json({ success: false, error: "Not authorized" });
+    }
+    return next();
+  } catch {
+    return res.status(401).json({ success: false, error: "Not authorized" });
+  }
+}
+
 // Register endpoint — step 1 of signup. We DON'T create the account here.
 // Instead we stash the pending registration (with the password already hashed)
 // and email a 6-digit verification code. The account is only created once the

@@ -19,6 +19,7 @@ import {
   type PasswordResetCode,
   type SignupVerification,
   type ToolConfig,
+  toolSettings,
   ToolType,
   ToolCategory
 } from "@workspace/db";
@@ -94,6 +95,11 @@ export interface IStorage {
   getAllTools(): Promise<ToolConfig[]>;
   getToolByType(type: ToolType): Promise<ToolConfig | undefined>;
   getToolsByCategory(category: ToolCategory): Promise<ToolConfig[]>;
+
+  // Admin tool pause controls. Paused tools reject new conversions everywhere.
+  getPausedToolTypes(): Promise<Set<string>>;
+  isToolPaused(toolType: string): Promise<boolean>;
+  setToolPaused(toolType: string, paused: boolean): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -423,6 +429,8 @@ export class MemStorage implements IStorage {
       passwordHash: insertUser.passwordHash!,
       plan: insertUser.plan || "free",
       credits: 0,
+      dodoCustomerId: null,
+      dodoSubscriptionId: null,
       profilePictureUrl: null,
       createdAt: now
     };
@@ -786,6 +794,22 @@ export class MemStorage implements IStorage {
 
   async getToolsByCategory(category: ToolCategory): Promise<ToolConfig[]> {
     return this.tools.filter(tool => tool.category === category);
+  }
+
+  // Admin tool pause controls (in-memory)
+  private pausedTools: Set<string> = new Set();
+
+  async getPausedToolTypes(): Promise<Set<string>> {
+    return new Set(this.pausedTools);
+  }
+
+  async isToolPaused(toolType: string): Promise<boolean> {
+    return this.pausedTools.has(toolType);
+  }
+
+  async setToolPaused(toolType: string, paused: boolean): Promise<void> {
+    if (paused) this.pausedTools.add(toolType);
+    else this.pausedTools.delete(toolType);
   }
 }
 
@@ -1419,6 +1443,41 @@ export class DatabaseStorage implements IStorage {
 
   async getToolsByCategory(category: ToolCategory): Promise<ToolConfig[]> {
     return this.tools.filter(tool => tool.category === category);
+  }
+
+  // Admin tool pause controls (DB-backed, cached briefly so the hot conversion
+  // path doesn't hit the database on every request).
+  private pausedCache: { set: Set<string>; fetchedAt: number } | null = null;
+  private static PAUSE_CACHE_MS = 5_000;
+
+  async getPausedToolTypes(): Promise<Set<string>> {
+    const now = Date.now();
+    if (this.pausedCache && now - this.pausedCache.fetchedAt < DatabaseStorage.PAUSE_CACHE_MS) {
+      return this.pausedCache.set;
+    }
+    const rows = await db
+      .select({ toolType: toolSettings.toolType })
+      .from(toolSettings)
+      .where(eq(toolSettings.paused, true));
+    const set = new Set(rows.map((r) => r.toolType));
+    this.pausedCache = { set, fetchedAt: now };
+    return set;
+  }
+
+  async isToolPaused(toolType: string): Promise<boolean> {
+    return (await this.getPausedToolTypes()).has(toolType);
+  }
+
+  async setToolPaused(toolType: string, paused: boolean): Promise<void> {
+    await db
+      .insert(toolSettings)
+      .values({ toolType, paused, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: toolSettings.toolType,
+        set: { paused, updatedAt: new Date() },
+      });
+    // Bust the cache so the change takes effect immediately in this process.
+    this.pausedCache = null;
   }
 }
 

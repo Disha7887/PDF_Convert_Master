@@ -77,6 +77,7 @@ const ResizeImageTool = named(() => import("@/pages/ImageEditTools"), "ResizeIma
 const CropImageTool = named(() => import("@/pages/ImageEditTools"), "CropImageTool");
 const RotateImageTool = named(() => import("@/pages/ImageEditTools"), "RotateImageTool");
 const Features = named(() => import("@/pages/Features"), "Features");
+const AdminPage = named(() => import("@/pages/AdminPage"), "AdminPage");
 const LearnMore = named(() => import("@/pages/LearnMore"), "LearnMore");
 
 // Route-loading fallback. Uses the single global PageLoader (the shared
@@ -272,6 +273,12 @@ function Router() {
         <DynamicLayout>
           <Support />
         </DynamicLayout>
+      </Route>
+
+      {/* Hidden admin dashboard. Standalone (no site nav), not linked anywhere,
+          noindex; all data behind server-side admin auth. */}
+      <Route path="/admin">
+        <AdminPage />
       </Route>
 
       {/* Auth pages render standalone (no marketing nav) to match the mobile

@@ -17,6 +17,7 @@ import ffmpegStatic from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
 import { register, signin, verifySignupOtp, getCurrentUser, authenticateUser, updateProfile, changePassword, forgotPassword, resetPassword, googleAuth, googleConfig, googleMobileStart, googleMobileCallback } from "./auth";
 import { notifyUser, ensureWelcomeNotification } from "./notify";
+import { registerAdminRoutes } from "./adminRoutes";
 import { saveAvatar, getAvatar, deleteAvatar } from "./lib/avatarStorage";
 import { authenticateApiKey } from "./middlewares/apiKeyMiddleware";
 import { optionalConversionAuth, ConversionAuthRequest } from "./middlewares/requireConversionAuth";
@@ -2689,6 +2690,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Admin kill-switch: paused tools reject new conversions immediately.
+      if (await storage.isToolPaused(toolType)) {
+        return res.status(503).json({
+          success: false,
+          error: "This tool is temporarily unavailable. Please try again later."
+        });
+      }
+
       if (fileSize > tool.maxFileSize * 1024 * 1024) {
         return res.status(400).json({
           success: false,
@@ -2769,6 +2778,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({
           success: false,
           error: "Please select at least 2 PDF files to merge."
+        });
+      }
+
+      // Admin kill-switch: paused tools reject new conversions immediately.
+      if (await storage.isToolPaused(ToolType.MERGE_PDFS)) {
+        return res.status(503).json({
+          success: false,
+          error: "This tool is temporarily unavailable. Please try again later."
         });
       }
 
@@ -2881,6 +2898,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({
           success: false,
           error: "Please select at least one image to convert.",
+        });
+      }
+
+      // Admin kill-switch: paused tools reject new conversions immediately.
+      if (await storage.isToolPaused(ToolType.IMAGES_TO_PDF)) {
+        return res.status(503).json({
+          success: false,
+          error: "This tool is temporarily unavailable. Please try again later."
         });
       }
 
@@ -3763,6 +3788,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/signin", authRateLimit(15), signin);
   app.post("/api/auth/login", authRateLimit(15), signin); // alias used by web AuthContext
 
+  // Hidden admin dashboard API (env-var credentials, admin-scoped JWT).
+  registerAdminRoutes(app, authRateLimit);
+
   // Step 2 of signup: verify the emailed OTP, which creates the account.
   app.post("/api/auth/verify-signup", authRateLimit(15), verifySignupOtp);
   app.post("/api/verify-signup", authRateLimit(15), verifySignupOtp); // alias
@@ -4397,6 +4425,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const tool = await storage.getToolByType(toolType);
         if (!tool) {
           return res.status(404).json({ success: false, error: "Tool not found" });
+        }
+
+        // Admin kill-switch: paused tools reject new conversions immediately.
+        if (await storage.isToolPaused(toolType)) {
+          return res.status(503).json({
+            success: false,
+            status: "offline",
+            error: "This tool is temporarily unavailable. Please try again later.",
+          });
         }
 
         const isMerge = toolType === ToolType.MERGE_PDFS;

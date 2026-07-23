@@ -234,6 +234,17 @@ export enum ToolType {
   COMPRESS_VIDEO = "compress_video"
 }
 
+// Per-tool admin settings. A row exists only once an admin has touched a tool;
+// absence of a row means the tool runs normally. `paused` tools reject new
+// conversions everywhere (web, mobile, public API) with a friendly 503.
+export const toolSettings = pgTable("tool_settings", {
+  toolType: text("tool_type").primaryKey(),
+  paused: boolean("paused").notNull().default(false),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type ToolSetting = typeof toolSettings.$inferSelect;
+
 // Conversion jobs table  
 export const conversionJobs = pgTable("conversion_jobs", {
   id: serial("id").primaryKey(),
