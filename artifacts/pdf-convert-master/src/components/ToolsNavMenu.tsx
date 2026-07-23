@@ -18,8 +18,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { toolConfigs, isHeroTool } from "@/lib/toolConfig";
-import { Menu } from "lucide-react";
+import { toolConfigs, isHeroTool, getServerToolType } from "@/lib/toolConfig";
+import { useToolPaused } from "@/lib/usePausedTools";
+import { Clock, Menu } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Tools grouped for the navbar dropdowns
@@ -50,9 +51,21 @@ const IMAGE_TOOLS = [
 const triggerClass =
   "font-medium text-gray-600 text-base leading-6 bg-transparent hover:bg-transparent hover:text-gray-900 focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-gray-900 px-0 h-auto";
 
+// Small amber hint appended to a tool row when an admin has paused the tool.
+const PausedHint = ({ testId }: { testId: string }): JSX.Element => (
+  <span
+    className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600"
+    data-testid={testId}
+  >
+    <Clock className="h-3 w-3" />
+    Unavailable
+  </span>
+);
+
 const ToolLink = ({ id }: { id: string }): JSX.Element | null => {
   const [, setLocation] = useLocation();
   const tool = toolConfigs[id];
+  const isPaused = useToolPaused(tool ? getServerToolType(tool) : undefined);
   if (!tool) return null;
   const Icon = tool.icon;
   const target = isHeroTool(id) ? `/?tool=${id}` : tool.route;
@@ -61,7 +74,7 @@ const ToolLink = ({ id }: { id: string }): JSX.Element | null => {
       <button
         type="button"
         onClick={() => target && setLocation(target)}
-        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-blue-50"
+        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-blue-50 ${isPaused ? "opacity-70" : ""}`}
         data-testid={`nav-tool-${tool.id}`}
       >
         <span
@@ -72,6 +85,7 @@ const ToolLink = ({ id }: { id: string }): JSX.Element | null => {
         <span className="whitespace-nowrap text-sm font-medium text-gray-700">
           {tool.title}
         </span>
+        {isPaused && <PausedHint testId={`nav-tool-paused-${tool.id}`} />}
       </button>
     </NavigationMenuLink>
   );
@@ -175,6 +189,7 @@ const MobileToolButton = ({
 }): JSX.Element | null => {
   const [, setLocation] = useLocation();
   const tool = toolConfigs[id];
+  const isPaused = useToolPaused(tool ? getServerToolType(tool) : undefined);
   if (!tool) return null;
   const Icon = tool.icon;
   const target = isHeroTool(id) ? `/?tool=${id}` : tool.route;
@@ -185,7 +200,7 @@ const MobileToolButton = ({
         if (target) setLocation(target);
         onNavigate();
       }}
-      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-blue-50"
+      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-blue-50 ${isPaused ? "opacity-70" : ""}`}
       data-testid={`mobile-nav-tool-${tool.id}`}
     >
       <span
@@ -194,6 +209,7 @@ const MobileToolButton = ({
         <Icon className={`h-4 w-4 ${tool.iconColor}`} />
       </span>
       <span className="text-sm font-medium text-gray-700">{tool.title}</span>
+      {isPaused && <PausedHint testId={`mobile-nav-tool-paused-${tool.id}`} />}
     </button>
   );
 };

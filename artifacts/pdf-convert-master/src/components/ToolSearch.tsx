@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Search, X } from "lucide-react";
+import { Clock, Search, X } from "lucide-react";
 import { Command as CommandPrimitive } from "cmdk";
-import { toolConfigs, isHeroTool, type ToolConfig } from "@/lib/toolConfig";
+import { toolConfigs, isHeroTool, getServerToolType, type ToolConfig } from "@/lib/toolConfig";
+import { usePausedTools } from "@/lib/usePausedTools";
 import { cn } from "@/lib/utils";
 
 // Display order for the category groups inside the search dropdown.
@@ -41,6 +42,7 @@ export const ToolSearch = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const groups = groupedTools();
+  const pausedTools = usePausedTools();
 
   // ⌘K / Ctrl+K toggles the inline search and focuses it.
   useEffect(() => {
@@ -96,12 +98,16 @@ export const ToolSearch = ({
         >
           {tools.map((tool) => {
             const Icon = tool.icon;
+            const isPaused = pausedTools.has(getServerToolType(tool));
             return (
               <CommandPrimitive.Item
                 key={tool.id}
                 value={`${tool.title} ${tool.description} ${tool.id}`}
                 onSelect={() => handleSelect(tool)}
-                className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2.5 text-sm outline-none data-[selected=true]:bg-gray-100"
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 rounded-md px-2 py-2.5 text-sm outline-none data-[selected=true]:bg-gray-100",
+                  isPaused && "opacity-70",
+                )}
                 data-testid={`search-tool-${tool.id}`}
               >
                 <span
@@ -117,6 +123,15 @@ export const ToolSearch = ({
                     {tool.description}
                   </span>
                 </div>
+                {isPaused && (
+                  <span
+                    className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600"
+                    data-testid={`search-tool-paused-${tool.id}`}
+                  >
+                    <Clock className="h-3 w-3" />
+                    Unavailable
+                  </span>
+                )}
               </CommandPrimitive.Item>
             );
           })}

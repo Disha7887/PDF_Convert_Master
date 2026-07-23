@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
-import { toolConfigs, isHeroTool, type ToolConfig } from "@/lib/toolConfig";
+import { toolConfigs, isHeroTool, getServerToolType, type ToolConfig } from "@/lib/toolConfig";
+import { usePausedTools } from "@/lib/usePausedTools";
+import { Clock } from "lucide-react";
 import { useLocation } from "wouter";
 
 export const TestimonialsSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
+  const pausedTools = usePausedTools();
 
   // Every tool, in definition order (PDF conversions → image tools → PDF management)
   const tools = Object.values(toolConfigs);
@@ -40,12 +43,13 @@ export const TestimonialsSection = (): JSX.Element => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {tools.map((tool) => {
+            const isPaused = pausedTools.has(getServerToolType(tool));
             return (
               <button
                 key={tool.id}
                 type="button"
                 onClick={() => handleToolClick(tool)}
-                className="group flex flex-col items-center text-center gap-3 rounded-2xl border border-gray-200/70 bg-card p-5 transition-all hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className={`group flex flex-col items-center text-center gap-3 rounded-2xl border border-gray-200/70 bg-card p-5 transition-all hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${isPaused ? "opacity-70" : ""}`}
                 data-testid={`card-tool-${tool.id}`}
               >
                 <span
@@ -56,6 +60,15 @@ export const TestimonialsSection = (): JSX.Element => {
                 <span className="text-sm font-semibold text-gray-900 leading-snug">
                   {tool.title}
                 </span>
+                {isPaused && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-semibold px-2 py-0.5"
+                    data-testid={`card-tool-paused-${tool.id}`}
+                  >
+                    <Clock className="h-3 w-3" />
+                    Unavailable
+                  </span>
+                )}
                 <span className="text-xs text-gray-500 leading-snug line-clamp-2">
                   {tool.description}
                 </span>
