@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Clock, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
+import { PausedBadge } from "@/components/PausedBadge";
 import { Command as CommandPrimitive } from "cmdk";
 import { toolConfigs, isHeroTool, getServerToolType, type ToolConfig } from "@/lib/toolConfig";
 import { usePausedTools } from "@/lib/usePausedTools";
@@ -124,13 +125,10 @@ export const ToolSearch = ({
                   </span>
                 </div>
                 {isPaused && (
-                  <span
-                    className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600"
-                    data-testid={`search-tool-paused-${tool.id}`}
-                  >
-                    <Clock className="h-3 w-3" />
-                    Unavailable
-                  </span>
+                  <PausedBadge
+                    className="ml-auto shrink-0"
+                    testId={`search-tool-paused-${tool.id}`}
+                  />
                 )}
               </CommandPrimitive.Item>
             );

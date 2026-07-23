@@ -3,7 +3,7 @@ import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
 import { toolConfigs, isHeroTool, getServerToolType, type ToolConfig } from "@/lib/toolConfig";
 import { usePausedTools } from "@/lib/usePausedTools";
-import { Clock } from "lucide-react";
+import { PausedBadge } from "@/components/PausedBadge";
 import { useLocation } from "wouter";
 
 export const TestimonialsSection = (): JSX.Element => {
@@ -61,13 +61,7 @@ export const TestimonialsSection = (): JSX.Element => {
                   {tool.title}
                 </span>
                 {isPaused && (
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-semibold px-2 py-0.5"
-                    data-testid={`card-tool-paused-${tool.id}`}
-                  >
-                    <Clock className="h-3 w-3" />
-                    Unavailable
-                  </span>
+                  <PausedBadge testId={`card-tool-paused-${tool.id}`} />
                 )}
                 <span className="text-xs text-gray-500 leading-snug line-clamp-2">
                   {tool.description}

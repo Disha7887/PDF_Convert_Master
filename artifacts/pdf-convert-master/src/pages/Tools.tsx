@@ -17,6 +17,7 @@ import {
   Clock,
 } from "lucide-react";
 import { ConverterStatusIcon } from "@/components/converter-status-icon";
+import { PausedBadge } from "@/components/PausedBadge";
 import { UploadDropzone } from "@/components/upload/UploadDropzone";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { ToolLottieIcon } from "@/components/tool-lottie-icon";
@@ -614,13 +615,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ toolConfig }) => {
                 </span>
               )}
               {!isComingSoon && isPaused && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-semibold px-2 py-0.5"
-                  data-testid={`badge-paused-${toolConfig.id}`}
-                >
-                  <Clock className="w-3 h-3" />
-                  Unavailable
-                </span>
+                <PausedBadge testId={`badge-paused-${toolConfig.id}`} />
               )}
             </h3>
 
