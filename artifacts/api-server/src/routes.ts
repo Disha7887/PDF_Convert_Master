@@ -3574,6 +3574,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Admin kill-switch: this legacy endpoint behaves like images-to-pdf,
+      // so it honors the same pause switch.
+      if (await storage.isToolPaused(ToolType.IMAGES_TO_PDF)) {
+        return res.status(503).json({
+          success: false,
+          error: "This tool is temporarily unavailable. Please try again later."
+        });
+      }
+
       console.log(`Generating PDF from ${files.length} files...`);
       
       // Create a new PDF document

@@ -1449,19 +1449,51 @@ export class DatabaseStorage implements IStorage {
   // path doesn't hit the database on every request).
   private pausedCache: { set: Set<string>; fetchedAt: number } | null = null;
   private static PAUSE_CACHE_MS = 5_000;
+  private toolSettingsReady: Promise<void> | null = null;
+
+  // Startup bootstrap: environments deployed before this feature (e.g. prod)
+  // won't have the table yet, and the deploy flow has no migration runner.
+  // Idempotent and cached so it runs at most once per process.
+  private ensureToolSettingsTable(): Promise<void> {
+    if (!this.toolSettingsReady) {
+      this.toolSettingsReady = db
+        .execute(sql`
+          CREATE TABLE IF NOT EXISTS tool_settings (
+            tool_type text PRIMARY KEY,
+            paused boolean NOT NULL DEFAULT false,
+            updated_at timestamp DEFAULT now()
+          )
+        `)
+        .then(() => undefined)
+        .catch((err: unknown) => {
+          // Allow a retry on the next call rather than caching the failure.
+          this.toolSettingsReady = null;
+          throw err;
+        });
+    }
+    return this.toolSettingsReady;
+  }
 
   async getPausedToolTypes(): Promise<Set<string>> {
     const now = Date.now();
     if (this.pausedCache && now - this.pausedCache.fetchedAt < DatabaseStorage.PAUSE_CACHE_MS) {
       return this.pausedCache.set;
     }
-    const rows = await db
-      .select({ toolType: toolSettings.toolType })
-      .from(toolSettings)
-      .where(eq(toolSettings.paused, true));
-    const set = new Set(rows.map((r) => r.toolType));
-    this.pausedCache = { set, fetchedAt: now };
-    return set;
+    try {
+      await this.ensureToolSettingsTable();
+      const rows = await db
+        .select({ toolType: toolSettings.toolType })
+        .from(toolSettings)
+        .where(eq(toolSettings.paused, true));
+      const set = new Set(rows.map((r) => r.toolType));
+      this.pausedCache = { set, fetchedAt: now };
+      return set;
+    } catch (err) {
+      // Fail open: a pause-state read failure must never take down the
+      // conversion endpoints. Treat all tools as active until the DB recovers.
+      console.error("[tool-pause] Failed to read pause state, treating all tools as active:", err);
+      return this.pausedCache?.set ?? new Set();
+    }
   }
 
   async isToolPaused(toolType: string): Promise<boolean> {
@@ -1469,6 +1501,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async setToolPaused(toolType: string, paused: boolean): Promise<void> {
+    await this.ensureToolSettingsTable();
     await db
       .insert(toolSettings)
       .values({ toolType, paused, updatedAt: new Date() })
