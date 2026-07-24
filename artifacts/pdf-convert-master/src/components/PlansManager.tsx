@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Code2, Archive, FileImage, CreditCard } from "lucide-react";
 import { ProcessingSpinner } from "@/components/processing-spinner";
+import { LottieIcon } from "@/components/ui/lottie-icon";
+import recommendedAnim from "@/assets/lottie/recommended.json";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -361,8 +363,9 @@ export const PlansManager: React.FC = () => {
                   }`}
                 >
                   {plan.popular && !isCurrent && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f7433d] text-white border-[#f7433d] hover:bg-[#f7433d]">
-                      Most Popular
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f7433d] text-white border-[#f7433d] hover:bg-[#f7433d] flex items-center gap-1 pl-1.5">
+                      <LottieIcon animationData={recommendedAnim} size={18} />
+                      Recommended
                     </Badge>
                   )}
                   {isCurrent && (
