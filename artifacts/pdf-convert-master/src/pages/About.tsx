@@ -210,7 +210,7 @@ export const About = (): JSX.Element => {
       </section>
 
       {/* Get in Touch Section */}
-      <section className="py-20 bg-gradient-to-r from-slate-800 to-slate-900">
+      <section className="py-20 bg-slate-900 bg-gradient-to-r from-slate-800 to-slate-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">Get in Touch</h2>
@@ -250,7 +250,7 @@ export const About = (): JSX.Element => {
           
           <div className="text-center">
             <Button
-              className="bg-white text-white hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
+              className="bg-white text-slate-900 hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
               onClick={() => setLocation('/contact')}
             >
               Contact Us Today
