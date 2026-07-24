@@ -363,10 +363,12 @@ export const PlansManager: React.FC = () => {
                   }`}
                 >
                   {plan.popular && !isCurrent && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f7433d] text-white border-[#f7433d] hover:bg-[#f7433d] flex items-center gap-1 pl-1.5">
-                      <LottieIcon animationData={recommendedAnim} size={18} />
-                      Recommended
-                    </Badge>
+                    <div
+                      className="absolute -top-8 left-1/2 -translate-x-1/2 pointer-events-none"
+                      aria-label="Recommended plan"
+                    >
+                      <LottieIcon animationData={recommendedAnim} width={110} height={73} />
+                    </div>
                   )}
                   {isCurrent && (
                     <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f7433d] text-white border-[#f7433d] hover:bg-[#f7433d]">
