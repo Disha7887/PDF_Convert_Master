@@ -5,6 +5,10 @@ import { Card } from "@/components/ui/card";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 import { useLocation } from "wouter";
 import { ArrowRightLeft, Layers, Play, Shield } from "lucide-react";
+import { LottieIcon } from "@/components/ui/lottie-icon";
+import featureConvert from "@/assets/lottie/feature-convert.json";
+import featureOrganize from "@/assets/lottie/feature-organize.json";
+import featureSecure from "@/assets/lottie/feature-secure.json";
 
 export const FeaturesSection = (): JSX.Element => {
   // Add CSS keyframes for the rotating border animation
@@ -40,6 +44,7 @@ export const FeaturesSection = (): JSX.Element => {
     {
       title: "Convert",
       IconComponent: ArrowRightLeft,
+      lottie: featureConvert,
       description:
         "Transform your documents between different formats with perfect quality preservation.",
       features: ["PDF to Word", "Word to PDF", "Excel to PDF", "Image to PDF"],
@@ -50,6 +55,7 @@ export const FeaturesSection = (): JSX.Element => {
     {
       title: "Organize",
       IconComponent: Layers,
+      lottie: featureOrganize,
       description:
         "Merge, split, and reorganize your PDF documents with powerful editing tools.",
       features: ["Merge PDFs", "Split PDFs", "Compress Files", "Rotate Pages"],
@@ -60,6 +66,7 @@ export const FeaturesSection = (): JSX.Element => {
     {
       title: "Secure",
       IconComponent: Shield,
+      lottie: featureSecure,
       description:
         "Protect your documents with advanced security features and encryption.",
       features: [
@@ -301,11 +308,15 @@ export const FeaturesSection = (): JSX.Element => {
                     {/* Icon Container */}
                     <div className="flex justify-center mb-6">
                       <div className={`w-20 h-20 ${card.bgColor} rounded-2xl flex items-center justify-center`}>
-                        <IconComponent
-                          size={40}
-                          style={{ color: card.iconColor }}
-                          strokeWidth={1.5}
-                        />
+                        {card.lottie ? (
+                          <LottieIcon animationData={card.lottie} size={56} />
+                        ) : (
+                          <IconComponent
+                            size={40}
+                            style={{ color: card.iconColor }}
+                            strokeWidth={1.5}
+                          />
+                        )}
                       </div>
                     </div>
 
