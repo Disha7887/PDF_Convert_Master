@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,15 +8,33 @@ import {
   Shield,
   Globe,
   ArrowRight,
-  BookOpen
+  BookOpen,
+  Copy,
+  Check
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { AnimatedBackground } from "@/components/ui/animated-background";
 
 export const APIDocumentationSection = (): JSX.Element => {
   const [, setLocation] = useLocation();
+  const [copied, setCopied] = useState(false);
   // Public API lives on the custom domain, so the example always shows it.
   const apiDomain = "https://pdfgenius.app";
+
+  const curlExample = `curl -X POST "${apiDomain}/api/v1/word_to_pdf" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -F "file=@document.docx" \\
+  -o converted.pdf`;
+
+  const copyCurl = async () => {
+    try {
+      await navigator.clipboard.writeText(curlExample);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable (e.g. insecure context) — leave the text selectable.
+    }
+  };
 
   const apiFeatures = [
     {
@@ -80,12 +98,25 @@ export const APIDocumentationSection = (): JSX.Element => {
           </div>
 
           <Card className="bg-gray-50 border border-gray-200 shadow-sm max-w-3xl mx-auto">
-            <CardContent className="p-6">
+            <CardContent
+              className="relative p-6 cursor-pointer group"
+              onClick={copyCurl}
+              role="button"
+              aria-label="Copy curl example to clipboard"
+              title="Click to copy"
+            >
+              <div
+                className={`absolute top-3 right-3 flex items-center gap-1.5 text-xs rounded-md border px-2 py-1 transition-colors ${
+                  copied
+                    ? "bg-green-50 border-green-200 text-green-700"
+                    : "bg-white border-gray-200 text-gray-500 group-hover:text-gray-700"
+                }`}
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Copied!" : "Copy"}
+              </div>
               <pre className="text-sm text-gray-700 overflow-x-auto">
-                <code>{`curl -X POST "${apiDomain}/api/v1/word_to_pdf" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -F "file=@document.docx" \\
-  -o converted.pdf`}</code>
+                <code>{curlExample}</code>
               </pre>
             </CardContent>
           </Card>
