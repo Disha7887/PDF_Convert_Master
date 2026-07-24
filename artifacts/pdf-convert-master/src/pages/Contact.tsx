@@ -259,7 +259,7 @@ export const Contact = (): JSX.Element => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {/* Phone Support */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+              <div className="bg-blue-600 bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Phone className="w-6 h-6" />
                 </div>
@@ -293,7 +293,7 @@ export const Contact = (): JSX.Element => {
 
             {/* Email Support */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+              <div className="bg-blue-600 bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <Mail className="w-6 h-6" />
                 </div>
@@ -327,7 +327,7 @@ export const Contact = (): JSX.Element => {
 
             {/* Live Chat */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+              <div className="bg-blue-600 bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
                 </div>
@@ -360,7 +360,7 @@ export const Contact = (): JSX.Element => {
 
             {/* WhatsApp */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+              <div className="bg-blue-600 bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                   <MessageSquare className="w-6 h-6" />
                 </div>
