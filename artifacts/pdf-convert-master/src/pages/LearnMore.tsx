@@ -1096,10 +1096,246 @@ export const LearnMore: React.FC = () => {
       date: "December 7, 2024",
       tags: ["Legal", "Compliance", "E-Discovery", "Digital Signatures", "Law"],
       featured: false
+    },
+    {
+      id: "11",
+      title: "Merging and Splitting PDFs: Organize Documents Like a Pro",
+      excerpt: "Learn when to merge, when to split, and how to reorganize PDF pages to build clean, shareable documents from scattered files.",
+      content: `
+        <h2>Why Merge and Split PDFs?</h2>
+        <p>Real-world documents rarely arrive in the perfect shape. Contracts come as separate scans, reports are split across chapters, and application packets need to combine forms, IDs, and cover letters. Merging and splitting are the two fundamental operations that turn scattered files into organized documents.</p>
+
+        <h3>When to Merge</h3>
+        <ul>
+          <li><strong>Application packets:</strong> Combine forms, identification, and supporting documents into one file</li>
+          <li><strong>Reports:</strong> Join chapters, appendices, and cover pages produced by different people</li>
+          <li><strong>Invoicing:</strong> Bundle an invoice with its supporting receipts and timesheets</li>
+          <li><strong>Archiving:</strong> Consolidate related correspondence into a single searchable record</li>
+        </ul>
+
+        <h3>When to Split</h3>
+        <ul>
+          <li><strong>Sharing selectively:</strong> Send only the relevant pages instead of a 200-page manual</li>
+          <li><strong>Size limits:</strong> Break large files into email-friendly parts</li>
+          <li><strong>Confidentiality:</strong> Separate sensitive sections before distribution</li>
+          <li><strong>Reuse:</strong> Extract a chart or form page for use in another document</li>
+        </ul>
+
+        <h3>Best Practices</h3>
+        <ol>
+          <li><strong>Order before merging:</strong> Rename files with numeric prefixes (01-cover, 02-body) so they combine in the right sequence</li>
+          <li><strong>Rotate first:</strong> Fix sideways scanned pages before merging so the final document reads cleanly</li>
+          <li><strong>Delete blank pages:</strong> Double-sided scanning often inserts empty pages — remove them for a professional result</li>
+          <li><strong>Compress after merging:</strong> Large combined files benefit from a compression pass before sharing</li>
+        </ol>
+
+        <h3>Conclusion</h3>
+        <p>Merging and splitting are simple operations with outsized impact on how professional your documents feel. A well-organized single PDF is easier to read, easier to search, and far easier to share than a folder of fragments.</p>
+      `,
+      category: "Organization",
+      readTime: "6 min",
+      author: "PDF Genius Team",
+      date: "December 18, 2024",
+      tags: ["Merge", "Split", "Organization", "Productivity"],
+      featured: false
+    },
+    {
+      id: "12",
+      title: "Watermarks and Branding: Protecting and Polishing Your PDFs",
+      excerpt: "Use text and image watermarks to mark ownership, signal document status, and keep your brand front and center.",
+      content: `
+        <h2>What Watermarks Do</h2>
+        <p>A watermark is text or an image layered across your document pages. It serves two purposes at once: it protects your work by marking ownership, and it communicates status or branding at a glance.</p>
+
+        <h3>Common Watermark Uses</h3>
+        <ul>
+          <li><strong>Status labels:</strong> DRAFT, CONFIDENTIAL, APPROVED, or SAMPLE across every page</li>
+          <li><strong>Ownership:</strong> Your name or company on portfolios, proofs, and proposals</li>
+          <li><strong>Branding:</strong> A subtle logo on client deliverables and reports</li>
+          <li><strong>Deterrence:</strong> Discouraging unauthorized reuse of shared previews</li>
+        </ul>
+
+        <h3>Design Guidelines</h3>
+        <ol>
+          <li><strong>Keep opacity low:</strong> 10–30% is usually enough — the content must stay readable</li>
+          <li><strong>Use diagonal placement:</strong> A 45° angle covers the page without hiding any single line</li>
+          <li><strong>Choose neutral colors:</strong> Light gray works on almost any document; brand colors work for logos</li>
+          <li><strong>Test on every page type:</strong> A watermark that looks good on text may clash with charts or photos</li>
+        </ol>
+
+        <h3>Text vs. Image Watermarks</h3>
+        <p><strong>Text watermarks</strong> are ideal for status labels and quick ownership marks — they scale cleanly and stay crisp at any size.</p>
+        <p><strong>Image watermarks</strong> shine for branding — a transparent PNG logo gives a professional, polished feel to client-facing documents.</p>
+
+        <h3>Conclusion</h3>
+        <p>A well-designed watermark protects your work without getting in its way. Keep it subtle, consistent, and appropriate to the document's audience.</p>
+      `,
+      category: "Security",
+      readTime: "5 min",
+      author: "PDF Genius Team",
+      date: "December 17, 2024",
+      tags: ["Watermark", "Branding", "Protection", "Design"],
+      featured: false
+    },
+    {
+      id: "13",
+      title: "Electronic Signatures: Signing PDFs Without Printing",
+      excerpt: "Draw, type, or upload your signature and place it anywhere on a PDF — and understand when an e-signature is legally sufficient.",
+      content: `
+        <h2>The End of Print-Sign-Scan</h2>
+        <p>Printing a document, signing it with a pen, and scanning it back is slow, wasteful, and produces low-quality results. Electronic signatures let you sign directly on the PDF and send it back in minutes.</p>
+
+        <h3>Three Ways to Create a Signature</h3>
+        <ul>
+          <li><strong>Draw:</strong> Sign with your mouse, trackpad, or finger — closest to a handwritten signature</li>
+          <li><strong>Type:</strong> Enter your name and choose a signature-style font — fast and always legible</li>
+          <li><strong>Upload:</strong> Use a photo or scan of your real signature for a personal touch</li>
+        </ul>
+
+        <h3>Placement Tips</h3>
+        <ol>
+          <li>Zoom in before placing your signature so it lands exactly on the line</li>
+          <li>Resize the signature to match the space — an oversized signature looks unprofessional</li>
+          <li>Add the date next to your signature when the form requires it</li>
+          <li>Review the whole document before exporting — signatures are flattened into the final PDF</li>
+        </ol>
+
+        <h3>Are Electronic Signatures Legally Valid?</h3>
+        <p>In most jurisdictions, yes. Laws such as the U.S. ESIGN Act and the EU's eIDAS regulation recognize electronic signatures for the vast majority of agreements. That said, some documents — wills, certain property transfers, notarized documents — may still require wet-ink signatures. When in doubt for high-stakes documents, confirm requirements with the receiving party.</p>
+
+        <h3>Conclusion</h3>
+        <p>For everyday agreements, permission forms, and contracts, signing electronically is faster, cleaner, and just as valid. Keep a saved signature ready and you can turn around signed documents in under a minute.</p>
+      `,
+      category: "Business",
+      readTime: "6 min",
+      author: "PDF Genius Team",
+      date: "December 16, 2024",
+      tags: ["E-Signature", "Sign PDF", "Contracts", "Paperless"],
+      featured: false
+    },
+    {
+      id: "14",
+      title: "Image Editing Essentials: Resize, Convert, and Compress Like a Pro",
+      excerpt: "Master everyday image tasks — resizing for the web, converting between formats, compressing for email, and removing backgrounds.",
+      content: `
+        <h2>Why Image Handling Matters</h2>
+        <p>Images are everywhere in modern documents and websites — and the wrong size or format slows pages down, breaks uploads, and bloats emails. A few basic operations cover almost every situation.</p>
+
+        <h3>Choosing the Right Format</h3>
+        <ul>
+          <li><strong>JPG:</strong> Photos and complex images — small files, no transparency</li>
+          <li><strong>PNG:</strong> Screenshots, logos, and anything needing transparency</li>
+          <li><strong>WebP:</strong> Modern web format — smaller than JPG and PNG at similar quality</li>
+          <li><strong>TIFF:</strong> Print and archival work where quality trumps file size</li>
+        </ul>
+
+        <h3>Resizing Without Ruining Quality</h3>
+        <ol>
+          <li><strong>Shrink, don't stretch:</strong> Downscaling keeps quality; upscaling without AI tools produces blur</li>
+          <li><strong>Keep the aspect ratio locked</strong> unless you're deliberately cropping</li>
+          <li><strong>Resize for the destination:</strong> ~1200px wide covers most web uses; full resolution is only needed for print</li>
+        </ol>
+
+        <h3>Compression: Finding the Sweet Spot</h3>
+        <p>Most photos can lose 60–80% of their file size before quality loss becomes visible. Compress before emailing or uploading — recipients rarely need a 12 MB original.</p>
+
+        <h3>Background Removal</h3>
+        <p>AI background removal turns product photos and portraits into clean cutouts in seconds — ideal for listings, profile pictures, and marketing material. Start with a well-lit photo with clear subject/background separation for the best result.</p>
+
+        <h3>Conclusion</h3>
+        <p>Right format, right size, sensible compression — these three habits make every upload faster and every document lighter, with no visible quality loss.</p>
+      `,
+      category: "Technology",
+      readTime: "7 min",
+      author: "PDF Genius Team",
+      date: "December 19, 2024",
+      tags: ["Images", "Resize", "Compression", "WebP", "Background Removal"],
+      featured: false
+    },
+    {
+      id: "15",
+      title: "Video Compression Explained: Smaller Files, Watchable Quality",
+      excerpt: "Understand how video compression works, what really controls file size, and how to shrink videos for sharing without wrecking them.",
+      content: `
+        <h2>Why Video Files Are So Big</h2>
+        <p>Video is by far the heaviest media type — a single minute of phone footage can exceed 100 MB. That's because video is thousands of images plus audio. Compression works by encoding the differences between frames instead of storing every frame in full.</p>
+
+        <h3>What Controls File Size</h3>
+        <ul>
+          <li><strong>Bitrate:</strong> The single biggest factor — how much data is spent per second of video</li>
+          <li><strong>Resolution:</strong> 4K has four times the pixels of 1080p; downscaling saves enormous space</li>
+          <li><strong>Codec:</strong> Modern codecs like H.264 and H.265 pack far more quality into fewer bits</li>
+          <li><strong>Frame rate:</strong> 60fps footage can often drop to 30fps with no perceptible loss for normal content</li>
+        </ul>
+
+        <h3>Choosing a Compression Level</h3>
+        <p><strong>Light compression</strong> keeps near-original quality — best for footage you'll edit later.</p>
+        <p><strong>Balanced compression</strong> is the sweet spot for sharing — significant size reduction with quality that looks great on phones and laptops.</p>
+        <p><strong>Strong compression</strong> prioritizes smallest size — ideal for messaging apps and email attachments with strict limits.</p>
+
+        <h3>Practical Tips</h3>
+        <ol>
+          <li>Compress a copy, never your only original</li>
+          <li>Trim unwanted footage before compressing — deleted seconds are free savings</li>
+          <li>Match resolution to the destination: 720p is plenty for chat apps</li>
+          <li>Expect compression to take time — encoding a long video is heavy work even on fast machines</li>
+        </ol>
+
+        <h3>Conclusion</h3>
+        <p>Video compression is a trade-off between size and quality, but modern encoders make that trade remarkably generous. For everyday sharing, a balanced compression setting delivers files a fraction of the original size that still look great.</p>
+      `,
+      category: "Technology",
+      readTime: "8 min",
+      author: "PDF Genius Team",
+      date: "December 20, 2024",
+      tags: ["Video", "Compression", "MP4", "File Size"],
+      featured: false
+    },
+    {
+      id: "16",
+      title: "Automating Document Conversion with a REST API",
+      excerpt: "Move beyond manual conversions — integrate PDF and image processing directly into your applications with a simple HTTP API.",
+      content: `
+        <h2>When Manual Conversion Stops Scaling</h2>
+        <p>Converting a file by hand takes seconds. Converting five hundred a day does not. If documents flow through your product — invoices, reports, user uploads — conversion belongs in your code, not in someone's browser tabs.</p>
+
+        <h3>What a Conversion API Gives You</h3>
+        <ul>
+          <li><strong>Automation:</strong> Convert files the moment they're uploaded, with no human in the loop</li>
+          <li><strong>Consistency:</strong> Every file processed with identical settings and quality</li>
+          <li><strong>Integration:</strong> Generated PDFs land directly in your storage, email, or workflow</li>
+          <li><strong>Scale:</strong> Handle spikes without hiring more hands</li>
+        </ul>
+
+        <h3>Anatomy of an API Conversion</h3>
+        <p>A typical conversion is a single HTTP request: authenticate with your API key, POST the file to the endpoint for the tool you need (like <code>word_to_pdf</code> or <code>compress_pdf</code>), and receive the converted file in the response. Synchronous processing means no polling or callbacks for standard documents.</p>
+
+        <h3>Integration Best Practices</h3>
+        <ol>
+          <li><strong>Keep keys secret:</strong> Store API keys in environment variables, never in client-side code or repositories</li>
+          <li><strong>Handle failures gracefully:</strong> Corrupt uploads happen — surface clear errors to users instead of silent retries</li>
+          <li><strong>Validate before sending:</strong> Check file type and size client-side to avoid wasted API calls</li>
+          <li><strong>Watch your quota:</strong> Monitor usage so batch jobs don't exhaust your monthly allowance mid-run</li>
+        </ol>
+
+        <h3>Common Use Cases</h3>
+        <p><strong>Invoice pipelines:</strong> Generate Word invoices from templates, convert to PDF, and email automatically.</p>
+        <p><strong>User uploads:</strong> Normalize every uploaded document to PDF for consistent viewing.</p>
+        <p><strong>Archival:</strong> Batch-convert legacy Office files into searchable PDFs.</p>
+
+        <h3>Conclusion</h3>
+        <p>An API turns document conversion from a chore into infrastructure. Start with one endpoint, wire it into your workflow, and expand as your needs grow.</p>
+      `,
+      category: "Technology",
+      readTime: "7 min",
+      author: "PDF Genius Team",
+      date: "December 21, 2024",
+      tags: ["API", "Automation", "Developers", "Integration"],
+      featured: false
     }
   ];
 
-  const categories = ["All", "Conversion", "Security", "Optimization", "Business", "Accessibility", "Technology", "Mobile", "Support", "Legal"];
+  const categories = ["All", "Conversion", "Security", "Optimization", "Organization", "Business", "Accessibility", "Technology", "Mobile", "Support", "Legal"];
 
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
